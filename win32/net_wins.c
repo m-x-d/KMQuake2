@@ -123,6 +123,11 @@ qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
 			return true;
 		return false;
 	}
+
+	//mxd. Fixes C4715: 'NET_CompareAdr': not all control paths return a value
+	// https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/code/qcommon/net_chan.c#L519 
+	Com_Printf(S_COLOR_YELLOW"NET_CompareAdr: bad address type: %i\n", a.type);
+	return false;
 }
 
 /*
@@ -138,7 +143,7 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 		return false;
 
 	if (a.type == NA_LOOPBACK)
-		return TRUE;
+		return true;
 
 	if (a.type == NA_IP)
 	{
@@ -153,6 +158,11 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 			return true;
 		return false;
 	}
+
+	//mxd. Fixes C4715: 'NET_CompareBaseAdr': not all control paths return a value
+	// https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/code/qcommon/net_chan.c#L471 
+	Com_Printf(S_COLOR_YELLOW"NET_CompareBaseAdr: bad address type: %i\n", a.type);
+	return false;
 }
 
 /*
@@ -503,7 +513,7 @@ int NET_IPSocket (char *net_interface, int port)
 {
 	int					newsocket;
 	struct sockaddr_in	address;
-	qboolean			_true = true;
+	u_long				_true = 1; //mxd. Fixes C4133: 'function': incompatible types - from 'qboolean *' to 'u_long *'
 	int					i = 1;
 	int					err;
 

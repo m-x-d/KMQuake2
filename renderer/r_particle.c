@@ -219,7 +219,7 @@ vec3_t		shadelight;
 // used for grouping particles by identical rendering state
 // and rendering in vertex arrays
 typedef struct particleRenderState_s particleRenderState_t;
-typedef struct particleRenderState_s
+struct particleRenderState_s //mxd. Removed typedef. Fixes C4091: 'typedef ': ignored on left of 'particleRenderState_s' when no variable is declared
 {
 	GLenum		polymode;
 //	qboolean	texture2D;

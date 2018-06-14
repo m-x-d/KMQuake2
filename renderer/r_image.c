@@ -1221,15 +1221,18 @@ unsigned char jpg_fill_input_buffer(j_decompress_ptr cinfo)
 
 void jpg_skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 {
-        
-    cinfo->src->next_input_byte += (size_t) num_bytes;
-    cinfo->src->bytes_in_buffer -= (size_t) num_bytes;
-
-    if (cinfo->src->bytes_in_buffer < 0) 
+	if(cinfo->src->bytes_in_buffer >= (size_t) num_bytes) // //mxd. bytes_in_buffer can't be < 0
+	{
+		cinfo->src->next_input_byte += (size_t)num_bytes;
+		cinfo->src->bytes_in_buffer -= (size_t)num_bytes;
+	}
+	else
+	{
 		VID_Printf(PRINT_ALL, "Premature end of JPEG data\n");
+	}
 }
 
-void jpeg_mem_src(j_decompress_ptr cinfo, byte *mem, int len)
+void jpeg_mem_src(j_decompress_ptr cinfo, const unsigned char *mem, unsigned long len) //mxd. Was byte *mem, int len. Fixes C4028: formal parameters 2 and 3 different from declaration
 {
     cinfo->src = (struct jpeg_source_mgr *)(*cinfo->mem->alloc_small)((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(struct jpeg_source_mgr));
     cinfo->src->init_source = jpg_null;

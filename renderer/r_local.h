@@ -339,7 +339,7 @@ extern	float	r_world_matrix[16];
 
 // entity sorting struct
 typedef struct sortedelement_s sortedelement_t;
-typedef struct sortedelement_s 
+struct sortedelement_s //mxd. Removed typedef. Fixes C4091: 'typedef ': ignored on left of 'sortedelement_s' when no variable is declared
 {
 	void  *data;
 	vec_t len;
@@ -351,7 +351,7 @@ typedef struct sortedelement_s
 //
 // r_image.c
 //
-void R_TranslatePlayerSkin (int playernum);
+//void R_TranslatePlayerSkin (int playernum); //mxd. Undefined and unused
 
 // Knightmare- added some of Psychospaz's shortcuts
 void ElementAddNode (sortedelement_t *base, sortedelement_t *thisElement);

@@ -27,7 +27,7 @@ cvar_t	*cl_http_filelists;
 cvar_t	*cl_http_proxy;
 cvar_t	*cl_http_max_connections;
 
-static enum
+enum //mxd. Removed static. Fixes C4091: 'static ': ignored on left of '' when no variable is declared
 {
 	HTTPDL_ABORT_NONE,
 	HTTPDL_ABORT_SOFT,
