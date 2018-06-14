@@ -1391,11 +1391,14 @@ skipwhite:
 	if (c == '\"')
 	{
 		data++;
-		while (1)
+		while (true)
 		{
 			c = *data++;
 			if (c=='\"' || !c)
 			{
+				if (len == MAX_TOKEN_CHARS)	// Knightmare- discard if > MAX_TOKEN_CHARS-1
+					len = 0;
+				
 				com_token[len] = 0;
 				*data_p = data;
 				return com_token;

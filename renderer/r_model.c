@@ -35,11 +35,11 @@ void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer);
 //Harven++ MD3
 void Mod_LoadAliasMD3Model (model_t *mod, void *buffer);
 //Harven-- MD3
-model_t *Mod_LoadModel (model_t *mod, qboolean crash);
+//model_t *Mod_LoadModel (model_t *mod, qboolean crash); //mxd. Unused
 
 byte	mod_novis[MAX_MAP_LEAFS/8];
 
-#define	MAX_MOD_KNOWN	512
+#define	MAX_MOD_KNOWN	8192 //mxd. Was 512
 model_t	mod_known[MAX_MOD_KNOWN];
 int		mod_numknown;
 
@@ -277,7 +277,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		break;
 	
 	case IDBSPHEADER:
-		loadmodel->extradata = Hunk_Begin (0x1000000);
+		loadmodel->extradata = Hunk_Begin (0x2000000); //mxd. Was 0x1000000
 		Mod_LoadBrushModel (mod, buf);
 		break;
 
@@ -409,7 +409,11 @@ void Mod_LoadSubmodels (lump_t *l)
 	if (l->filelen % sizeof(*in))
 		VID_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc ( count*sizeof(*out));	
+	out = Hunk_Alloc ( count*sizeof(*out));
+
+	// Knightmare- catch submodel overflow
+	if (count >= MAX_MOD_KNOWN)
+		VID_Error(ERR_DROP, "MOD_LoadBmodel: too many submodels (%i >= %i) in %s", count, MAX_MOD_KNOWN, loadmodel->name);
 
 	loadmodel->submodels = out;
 	loadmodel->numsubmodels = count;
@@ -815,11 +819,11 @@ void Mod_LoadFaces (lump_t *l)
 	for ( surfnum=0 ; surfnum<count ; surfnum++, in++, out++)
 	{
 		out->firstedge = LittleLong(in->firstedge);
-		out->numedges = LittleShort(in->numedges);		
+		out->numedges = LittleShort(in->numedges);
 		out->flags = 0;
 		out->polys = NULL;
 
-		planenum = LittleShort(in->planenum);
+		planenum = (unsigned short)LittleShort(in->planenum);
 		side = LittleShort(in->side);
 		if (side)
 			out->flags |= SURF_PLANEBACK;			
@@ -923,8 +927,8 @@ void Mod_LoadNodes (lump_t *l)
 		p = LittleLong(in->planenum);
 		out->plane = loadmodel->planes + p;
 
-		out->firstsurface = LittleShort (in->firstface);
-		out->numsurfaces = LittleShort (in->numfaces);
+		out->firstsurface = (unsigned short)LittleShort (in->firstface);
+		out->numsurfaces =  (unsigned short)LittleShort (in->numfaces);
 		out->contents = -1;	// differentiate from leafs
 
 		for (j=0 ; j<2 ; j++)
@@ -977,12 +981,13 @@ void Mod_LoadLeafs (lump_t *l)
 
 		out->firstmarksurface = loadmodel->marksurfaces +
 			(unsigned short)LittleShort(in->firstleafface);	// Knightmare- make sure this doesn't turn negative!
-		out->nummarksurfaces = LittleShort(in->numleaffaces);
+		out->nummarksurfaces = (unsigned short)LittleShort(in->numleaffaces);
 		
 		// underwater flag for caustics
 		//if (out->contents & (CONTENTS_WATER|CONTENTS_SLIME) )
 		if (out->contents & (MASK_WATER) )
-		{	unsigned int flag;
+		{	
+			unsigned int flag;
 			if (out->contents & CONTENTS_LAVA)
 				flag = SURF_UNDERLAVA;
 			else if (out->contents & CONTENTS_SLIME)
@@ -1005,24 +1010,21 @@ Mod_LoadMarksurfaces
 =================
 */
 void Mod_LoadMarksurfaces (lump_t *l)
-{	
-	int		i, j, count;
-	short		*in;
-	msurface_t **out;
-	
-	in = (void *)(mod_base + l->fileofs);
+{
+	unsigned short *in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		VID_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
-	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc ( count*sizeof(*out));	
+		VID_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+
+	const int count = l->filelen / sizeof(*in);
+	msurface_t **out = Hunk_Alloc ( count*sizeof(*out));
 
 	loadmodel->marksurfaces = out;
 	loadmodel->nummarksurfaces = count;
 
-	for ( i=0 ; i<count ; i++)
+	for (int i = 0; i < count; i++)
 	{
-		j = LittleShort(in[i]);
-		if (j < 0 ||  j >= loadmodel->numsurfaces)
+		const int j = (unsigned short)LittleShort(in[i]);
+		if (j >= loadmodel->numsurfaces)
 			VID_Error (ERR_DROP, "Mod_ParseMarksurfaces: bad surface number");
 		out[i] = loadmodel->surfaces + j;
 	}

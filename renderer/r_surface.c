@@ -2079,9 +2079,11 @@ void R_MarkLeaves (void)
 	if (r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->value && r_viewcluster != -1)
 		return;
 
-	// development aid to let you run around and see exactly where
-	// the pvs ends
+	// development aid to let you run around and see exactly where the pvs ends
 	if (r_lockpvs->value)
+		return;
+
+	if (!r_worldmodel)	// Knightmare- potential crash fix
 		return;
 
 	r_visframecount++;
