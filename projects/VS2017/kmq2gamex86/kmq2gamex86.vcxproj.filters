@@ -1,0 +1,379 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{44e60a02-4c74-478a-94ed-2642dcbbcd77}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Source Files\acesrc">
+      <UniqueIdentifier>{6dc98750-595e-4a48-857a-6c81cb2e69dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0589e378-eef1-422d-b971-303972cdbd58}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\acebot">
+      <UniqueIdentifier>{4197043c-810e-48c6-b4a3-4188c46f197c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{a56cb47d-7ddc-447d-a99f-4d03413d3364}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Source Files\game">
+      <UniqueIdentifier>{9e160d18-b21b-45a4-b01c-616ee3c88e8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\player">
+      <UniqueIdentifier>{97dcb982-bb41-4464-b0c1-765dfb3f6ef9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\monster">
+      <UniqueIdentifier>{88bb74e9-0a79-4b7a-a680-cc47ed4e2758}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\game\km_cvar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\q_shared.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_ai.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_cmds.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_compress.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_items.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_movement.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_nodes.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\acebot_spawn.c">
+      <Filter>Source Files\acesrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_ai.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_camera.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_chase.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_cmds.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_combat.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_crane.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_ctf.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_fog.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_func.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_items.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_jetpack.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_lights.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_lock.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_main.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_misc.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_model.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_monster.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_moreai.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_mtrain.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_patchplayermodels.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_pendulum.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_phys.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_reflect.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_save.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_spawn.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_svcmds.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_target.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_thing.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_tracktrain.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_trigger.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_turret.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_utils.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_vehicle.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\g_weapon.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_actor.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_actor_weap.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_berserk.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_boss2.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_boss3.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_boss31.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_boss32.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_brain.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_chick.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_flash.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_flipper.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_float.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_flyer.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_gladiator.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_gunner.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_hover.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_infantry.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_insane.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_medic.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_move.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_mutant.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_parasite.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_soldier.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_supertank.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\m_tank.c">
+      <Filter>Source Files\monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_chase.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_client.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_hud.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_menu.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_text.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_trail.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_view.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\game\p_weapon.c">
+      <Filter>Source Files\player</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\game\g_ctf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\g_local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\km_cvar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\laz_misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_actor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_berserk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_boss2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_boss31.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_boss32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_brain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_chick.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_flipper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_float.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_flyer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_gladiator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_gunner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_hover.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_infantry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_insane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_medic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_mutant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_parasite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_soldier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_supertank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_tank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\p_menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\p_text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\pak.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\q_shared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\acebot.h">
+      <Filter>Header Files\acebot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\g_func_decs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\g_func_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\fmod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\game\lazarus.def">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="kmq2gamex86.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

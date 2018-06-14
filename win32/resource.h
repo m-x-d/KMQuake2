@@ -3,11 +3,9 @@
 // Used by q2.rc
 //
 #define IDI_ICON1                       101
-#define IDB_BITMAP1                     106
-#define IDD_DIALOG1                     107
-#define IDI_ICON2                       112
-#define IDI_ICON3                       113
-#define IDB_BITMAP2                     115
+#define IDI_ICON2                       102
+#define IDI_ICON3                       103
+#define IDB_BITMAP1                     104
 
 // Next default values for new objects
 // 

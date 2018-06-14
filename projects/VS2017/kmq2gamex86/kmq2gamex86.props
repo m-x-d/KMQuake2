@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <ReleaseDir>.\release/</ReleaseDir>
+    <BuildDir>..\build\BASEQ2/</BuildDir>
+    <DebugDir>.\debug/</DebugDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_PropertySheetDisplayName>KMQ2 game</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="ReleaseDir">
+      <Value>$(ReleaseDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="BuildDir">
+      <Value>$(BuildDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="DebugDir">
+      <Value>$(DebugDir)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
