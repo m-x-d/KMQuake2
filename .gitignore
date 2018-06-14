@@ -1,11 +1,12 @@
-/projects/VS2017/*.user
 /projects/VS2017/.vs
-/projects/VS2017/*.aps
 /projects/VS2017/build
 /projects/VS2017/extractfuncs/release
 /projects/VS2017/extractfuncs/debug
+/projects/VS2017/extractfuncs/*.user
 /projects/VS2017/kmq2gamex86/release
 /projects/VS2017/kmq2gamex86/debug
+/projects/VS2017/kmq2gamex86/*.user
 /projects/VS2017/kmquake2/release
 /projects/VS2017/kmquake2/debug
+/projects/VS2017/kmquake2/*.user
 
