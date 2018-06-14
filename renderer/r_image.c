@@ -1244,6 +1244,24 @@ void jpeg_mem_src(j_decompress_ptr cinfo, byte *mem, int len)
 #define DSTATE_START	200	/* after create_decompress */
 #define DSTATE_INHEADER	201	/* reading header markers, no SOS yet */
 
+//mxd. JPEG Error handling...
+struct custom_jpeg_error_mgr
+{
+	struct jpeg_error_mgr pub;
+	jmp_buf setjmp_buffer;
+};
+
+typedef struct custom_jpeg_error_mgr *custom_jpeg_error_ptr;
+
+static void custom_jpeg_error_exit(j_common_ptr cinfo)
+{
+	// cinfo->err really points to custom_jpeg_error_mgr struct, so coerce pointer
+	custom_jpeg_error_ptr err = (custom_jpeg_error_ptr)cinfo->err;
+
+	// Return control to the setjmp point
+	longjmp(err->setjmp_buffer, 1);
+}
+
 /*
 ==============
 R_LoadJPG
@@ -1252,7 +1270,7 @@ R_LoadJPG
 void R_LoadJPG (char *filename, byte **pic, int *width, int *height)
 {
 	struct jpeg_decompress_struct	cinfo;
-	struct jpeg_error_mgr			jerr;
+	struct custom_jpeg_error_mgr	jerr; //mxd
 	byte							*rawdata, *rgbadata, *scanline, *p, *q;
 	int								rawsize, i;
 
@@ -1260,7 +1278,7 @@ void R_LoadJPG (char *filename, byte **pic, int *width, int *height)
 	rawsize = FS_LoadFile(filename, (void **)&rawdata);
 	if (!rawdata)
 	{
-	VID_Printf (PRINT_DEVELOPER, "Bad jpg file %s\n", filename);
+		VID_Printf (PRINT_DEVELOPER, "Bad jpg file %s\n", filename);
 		return;	
 	}
 
@@ -1275,7 +1293,21 @@ void R_LoadJPG (char *filename, byte **pic, int *width, int *height)
 	}
 
 	// Initialise libJpeg Object
-	cinfo.err = jpeg_std_error(&jerr);
+	cinfo.err = jpeg_std_error(&jerr.pub);
+	jerr.pub.error_exit = custom_jpeg_error_exit; //mxd
+	if (setjmp(jerr.setjmp_buffer)) //mxd
+	{
+		// Display the message
+		char buffer[JMSG_LENGTH_MAX];
+		(*cinfo.err->format_message) ((j_common_ptr)&cinfo, buffer);
+		VID_Printf(PRINT_ALL, "Failed to load jpg file %s. %s\n", filename, buffer);
+
+		// Get rid of data
+		jpeg_destroy_decompress(&cinfo);
+		FS_FreeFile(rawdata);
+		return;
+	}
+
 	jpeg_create_decompress(&cinfo);
 
 	// Feed JPEG memory into the libJpeg Object
@@ -1290,7 +1322,7 @@ void R_LoadJPG (char *filename, byte **pic, int *width, int *height)
 	// Check Color Components
 	if(cinfo.output_components != 3)
 	{
-		VID_Printf(PRINT_ALL, "Invalid JPEG color components\n");
+		VID_Printf(PRINT_ALL, "Failed to load jpg file %s: invalid JPEG color components\n", filename);
 		jpeg_destroy_decompress(&cinfo);
 		FS_FreeFile(rawdata);
 		return;
