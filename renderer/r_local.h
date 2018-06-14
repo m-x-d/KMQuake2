@@ -961,9 +961,9 @@ IMPLEMENTATION SPECIFIC FUNCTIONS
 
 void		GLimp_BeginFrame( float camera_separation );
 void		GLimp_EndFrame( void );
-int 		GLimp_Init( void *hinstance, void *hWnd );
+qboolean 	GLimp_Init( void *hinstance, void *wndproc); //mxd. int -> qboolean
 void		GLimp_Shutdown( void );
-int     	GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen );
+rserr_t     GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen ); //mxd. int -> rserr_t
 void		GLimp_AppActivate( qboolean active );
 void		GLimp_EnableLogging( qboolean enable );
 void		GLimp_LogNewFrame( void );

@@ -24,8 +24,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "resource.h"
 #include "winquake.h"
 
-
 #ifdef NEW_DED_CONSOLE
+
+//mxd. Enable modern controls...
+#include "CommCtrl.h" 
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define CONSOLE_WINDOW_STYLE		(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|WS_CLIPCHILDREN|WS_GROUP)
 #define CONSOLE_WINDOW_CLASS_NAME	"KMQ2 Console"
@@ -66,6 +69,7 @@ typedef struct {
 	HBITMAP		hLogoImage;
 	HFONT		hFont;
 	HFONT		hFontBold;
+	HFONT		hFontConsole; //mxd
 	HBRUSH		hBrushMsg;
 	HBRUSH		hBrushOutput;
 	HBRUSH		hBrushInput;
@@ -273,7 +277,7 @@ static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 			SetTextColor((HDC)wParam, RGB(255, 255, 255));
 			return (LONG)sys_console.hBrushOutput;
 		}
-		else if ((HWND)lParam == sys_console.hWndInput)
+		if ((HWND)lParam == sys_console.hWndInput)
 		{
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetBkColor((HDC)wParam, RGB(255, 255, 255));
@@ -291,7 +295,7 @@ static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 			if (sys_console.flashColor)
 				SetTextColor((HDC)wParam, RGB(255, 0, 0));
 			else
-				SetTextColor((HDC)wParam, RGB(0, 0, 0));
+				SetTextColor((HDC)wParam, RGB(255, 255, 255)); //mxd. Was 0, 0, 0
 
 			return (LONG)sys_console.hBrushMsg;
 		}
@@ -373,6 +377,8 @@ void Sys_ShutdownConsole (void)
 		DeleteObject(sys_console.hFont);
 	if (sys_console.hFontBold)
 		DeleteObject(sys_console.hFontBold);
+	if (sys_console.hFontConsole) //mxd
+		DeleteObject(sys_console.hFontConsole);
 
 	if (sys_console.defOutputProc)
 		SetWindowLong(sys_console.hWndOutput, GWL_WNDPROC, (LONG)sys_console.defOutputProc);
@@ -396,6 +402,10 @@ void Sys_InitDedConsole (void)
 	HDC			hDC;
 	RECT		r;
 	int			x, y, w, h;
+
+	//mxd. Ensure that the common control DLL is loaded... 
+	INITCOMMONCONTROLSEX icex = { sizeof(INITCOMMONCONTROLSEX), ICC_STANDARD_CLASSES };
+	InitCommonControlsEx(&icex);
 
 	// Center the window in the desktop
 	hDC = GetDC(0);
@@ -443,26 +453,27 @@ void Sys_InitDedConsole (void)
 		exit(0);
 	}
 
-	sys_console.hWndMsg = CreateWindowEx(0, "STATIC", "", WS_CHILD | SS_SUNKEN, 5, 65, 530, 30, sys_console.hWnd, NULL, global_hInstance, NULL); // was 5, 5, 530, 30
+	sys_console.hWndMsg = CreateWindowEx(0, "STATIC", "", WS_CHILD | SS_SUNKEN, 5, 5, 530, 30, sys_console.hWnd, NULL, global_hInstance, NULL); // was 5, 5, 530, 30
 	sys_console.hWndOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE, 5, 40+LOGO_OFFSET, 530, 350, sys_console.hWnd, NULL, global_hInstance, NULL);
 	sys_console.hWndInput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 5, 395+LOGO_OFFSET, 530, 20, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndCopy = CreateWindowEx(0, "BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 5, 425+LOGO_OFFSET, 70, 25, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 80, 425+LOGO_OFFSET, 70, 25, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndQuit = CreateWindowEx(0, "BUTTON", "Quit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 465, 425+LOGO_OFFSET, 70, 25, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndCopy = CreateWindowEx(0, "BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 422+LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 422+LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndQuit = CreateWindowEx(0, "BUTTON", "Quit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 445, 422+LOGO_OFFSET, 90, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
 
 	// splash logo
 	sys_console.hWndLogo = CreateWindowEx(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_CENTERIMAGE, 0, 0, 540, 160, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hLogoImage = (HBITMAP)LoadImage(global_hInstance, MAKEINTRESOURCE(IDB_BITMAP2),IMAGE_BITMAP,0,0,LR_LOADMAP3DCOLORS);
+	sys_console.hLogoImage = (HBITMAP)LoadImage(global_hInstance, MAKEINTRESOURCE(IDB_BITMAP1),IMAGE_BITMAP,0,0,LR_LOADMAP3DCOLORS);
 
 	// Create and set fonts
-	sys_console.hFont = CreateFont(14, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
-	sys_console.hFontBold = CreateFont(20, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "System");
+	sys_console.hFont =		   CreateFont(18, 0, 0, 0, FW_LIGHT,    FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Segoe UI");
+	sys_console.hFontBold =	   CreateFont(18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Segoe UI");
+	sys_console.hFontConsole = CreateFont(14, 0, 0, 0, FW_LIGHT,    FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Courier New"); //mxd
 
-	SendMessage(sys_console.hWndMsg, WM_SETFONT, (WPARAM)sys_console.hFont, FALSE);
-	SendMessage(sys_console.hWndOutput, WM_SETFONT, (WPARAM)sys_console.hFont, FALSE);
-	SendMessage(sys_console.hWndInput, WM_SETFONT, (WPARAM)sys_console.hFont, FALSE);
-	SendMessage(sys_console.hWndCopy, WM_SETFONT, (WPARAM)sys_console.hFontBold, FALSE);
-	SendMessage(sys_console.hWndClear, WM_SETFONT, (WPARAM)sys_console.hFontBold, FALSE);
+	SendMessage(sys_console.hWndMsg, WM_SETFONT, (WPARAM)sys_console.hFontConsole, FALSE);
+	SendMessage(sys_console.hWndOutput, WM_SETFONT, (WPARAM)sys_console.hFontConsole, FALSE);
+	SendMessage(sys_console.hWndInput, WM_SETFONT, (WPARAM)sys_console.hFontConsole, FALSE);
+	SendMessage(sys_console.hWndCopy, WM_SETFONT, (WPARAM)sys_console.hFont, FALSE);
+	SendMessage(sys_console.hWndClear, WM_SETFONT, (WPARAM)sys_console.hFont, FALSE);
 	SendMessage(sys_console.hWndQuit, WM_SETFONT, (WPARAM)sys_console.hFontBold, FALSE);
 	SendMessage(sys_console.hWndLogo, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)sys_console.hLogoImage);
 
