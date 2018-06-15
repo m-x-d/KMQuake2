@@ -118,7 +118,7 @@ float R_CalcShadowAlpha (entity_t *e)
 	else if (dist >= maxRange) // out of range
 		outAlpha = 0.0f;
 	else // fade based on distance
-		outAlpha = r_shadowalpha->value * (fabs(dist-maxRange)/SHADOW_FADE_DIST);
+		outAlpha = r_shadowalpha->value * (fabsf(dist-maxRange)/SHADOW_FADE_DIST);
 
 	return outAlpha;
 }
@@ -498,7 +498,7 @@ void R_SetShadeLight (void)
 		float	scale;
 		float	min;
 
-		scale = 0.2 * sin(r_newrefdef.time*7);
+		scale = 0.2 * sinf(r_newrefdef.time*7);
 		for (i=0 ; i<3 ; i++)
 		{
 			min = shadelight[i] * 0.8;

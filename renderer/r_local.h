@@ -129,8 +129,8 @@ typedef enum
 
 #include "r_model.h"
 
-void GL_BeginRendering (int *x, int *y, int *width, int *height);
-void GL_EndRendering (void);
+//void GL_BeginRendering (int *x, int *y, int *width, int *height); //mxd. Redundant declaration
+//void GL_EndRendering (void); //mxd. Redundant declaration
 
 void GL_UpdateSwapInterval( void );
 
@@ -490,7 +490,7 @@ void R_DrawWorld (void);
 void R_RenderDlights (void);
 void R_DrawAlphaSurfaces (void);
 void R_RenderBrushPoly (msurface_t *fa);
-void R_InitMedia (void);
+//void R_InitMedia (void); //mxd. Redundant declaration
 void R_DrawInitLocal (void);
 void R_SubdivideSurface (msurface_t *fa);
 qboolean R_CullBox (vec3_t mins, vec3_t maxs);
@@ -518,7 +518,7 @@ extern	vec3_t	shadelight;
 extern	vec3_t	lightspot;
 extern	float	shellFlowH, shellFlowV;
 
-void	R_ShadowLight (vec3_t pos, vec3_t lightAdd);
+//void	R_ShadowLight (vec3_t pos, vec3_t lightAdd); //mxd. Redundant declaration
 void	R_SetShellBlend (qboolean toggle);
 void	R_SetVertexRGBScale (qboolean toggle);
 qboolean FlowingShell (void);
@@ -629,7 +629,7 @@ char	*va(char *format, ...);
 #endif
 
 
-void COM_StripExtension (char *in, char *out);
+//void COM_StripExtension (char *in, char *out); //mxd. Redundant declaration
 
 //
 // r_draw.c
@@ -921,11 +921,12 @@ void	VID_Error (int err_level, char *str, ...);
 
 void	CL_SetParticleImages (void);
 
-void	Cmd_AddCommand (char *name, void(*cmd)(void));
+//mxd. Redundant declarations
+/*void	Cmd_AddCommand (char *name, void(*cmd)(void));
 void	Cmd_RemoveCommand (char *name);
 int		Cmd_Argc (void);
 char	*Cmd_Argv (int i);
-void	Cbuf_ExecuteText (int exec_when, char *text);
+void	Cbuf_ExecuteText (int exec_when, char *text);*/
 
 void	VID_Printf (int print_level, char *str, ...);
 
@@ -934,17 +935,19 @@ void	VID_Printf (int print_level, char *str, ...);
 // or a discrete file from anywhere in the quake search path
 // a -1 return means the file does not exist
 // NULL can be passed for buf to just determine existance
-char	**FS_ListPak (char *find, int *num);
+//mxd. Redundant declarations
+/*char	**FS_ListPak (char *find, int *num);
 int		FS_LoadFile (char *name, void **buf);
-void	FS_FreeFile (void *buf);
+void	FS_FreeFile (void *buf);*/
 
 // gamedir will be the current directory that generated
 // files should be stored to, ie: "f:\quake\id1"
-char	*FS_Gamedir (void);
+//char	*FS_Gamedir (void); //mxd. Redundant declaration
 
-cvar_t	*Cvar_Get (char *name, char *value, int flags);
+//mxd. Redundant declarations
+/*cvar_t	*Cvar_Get (char *name, char *value, int flags);
 cvar_t	*Cvar_Set (char *name, char *value );
-void	 Cvar_SetValue (char *name, float value);
+void	 Cvar_SetValue (char *name, float value);*/
 
 qboolean	VID_GetModeInfo (int *width, int *height, int mode);
 void		VID_NewWindow (int width, int height);

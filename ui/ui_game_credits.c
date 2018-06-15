@@ -390,9 +390,9 @@ static const char *roguecredits[] =
 int stringLengthExtra (const char *string);
 void M_Credits_MenuDraw (void)
 {
-	float		alpha, time = (cls.realtime - credits_start_time) * 0.05;
+	float		alpha; //, time = (cls.realtime - credits_start_time) * 0.05;
 	int			i, y, x, len, stringoffset;
-	qboolean	bold;
+	//qboolean	bold;
 
 	if ((SCREEN_HEIGHT - ((cls.realtime - credits_start_time)/40.0F)
 		+ credits_start_line * MENU_LINE_SIZE) < 0)
@@ -411,8 +411,8 @@ void M_Credits_MenuDraw (void)
 	for (i=credits_start_line, y=SCREEN_HEIGHT - ((cls.realtime - credits_start_time)/40.0F) + credits_start_line * MENU_LINE_SIZE;
 		credits[i] && y < SCREEN_HEIGHT; y += MENU_LINE_SIZE, i++)
 	{
-		stringoffset = 0;
-		bold = false;
+		//stringoffset = 0;
+		//bold = false;
 
 		if (y <= -MENU_FONT_SIZE)
 			continue;
@@ -421,12 +421,12 @@ void M_Credits_MenuDraw (void)
 
 		if (credits[i][0] == '+')
 		{
-			bold = true;
+			//bold = true;
 			stringoffset = 1;
 		}
 		else
 		{
-			bold = false;
+			//bold = false;
 			stringoffset = 0;
 		}
 

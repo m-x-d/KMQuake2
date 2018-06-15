@@ -332,7 +332,7 @@ void S_StreamBackgroundTrack (void)
 	scale = (float)s_bgTrack.rate / dma.speed;
 	maxSamples = sizeof(data) / s_bgTrack.channels / s_bgTrack.width;
 
-	while (1)
+	while (true)
 	{
 		samples = (paintedtime + MAX_RAW_SAMPLES - s_rawend) * scale;
 		if (samples <= 0)
@@ -425,7 +425,7 @@ void S_UpdateBackgroundTrack (void)
 
 // =====================================================================
 
-void Q_strncpyz (char *dst, const char *src, int dstSize);
+//void Q_strncpyz (char *dst, const char *src, int dstSize); //mxd. Redundant declaration
 
 /*
 =================
@@ -686,7 +686,7 @@ void S_OGG_LoadFileList (void)
 			if (!FS_ItemInList(p, ogg_numfiles, ogg_filelist)) // check if already in list
 			{
 				ogg_filelist[ogg_numfiles] = malloc(strlen(p)+1);
-				sprintf(ogg_filelist[ogg_numfiles], "%s\0", p);
+				sprintf(ogg_filelist[ogg_numfiles], "%s", p);
 				ogg_numfiles++;
 			}
 		}
@@ -712,7 +712,7 @@ void S_OGG_LoadFileList (void)
 			if (!FS_ItemInList(p, ogg_numfiles, ogg_filelist)) // check if already in list
 			{
 				ogg_filelist[ogg_numfiles] = malloc(strlen(p)+1);
-				sprintf(ogg_filelist[ogg_numfiles], "%s\0", p);
+				sprintf(ogg_filelist[ogg_numfiles], "%s", p);
 				ogg_numfiles++;
 			}
 		}

@@ -46,7 +46,7 @@ int CL_FreeLoc (void)
 
 	for (i = 0; i < MAX_LOCATIONS; i++)
 	{
-		if (locations[i].used == false)
+		if (!locations[i].used)
 			return i;
 	}
 
@@ -435,7 +435,7 @@ void CL_AddViewLocs (void)
 		float dist;
 		entity_t ent;
 
-		if (locations[i].used == false)
+		if (!locations[i].used)
 			continue;
 
 		dist = ((float)cl.frame.playerstate.pmove.origin[0] * 0.125f - locations[i].origin[0]) *
@@ -458,7 +458,7 @@ void CL_AddViewLocs (void)
 		ent.model = NULL;
 
 		if (i == index)
-			ent.origin[2] += sin(cl.time * 0.01f) * 10.0f;
+			ent.origin[2] += sinf(cl.time * 0.01f) * 10.0f;
 
 		V_AddEntity(&ent);
 		num++;

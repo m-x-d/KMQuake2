@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 void S_Play(void);
 void S_SoundList(void);
 void S_Update_();
-void S_StopAllSounds(void);
+//void S_StopAllSounds(void); //mxd. Redundant declaration
 
 
 // =======================================================================
@@ -946,7 +946,7 @@ void S_AddLoopSounds (void)
 				sounds[j] = 0;	// don't check this again later
 
 				num = (cl.frame.parse_entities + j)&(MAX_PARSE_ENTITIES-1);
-				ent = &cl_parse_entities[num];
+				//ent = &cl_parse_entities[num]; //mxd. Assigned value never used
 
 				S_SpatializeOrigin (origin_v, 255.0, dist_mult, //SOUND_LOOPATTENUATE, // was ent->origin
 					&left, &right);
@@ -1118,7 +1118,6 @@ void S_Update (vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	int			i;
 	int			total;
 	channel_t	*ch;
-	channel_t	*combine;
 
 	if (!sound_started)
 		return;
@@ -1143,8 +1142,6 @@ void S_Update (vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	VectorCopy(forward, listener_forward);
 	VectorCopy(right, listener_right);
 	VectorCopy(up, listener_up);
-
-	combine = NULL;
 
 	// update spatialization for dynamic sounds	
 	ch = channels;

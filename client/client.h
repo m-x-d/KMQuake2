@@ -528,15 +528,15 @@ extern	entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
 
 //=============================================================================
 
-extern	netadr_t	net_from;
-extern	sizebuf_t	net_message;
+//extern	netadr_t	net_from; //mxd. Redundant declaration
+//extern	sizebuf_t	net_message; //mxd. Redundant declaration
 
 float ClampCvar( float min, float max, float value );
 
 // for use with the alt_text_color cvar
 void TextColor (int colornum, int *red, int *green, int *blue);
 qboolean StringSetParams (char modifier, int *red, int *green, int *blue, int *bold, int *shadow, int *italic, int *reset);
-void Con_DrawString (int x, int y, char *s, int alpha);
+void Con_DrawString (int x, int y, char *string, int alpha);
 void DrawStringGeneric (int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit);
 
 //cl_scrn.c
@@ -787,16 +787,16 @@ void	GLimp_AppActivate (qboolean activate);
 // cl_main
 //
 
-void CL_Init (void);
+//void CL_Init (void); //mxd. Redundant declaration
 void CL_FixUpGender(void);
 void CL_Disconnect (void);
 void CL_Disconnect_f (void);
-void CL_GetChallengePacket (void);
+//void CL_GetChallengePacket (void); //mxd. Redundant declaration
 void CL_PingServers_f (void);
 void CL_Snd_Restart_f (void);
 void CL_WriteConfig_f (void);
 
-void vectoangles2 (vec3_t value1, vec3_t angles);
+//void vectoangles2 (vec3_t value1, vec3_t angles); //mxd. Redundant declaration
 
 //
 // cl_input
@@ -1002,7 +1002,6 @@ void CL_AddParticleLight (cparticle_t *p,
 
 void CL_CalcPartVelocity (cparticle_t *p, float scale, float *time, vec3_t velocity);
 void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
-void CL_ParticleRotateThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_ParticleRotateThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_DecalAlphaThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_AddParticles (void);

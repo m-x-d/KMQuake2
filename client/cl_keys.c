@@ -212,8 +212,6 @@ Interactive line editing and console scrollback
 */
 void Key_Console (int key)
 {
-	int i;
-
 	switch ( key )
 	{
 	case K_KP_SLASH:
@@ -344,7 +342,7 @@ void Key_Console (int key)
 				if (key_linepos-con.backedit<=1)
 					return;
 
-				for (i=key_linepos-con.backedit-1; i<key_linepos; i++)
+				for (int i=key_linepos-con.backedit-1; i<key_linepos; i++)
 					key_lines[edit_line][i] = key_lines[edit_line][i+1];
 
 				if (key_linepos > 1)
@@ -362,7 +360,7 @@ void Key_Console (int key)
 	{
 		if (key_linepos>1 && con.backedit)
 		{
-			for (i=key_linepos-con.backedit; i<key_linepos; i++)
+			for (int i=key_linepos-con.backedit; i<key_linepos; i++)
 				key_lines[edit_line][i] = key_lines[edit_line][i+1];
 
 			con.backedit--;
@@ -463,6 +461,7 @@ void Key_Console (int key)
 	{	// Knightmare- added from Quake2Max
 		if (con.backedit) //insert character...
 		{
+			int i;
 			for (i=key_linepos; i>key_linepos-con.backedit; i--)
 					key_lines[edit_line][i] = key_lines[edit_line][i-1];
 
@@ -864,34 +863,34 @@ void Key_Init (void)
 	consolekeys[K_MWHEELUP] = true;
 	consolekeys[K_MWHEELDOWN] = true;
 
-	consolekeys['`'] = false;
-	consolekeys['~'] = false;
+	consolekeys[(int)'`'] = false;
+	consolekeys[(int)'~'] = false;
 
 	for (i=0 ; i<256 ; i++)
 		keyshift[i] = i;
 	for (i='a' ; i<='z' ; i++)
 		keyshift[i] = i - 'a' + 'A';
-	keyshift['1'] = '!';
-	keyshift['2'] = '@';
-	keyshift['3'] = '#';
-	keyshift['4'] = '$';
-	keyshift['5'] = '%';
-	keyshift['6'] = '^';
-	keyshift['7'] = '&';
-	keyshift['8'] = '*';
-	keyshift['9'] = '(';
-	keyshift['0'] = ')';
-	keyshift['-'] = '_';
-	keyshift['='] = '+';
-	keyshift[','] = '<';
-	keyshift['.'] = '>';
-	keyshift['/'] = '?';
-	keyshift[';'] = ':';
-	keyshift['\''] = '"';
-	keyshift['['] = '{';
-	keyshift[']'] = '}';
-	keyshift['`'] = '~';
-	keyshift['\\'] = '|';
+	keyshift[(int)'1'] = '!';
+	keyshift[(int)'2'] = '@';
+	keyshift[(int)'3'] = '#';
+	keyshift[(int)'4'] = '$';
+	keyshift[(int)'5'] = '%';
+	keyshift[(int)'6'] = '^';
+	keyshift[(int)'7'] = '&';
+	keyshift[(int)'8'] = '*';
+	keyshift[(int)'9'] = '(';
+	keyshift[(int)'0'] = ')';
+	keyshift[(int)'-'] = '_';
+	keyshift[(int)'='] = '+';
+	keyshift[(int)','] = '<';
+	keyshift[(int)'.'] = '>';
+	keyshift[(int)'/'] = '?';
+	keyshift[(int)';'] = ':';
+	keyshift[(int)'\''] = '"';
+	keyshift[(int)'['] = '{';
+	keyshift[(int)']'] = '}';
+	keyshift[(int)'`'] = '~';
+	keyshift[(int)'\\'] = '|';
 
 	menubound[K_ESCAPE] = true;
 	for (i=0 ; i<12 ; i++)

@@ -216,7 +216,7 @@ void UI_LoadArenas (void)
 {
 	char		*p, *s, *s2, *tok, *tok2;
 	char		**arenafiles;
-	char		**tmplist = 0;
+	char		**tmplist;
 	int			i, j, narenas = 0, narenanames = 0;
 	qboolean	type_supported[NUM_MAPTYPES];
 

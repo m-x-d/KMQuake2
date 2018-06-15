@@ -1132,7 +1132,7 @@ qboolean StringContainsToken (const char *string, const char *findToken)
 	strPos = string;
 	tokenLen = strlen(findToken);
 	
-	while (1)
+	while (true)
 	{
 		tokPos = strstr (strPos, findToken);
 
@@ -1680,7 +1680,7 @@ qboolean R_Init ( void *hinstance, void *hWnd, char *reason )
 		unsigned	line = 0;
 		VID_Printf (PRINT_DEVELOPER, "GL_EXTENSIONS: " );
 		extString = (char *)glConfig.extensions_string;
-		while (1)
+		while (true)
 		{
 			extTok = COM_Parse(&extString);
 			if (!extTok[0])
@@ -1849,7 +1849,7 @@ void GL_Strings_f (void)
 	// print extensions 2 to a line
 	VID_Printf (PRINT_ALL, "GL_EXTENSIONS: " );
 	extString = (char *)glConfig.extensions_string;
-	while (1)
+	while (true)
 	{
 		extTok = COM_Parse(&extString);
 		if (!extTok[0])

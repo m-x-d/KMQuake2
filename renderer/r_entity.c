@@ -33,7 +33,7 @@ void R_RotateForEntity (entity_t *e, qboolean full)
     qglTranslatef (e->origin[0],  e->origin[1],  e->origin[2]);
 
     qglRotatef (e->angles[1],  0, 0, 1);
-	if (full==true)
+	if (full)
 	{
 		qglRotatef (e->angles[0],  0, 1, 0);
 		qglRotatef (e->angles[2],  1, 0, 0);
@@ -137,7 +137,7 @@ void resetEntSortList (void)
 
 sortedelement_t *NewSortEnt (entity_t *ent)
 {
-	qboolean is_weapmodel = false;
+	//qboolean is_weapmodel = false;
 	//qboolean entinwater;
 	vec3_t distance;
 	sortedelement_t *element;
@@ -211,10 +211,7 @@ AddEntViewWeapTree
 */
 void AddEntViewWeapTree (entity_t *ent, qboolean trans)
 {
-	int closer = 0;
-	sortedelement_t *thisEnt;
-
-	thisEnt = NewSortEnt(ent);
+	sortedelement_t *thisEnt = NewSortEnt(ent);
 
 	if (!thisEnt)
 		return;
@@ -233,6 +230,7 @@ void AddEntViewWeapTree (entity_t *ent, qboolean trans)
 		else
 			ents_viewweaps_trans = thisEnt;	
 	}
+
 	entstosort++;
 }
 
@@ -244,10 +242,7 @@ AddEntTransTree
 */
 void AddEntTransTree (entity_t *ent)
 {
-	int closer = 0;
-	sortedelement_t *thisEnt;
-
-	thisEnt = NewSortEnt(ent);
+	sortedelement_t *thisEnt = NewSortEnt(ent);
 
 	if (!thisEnt)
 		return;

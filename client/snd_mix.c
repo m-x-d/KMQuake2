@@ -154,12 +154,9 @@ void S_TransferPaintBuffer(int endtime)
 
 	if (s_testsound->value)
 	{
-		int		i;
-		int		count;
-
 		// write a fixed sine wave
-		count = (endtime - paintedtime);
-		for (i=0 ; i<count ; i++)
+		const int delta = (endtime - paintedtime);
+		for (int i = 0; i < delta; i++)
 			paintbuffer[i].left = paintbuffer[i].right = sin((paintedtime+i)*0.1)*20000*256;
 	}
 
@@ -241,7 +238,7 @@ void S_PaintChannels(int endtime)
 			end = paintedtime + PAINTBUFFER_SIZE;
 
 		// start any playsounds
-		while (1)
+		while (true)
 		{
 			ps = s_pendingplays.next;
 			if (ps == &s_pendingplays)

@@ -215,7 +215,7 @@ void CopyFile (char *src, char *dst)
 		return;
 	}
 
-	while (1)
+	while (true)
 	{
 		l = fread (buffer, 1, sizeof(buffer), f1);
 		if (!l)
@@ -471,7 +471,7 @@ void SV_ReadServerFile (void)
 
 	// read all CVAR_LATCH cvars
 	// these will be things like coop, skill, deathmatch, etc
-	while (1)
+	while (true)
 	{
 		if (!FS_FRead (varName, 1, sizeof(varName), f))
 			break;

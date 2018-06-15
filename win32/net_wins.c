@@ -760,7 +760,7 @@ void NET_Sleep(int msec)
 {
     struct timeval timeout;
 	fd_set	fdset;
-	extern cvar_t *dedicated;
+	//extern cvar_t *dedicated; mxd. Redundant declaration
 	int i;
 
 	if (!dedicated || !dedicated->value)
@@ -794,10 +794,10 @@ NET_Init
 */
 void NET_Init (void)
 {
-	WORD	wVersionRequested; 
+	//WORD	wVersionRequested; 
 	int		r;
 
-	wVersionRequested = MAKEWORD(1, 1); 
+	//wVersionRequested = MAKEWORD(1, 1); 
 
 	r = WSAStartup (MAKEWORD(1, 1), &winsockdata);
 

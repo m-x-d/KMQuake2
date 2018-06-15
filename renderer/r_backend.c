@@ -156,8 +156,8 @@ void RB_ModifyTextureCoords (float *inArray, float *inVerts, int numVerts, rende
 	if (parms.rotate != 0.0f)
 	{
 		rad = -DEG2RAD(parms.rotate * r_newrefdef.time);
-		sint = sin(rad);
-		cost = cos(rad);
+		sint = sinf(rad);
+		cost = cosf(rad);
 
 		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2) {
 			t1 = tcArray[0];

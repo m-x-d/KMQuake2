@@ -188,7 +188,7 @@ Retuns number of available decalpoly_t fields
 int CL_NumFreeDecalPolys (void)
 {
 	int count = 0;
-	decalpolys_t *d = NULL;
+	decalpolys_t *d;
 	for (d = free_decals; d; d = d->next)
 		count++;
 	return count;
@@ -203,7 +203,7 @@ Retuns first free decal poly
 */
 decalpolys_t *CL_NewDecalPoly(void)
 {
-	decalpolys_t *d = NULL;
+	decalpolys_t *d;
 	if (!free_decals)
 		return NULL;
 
@@ -305,7 +305,7 @@ cparticle_t *CL_SetupParticle (
 			qboolean thinknext)
 {
 	int j;
-	cparticle_t	*p = NULL;
+	cparticle_t	*p;
 
 	if (!free_particles)
 		return NULL;

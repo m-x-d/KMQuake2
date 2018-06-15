@@ -387,7 +387,7 @@ All console printing must go through this in order to be logged to disk
 If no console is visible, the text will appear at the top of the game window
 ================
 */
-void Con_Print (char *txt)
+void Con_Print (char *text)
 {
 	int		y;
 	int		c, l;
@@ -397,27 +397,27 @@ void Con_Print (char *txt)
 	if (!con.initialized)
 		return;
 
-	if (txt[0] == 1 || txt[0] == 2)
+	if (text[0] == 1 || text[0] == 2)
 	{
 		mask = 128;		// go to colored text
-		txt++;
+		text++;
 	}
 	else
 		mask = 0;
 
 
-	while ( (c = *txt) )
+	while ( (c = *text) )
 	{
 	// count word length
 		for (l=0 ; l< con.linewidth ; l++)
-			if ( txt[l] <= ' ')
+			if (text[l] <= ' ')
 				break;
 
 	// word wrap
 		if (l != con.linewidth && (con.x + l > con.linewidth) )
 			con.x = 0;
 
-		txt++;
+		text++;
 
 		if (cr)
 		{
@@ -497,7 +497,7 @@ The input line scrolls horizontally if typing goes beyond the right edge
 */
 void Con_DrawInput (void)
 {
-	int		y;
+	//int		y; //mxd. Never used
 	int		i;
 	char	*text, output[2048];
 
@@ -526,7 +526,7 @@ void Con_DrawInput (void)
 		text += 1 + key_linepos - con.linewidth;
 		
 // draw it
-	y = con.vislines-FONT_SIZE*2; // was 16
+	//y = con.vislines-FONT_SIZE*2; // was 16 //mxd. Never used
 
 	Com_sprintf (output, sizeof(output), "");
 	for (i=0; i<con.linewidth; i++)

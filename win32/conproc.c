@@ -84,9 +84,9 @@ int CCheckParm (char *parm)
 void InitConProc (int argc, char **argv)
 {
 	unsigned	threadAddr;
-	HANDLE		hFile;
-	HANDLE		heventParent;
-	HANDLE		heventChild;
+	HANDLE		hFile = NULL; //mxd. Fixes "Variable might not be initialized" warning
+	HANDLE		heventParent = NULL;
+	HANDLE		heventChild = NULL;
 	int			t;
 
 	ccom_argc = argc;
@@ -167,7 +167,7 @@ unsigned _stdcall RequestProc (void *arg)
 	heventWait[0] = heventParentSend;
 	heventWait[1] = heventDone;
 
-	while (1)
+	while (TRUE)
 	{
 		dwRet = WaitForMultipleObjects (2, heventWait, FALSE, INFINITE);
 

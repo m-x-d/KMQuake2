@@ -287,7 +287,7 @@ void SaveEntProps(edict_t *e, FILE *f)
 		e->sounds,e->count);
 	fprintf(f,"noise_index = %d\n"
 		"noise_index2= %d\n"
-		"volume      = %d\n"
+		"volume      = %g\n"
 		"attenuation = %g\n"
 		"wait        = %g\n"
 		"delay       = %g\n"

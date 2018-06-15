@@ -160,7 +160,7 @@ void insertFont (char **list, char *insert, int len )
 char **SetFontNames (void)
 {
 	char *curFont;
-	char **list = 0, *p;//, *s;
+	char **list, *p;//, *s;
 	char findname[1024];
 	int nfonts = 0, nfontnames;
 	char **fontfiles;

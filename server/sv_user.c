@@ -730,7 +730,7 @@ void SV_ExecuteClientMessage (client_t *cl)
 	move_issued = false;
 	stringCmdCount = 0;
 
-	while (1)
+	while (true)
 	{
 		if (net_message.readcount > net_message.cursize)
 		{

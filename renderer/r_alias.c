@@ -453,12 +453,8 @@ void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float p
 	vec3_t			v0, v1, v2, v3;
 	float			thisAlpha;
 	maliasmesh_t	mesh;
-	maliasvertex_t	*verts;
 
 	mesh = hdr->meshes[meshnum];
-
-	verts = mesh.vertexes;
-
 	thisAlpha = aliasShadowAlpha; // was r_shadowalpha->value
 
 	for (i=0; i<mesh.num_tris; i++)
@@ -684,17 +680,17 @@ void R_DrawAliasVolumeShadow (maliasmodel_t *paliashdr, vec3_t bbox[8])
 		if (bbox[i][2] > highest) highest = bbox[i][2];
 		if (bbox[i][2] < lowest) lowest = bbox[i][2];
 	}
-	projected_distance = (fabs(highest - lightspot[2]) + (highest-lowest)) / vecAdd[2];
+	projected_distance = (fabsf(highest - lightspot[2]) + (highest-lowest)) / vecAdd[2];
 
 	VectorCopy(vecAdd, light);
 	
 	// reverse-rotate light vector based on angles
 	angle = -currententity->angles[PITCH] / 180 * M_PI;
-	cosp = cos(angle), sinp = sin(angle);
+	cosp = cosf(angle), sinp = sinf(angle);
 	angle = -currententity->angles[YAW] / 180 * M_PI;
-	cosy = cos(angle), siny = sin(angle);
+	cosy = cosf(angle), siny = sinf(angle);
 	angle = -currententity->angles[ROLL] / 180 * M_PI * R_RollMult(); // roll is backwards
-	cosr = cos(angle), sinr = sin(angle);
+	cosr = cosf(angle), sinr = sinf(angle);
 
 	// rotate for yaw (z axis)
 	ix = light[0], iy = light[1];

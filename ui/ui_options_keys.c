@@ -216,7 +216,6 @@ void addBindOption (int i, char* list[][2])
 static void Keys_MenuInit( void )
 {
 	int BINDS_MAX;
-	int i = 0;
 
 	s_keys_menu.x = SCREEN_WIDTH*0.5;
 	s_keys_menu.y = SCREEN_HEIGHT*0.5 - 72;
@@ -224,7 +223,7 @@ static void Keys_MenuInit( void )
 	s_keys_menu.cursordraw = KeyCursorDrawFunc;
 
 	BINDS_MAX = listSize(bindnames);
-	for (i=0;i<BINDS_MAX;i++)
+	for (int i=0;i<BINDS_MAX;i++)
 		addBindOption(i, bindnames);
 
 	s_keys_back_action.generic.type = MTYPE_ACTION;
@@ -235,7 +234,7 @@ static void Keys_MenuInit( void )
 	s_keys_back_action.generic.callback = UI_BackMenu;
 	s_keys_back_action.generic.cursordraw = KeysBackCursorDrawFunc;
 
-	for (i=0;i<BINDS_MAX;i++)
+	for (int i=0;i<BINDS_MAX;i++)
 		Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_binds[i] );
 
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_back_action );

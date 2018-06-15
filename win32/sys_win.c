@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 qboolean s_win95;
 
 int			starttime;
-int			ActiveApp;
+qboolean	ActiveApp; //mxd. int -> qboolean
 qboolean	Minimized;
 
 static HANDLE		hinput, houtput;
@@ -1158,7 +1158,7 @@ void *Sys_GetGameAPI (void *parms)
 		{
 			// now run through the search paths
 			path = NULL;
-			while (1)
+			while (true)
 			{
 				path = FS_NextPath (path);
 				if (!path)
@@ -1234,7 +1234,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     MSG				msg;
 	int				time, oldtime, newtime;
 	char			*cddir;
-	int				i; // Knightmare added
 	qboolean		cdscan = false; // Knightmare added
 
     /* previous instances do not exist in Win32 */
@@ -1276,7 +1275,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
 
 	// Knightmare- scan for cd command line option
-	for (i=0; i<argc; i++)
+	for (int i=0; i<argc; i++)
 		if (!strcmp(argv[i], "scanforcd")) {
 			cdscan = true;
 			break;
@@ -1307,7 +1306,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	oldtime = Sys_Milliseconds ();
 
     /* main window message loop */
-	while (1)
+	while (true)
 	{
 		// if at a full screen console, don't update unless needed
 		if (Minimized || (dedicated && dedicated->value) )
@@ -1325,7 +1324,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
 
 		// DarkOne's CPU usage fix
-		while (1)
+		while (true)
 		{
 			newtime = Sys_Milliseconds();
 			time = newtime - oldtime;
@@ -1347,5 +1346,5 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 
 	// never gets here
-    return TRUE;
+    //return TRUE;
 }

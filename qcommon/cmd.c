@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 void CL_LocPlace (void);
 #endif	// LOC_SUPPORT
 
-void Cmd_ForwardToServer (void);
+//void Cmd_ForwardToServer (void); //mxd. Redundant declaration
 
 #define	MAX_ALIAS_NAME	32
 
@@ -531,7 +531,7 @@ Cmd_Argv
 */
 char	*Cmd_Argv (int arg)
 {
-	if ( (unsigned)arg >= cmd_argc )
+	if ( arg < 0 ||arg >= cmd_argc )
 		return cmd_null_string;
 	return cmd_argv[arg];	
 }
@@ -660,7 +660,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 	if (!text)
 		return;
 
-	while (1)
+	while (true)
 	{
 // skip whitespace up to a /n
 		while (*text && *text <= ' ' && *text != '\n')
@@ -755,7 +755,7 @@ void	Cmd_RemoveCommand (char *cmd_name)
 	cmd_function_t	*cmd, **back;
 
 	back = &cmd_functions;
-	while (1)
+	while (true)
 	{
 		cmd = *back;
 		if (!cmd)

@@ -253,7 +253,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 		// resolve CS_PAKFILE, hack by Jay Dolan
 		FS_FOpenFile(sv.configstrings[CS_MODELS + 1], &f, FS_READ);
 	//	strncpy(sv.configstrings[CS_PAKFILE], (last_pk3_name ? last_pk3_name : ""));
-		Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name ? last_pk3_name : ""), sizeof(sv.configstrings[CS_PAKFILE]));
+		Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name[0] ? last_pk3_name : ""), sizeof(sv.configstrings[CS_PAKFILE])); //mxd. Address of array 'last_pk3_name' will always evaluate to 'true'
 		FS_FCloseFile(f);
 	
 		sv.models[1] = CM_LoadMap (sv.configstrings[CS_MODELS+1], false, &checksum);

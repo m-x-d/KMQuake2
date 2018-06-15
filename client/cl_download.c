@@ -639,7 +639,7 @@ void CL_AddToFailedDownloadList (char *name)
 {
 	int			i;
 	qboolean	found = false;
-	qboolean	added = false;
+	//qboolean	added = false; //mxd. Never used
 
 	// check if this name is already in the table
 	for (i=0; i<NUM_FAIL_DLDS; i++)
@@ -653,7 +653,7 @@ void CL_AddToFailedDownloadList (char *name)
 	// if it isn't already in the table, then we need to add it
 	if (!found)
 	{
-		Com_sprintf(lastfaileddownload[failedDlListIndex++], sizeof(lastfaileddownload[failedDlListIndex++]), "%s", name);
+		Com_sprintf(lastfaileddownload[failedDlListIndex++], sizeof(lastfaileddownload[failedDlListIndex]), "%s", name);
 
 		// wrap around to start of list
 		if (failedDlListIndex >= NUM_FAIL_DLDS)
@@ -850,7 +850,7 @@ void CL_ParseDownload (void)
 	{
 		Com_Printf ("Server does not have this file.\n");
 
-		if (cls.downloadname)	// Knightmare- save name of failed download
+		if (cls.downloadname[0])	// Knightmare- save name of failed download //mxd. Address of array 'cls.downloadname' will always evaluate to 'true'
 			CL_AddToFailedDownloadList (cls.downloadname);
 
 		if (cls.download)
@@ -859,6 +859,7 @@ void CL_ParseDownload (void)
 			fclose (cls.download);
 			cls.download = NULL;
 		}
+
 		CL_RequestNextDownload ();
 		return;
 	}

@@ -72,7 +72,7 @@ LPDIRECTSOUNDBUFFER pDSBuf, pDSPBuf;
 
 HINSTANCE hInstDS;
 
-qboolean SNDDMA_InitDirect (void);
+sndinitstat SNDDMA_InitDirect (void); //mxd. qboolean -> sndinitstat
 qboolean SNDDMA_InitWav (void);
 
 void FreeSound( void );
@@ -685,7 +685,7 @@ int SNDDMA_GetDMAPos(void)
 
 	if (dsound_init) 
 	{
-		mmtime.wType = TIME_SAMPLES;
+		//mmtime.wType = TIME_SAMPLES;
 		pDSBuf->lpVtbl->GetCurrentPosition(pDSBuf, &mmtime.u.sample, &dwWrite);
 		s = mmtime.u.sample - mmstarttime.u.sample;
 	}
@@ -782,7 +782,7 @@ void SNDDMA_Submit(void)
 	//
 	// find which sound blocks have completed
 	//
-	while (1)
+	while (true)
 	{
 		if ( snd_completed == snd_sent )
 		{
@@ -805,8 +805,9 @@ void SNDDMA_Submit(void)
 	while (((snd_sent - snd_completed) >> sample16) < 8)
 	{
 		h = lpWaveHdr + ( snd_sent&WAV_MASK );
-	if (paintedtime/256 <= snd_sent)
-		break;	//	Com_Printf ("submit overrun\n");
+		if (paintedtime/256 <= snd_sent)
+			break;	//	Com_Printf ("submit overrun\n");
+
 //Com_Printf ("send %i\n", snd_sent);
 		snd_sent++;
 		/* 

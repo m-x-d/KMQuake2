@@ -600,7 +600,8 @@ void IN_StartupJoystick (void)
 		return; 
  
 	// verify joystick driver is present
-	if ((numdevs = joyGetNumDevs ()) == 0)
+	numdevs = joyGetNumDevs();
+	if (numdevs == 0)
 	{
 //		Com_Printf ("\njoystick not found -- driver not present\n\n");
 		return;
@@ -613,7 +614,8 @@ void IN_StartupJoystick (void)
 		ji.dwSize = sizeof(ji);
 		ji.dwFlags = JOY_RETURNCENTERED;
 
-		if ((mmr = joyGetPosEx (joy_id, &ji)) == JOYERR_NOERROR)
+		mmr = joyGetPosEx(joy_id, &ji);
+		if (mmr == JOYERR_NOERROR)
 			break;
 	} 
 
@@ -627,7 +629,8 @@ void IN_StartupJoystick (void)
 	// get the capabilities of the selected joystick
 	// abort startup if command fails
 	memset (&jc, 0, sizeof(jc));
-	if ((mmr = joyGetDevCaps (joy_id, &jc, sizeof(jc))) != JOYERR_NOERROR)
+	mmr = joyGetDevCaps(joy_id, &jc, sizeof(jc));
+	if (mmr != JOYERR_NOERROR)
 	{
 		Com_Printf ("\njoystick not found -- invalid joystick capabilities (%x)\n\n", mmr); 
 		return;
@@ -860,7 +863,7 @@ void IN_JoyMove (usercmd_t *cmd)
 
 	// complete initialization if first time in
 	// this is needed as cvars are not available at initialization time
-	if( joy_advancedinit != true )
+	if( !joy_advancedinit )
 	{
 		Joy_AdvancedUpdate_f();
 		joy_advancedinit = true;
@@ -873,7 +876,7 @@ void IN_JoyMove (usercmd_t *cmd)
 	}
  
 	// collect the joystick data, if possible
-	if (IN_ReadJoystick () != true)
+	if ( !IN_ReadJoystick () )
 	{
 		return;
 	}
@@ -901,7 +904,7 @@ void IN_JoyMove (usercmd_t *cmd)
 			if ((joy_advanced->value == 0.0) && mlooking)
 			{
 				// user wants forward control to become look control
-				if (fabs(fAxisValue) > joy_pitchthreshold->value)
+				if (fabsf(fAxisValue) > joy_pitchthreshold->value)
 				{		
 					// if mouse invert is on, invert the joystick pitch value
 					// only absolute control support here (joy_advanced is false)
@@ -924,7 +927,7 @@ void IN_JoyMove (usercmd_t *cmd)
 			else
 			{
 				// user wants forward control to be forward control
-				if (fabs(fAxisValue) > joy_forwardthreshold->value)
+				if (fabsf(fAxisValue) > joy_forwardthreshold->value)
 				{
 					cmd->forwardmove += (fAxisValue * joy_forwardsensitivity->value) * speed * cl_forwardspeed->value;
 				}
@@ -932,14 +935,14 @@ void IN_JoyMove (usercmd_t *cmd)
 			break;
 
 		case AxisSide:
-			if (fabs(fAxisValue) > joy_sidethreshold->value)
+			if (fabsf(fAxisValue) > joy_sidethreshold->value)
 			{
 				cmd->sidemove += (fAxisValue * joy_sidesensitivity->value) * speed * cl_sidespeed->value;
 			}
 			break;
 
 		case AxisUp:
-			if (fabs(fAxisValue) > joy_upthreshold->value)
+			if (fabsf(fAxisValue) > joy_upthreshold->value)
 			{
 				cmd->upmove += (fAxisValue * joy_upsensitivity->value) * speed * cl_upspeed->value;
 			}
@@ -949,7 +952,7 @@ void IN_JoyMove (usercmd_t *cmd)
 			if ((in_strafe.state & 1) || (lookstrafe->value && mlooking))
 			{
 				// user wants turn control to become side control
-				if (fabs(fAxisValue) > joy_sidethreshold->value)
+				if (fabsf(fAxisValue) > joy_sidethreshold->value)
 				{
 					cmd->sidemove -= (fAxisValue * joy_sidesensitivity->value) * speed * cl_sidespeed->value;
 				}
@@ -957,7 +960,7 @@ void IN_JoyMove (usercmd_t *cmd)
 			else
 			{
 				// user wants turn control to be turn control
-				if (fabs(fAxisValue) > joy_yawthreshold->value)
+				if (fabsf(fAxisValue) > joy_yawthreshold->value)
 				{
 					if(dwControlMap[i] == JOY_ABSOLUTE_AXIS)
 					{
@@ -981,7 +984,7 @@ void IN_JoyMove (usercmd_t *cmd)
 		case AxisLook:
 			if (mlooking)
 			{
-				if (fabs(fAxisValue) > joy_pitchthreshold->value)
+				if (fabsf(fAxisValue) > joy_pitchthreshold->value)
 				{
 					// pitch movement detected and pitch movement desired by user
 					if(dwControlMap[i] == JOY_ABSOLUTE_AXIS)

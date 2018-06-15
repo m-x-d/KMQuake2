@@ -159,10 +159,9 @@ DrawStringGeneric
 */
 void DrawStringGeneric (int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit)
 {
-	unsigned i, j;
+	unsigned i, j, len;
 	char modifier, character;
-	int len, red, green, blue, italic, shadow, bold, reset;
-	qboolean modified;
+	int red, green, blue, italic, shadow, bold, reset;
 	float textSize, textScale;
 
 	// defaults
@@ -176,6 +175,7 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 	len = strlen( string );
 	for ( i = 0, j = 0; i < len; i++ )
 	{
+		qboolean modified = false; //mxd
 		modifier = string[i];
 		if (modifier&128) modifier &= ~128;
 

@@ -301,17 +301,18 @@ typedef struct model_s
 //============================================================================
 
 void	Mod_Init (void);
-void	Mod_ClearAll (void);
+//void	Mod_ClearAll (void); //mxd. Missing definition
 model_t *Mod_ForName (char *name, qboolean crash);
 mleaf_t *Mod_PointInLeaf (float *p, model_t *model);
 byte	*Mod_ClusterPVS (int cluster, model_t *model);
 
 void	Mod_Modellist_f (void);
 
-void	*Hunk_Begin (int maxsize);
+//mxd. Redundant declarations
+/*void	*Hunk_Begin (int maxsize);
 void	*Hunk_Alloc (int size);
 int		Hunk_End (void);
-void	Hunk_Free (void *base);
+void	Hunk_Free (void *base);*/
 
 void	Mod_FreeAll (void);
 void	Mod_Free (model_t *mod);

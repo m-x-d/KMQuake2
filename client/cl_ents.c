@@ -516,7 +516,7 @@ void CL_ParsePacketEntities (frame_t *oldframe, frame_t *newframe)
 		}
 	}
 
-	while (1)
+	while (true)
 	{
 		newnum = CL_ParseEntityBits (&bits);
 		if (newnum >= MAX_EDICTS)
@@ -1109,7 +1109,7 @@ struct model_s *S_RegisterSexedModel (entity_state_t *ent, char *base)
 
 // Knightmare- save off current player weapon model for player config menu
 extern	char	*currentweaponmodel;
-extern	char	cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
+//extern	char	cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH]; //mxd. Redundant declaration
 
 /*
 ===============
@@ -1336,7 +1336,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			// bobbing items by QuDos
 			if (cl_item_bobbing->value) {
 				float	bob_scale = (0.005 + s1->number * 0.00001) * 0.5;
-				float	bob = cos((cl.time + 1000) * bob_scale) * 5;
+				float	bob = cosf((cl.time + 1000) * bob_scale) * 5;
 				ent.oldorigin[2] += bob;
 				ent.origin[2] += bob;
 			}
@@ -1392,7 +1392,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			if (s1->modelindex2 == MAX_MODELS-1
 				|| ( LegacyProtocol() && s1->modelindex2 == OLD_MAX_MODELS-1 ) )
 			{
-				ci = &cl.clientinfo[s1->skinnum & 0xff];
+				//ci = &cl.clientinfo[s1->skinnum & 0xff]; //mxd. Assigned value never used
 				i = (s1->skinnum >> 8); // 0 is default weapon model
 				if (!cl_vwep->value || i > MAX_CLIENTWEAPONMODELS - 1)
 					i = 0;
@@ -1482,16 +1482,19 @@ void CL_AddPacketEntities (frame_t *frame)
 					// lose the yellow shell if we have a red, blue, or green shell
 					if (renderfx & (RF_SHELL_RED|RF_SHELL_BLUE|RF_SHELL_GREEN))
 						renderfx &= ~RF_SHELL_DOUBLE;
+
 					// if we have a red shell, turn it to purple by adding blue
 					if (renderfx & RF_SHELL_RED)
 						renderfx |= RF_SHELL_BLUE;
 					// if we have a blue shell (and not a red shell), turn it to cyan by adding green
 					else if (renderfx & RF_SHELL_BLUE)
+					{
 						// go to green if it's on already, otherwise do cyan (flash green)
 						if (renderfx & RF_SHELL_GREEN)
 							renderfx &= ~RF_SHELL_BLUE;
 						else
 							renderfx |= RF_SHELL_GREEN;
+					}
 				}
 			}
 			// pmm
@@ -1876,7 +1879,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 			for (pnum = 0 ; pnum<cl.frame.num_entities ; pnum++)
 				if ((s1=&cl_parse_entities[(cl.frame.parse_entities+pnum)&(MAX_PARSE_ENTITIES-1)])->number == cl.playernum+1)
 				{
-					int effects = s1->renderfx;
+					//int effects = s1->renderfx; //mxd. Never used
 
 					//if (effects & (RF_SHELL_RED|RF_SHELL_BLUE|RF_SHELL_GREEN) || s1->effects&(EF_PENT|EF_QUAD))
 					if (s1->effects&(EF_PENT|EF_QUAD|EF_DOUBLE|EF_HALF_DAMAGE))
@@ -1961,7 +1964,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 			for (pnum = 0 ; pnum<cl.frame.num_entities ; pnum++)
 				if ((s1=&cl_parse_entities[(cl.frame.parse_entities+pnum)&(MAX_PARSE_ENTITIES-1)])->number == cl.playernum+1)
 				{
-					int effects = s1->renderfx;
+					// int effects = s1->renderfx; //mxd. Never used
 
 					//if (effects & (RF_SHELL_RED|RF_SHELL_BLUE|RF_SHELL_GREEN) || s1->effects&(EF_PENT|EF_QUAD))
 					if (s1->effects&(EF_PENT|EF_QUAD|EF_DOUBLE|EF_HALF_DAMAGE))
@@ -2041,8 +2044,8 @@ void SetUpCamera (void)
 
 		//and who said trig was pointless?
 		angle = M_PI * cg_thirdperson_angle->value/180.0f;
-		dist_up = cg_thirdperson_dist->value * sin( angle  );
-		dist_back =  cg_thirdperson_dist->value * cos ( angle );
+		dist_up = cg_thirdperson_dist->value * sinf(angle);
+		dist_back =  cg_thirdperson_dist->value * cosf(angle);
 		//finish polar vector
 
 		VectorCopy(cl.refdef.vieworg, oldorg);
@@ -2132,7 +2135,7 @@ void CL_CalcViewValues (void)
 {
 	int			i;
 	float		lerp, backlerp;
-	centity_t	*ent;
+	//centity_t	*ent; //mxd. Never used
 	frame_t		*oldframe;
 	player_state_t	*ps, *ops;
 
@@ -2145,12 +2148,12 @@ void CL_CalcViewValues (void)
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
-	if ( fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256*8
+	if (   abs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256*8
 		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256*8
 		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256*8)
 		ops = ps;		// don't interpolate
 
-	ent = &cl_entities[cl.playernum+1];
+	//ent = &cl_entities[cl.playernum+1]; //mxd. Never used
 	lerp = cl.lerpfrac;
 
 	// calculate the origin

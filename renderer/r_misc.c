@@ -346,7 +346,7 @@ by Knightmare
 
 byte	*saveshotdata;
 
-void R_ScaledScreenshot (char *name)
+void R_ScaledScreenshot (char *name) //TODO: mxd: error handling
 {
 	struct jpeg_compress_struct		cinfo;
 	struct jpeg_error_mgr			jerr;
@@ -469,7 +469,7 @@ R_ScreenShot_JPG
 By Robert 'Heffo' Heffernan
 ================== 
 */
-void R_ScreenShot_JPG (qboolean silent)
+void R_ScreenShot_JPG (qboolean silent) //TODO: mxd: error handling
 {
 	struct jpeg_compress_struct		cinfo;
 	struct jpeg_error_mgr			jerr;

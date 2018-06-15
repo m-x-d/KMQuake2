@@ -1101,12 +1101,11 @@ void R_LoadPNG (char *filename, byte **pic, int *width, int *height)
 	png_structp	png;
 	png_infop	pnginfo;
 	byte		ioBuffer[8192];
-	int			len;
 	byte		*raw;
 
 	*pic = NULL;
 
-	len = FS_LoadFile (filename, (void **)&raw);
+	FS_LoadFile (filename, (void **)&raw);
 
 	if (!raw)
 	{	// Knightmare- skip this unless developer >= 2 because it spams the console
@@ -1754,7 +1753,7 @@ int nearest_power_of_2 (int size)
 	if (size == 1)
 		return size; 
 
-	while (1) 
+	while (true) 
 	{
 		i <<= 1;
 		if (size == i)
@@ -1841,7 +1840,7 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 		else								// clamp to 128x128
 			maxsize = 128;
 
-		while (1) {
+		while (true) {
 			if (scaled_width <= maxsize && scaled_height <= maxsize)
 				break;
 			scaled_width >>= 1;

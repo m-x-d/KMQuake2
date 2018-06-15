@@ -337,7 +337,7 @@ SV_InitGameProgs
 Init the game subsystem for a new map
 ===============
 */
-void SCR_DebugGraph (float value, int color);
+//void SCR_DebugGraph (float value, int color); //mxd. Redundant declaration
 
 void SV_InitGameProgs (void)
 {

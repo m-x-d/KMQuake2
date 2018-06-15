@@ -56,13 +56,13 @@ void	SCR_Init (void);
 
 void	SCR_UpdateScreen (void);
 
-void	SCR_SizeUp (void);
-void	SCR_SizeDown (void);
+//void	SCR_SizeUp (void); //mxd. Undefined and unused
+//void	SCR_SizeDown (void); //mxd. Undefined and unused
 void	SCR_CenterPrint (char *str);
-void	SCR_BeginLoadingPlaque (void);
+//void	SCR_BeginLoadingPlaque (void); //mxd. Redundant declaration
 void	SCR_EndLoadingPlaque (void);
 
-void	SCR_DebugGraph (float value, int color);
+//void	SCR_DebugGraph (float value, int color); //mxd. Redundant declaration
 
 void	SCR_TouchPics (void);
 
@@ -74,7 +74,6 @@ void	SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 float	SCR_ScaledVideo (float param);
 float	SCR_VideoScale (void);
 
-void	SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align);
 void	SCR_DrawFill (float x, float y, float width, float height, scralign_t align, int red, int green, int blue, int alpha);
 void	SCR_DrawPic (float x, float y, float width, float height, scralign_t align, char *pic, float alpha);
 void	SCR_DrawChar (float x, float y, scralign_t align, int num, int red, int green, int blue, int alpha, qboolean italic, qboolean last);

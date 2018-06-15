@@ -794,8 +794,8 @@ void CL_ParseTEnt (void)
 		if (type == TE_BULLET_SPARKS)
 			VectorScale(dir, 2, dir);
 		{
-			vec3_t color = { 255, 125, 10 };
-			CL_ParticleEffectSparks (pos, dir, color, (type == TE_GUNSHOT)? 5 : 10);
+			vec3_t c = { 255, 125, 10 };
+			CL_ParticleEffectSparks (pos, dir, c, (type == TE_GUNSHOT)? 5 : 10);
 		}
 
 		if (type != TE_SPARKS)
@@ -821,8 +821,8 @@ void CL_ParseTEnt (void)
 		CL_GunSmokeEffect (pos, dir);
 		CL_ParticleBulletDecal(pos, dir, 2.8);
 		{
-			vec3_t color = { 200, 100, 10 };
-			CL_ParticleEffectSparks (pos, dir, color, 8);
+			vec3_t c = { 200, 100, 10 };
+			CL_ParticleEffectSparks (pos, dir, c, 8);
 		}
 		break;
 
@@ -1074,7 +1074,7 @@ void CL_ParseTEnt (void)
 
 	case TE_PARASITE_ATTACK:
 	case TE_MEDIC_CABLE_ATTACK:
-		ent = CL_ParseBeam (clMedia.mod_parasite_segment);
+		CL_ParseBeam (clMedia.mod_parasite_segment);
 		break;
 
 	case TE_BOSSTPORT:			// boss teleporting to station
@@ -1084,12 +1084,12 @@ void CL_ParseTEnt (void)
 		break;
 
 	case TE_GRAPPLE_CABLE:
-		ent = CL_ParseBeam2 (clMedia.mod_grapple_cable);
+		CL_ParseBeam2 (clMedia.mod_grapple_cable);
 		break;
 
 	// RAFAEL
 	case TE_WELDING_SPARKS:
-		cnt = MSG_ReadByte (&net_message);
+		MSG_ReadByte (&net_message);
 		MSG_ReadPos (&net_message, pos);
 		MSG_ReadDir (&net_message, dir);
 		color = MSG_ReadByte (&net_message);
@@ -1276,18 +1276,18 @@ void CL_ParseTEnt (void)
 		break;
 
 	case TE_HEATBEAM:
-		ent = CL_ParsePlayerBeam (clMedia.mod_heatbeam);
+		CL_ParsePlayerBeam (clMedia.mod_heatbeam);
 		break;
 
 	case TE_MONSTER_HEATBEAM:
-		ent = CL_ParsePlayerBeam (clMedia.mod_monster_heatbeam);
+		CL_ParsePlayerBeam (clMedia.mod_monster_heatbeam);
 		break;
 
 	case TE_HEATBEAM_SPARKS:
 		cnt = 50;
 		MSG_ReadPos (&net_message, pos);
 		MSG_ReadDir (&net_message, dir);
-		r = 8;
+		//r = 8; //mxd. Assigned value never used
 		magnitude = 60;
 		CL_ParticleSteamEffect (pos, dir, 240, 240, 240, -20, -20, -20, cnt, magnitude);
 		S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
@@ -1485,7 +1485,7 @@ void CL_AddBeams (void)
 			if (yaw < 0)
 				yaw += 360;
 	
-			forward = sqrt (dist[0]*dist[0] + dist[1]*dist[1]);
+			forward = sqrtf (dist[0]*dist[0] + dist[1]*dist[1]);
 			pitch = (atan2(dist[2], forward) * -180.0 / M_PI);
 			if (pitch < 0)
 				pitch += 360.0;
@@ -1504,7 +1504,7 @@ void CL_AddBeams (void)
 		{
 			model_length = 30.0;
 		}
-		steps = ceil(d/model_length);
+		steps = ceilf(d/model_length);
 		len = (d-model_length)/(steps-1);
 
 		// PMM - special case for lightning model .. if the real length is shorter than the model,
@@ -1706,10 +1706,8 @@ void CL_AddPlayerBeams (void)
 //PMM
 		if (clMedia.mod_heatbeam && (b->model == clMedia.mod_heatbeam) && (firstperson||chasecam))
 		{
-			vec_t len;
-
-			len = VectorLength (dist);
-			VectorScale (f, len, dist);
+			vec_t l = VectorLength (dist);
+			VectorScale (f, l, dist);
 			if (chasecam)
 				VectorMA (dist, (newhandmult * b->offset[0]), r, dist);
 			else
@@ -1746,7 +1744,7 @@ void CL_AddPlayerBeams (void)
 			if (yaw < 0)
 				yaw += 360;
 	
-			forward = sqrt (dist[0]*dist[0] + dist[1]*dist[1]);
+			forward = sqrtf (dist[0]*dist[0] + dist[1]*dist[1]);
 			pitch = (atan2(dist[2], forward) * -180.0 / M_PI);
 			if (pitch < 0)
 				pitch += 360.0; 
@@ -1810,7 +1808,7 @@ void CL_AddPlayerBeams (void)
 		{
 			model_length = 30.0;
 		}
-		steps = ceil(d/model_length);
+		steps = ceilf(d/model_length);
 		len = (d-model_length)/(steps-1);
 
 		// PMM - special case for lightning model .. if the real length is shorter than the model,
@@ -1834,6 +1832,7 @@ void CL_AddPlayerBeams (void)
 			V_AddEntity (&ent);			
 			return;
 		}
+
 		while (d > 0)
 		{
 			VectorCopy (org, ent.origin);
@@ -1894,7 +1893,7 @@ void CL_AddExplosions (void)
 		if (ex->type == ex_free)
 			continue;
 		frac = (cl.time - ex->start)/100.0;
-		f = floor(frac);
+		f = floorf(frac);
 
 		ent = &ex->ent;
 
@@ -2006,14 +2005,15 @@ void CL_ProcessSustain ()
 
 	for (i=0, s=cl_sustains; i< MAX_SUSTAINS; i++, s++)
 	{
-		if (s->id)
-			if ((s->endtime >= cl.time) && (cl.time >= s->nextthink))
-			{
-//				Com_Printf ("think %d %d %d\n", cl.time, s->nextthink, s->thinkinterval);
-				s->think (s);
-			}
-			else if (s->endtime < cl.time)
-				s->id = 0;
+		if (!s->id) continue;
+
+		if ((s->endtime >= cl.time) && (cl.time >= s->nextthink))
+		{
+//			Com_Printf ("think %d %d %d\n", cl.time, s->nextthink, s->thinkinterval);
+			s->think (s);
+		}
+		else if (s->endtime < cl.time)
+			s->id = 0;
 	}
 }
 

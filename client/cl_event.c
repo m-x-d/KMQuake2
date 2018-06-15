@@ -117,7 +117,7 @@ void CL_FootSteps (entity_state_t *ent, qboolean loud)
 	vec3_t	end;
 	int		r;
 	int		surface;
-	struct	sfx_s	*stepsound = NULL;
+	struct	sfx_s	*stepsound;
 	float	volume = 0.5;
 
 	r = (rand()&3);

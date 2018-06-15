@@ -138,7 +138,6 @@ void VID_Printf (int print_level, char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
-	static qboolean	inupdate;
 	
 	va_start (argptr, fmt);
 //	vsprintf (msg, fmt, argptr);
@@ -164,14 +163,13 @@ void VID_Error (int err_level, char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
-	static qboolean	inupdate;
 	
 	va_start (argptr, fmt);
 //	vsprintf (msg, fmt,argptr);
 	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
 	va_end (argptr);
 
-	Com_Error (err_level,"%s", msg);
+	Com_Error (err_level, "%s", msg);
 }
 
 //==========================================================================
@@ -307,14 +305,8 @@ MainWndProc
 main window procedure
 ====================
 */
-LONG WINAPI MainWndProc (
-    HWND    hWnd,
-    UINT    uMsg,
-    WPARAM  wParam,
-    LPARAM  lParam)
+LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	LONG			lRet = 0;
-
 	if ( uMsg == MSH_MOUSEWHEEL )
 	{
 		if ( ( ( int ) wParam ) > 0 )
@@ -493,16 +485,16 @@ LONG WINAPI MainWndProc (
 	case MM_MCINOTIFY:
 		{
 			LONG CDAudio_MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-			lRet = CDAudio_MessageHandler (hWnd, uMsg, wParam, lParam);
+			CDAudio_MessageHandler (hWnd, uMsg, wParam, lParam);
 		}
 		break;
 
 	default:	// pass all unhandled messages to DefWindowProc
-        return DefWindowProc (hWnd, uMsg, wParam, lParam);
-    }
+		return DefWindowProc (hWnd, uMsg, wParam, lParam);
+	}
 
-    /* return 0 if handled message, 1 if not */
-    return DefWindowProc( hWnd, uMsg, wParam, lParam );
+	/* return 0 if handled message, 1 if not */
+	return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
 
 /*

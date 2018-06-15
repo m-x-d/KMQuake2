@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
   */
 
 #include "client.h"
-#include "../ui/ui_local.h"
+//#include "../ui/ui_local.h" //mxd. Unused
 
 float		scr_con_current;	// aproaches scr_conlines at scr_conspeed
 float		scr_conlines;		// 0.0 to 1.0 lines of console to display
@@ -635,7 +635,7 @@ void SCR_CenterPrint (char *str)
 		if (!*s)
 			break;
 		s++;		// skip the \n
-	} while (1);
+	} while (true);
 	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
 	Con_ClearNotify ();
 }
@@ -686,7 +686,7 @@ void SCR_DrawCenterString (void)
 		if (!*start)
 			break;
 		start++;		// skip the \n
-	} while (1);
+	} while (true);
 }
 
 void SCR_CheckDrawCenterString (void)
@@ -910,7 +910,7 @@ void SCR_DrawCrosshair (void)
 	//alpha = 0.75 + 0.25*sin(anglemod(cl.time*0.005));
 	scaledSize = crosshair_scale->value * CROSSHAIR_SIZE;
 	pulsealpha = crosshair_alpha->value * crosshair_pulse->value;
-	alpha = max(min(crosshair_alpha->value - pulsealpha + pulsealpha*sin(anglemod(cl.time*0.005)), 1.0), 0.0);
+	alpha = max(min(crosshair_alpha->value - pulsealpha + pulsealpha*sinf(anglemod(cl.time*0.005)), 1.0), 0.0);
 
 //	R_DrawScaledPic (scr_vrect.x + (int)(((float)scr_vrect.width - scale*(float)crosshair_width)*0.5), // x
 //					scr_vrect.y + (int)(((float)scr_vrect.height - scale*(float)crosshair_height)*0.5),	// y
@@ -1027,7 +1027,7 @@ void SCR_DrawLoadingBar (float x, float y, float w, float h, int percent, float 
 
 	// changeable download/map load bar color
 	TextColor((int)alt_text_color->value, &red, &green, &blue);
-	iRatio = 1 - fabs(sizeRatio);
+	iRatio = 1 - fabsf(sizeRatio);
 	hiRatio = iRatio * 0.5;
 
 	SCR_DrawFill (x, y, w, h, ALIGN_STRETCH, 255, 255, 255, 90);
@@ -1076,7 +1076,7 @@ void SCR_DrawLoading (void)
 	int			plaqueOffset, picX, picW;
 	char		mapfile[64], picName[MAX_QPATH];
 	char		*loadMsg;
-	qboolean	isMap = false, haveMapPic = false, widescreen;
+	qboolean	isMap = false, haveMapPic = false /*, widescreen*/;
 	qboolean	simplePlaque = (scr_simple_loadscreen->value != 0);
 
 	if (!scr_draw_loading) {
@@ -1085,7 +1085,7 @@ void SCR_DrawLoading (void)
 	}
 
 	scr_draw_loading = 0;
-	widescreen = (((float)viddef.width / (float)viddef.height) > STANDARD_ASPECT_RATIO);
+	//widescreen = (((float)viddef.width / (float)viddef.height) > STANDARD_ASPECT_RATIO); //mxd. Never unused
 
 	// loading a map...
 	if (loadingMessage && cl.configstrings[CS_MODELS+1][0])
@@ -1729,7 +1729,7 @@ void _DrawHUDString (char *string, int x, int y, int centerwidth, int xor, qbool
 		if (*string)
 		{
 			string++;	// skip the \n
-			x = margin;
+			//x = margin; //mxd. Assigned value never unused
 //			y += scaledHud(8);
 			y += scaleForScreen(8);
 		}
@@ -1875,7 +1875,7 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 	InitHudScale ();
 	x = 0;
 	y = 0;
-	width = 3;
+	//width = 3; //mxd. Assigned value never unused
 
 	while (s)
 	{

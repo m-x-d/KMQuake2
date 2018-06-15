@@ -152,7 +152,7 @@ void CMod_LoadSubmodels (lump_t *l)
 
 	numcmodels = count;
 
-	for ( i=0 ; i<count ; i++, in++, out++)
+	for ( i=0 ; i<count ; i++, in++/*, out++*/)
 	{
 		out = &map_cmodels[i];
 
@@ -920,7 +920,7 @@ void CM_BoxLeafnums_r (int nodenum)
 	cnode_t		*node;
 	int		s;
 
-	while (1)
+	while (true)
 	{
 		if (nodenum < 0)
 		{
@@ -1336,9 +1336,9 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 		if (trace_ispoint)
 			offset = 0;
 		else
-			offset = fabs(trace_extents[0]*plane->normal[0]) +
-				fabs(trace_extents[1]*plane->normal[1]) +
-				fabs(trace_extents[2]*plane->normal[2]);
+			offset = fabsf(trace_extents[0]*plane->normal[0]) +
+					 fabsf(trace_extents[1]*plane->normal[1]) +
+					 fabsf(trace_extents[2]*plane->normal[2]);
 	}
 
 
@@ -1421,8 +1421,6 @@ trace_t		CM_BoxTrace (vec3_t start, vec3_t end,
 						  vec3_t mins, vec3_t maxs,
 						  int headnode, int brushmask)
 {
-	int		i;
-
 	checkcount++;		// for multi-check avoidance
 
 	c_traces++;			// for statistics, may be zeroed
@@ -1447,20 +1445,20 @@ trace_t		CM_BoxTrace (vec3_t start, vec3_t end,
 	if (start[0] == end[0] && start[1] == end[1] && start[2] == end[2])
 	{
 		int		leafs[1024];
-		int		i, numleafs;
+		int		numleafs;
 		vec3_t	c1, c2;
 		int		topnode;
 
 		VectorAdd (start, mins, c1);
 		VectorAdd (start, maxs, c2);
-		for (i=0 ; i<3 ; i++)
+		for (int i=0 ; i<3 ; i++)
 		{
 			c1[i] -= 1;
 			c2[i] += 1;
 		}
 
 		numleafs = CM_BoxLeafnums_headnode (c1, c2, leafs, 1024, headnode, &topnode);
-		for (i=0 ; i<numleafs ; i++)
+		for (int i=0 ; i<numleafs ; i++)
 		{
 			CM_TestInLeaf (leafs[i]);
 			if (trace_trace.allsolid)
@@ -1498,9 +1496,10 @@ trace_t		CM_BoxTrace (vec3_t start, vec3_t end,
 	}
 	else
 	{
-		for (i=0 ; i<3 ; i++)
+		for (int i=0 ; i<3 ; i++)
 			trace_trace.endpos[i] = start[i] + trace_trace.fraction * (end[i] - start[i]);
 	}
+
 	return trace_trace;
 }
 

@@ -142,12 +142,12 @@ int		MSG_ReadPMCoordNew (sizebuf_t *msg_read);
 
 extern	qboolean		bigendien;
 
-extern	short	BigShort (short l);
+/*extern	short	BigShort (short l);
 extern	short	LittleShort (short l);
 extern	int		BigLong (int l);
 extern	int		LittleLong (int l);
 extern	float	BigFloat (float l);
-extern	float	LittleFloat (float l);
+extern	float	LittleFloat (float l);*/ //mxd. Redundant declarations
 
 //============================================================================
 
@@ -158,7 +158,7 @@ void COM_ClearArgv (int arg);
 int COM_CheckParm (char *parm);
 void COM_AddParm (char *parm);
 
-void COM_Init (void);
+//void COM_Init (void); //mxd. Undefined and unused 
 void COM_InitArgv (int argc, char **argv);
 
 char *CopyString (char *in);
@@ -167,7 +167,7 @@ void StripHighBits (char *string, int highbits);
 void ExpandNewLines (char *string);
 
 qboolean IsValidChar (int c);
-void ExpandNewLines (char *string);
+//void ExpandNewLines (char *string); //mxd. Redundant declaration
 char *StripQuotes (char *string);
 const char *MakePrintable (const void *subject, size_t numchars);
 
@@ -864,7 +864,7 @@ MISC
 
 void		Com_BeginRedirect (int target, char *buffer, int buffersize, void (*flush));
 void		Com_EndRedirect (void);
-void 		Com_Printf (char *fmt, ...);
+//void 		Com_Printf (char *fmt, ...); //mxd. Redundant declaration
 void 		Com_DPrintf (char *fmt, ...);
 void 		Com_Error (int code, char *fmt, ...);
 void 		Com_Quit (void);
@@ -935,10 +935,10 @@ void	*Sys_GetGameAPI (void *parms);
 char	*Sys_ConsoleInput (void);
 void	Sys_ConsoleOutput (char *string);
 void	Sys_SendKeyEvents (void);
-void	Sys_Error (char *error, ...);
+//void	Sys_Error (char *error, ...); //mxd. Redundant declaration
 void	Sys_Quit (void);
 char	*Sys_GetClipboardData( void );
-void	Sys_CopyProtect (void);
+//void	Sys_CopyProtect (void); //mxd. Heh
 
 /*
 ==============================================================

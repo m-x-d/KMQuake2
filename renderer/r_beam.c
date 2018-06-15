@@ -31,13 +31,12 @@ R_RenderBeam
 */
 void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green, float blue, float alpha)
 {
-	float		len;
-	vec3_t		up		= {vup[0]    * 0.75f, vup[1]    * 0.75f, vup[2]    * 0.75f};
-	vec3_t		right	= {vright[0] * 0.75f, vright[1] * 0.75f, vright[2] * 0.75f};
+	//vec3_t		up		= {vup[0]    * 0.75f, vup[1]    * 0.75f, vup[2]    * 0.75f};
+	//vec3_t		right	= {vright[0] * 0.75f, vright[1] * 0.75f, vright[2] * 0.75f};
 	vec3_t		vert[4], ang_up, ang_right, vdelta;
 	vec2_t		texCoord[4];
 	vec4_t		beamColor;
-	int			oldrender=0, rendertype=0, i;
+	int			i;
 
 	c_alias_polys += 2;
 
@@ -50,7 +49,7 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 	Vector4Set(beamColor, red/255, green/255, blue/255, alpha/255);
 
 	VectorSubtract(start, end, ang_up);
-	len = VectorNormalize(ang_up);
+	VectorNormalize(ang_up);
 
 	VectorSubtract(r_newrefdef.vieworg, start, vdelta);
 	CrossProduct(ang_up, vdelta, ang_right);

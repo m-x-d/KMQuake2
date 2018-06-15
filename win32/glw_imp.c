@@ -37,12 +37,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "glw_win.h"
 #include "winquake.h"
 
-static qboolean GLimp_SwitchFullscreen( int width, int height );
+//static qboolean GLimp_SwitchFullscreen( int width, int height ); //mxd. No definition
 qboolean GLimp_InitGL (void);
 
 glwstate_t glw_state;
 
-extern cvar_t *vid_fullscreen;
+//extern cvar_t *vid_fullscreen; //mxd. Redundant declaration
 extern cvar_t *vid_ref;
 
 // Knightmare- added Vic's hardware gammaramp
@@ -854,13 +854,13 @@ void GLimp_AppActivate( qboolean active )
 				dm.dmFields |= DM_BITSPERPEL;
 			//	VID_Printf( PRINT_ALL, "...using r_bitdepth of %d\n", (int)r_bitdepth->value );
 			}
-			else
+			/*else
 			{
 				HDC hdc = GetDC( NULL );
 				int bitspixel = GetDeviceCaps( hdc, BITSPIXEL );
 			//	VID_Printf( PRINT_ALL, "...using desktop display depth of %d\n", bitspixel );
 				ReleaseDC( 0, hdc );
-			}
+			}*/
 
 			VID_Printf( PRINT_ALL, "...calling CDS: " );
 			if ( ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) == DISP_CHANGE_SUCCESSFUL )

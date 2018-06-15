@@ -140,7 +140,7 @@ CL_ParseServerData
 */
 void CL_ParseServerData (void)
 {
-	extern cvar_t	*fs_gamedirvar;
+	//extern cvar_t	*fs_gamedirvar; //mxd. Redundant declaration
 	char	*str;
 	int		i;
 	
@@ -741,7 +741,7 @@ void CL_ParseServerMessage (void)
 //
 // parse the message
 //
-	while (1)
+	while (true)
 	{
 		if (net_message.readcount > net_message.cursize)
 		{

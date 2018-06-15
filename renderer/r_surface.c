@@ -595,7 +595,7 @@ blends them into the framebuffer.
 void R_BlendLightmaps (void)
 {
 	int			i;
-	msurface_t	*surf, *newdrawsurf = 0;
+	msurface_t	*surf, *newdrawsurf;
 
 	// not used in multitexture mode
 	if (glConfig.multitexture)
@@ -609,8 +609,7 @@ void R_BlendLightmaps (void)
 	// don't bother writing Z
 	GL_DepthMask (false);
 
-	// set the appropriate blending mode unless we're only looking at the
-	// lightmaps.
+	// set the appropriate blending mode unless we're only looking at the lightmaps.
 	if (!r_lightmap->value)
 	{
 		GL_Enable (GL_BLEND);
@@ -1241,7 +1240,7 @@ Underwater caustic effect based on code by Kirk Barnes
 extern unsigned int dst_texture_ARB;
 static void RB_DrawCaustics (msurface_t *surf)
 {
-	int			i, vert=0;	// nv
+	int			i;	// nv
 	float		scrollh, scrollv, scaleh, scalev, dstscroll;	// *v,
 	image_t		*causticpic = RB_CausticForSurface (surf);
 	qboolean	previousBlend = false;
@@ -2417,7 +2416,6 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 {
 	int			i, lindex, lnumverts;
 	medge_t		*pedges, *r_pedge;
-	int			vertpage;
 	float		*vec;
 	float		s, t;
 	glpoly_t	*poly;
@@ -2426,7 +2424,6 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 // reconstruct the polygon
 	pedges = currentmodel->edges;
 	lnumverts = fa->numedges;
-	vertpage = 0;
 
 	VectorClear (total);
 

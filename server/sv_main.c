@@ -124,13 +124,17 @@ client_t *GetClientFromAdr (netadr_t address)
 	for (i = 0; i < maxclients->value; i++)
 	{
 		cl = &svs.clients[i];
-		if (NET_CompareBaseAdr(cl->netchan.remote_address, address)) {
-			found = true; break; }
+		if (NET_CompareBaseAdr(cl->netchan.remote_address, address))
+		{
+			found = true;
+			break;
+		}
 	}
 	if (found)
 		return cl;
-	else // don't return non-matching client
-		return NULL;
+
+	// don't return non-matching client
+	return NULL;
 }
 
 
@@ -861,12 +865,9 @@ player processing happens outside RunWorldFrame
 */
 void SV_PrepWorldFrame (void)
 {
-	edict_t	*ent;
-	int		i;
-
-	for (i=0 ; i<ge->num_edicts ; i++, ent++)
+	for (int i=0 ; i<ge->num_edicts ; i++)
 	{
-		ent = EDICT_NUM(i);
+		edict_t *ent = EDICT_NUM(i);
 		// events only last for a single message
 		ent->s.event = 0;
 	}

@@ -177,9 +177,7 @@ sortedpart_t NewSortedPart (particle_t *p)
 
 void R_SortParticlesOnList (void)
 {
-	int i, j=0, rangestart=0, rangecount=1;
-
-	for (i=0; i<r_newrefdef.num_particles; i++)
+	for (int i=0; i<r_newrefdef.num_particles; i++)
 		sorted_parts[i] = NewSortedPart(&r_newrefdef.particles[i]);
 
 	qsort((void *)sorted_parts, r_newrefdef.num_particles, sizeof(sortedpart_t), transCompare);
@@ -531,7 +529,7 @@ R_RenderParticle
 void R_RenderParticle (particle_t *p)
 {
 	float		size, len, lighting = r_particle_lighting->value;
-	int			oldrender=0, rendertype=0, numVerts, numIndex;
+	int			numVerts, numIndex;
 	
 	vec3_t		shadelight, move;
 	vec4_t		partColor;
@@ -589,15 +587,20 @@ void R_RenderParticle (particle_t *p)
 
 	// estimate number of verts for this particle
 	if (p->flags & PART_SPARK)
-	{	numVerts = numIndex = 3;	}
-	else if (p->flags & PART_LIGHTNING) {
+	{
+		numVerts = numIndex = 3;
+	}
+	else if (p->flags & PART_LIGHTNING)
+	{
 		VectorSubtract(p->origin, p->angle, move);
 		len = VectorNormalize(move);
 		numVerts = numIndex = len / size + 1;
 		numVerts *= 4;	numIndex *= 6;
 	}
 	else // PART_BEAM, PART_DIRECTION, PART_ANGLED, default
-	{	numVerts = 4;	numIndex = 6;	}
+	{
+		numVerts = 4;	numIndex = 6;
+	}
 
 	// check if render state changed from last particle
 	R_CheckParticleRenderState (&thisPart, numVerts, numIndex);
@@ -713,10 +716,10 @@ void R_RenderParticle (particle_t *p)
 		VectorCopy(thisvec, tempvec);
 		
 		//lightning starts at point and then flares out
-		#define LIGHTNINGWARPFUNCTION 0.25*sin(time+i+warpfactor)*(dec/len)
+		#define LIGHTNINGWARPFUNCTION 0.25f*sinf(time+i+warpfactor)*(dec/len)
 		
 		warpadd = LIGHTNINGWARPFUNCTION;
-		factor = 1;
+		//factor = 1; //mxd. Assigned value never used
 		halflen = len/2.0;
 		
 		thisvec[0]= (thisvec[0]*2 + crandom()*5)/2;
@@ -750,7 +753,7 @@ void R_RenderParticle (particle_t *p)
 				rb_vertex++;
 			}
 
-			tlen = (len<halflen)? fabs(len-halflen): fabs(len-halflen);
+			tlen = fabsf(len - halflen); //mxd. Was (len<halflen) ? fabsf(len-halflen) : fabsf(len-halflen);
 			factor = tlen/(size*size);
 			
 			if (factor > 4)
@@ -770,7 +773,7 @@ void R_RenderParticle (particle_t *p)
 			thisvec[2]= ((thisvec[2] + crandom()*size) + tempvec[2]*factor)/(factor+1);
 		}
 
-		i+=warpsize;
+		//i+=warpsize; //mxd. Assigned value never used
 		
 		// one more time
 		if (len>0)

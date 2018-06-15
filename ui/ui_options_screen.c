@@ -160,13 +160,13 @@ qboolean isNumeric (char ch)
 {
 	if (ch >= '0' && ch <= '9')
 		return true;
-	else return false;
+	return false;
 }
 
 char **SetCrosshairNames (void)
 {
 	char *curCrosshair;
-	char **list = 0, *p;
+	char **list, *p;
 	char findname[1024];
 	int ncrosshairs = 0, ncrosshairnames;
 	char **crosshairfiles;
@@ -465,7 +465,7 @@ void Options_Screen_MenuInit ( void )
 
 void MenuCrosshair_MouseClick ( void )
 {
-	char *sound = NULL;
+	char *sound;
 	buttonmenuobject_t crosshairbutton;
 	int button_x, button_y;
 	int button_size;

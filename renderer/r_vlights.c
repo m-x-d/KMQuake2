@@ -44,14 +44,14 @@ void VLight_InitAnormTable (void)
 	for ( x = 0; x < VLIGHT_GRIDSIZE_X; x++ )
 	{
 		angle = (x * 360 / VLIGHT_GRIDSIZE_X) * ( M_PI / 180.0f );
-		sy = sin(angle);
-		cy = cos(angle);
+		sy = sinf(angle);
+		cy = cosf(angle);
 
 		for ( y = 0; y < VLIGHT_GRIDSIZE_Y; y++ )
 		{
 			angle = (y * 360 / VLIGHT_GRIDSIZE_X) * ( M_PI / 180.0f );
-			sp = sin(angle);
-			cp = cos(angle);
+			sp = sinf(angle);
+			cp = cosf(angle);
 			
 			vlightgrid[x][y][0] = cp*cy;
 			vlightgrid[x][y][1] = cp*sy;
@@ -81,7 +81,7 @@ float VLight_GetLightValue ( vec3_t normal, vec3_t dir, float apitch, float ayaw
 		if (angle2 < 0)
 			angle2 += 360;
 		
-		forward = sqrt ( normal[0]*normal[0] + normal[1]*normal[1] );
+		forward = sqrtf ( normal[0]*normal[0] + normal[1]*normal[1] );
 		angle1 = atan2( normal[2], forward ) * ( 180.0f / M_PI );
 		if (angle1 < 0)
 			angle1 += 360;

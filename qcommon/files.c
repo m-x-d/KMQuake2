@@ -581,7 +581,7 @@ int FS_FOpenFileRead (fsHandle_t *handle)
 			// find index of pack item
 			i = FS_FindPackItem (pack, handle->name, hash);
 			// found it!
-			if ( i != -1 && i >= 0 && i < pack->numFiles )
+			if ( i >= 0 && i < pack->numFiles )
 			{
 #else
 			for (i = 0; i < pack->numFiles; i++)
@@ -873,7 +873,8 @@ int FS_Write (const void *buffer, int size, fileHandle_t f){
 			Com_Printf(S_COLOR_RED"FS_Write: 0 bytes written to %s\n", handle->name);
 			return size - remaining;
 		}
-		else if (w == -1)
+
+		if (w == -1)
 			Com_Error(ERR_FATAL, "FS_Write: -1 bytes written to %s", handle->name);
 
 		remaining -= w;
@@ -917,7 +918,7 @@ char **FS_ListPak (char *find, int *num)
 	fsPack_t		*pak;
 
 	int nfiles = 0, nfound = 0;
-	char **list = 0;
+	char **list;
 	int i;
 
 	// now check pak files
@@ -1040,14 +1041,14 @@ Returns -1 if an error occurs
 */
 int FS_Tell (fileHandle_t f)
 {
-	fsHandle_t *handle;
-
-	handle = FS_GetFileByHandle(f);
+	fsHandle_t *handle = FS_GetFileByHandle(f);
 
 	if (handle->file)
 		return ftell(handle->file);
-	else if (handle->zip)
+	if (handle->zip)
 		return unztell(handle->zip);
+
+	return -1; //mxd. Let's actually return -1 :)
 }
 
 /*
@@ -1127,8 +1128,6 @@ int FS_LoadFile (char *path, void **buffer)
 	fileHandle_t	f;
 	byte			*buf;
 	int				size;
-
-	buf = NULL;
 
 	size = FS_FOpenFile(path, &f, FS_READ);
 	if (size == -1 || size == 0)
@@ -1516,7 +1515,6 @@ void FS_AddGameDirectory (const char *dir)
 	char			packPath[MAX_OSPATH];
 	int				i, j;
 	// VoiD -S- *.pak support
-	char *path = NULL;
 	char findname[1024];
 	char **dirnames;
 	int ndirs;
@@ -1745,7 +1743,7 @@ void FS_Startup (void)
 FS_Init
 =================
 */
-void FS_Dir_f (void);
+//void FS_Dir_f (void); //mxd. Redundant declaration
 void FS_Link_f (void);
 char *Sys_GetCurrentDirectory (void);
 
@@ -2036,7 +2034,7 @@ char **FS_ListFiles (char *findname, int *numfiles, unsigned musthave, unsigned 
 {
 	char *s;
 	int nfiles = 0;
-	char **list = 0;
+	char **list;
 
 	s = Sys_FindFirst( findname, musthave, canthave );
 	while ( s )

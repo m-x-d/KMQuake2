@@ -185,7 +185,7 @@ void Sys_Error (char *error, ...)
 	Sys_ShowConsole(true);
 
 	// Wait for the user to quit
-	while (1)
+	while (true)
 	{
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
 		{

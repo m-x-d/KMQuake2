@@ -178,7 +178,7 @@ the entire URL...
 */
 static void CL_EscapeHTTPPath (const char *filePath, char *escaped)
 {
-	int		i;
+	size_t	i;
 	size_t	len;
 	char	*p;
 

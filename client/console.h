@@ -52,14 +52,14 @@ extern	console_t	con;
 
 extern	qboolean	halfconback;	// whether to draw Q3-style console
 
-void Con_DrawCharacter (int cx, int line, int num);
+//void Con_DrawCharacter (int cx, int line, int num); //mxd. Undeclared and unused
 
 void Con_CheckResize (void);
 void Con_Init (void);
 //Knightmare changed
 //void Con_DrawConsole (float frac);
 void Con_DrawConsole (float frac, qboolean ingame);
-void Con_Print (char *txt);
+//void Con_Print (char *txt); //mxd. Redundant declaration
 void Con_CenteredPrint (char *text);
 void Con_Clear_f (void);
 void Con_DrawNotify (void);

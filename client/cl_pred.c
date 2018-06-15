@@ -121,8 +121,7 @@ void CL_ClipMoveToEntities (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, 
 			mins, maxs, headnode,  MASK_PLAYERSOLID,
 			ent->origin, angles);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < tr->fraction)
+		if (trace.allsolid || trace.startsolid || trace.fraction < tr->fraction)
 		{
 			trace.ent = (struct edict_s *)ent;
 		 	if (tr->startsolid)
@@ -197,8 +196,7 @@ void CL_ClipMoveToEntities2 (int entnum, vec3_t start, vec3_t mins, vec3_t maxs,
 			mins, maxs, headnode,  MASK_PLAYERSOLID,
 			ent->origin, angles);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < tr->fraction)
+		if (trace.allsolid || trace.startsolid || trace.fraction < tr->fraction)
 		{
 			trace.ent = (struct edict_s *)ent;
 		 	if (tr->startsolid)
@@ -253,8 +251,7 @@ void CL_ClipMoveToBrushEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 			mins, maxs, headnode,  MASK_PLAYERSOLID,
 			ent->origin, angles);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < tr->fraction)
+		if (trace.allsolid || trace.startsolid || trace.fraction < tr->fraction)
 		{
 			trace.ent = (struct edict_s *)ent;
 		 	if (tr->startsolid)
@@ -485,7 +482,7 @@ void CL_PredictMovement (void)
 
 //	SCR_DebugGraph (current - ack - 1, 0);
 
-	frame = 0;
+	//frame = 0; //mxd. Never used
 
 #ifdef CLIENT_SPLIT_NETFRAME
 	if (cl_async->value)

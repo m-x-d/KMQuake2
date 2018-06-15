@@ -42,7 +42,7 @@ static	void	SpinControl_DoSlide( menulist_s *s, int dir );
 #define RCOLUMN_OFFSET  MENU_FONT_SIZE*2	// was 16
 #define LCOLUMN_OFFSET -MENU_FONT_SIZE*2	// was -16
 
-extern viddef_t viddef;
+//extern viddef_t viddef; //mxd. Redundant declaration
 
 #define VID_WIDTH viddef.width
 #define VID_HEIGHT viddef.height
@@ -53,14 +53,14 @@ int stringLen (const char *string);
 int stringLengthExtra (const char *string)
 {
 	unsigned i, j;
-	char modifier;
+	//char modifier;
 	float len = strlen( string );
 
 	for ( i = 0, j = 0; i < len; i++ )
 	{
-		modifier = string[i];
+		/*modifier = string[i];
 		if (modifier>128)
-			modifier-=128;
+			modifier-=128;*/
 
 		if ((string[i] == '^') || (i>0 && string[i-1] == '^'))
 			j++;
@@ -71,8 +71,7 @@ int stringLengthExtra (const char *string)
 
 char *unformattedString (const char *string)
 {
-	unsigned i;
-	int len;
+	unsigned i, len;
 	char character;
 	char *newstring = "";
 
@@ -100,17 +99,15 @@ int mouseOverAlpha (menucommon_s *m)
 {
 	if (cursor.menuitem == m)
 	{
-		int alpha;
-
-		alpha = 125 + 25 * cos(anglemod(cl.time*0.005));
+		int alpha = 125 + 25 * cosf(anglemod(cl.time*0.005));
 
 		if (alpha>255) alpha = 255;
 		if (alpha<0) alpha = 0;
 
 		return alpha;
 	}
-	else 
-		return 255;
+
+	return 255;
 }
 //======================================================
 
@@ -159,9 +156,8 @@ qboolean Field_DoEnter (menufield_s *f)
 
 void Field_Draw (menufield_s *f)
 {
-	int i, alpha = mouseOverAlpha(&f->generic), xtra;
+	int alpha = mouseOverAlpha(&f->generic), xtra;
 	char tempbuffer[128]="";
-	int offset;
 
 	if (f->generic.name)
 		Menu_DrawStringR2LDark (f->generic.x + f->generic.parent->x + LCOLUMN_OFFSET,
@@ -170,19 +166,19 @@ void Field_Draw (menufield_s *f)
 	if (xtra = stringLengthExtra(f->buffer))
 	{
 		strncpy( tempbuffer, f->buffer + f->visible_offset, f->visible_length );
-		offset = strlen(tempbuffer) - xtra;
+		int offset = strlen(tempbuffer) - xtra;
 
 		if (offset > f->visible_length)
 		{
 			f->visible_offset = offset - f->visible_length;
 			strncpy( tempbuffer, f->buffer + f->visible_offset - xtra, f->visible_length + xtra );
-			offset = f->visible_offset;
+			//offset = f->visible_offset; //mxd. Assigned value never used
 		}
 	}
 	else
 	{
 		strncpy( tempbuffer, f->buffer + f->visible_offset, f->visible_length );
-		offset = strlen(tempbuffer);
+		//offset = strlen(tempbuffer); //mxd. Assigned value never used
 	}
 
 	SCR_DrawChar (f->generic.x + f->generic.parent->x + MENU_FONT_SIZE*2,
@@ -194,7 +190,7 @@ void Field_Draw (menufield_s *f)
 	SCR_DrawChar (f->generic.x + f->generic.parent->x + (3+f->visible_length)*MENU_FONT_SIZE,
 				f->generic.y + f->generic.parent->y + 4, ALIGN_CENTER, 26, 255,255,255,255, false, false);
 
-	for (i = 0; i < f->visible_length; i++)
+	for (int i = 0; i < f->visible_length; i++)
 	{
 		SCR_DrawChar (f->generic.x + f->generic.parent->x + (3+i)*MENU_FONT_SIZE,
 					f->generic.y + f->generic.parent->y - 4, ALIGN_CENTER, 19, 255,255,255,255, false, false);
@@ -588,7 +584,7 @@ void Menu_AdjustCursor (menuframework_s *m, int dir)
 	//
 	if (dir == 1)
 	{
-		while (1)
+		while (true)
 		{
 			if ( (citem = Menu_ItemAtCursor(m)) != 0 )
 			//	if ( citem->type != MTYPE_SEPARATOR )
@@ -601,7 +597,7 @@ void Menu_AdjustCursor (menuframework_s *m, int dir)
 	}
 	else
 	{
-		while (1)
+		while (true)
 		{
 			if ( (citem = Menu_ItemAtCursor(m)) != 0 )
 			//	if (citem->type != MTYPE_SEPARATOR)
@@ -682,7 +678,7 @@ void Menu_Draw (menuframework_s *menu)
 
 		for (i = menu->nitems; i >= 0 ; i--)
 		{
-			int		type, len;
+			int		type;
 			int		min[2], max[2];
 			float	x1, y1, w1, h1;
 
@@ -705,7 +701,7 @@ void Menu_Draw (menuframework_s *menu)
 			{
 				case MTYPE_ACTION:
 					{
-						len = strlen(item->name);
+						int len = strlen(item->name);
 						
 						if (item->flags & QMF_LEFT_JUSTIFY)
 						{
@@ -722,7 +718,7 @@ void Menu_Draw (menuframework_s *menu)
 					{
 						if (item->name)
 						{
-							len = strlen(item->name);
+							int len = strlen(item->name);
 							min[0] -= SCR_ScaledVideo(len*MENU_FONT_SIZE - LCOLUMN_OFFSET*2);
 						}
 						else
@@ -736,7 +732,6 @@ void Menu_Draw (menuframework_s *menu)
 					{
 						int len;
 						menulist_s *spin = menu->items[i];
-
 
 						if (item->name)
 						{
@@ -754,7 +749,7 @@ void Menu_Draw (menuframework_s *menu)
 					{
 						menufield_s *text = menu->items[i];
 
-						len = text->visible_length + 2;
+						int len = text->visible_length + 2;
 
 						max[0] += SCR_ScaledVideo(len*MENU_FONT_SIZE);
 						type = MENUITEM_TEXT;

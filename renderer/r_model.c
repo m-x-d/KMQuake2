@@ -64,7 +64,7 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 		VID_Error (ERR_DROP, "Mod_PointInLeaf: bad model");
 
 	node = model->nodes;
-	while (1)
+	while (true)
 	{
 		if (node->contents != -1)
 			return (mleaf_t *)node;
@@ -588,24 +588,24 @@ Mod_CheckWalSizeList
 */
 qboolean Mod_CheckWalSizeList (const char *name, int *width, int *height)
 {
-	int		i;
-	long	hash;
-
-	hash = Com_HashFileName(name, 0, false);
-	for (i=0; i<NUM_WALSIZES; i++)
+	const long hash = Com_HashFileName(name, 0, false);
+	for (int i = 0; i<NUM_WALSIZES; i++)
 	{
-		if (hash == walSizeList[i].hash) {	// compare hash first
-			if (walSizeList[i].name && strlen(walSizeList[i].name)
-				&& !strcmp(name, walSizeList[i].name))
-			{	// return size of texture
+		if (hash == walSizeList[i].hash) // compare hash first
+		{	
+			if (strlen(walSizeList[i].name) && !strcmp(name, walSizeList[i].name)) //mxd. Address of array 'walSizeList[i].name' will always evaluate to 'true'
+			{	
+				// return size of texture
 				if (width)
 					*width = walSizeList[i].width;
 				if (height)
 					*height = walSizeList[i].height;
+
 				return true;
 			}
 		}
 	}
+
 	return false;
 }
 
@@ -707,7 +707,7 @@ void Mod_LoadTexinfo (lump_t *l)
 			out->glow = glMedia.notexture;
 		
 		// Q2E HACK: find .wal dimensions for texture coord generation
-		// NOTE: Once Q3 map support is added, be be sure to disable this
+		// NOTE: Once Q3 map support is added, be sure to disable this
 		// for Q3 format maps, because they will be natively textured with
 		// hi-res textures.
 		Mod_GetWalSize (in->texture, &out->texWidth, &out->texHeight);
@@ -773,8 +773,8 @@ void CalcSurfaceExtents (msurface_t *s)
 
 	for (i=0 ; i<2 ; i++)
 	{	
-		bmins[i] = floor(mins[i]/16);
-		bmaxs[i] = ceil(maxs[i]/16);
+		bmins[i] = floorf(mins[i]/16);
+		bmaxs[i] = ceilf(maxs[i]/16);
 
 		s->texturemins[i] = bmins[i] * 16;
 		s->extents[i] = (bmaxs[i] - bmins[i]) * 16;
@@ -1310,7 +1310,7 @@ skin protoshaders
 */
 void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int dataSize, char *meshname, int skinnum, char *scriptname)
 {
-	char	*token=NULL, *token2=NULL;
+	char	*token, *token2=NULL;
 	char	glowname[MD3_MAX_PATH];
 	int		i;
 	renderparms_t *skinParms = &skin->renderparms;
@@ -1557,10 +1557,10 @@ md3 skin protoshaders
 void Mod_LoadModelScript (model_t *mod, maliasmodel_t *aliasmod)
 {
 	char		scriptname[MAX_QPATH];
-	char		*buf, *parse_data, *token=NULL, *token2=NULL;
+	char		*buf, *parse_data, *token;
 	int			buf_size, i, j; //, k;
 	qboolean	skinname_found;
-	renderparms_t	*skinParms;
+	//renderparms_t	*skinParms;
 
 	// set defaults
 	for (i=0; i < aliasmod->num_meshes; i++)
@@ -1583,7 +1583,7 @@ void Mod_LoadModelScript (model_t *mod, maliasmodel_t *aliasmod)
 	{
 		for (j=0; j<aliasmod->meshes[i].num_skins; j++)
 		{
-			skinParms = &aliasmod->meshes[i].skins[j].renderparms;
+			//skinParms = &aliasmod->meshes[i].skins[j].renderparms;
 
 			// search the script file for that meshname
 			skinname_found = false;
@@ -2038,7 +2038,7 @@ void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer)
 	mod->radius = 0;
 	ClearBounds(mod->mins, mod->maxs);
 
-	for (i=0; i < poutmodel->num_frames; i++, pinframe++, poutframe++, poutvert += numVertices)
+	for (i=0; i < poutmodel->num_frames; i++/*, pinframe++*/, poutframe++, poutvert += numVertices)
 	{
 		pinframe = (daliasframe_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_frames) + i*LittleLong(pinmodel->framesize));
 
@@ -2334,9 +2334,9 @@ void Mod_LoadAliasMD3Model (model_t *mod, void *buffer)
 				lat *= M_PI/128;
 				lng *= M_PI/128;
 
-				normal[0] = cos(lat) * sin(lng);
-				normal[1] = sin(lat) * sin(lng);
-				normal[2] = cos(lng);
+				normal[0] = cosf(lat) * sinf(lng);
+				normal[1] = sinf(lat) * sinf(lng);
+				normal[2] = cosf(lng);
 
 				// use ye olde quantized normals for shading
 				maxdot = -999999.0;

@@ -258,11 +258,11 @@ void M_Menu_Main_f (void);
 		void M_Menu_Options_Interface_f (void);
 	void M_Menu_Quit_f (void);
 
-	void M_Menu_Credits( void );
+	//void M_Menu_Credits( void ); //mxd. Missing definition
 
 static char *creditsBuffer;
 
-void ActionStartMod (char *mod);
+//void ActionStartMod (char *mod); //mxd. Missing definition
 
 // ui_subsystem.c
 void UI_AddButton (buttonmenuobject_t *thisObj, int index, float x, float y, float w, float h);
@@ -271,7 +271,7 @@ void UI_RefreshCursorMenu (void);
 void UI_RefreshCursorLink (void);
 void UI_RefreshCursorButtons (void);
 void UI_PushMenu ( void (*draw) (void), const char *(*key) (int k) );
-void UI_ForceMenuOff (void);
+//void UI_ForceMenuOff (void); //mxd. Redundant declaration
 void UI_PopMenu (void);
 void UI_BackMenu (void *unused);
 const char *Default_MenuKey( menuframework_s *m, int key );

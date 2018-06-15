@@ -108,7 +108,7 @@ typedef struct {
 
 static cinematic_t	cinematics[MAX_CINEMATICS];
 
-void Q_strncpyz (char *dst, const char *src, int dstSize);
+//void Q_strncpyz (char *dst, const char *src, int dstSize); //mxd. Redundant declaration
 
 
 typedef struct
@@ -308,7 +308,7 @@ CIN_ReadInfo
 */
 static void CIN_ReadInfo (cinematic_t *cin)
 {
-	roqChunk_t	*chunk = &cin->roqChunk;
+	//roqChunk_t	*chunk = &cin->roqChunk; //mxd. Never used
 	short		data[4];
 
 	FS_Read(data, sizeof(data), cin->file);
@@ -345,13 +345,12 @@ CIN_ReadCodebook
 static void CIN_ReadCodebook (cinematic_t *cin)
 {
 	roqChunk_t	*chunk = &cin->roqChunk;
-	int			nv1, nv2;
 
-	nv1 = (chunk->argument >> 8) & 0xff;
+	unsigned int nv1 = (chunk->argument >> 8) & 0xff; //mxd. int -> unsigned int
 	if (!nv1)
 		nv1 = 256;
 
-	nv2 = chunk->argument & 0xff;
+	unsigned int nv2 = chunk->argument & 0xff; //mxd. int -> unsigned int
 	if (!nv2 && (nv1 * 6 < chunk->size))
 		nv2 = 256;
 
@@ -702,7 +701,7 @@ static void CIN_Huff1Decompress (cinematic_t *cin, const byte *data, int size)
 			nodeNum = cin->hNumNodes1[nodeNum];
 		}
 		nodeNum = nodes[nodeNum*2 + (in&1)];
-		in >>= 1;
+		//in >>= 1; //mxd. Never used
 	}
 
 	if (input - data != size && input - data != size+1)
@@ -990,7 +989,7 @@ static void CIN_ReadAudioFrame (cinematic_t *cin)
 		roqChunk_t	*chunk = &cin->roqChunk;
 		byte		compressed[0x20000];
 		short		l, r;
-		int			i;
+		unsigned	i; //mxd. int -> unsigned
 
 		if (cin->flags & CIN_SILENT)
 		{
@@ -1086,7 +1085,7 @@ static qboolean CIN_ReadNextFrame (cinematic_t *cin)
 			if (cin->remaining <= 0 || chunk->size > cin->remaining)
 				return false;	// Done
 
-			if (chunk->size <= 0)
+			if (chunk->size == 0) //mxd. unsigned can't be < 0
 				continue;
 
 			if (chunk->id == RoQ_INFO)

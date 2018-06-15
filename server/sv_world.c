@@ -219,21 +219,18 @@ void SV_LinkEdict (edict_t *ent)
 	// set the abs box
 	if (ent->solid == SOLID_BSP && 
 	(ent->s.angles[0] || ent->s.angles[1] || ent->s.angles[2]) )
-	{	// expand for rotation
-		float		max, v;
-		int			i;
-
-		max = 0;
-		for (i=0 ; i<3 ; i++)
+	{	
+		// expand for rotation
+		float max = 0;
+		for (int i=0 ; i<3 ; i++)
 		{
-			v =fabs( ent->mins[i]);
-			if (v > max)
-				max = v;
-			v =fabs( ent->maxs[i]);
-			if (v > max)
-				max = v;
+			float v = fabs(ent->mins[i]);
+			if (v > max) max = v;
+			v = fabs(ent->maxs[i]);
+			if (v > max) max = v;
 		}
-		for (i=0 ; i<3 ; i++)
+
+		for (int i=0 ; i<3 ; i++)
 		{
 			ent->absmin[i] = ent->s.origin[i] - max;
 			ent->absmax[i] = ent->s.origin[i] + max;
@@ -324,7 +321,7 @@ void SV_LinkEdict (edict_t *ent)
 
 // find the first node that the ent's box crosses
 	node = sv_areanodes;
-	while (1)
+	while (true)
 	{
 		if (node->axis == -1)
 			break;
@@ -355,9 +352,6 @@ void SV_AreaEdicts_r (areanode_t *node)
 {
 	link_t		*l, *next, *start;
 	edict_t		*check;
-	int			count;
-
-	count = 0;
 
 	// touch linked edicts
 	if (area_type == AREA_SOLID)
@@ -434,7 +428,6 @@ int SV_PointContents (vec3_t p)
 	int			i, num;
 	int			contents, c2;
 	int			headnode;
-	float		*angles;
 
 	// get base contents from world
 	contents = CM_PointContents (p, sv.models[1]->headnode);
@@ -448,10 +441,6 @@ int SV_PointContents (vec3_t p)
 
 		// might intersect, so do an exact clip
 		headnode = SV_HullForEntity (hit);
-		angles = hit->s.angles;
-		if (hit->solid != SOLID_BSP)
-			angles = vec3_origin;	// boxes don't rotate
-
 		c2 = CM_TransformedPointContents (p, headnode, hit->s.origin, hit->s.angles);
 
 		contents |= c2;
@@ -563,8 +552,7 @@ void SV_ClipMoveToEntities ( moveclip_t *clip )
 				clip->mins, clip->maxs, headnode,  clip->contentmask,
 				touch->s.origin, angles);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < clip->trace.fraction)
+		if (trace.allsolid || trace.startsolid || trace.fraction < clip->trace.fraction)
 		{
 			trace.ent = touch;
 		 	if (clip->trace.startsolid)

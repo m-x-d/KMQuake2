@@ -187,7 +187,7 @@ static qboolean PlayerConfig_ScanDirectories (void)
 {
 	char findname[1024];
 	char scratch[1024];
-	int ndirs = 0, npms = 0;
+	int ndirs = 0, npms;
 	char **dirnames;
 	char *path = NULL;
 	int i;
@@ -362,9 +362,9 @@ static int pmicmpfnc (const void *_a, const void *_b)
 
 qboolean PlayerConfig_MenuInit (void)
 {
-	extern cvar_t *name;
-	extern cvar_t *team;
-	extern cvar_t *skin;
+	//extern cvar_t *name; //mxd. Redundant declaration
+	//extern cvar_t *team; //mxd. Never used
+	//extern cvar_t *skin; //mxd. Redundant declaration
 	char currentdirectory[1024];
 	char currentskin[1024];
 	char scratch[MAX_QPATH];
@@ -605,11 +605,11 @@ void PlayerConfig_MouseClick (void)
 			icon_y = SCREEN_HEIGHT - 108,
 			icon_offset = 0;
 	int		i, count;
-	char	*sound = NULL;
+	char	*sound;
 	buttonmenuobject_t buttons[NUM_SKINBOX_ITEMS];
 
 	for (i=0; i<NUM_SKINBOX_ITEMS; i++)
-		buttons[i].index =- 1;
+		buttons[i].index = -1;
 
 	if (s_pmi[s_player_model_box.curvalue].nskins < NUM_SKINBOX_ITEMS || s_player_skin_box.curvalue < 4)
 		i=0;
@@ -655,9 +655,8 @@ void PlayerConfig_MouseClick (void)
 				if (sound)
 					S_StartLocalSound (sound);
 				SkinCallback (NULL);
-
-				return;
 			}
+
 			break;
 		}
 	}
@@ -745,7 +744,7 @@ void PlayerConfig_MenuDraw (void)
 	if ( s_pmi[s_player_model_box.curvalue].skindisplaynames )
 	{
 		int			yaw;
-		int			maxframe = 29;
+		//int			maxframe = 29;
 		vec3_t		modelOrg;
 		// Psychopspaz's support for showing weapon model
 		entity_t	entity[2], *ent;
