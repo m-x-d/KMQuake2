@@ -2010,10 +2010,11 @@ void R_BeginFrame( float camera_separation )
 	//
 	// texturemode stuff
 	//
-	if ( r_texturemode->modified )
+	if ( r_texturemode->modified || (glConfig.anisotropic && r_anisotropic->modified) ) //mxd. https://github.com/yquake2/yquake2/blob/1e3135d4fc306b6085d607afdf766a9514235b0b/src/client/refresh/gl1/gl1_main.c#L1705
 	{
 		GL_TextureMode( r_texturemode->string );
 		r_texturemode->modified = false;
+		r_anisotropic->modified = false;
 	}
 
 	if ( r_texturealphamode->modified )

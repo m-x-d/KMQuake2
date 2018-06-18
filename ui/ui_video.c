@@ -70,6 +70,23 @@ static void BrightnessCallback ( void *s )
 	Cvar_SetValue( "vid_gamma", (1.3 - (s_brightness_slider.curvalue/20.0)) );
 }
 
+static void AnisotropicCallback(void *s) //mxd
+{
+	menulist_s *list = (menulist_s *)s;
+	Cvar_SetValue("r_anisotropic", (list->curvalue == 0 ? 0 : pow(2, list->curvalue)));
+}
+
+static void TextureFilterCallback (void *unused) //mxd
+{
+	switch ((int)s_texfilter_box.curvalue)
+	{
+		case 0:  Cvar_Set("r_texturemode", "GL_NEAREST_MIPMAP_LINEAR"); break;
+		case 1:  Cvar_Set("r_texturemode", "GL_LINEAR_MIPMAP_NEAREST"); break;
+		case 2:
+		default: Cvar_Set("r_texturemode", "GL_LINEAR_MIPMAP_LINEAR"); break;
+	}
+}
+
 static void VsyncCallback ( void *unused )
 {
 	Cvar_SetValue( "r_swapinterval", s_vsync_box.curvalue);
@@ -201,21 +218,6 @@ static void ApplyChanges( void *unused )
 		break;
 	}
 
-	if (s_texfilter_box.curvalue == 0)
-		Cvar_Set("r_texturemode", "GL_LINEAR_MIPMAP_NEAREST");
-	else if (s_texfilter_box.curvalue == 1)
-		Cvar_Set("r_texturemode", "GL_LINEAR_MIPMAP_LINEAR");
-
-	switch ((int)s_aniso_box.curvalue)
-	{
-		case 1: Cvar_SetValue( "r_anisotropic", 2.0 ); break;
-		case 2: Cvar_SetValue( "r_anisotropic", 4.0 ); break;
-		case 3: Cvar_SetValue( "r_anisotropic", 8.0 ); break;
-		case 4: Cvar_SetValue( "r_anisotropic", 16.0 ); break;
-		default:
-		case 0: Cvar_SetValue( "r_anisotropic", 0.0 ); break;
-	}
-
 	Cvar_SetValue( "r_nonpoweroftwo_mipmaps", s_npot_mipmap_box.curvalue );
 //	Cvar_SetValue( "r_ext_texture_compression", s_texcompress_box.curvalue );
 
@@ -232,10 +234,12 @@ static void ApplyChanges( void *unused )
 int texfilter_box_setval (void)
 {
 	char *texmode = Cvar_VariableString("r_texturemode");
-	if (!Q_strcasecmp(texmode, "GL_LINEAR_MIPMAP_NEAREST"))
+	if (!Q_strcasecmp(texmode, "GL_NEAREST_MIPMAP_LINEAR")) //mxd
 		return 0;
-	else
+	if (!Q_strcasecmp(texmode, "GL_LINEAR_MIPMAP_NEAREST"))
 		return 1;
+
+	return 2; //trilinear
 }
 
 // Knightmare- refresh rate option
@@ -377,6 +381,7 @@ void Menu_Video_Init (void)
 	};
 	static const char *mip_names[] =
 	{
+		"nearest", //mxd
 		"bilinear",
 		"trilinear",
 		0
@@ -470,6 +475,7 @@ void Menu_Video_Init (void)
 	s_texfilter_box.generic.x			= 0;
 	s_texfilter_box.generic.y			= y += 2*MENU_LINE_SIZE;
 	s_texfilter_box.generic.name		= "texture filter";
+	s_texfilter_box.generic.callback	= TextureFilterCallback; //mxd
 	s_texfilter_box.curvalue			= texfilter_box_setval();
 	s_texfilter_box.itemnames			= mip_names;
 	s_texfilter_box.generic.statusbar	= "changes texture filtering mode";
@@ -478,6 +484,7 @@ void Menu_Video_Init (void)
 	s_aniso_box.generic.x			= 0;
 	s_aniso_box.generic.y			= y += MENU_LINE_SIZE;
 	s_aniso_box.generic.name		= "anisotropic filter";
+	s_aniso_box.generic.callback	= AnisotropicCallback; //mxd
 	s_aniso_box.curvalue			= GetAnisoCurValue();
 	s_aniso_box.itemnames			= GetAnisoNames();
 	s_aniso_box.generic.statusbar	= "changes level of anisotropic mipmap filtering";

@@ -327,8 +327,6 @@ extern	cvar_t	*vid_gamma;
 
 
 extern	int		gl_lightmap_format;
-extern	int		gl_solid_format;
-extern	int		gl_alpha_format;
 extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
 
