@@ -1128,7 +1128,7 @@ void R_LoadPNG (char *filename, byte **pic, int *width, int *height)
 		return;
 	}
 
-	png_set_sig_bytes (png, 0/*sizeof( sig )*/);
+	//png_set_sig_bytes (png, 0/*sizeof( sig )*/);
 
 	R_CreatePNG (); // creates the r_png_handle struct
 
@@ -1428,26 +1428,21 @@ typedef struct
 
 void R_FloodFillSkin( byte *skin, int skinwidth, int skinheight )
 {
-	byte				fillcolor = *skin; // assume this is the pixel to fill
+	const byte			fillcolor = *skin; // assume this is the pixel to fill
 	floodfill_t			fifo[FLOODFILL_FIFO_SIZE];
 	int					inpt = 0, outpt = 0;
-	int					filledcolor = -1;
-	int					i;
+	int					filledcolor = 0;
 
-	if (filledcolor == -1)
-	{
-		filledcolor = 0;
-		// attempt to find opaque black
-		for (i = 0; i < 256; ++i)
-			if (d_8to24table[i] == (255 << 0)) // alpha 1.0
-			{
-				filledcolor = i;
-				break;
-			}
-	}
+	// attempt to find opaque black
+	for (int i = 0; i < 256; ++i)
+		if (d_8to24table[i] == (255 << 0)) // alpha 1.0
+		{
+			filledcolor = i;
+			break;
+		}
 
 	// can't fill to filled color or to transparent color (used as visited marker)
-	if ((fillcolor == filledcolor) || (fillcolor == 255))
+	if (fillcolor == filledcolor || fillcolor == 255)
 	{
 		//printf( "not filling skin from %d to %d\n", fillcolor, filledcolor );
 		return;
@@ -2133,16 +2128,14 @@ R_CheckImgFailed
 */
 qboolean R_CheckImgFailed (char *name)
 {
-	int		i;
-	long	hash;
-
-	hash = Com_HashFileName(name, 0, false);
-	for (i=0; i<NUM_FAIL_IMAGES; i++)
+	const long hash = Com_HashFileName(name, 0, false);
+	for (int i = 0; i < NUM_FAIL_IMAGES; i++)
 	{
-		if (hash == lastFailedImageHash[i]) {	// compare hash first
-			if (lastFailedImage[i] && strlen(lastFailedImage[i])
-				&& !strcmp(name, lastFailedImage[i]))
-			{	// we already tried to load this image, didn't find it
+		if (hash == lastFailedImageHash[i]) // compare hash first
+		{	
+			if (lastFailedImage[i][0] && !strcmp(name, lastFailedImage[i]))
+			{	
+				// we already tried to load this image, didn't find it
 				//VID_Printf (PRINT_ALL, "R_CheckImgFailed: found %s on failed to load list\n", name);
 				return true;
 			}

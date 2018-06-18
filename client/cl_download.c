@@ -276,7 +276,7 @@ void CL_RequestNextDownload (void)
 						// r1ch: spam warning for models that are broken
 						if (strchr (skinname, '\\'))
 							Com_Printf ("Warning, sprite %s with incorrectly linked skin: %s\n", cl.configstrings[precache_check], skinname);
-						else if (strlen(skinname) > MAX_SKINNAME-1)
+						else if (strlen(skinname) > MAX_SKINNAME-1) //mxd. Never triggered, because dsprframe_t.name[64]
 							Com_Error (ERR_DROP, "Sprite %s has too long a skin path: %s", cl.configstrings[precache_check], skinname);
 
 						if (!CL_CheckOrDownloadFile(skinname))
@@ -618,14 +618,9 @@ CL_CheckDownloadFailed
 */
 qboolean CL_CheckDownloadFailed (char *name)
 {
-	int		i;
-
-	for (i=0; i<NUM_FAIL_DLDS; i++)
-		if (lastfaileddownload[i] && strlen(lastfaileddownload[i])
-			&& !strcmp(name, lastfaileddownload[i]))
-		{	// we already tried downlaoding this, server didn't have it
-			return true;
-		}
+	for (int i = 0; i < NUM_FAIL_DLDS; i++)
+		if (strlen(lastfaileddownload[i]) && !strcmp(name, lastfaileddownload[i]))
+			return true; // we already tried downloading this, server didn't have it
 
 	return false;
 }
@@ -637,14 +632,12 @@ CL_AddToFailedDownloadList
 */
 void CL_AddToFailedDownloadList (char *name)
 {
-	int			i;
 	qboolean	found = false;
 	//qboolean	added = false; //mxd. Never used
 
 	// check if this name is already in the table
-	for (i=0; i<NUM_FAIL_DLDS; i++)
-		if (lastfaileddownload[i] && strlen(lastfaileddownload[i])
-			&& !strcmp(name, lastfaileddownload[i]))
+	for (int i = 0; i < NUM_FAIL_DLDS; i++)
+		if (strlen(lastfaileddownload[i]) && !strcmp(name, lastfaileddownload[i]))
 		{
 			found = true;
 			break;

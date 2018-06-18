@@ -781,25 +781,26 @@ void Con_DrawConsole (float frac, qboolean trans)
 			Q_strncpyz(dlbar, text, sizeof(dlbar));
 	//	strncat(dlbar, ": ");
 		Q_strncatz(dlbar, ": ", sizeof(dlbar));
-		i = strlen(dlbar);
+
+		len = strlen(dlbar); //mxd
+		//i = strlen(dlbar);
 		
 		// init solid color download bar
-		graph_x = (i+1)*FONT_SIZE;
+		graph_x = (len+1)*FONT_SIZE;
 		graph_y = con.vislines - (int)(FONT_SIZE*1.5) - (int)barheight; // was -12
 		graph_w = y*FONT_SIZE;
 		graph_h = FONT_SIZE;
 
 		for (j = 0; j < y; j++) // add blank spaces
-			Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar)-strlen(dlbar), " ");
+			Com_sprintf(dlbar + len, sizeof(dlbar) - len, " ");
 
 		if (cls.downloadrate > 0.0f)
-			Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar)-strlen(dlbar), " %2d%% (%4.2fKB/s)", cls.downloadpercent, cls.downloadrate);
+			Com_sprintf(dlbar + len, sizeof(dlbar) - len, " %2d%% (%4.2fKB/s)", cls.downloadpercent, cls.downloadrate);
 		else
-			Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar)-strlen(dlbar), " %2d%%", cls.downloadpercent);
+			Com_sprintf(dlbar + len, sizeof(dlbar) - len, " %2d%%", cls.downloadpercent);
 
 		// draw it
 		//y = graph_y;
-		len = strlen(dlbar);
 		for (i = 0; i < len; i++)
 			if (dlbar[i] != ' ')
 				R_DrawChar( (i+1)*FONT_SIZE, graph_y, dlbar[i], CON_FONT_SCALE, 255, 255, 255, 255, false, (i==(len-1)) );

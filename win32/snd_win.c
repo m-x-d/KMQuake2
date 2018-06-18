@@ -659,8 +659,8 @@ int SNDDMA_Init(void)
 
 	if (!dsound_init && !wav_init)
 	{
-		if (snd_firsttime)
-			Com_Printf ("*** No sound device initialized ***\n");
+		//if (snd_firsttime) //mxd. Always false
+			//Com_Printf ("*** No sound device initialized ***\n");
 
 		return 0;
 	}

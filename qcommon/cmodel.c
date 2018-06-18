@@ -594,7 +594,7 @@ cmodel_t *CM_LoadMap (char *name, qboolean clientload, unsigned *checksum)
 
 	map_noareas = Cvar_Get ("map_noareas", "0", 0);
 
-	if (  !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
+	if ( name && !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) ) //mxd. Make sure "name" isn't null before using it
 	{
 		*checksum = last_checksum;
 		if (!clientload)
@@ -602,6 +602,7 @@ cmodel_t *CM_LoadMap (char *name, qboolean clientload, unsigned *checksum)
 			memset (portalopen, 0, sizeof(portalopen));
 			FloodAreaConnections ();
 		}
+
 		return &map_cmodels[0];		// still have the right version
 	}
 

@@ -2664,7 +2664,7 @@ void R_BeginBuildingLightmaps (model_t *m)
 	}
 
 	// initialize the dynamic lightmap texture
-	GL_Bind( glState.lightmap_textures + 0 );
+	GL_Bind( glState.lightmap_textures );
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	qglTexImage2D( GL_TEXTURE_2D, 

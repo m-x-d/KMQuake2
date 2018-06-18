@@ -490,22 +490,20 @@ void Mod_InitFailedTexList (void)
 Mod_CheckTexFailed
 ===============
 */
-qboolean Mod_CheckTexFailed (char *name)
+qboolean Mod_CheckTexFailed (char *name) //mxd. Identical to R_CheckImgFailed
 {
-	int		i;
-	long	hash;
-
-	hash = Com_HashFileName(name, 0, false);
-	for (i=0; i<NUM_FAIL_TEXTURES; i++)
+	const long hash = Com_HashFileName(name, 0, false);
+	for (int i = 0; i<NUM_FAIL_TEXTURES; i++)
 	{
-		if (hash == lastFailedTextureHash[i]) {	// compare hash first
-			if (lastFailedTexture[i] && strlen(lastFailedTexture[i])
-				&& !strcmp(name, lastFailedTexture[i]))
+		if (hash == lastFailedTextureHash[i]) // compare hash first
+		{	
+			if (lastFailedTexture[i][0] && !strcmp(name, lastFailedTexture[i]))
 			{	// we already tried to load this image, didn't find it
 				return true;
 			}
 		}
 	}
+
 	return false;
 }
 

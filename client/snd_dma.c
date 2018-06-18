@@ -591,7 +591,7 @@ void S_IssuePlaysound (playsound_t *ps)
 		Com_Printf ("Issue %i\n", ps->begin);
 	// pick a channel to play on
 	ch = S_PickChannel(ps->entnum, ps->entchannel);
-	if (!ch)
+	if (!ch || !ps->sfx->name[0]) //mxd. Added ps->sfx check...
 	{
 		S_FreePlaysound (ps);
 		return;
@@ -792,6 +792,7 @@ void S_StartLocalSound (char *sound)
 		Com_Printf ("S_StartLocalSound: can't cache %s\n", sound);
 		return;
 	}
+
 	S_StartSound (NULL, cl.playernum+1, 0, sfx, 1, 1, 0);
 }
 
@@ -1158,7 +1159,6 @@ void S_Update (vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		if (!ch->leftvol && !ch->rightvol)
 		{
 			memset (ch, 0, sizeof(*ch));
-			continue;
 		}
 	}
 

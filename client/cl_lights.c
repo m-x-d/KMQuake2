@@ -99,7 +99,7 @@ void CL_SetLightstyle (int i)
 		s = cl.configstrings[i+CS_LIGHTS];
 
 	j = strlen (s);
-	if (j >= MAX_QPATH)
+	if (j >= MAX_QPATH) //mxd: never triggered, because cl.configstrings[][64]
 		Com_Error (ERR_DROP, "svc_lightstyle length=%i", j);
 
 	cl_lightstyle[i].length = j;

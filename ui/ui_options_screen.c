@@ -107,8 +107,8 @@ int	numcrosshairs;
 
 static void CrosshairFunc( void *unused )
 {
-	if (s_options_screen_crosshair_box.curvalue == 0) {
-		Cvar_SetValue( "crosshair", 0); return; }
+	if (s_options_screen_crosshair_box.curvalue == 0)
+		Cvar_SetValue( "crosshair", 0);
 	else
 		Cvar_SetValue( "crosshair", atoi(strdup(crosshair_names[s_options_screen_crosshair_box.curvalue]+2)) );
 }

@@ -343,8 +343,8 @@ float	anglemod(float a)
 	return a;
 }
 
-	int		i;
-	vec3_t	corners[2];
+	//int		i;
+	//vec3_t	corners[2];
 
 
 // this is the slow, general version
@@ -1906,7 +1906,6 @@ void Info_SetValueForKey (char *s, char *key, char *value)
 {
 	char	newi[MAX_INFO_STRING], *v;
 	int		c;
-	int		maxsize = MAX_INFO_STRING;
 
 	if (strstr (key, "\\") || strstr (value, "\\") )
 	{
@@ -1920,13 +1919,13 @@ void Info_SetValueForKey (char *s, char *key, char *value)
 		return;
 	}
 
-	if (strstr (key, "\"") || strstr (value, "\"") )
+	if (strstr (key, "\"") || (value && strstr (value, "\"")) )
 	{
 		Com_Printf ("Can't use keys or values with a \"\n");
 		return;
 	}
 
-	if (strlen(key) > MAX_INFO_KEY-1 || strlen(value) > MAX_INFO_KEY-1)
+	if (strlen(key) > MAX_INFO_KEY-1 || (value && strlen(value) > MAX_INFO_KEY-1))
 	{
 		Com_Printf ("Keys and values must be < 64 characters.\n");
 		return;
@@ -1937,7 +1936,7 @@ void Info_SetValueForKey (char *s, char *key, char *value)
 
 	Com_sprintf (newi, sizeof(newi), "\\%s\\%s", key, value);
 
-	if (strlen(newi) + strlen(s) > maxsize)
+	if (strlen(newi) + strlen(s) > MAX_INFO_STRING)
 	{
 		Com_Printf ("Info string length exceeded\n");
 		return;

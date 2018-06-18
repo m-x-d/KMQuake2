@@ -419,7 +419,8 @@ void SV_BeginDownload_f(void)
 		SV_DropClient (sv_client);
 		return;
 	}
-	else if (offset < 0) // r1ch fix: negative offset will crash on read
+
+	if (offset < 0) // r1ch fix: negative offset will crash on read
 	{
 		Com_Printf ("Refusing illegal download offset %d to %s\n", offset, sv_client->name);
 		MSG_WriteByte (&sv_client->netchan.message, svc_download);
@@ -429,7 +430,8 @@ void SV_BeginDownload_f(void)
 		SV_DropClient (sv_client);
 		return;
 	}
-	else if ( !length || name[0] == 0 // empty name, maybe as result of ./ normalize
+
+	if ( !length || name[0] == 0 // empty name, maybe as result of ./ normalize
 			|| !IsValidChar(name[0])
 			// r1ch: \ is bad in general, client won't even write properly if we do sent it
 			|| strchr (name, '\\')
@@ -452,7 +454,8 @@ void SV_BeginDownload_f(void)
 		|| (strncmp(name, "maps/", 5) == 0 && !allow_download_maps->value)
 		// MUST be in a subdirectory, unless a pk3	
 		|| (!strstr (name, "/") && strcmp(name+strlen(name)-4, ".pk3")) )	*/
-	{	// don't allow anything with .. path
+	{	
+		// don't allow anything with .. path
 		MSG_WriteByte (&sv_client->netchan.message, svc_download);
 		MSG_WriteShort (&sv_client->netchan.message, -1);
 		MSG_WriteByte (&sv_client->netchan.message, 0);

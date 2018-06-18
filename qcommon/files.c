@@ -1687,7 +1687,7 @@ TODO: close open files for game dir
 */
 void FS_Startup (void)
 {
-	if (strstr(fs_gamedirvar->string, "..") || strstr(fs_gamedirvar->string, ".")
+	if (/*strstr(fs_gamedirvar->string, "..") ||*/ strstr(fs_gamedirvar->string, ".")
 		|| strstr(fs_gamedirvar->string, "/") || strstr(fs_gamedirvar->string, "\\")
 		|| strstr(fs_gamedirvar->string, ":") || !fs_gamedirvar->string[0])
 	{

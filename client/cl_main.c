@@ -949,7 +949,6 @@ extern netadr_t global_adr_server_netadr[16];
 
 void CL_PingServers_f (void)
 {
-	int			i;
 	netadr_t	adr;
 	char		name[32];
 	char		*adrstring;
@@ -962,9 +961,10 @@ void CL_PingServers_f (void)
 	Com_Printf ("pinging broadcast...\n");
 
 	// send a packet to each address book entry
-	for (i=0 ; i<16 ; i++)
+	for (int i = 0; i < 16; i++)
 	{
-        memset(&global_adr_server_netadr[i], 0, sizeof(global_adr_server_netadr[0]));
+		const size_t adrsize = sizeof(global_adr_server_netadr[0]); //mxd
+		memset(&global_adr_server_netadr[i], 0, adrsize);
         global_adr_server_time[i] = Sys_Milliseconds() ;
 
         Com_sprintf (name, sizeof(name), "adr%i", i);
@@ -981,7 +981,7 @@ void CL_PingServers_f (void)
 		if (!adr.port)
 			adr.port = BigShort(PORT_SERVER);
         
-        memcpy(&global_adr_server_netadr[i], &adr, sizeof(global_adr_server_netadr));
+        memcpy(&global_adr_server_netadr[i], &adr, adrsize);
 
 		// if the server is using the old protocol,
 		// lie to it about this client's protocol

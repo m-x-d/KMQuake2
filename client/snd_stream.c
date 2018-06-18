@@ -663,8 +663,9 @@ void S_OGG_LoadFileList (void)
 	// Set search path
 	path = FS_NextPath(path);
 	while (path) 
-	{	// Knightmare- catch repeated paths
-		if ( strlen(lastPath) > 0 && !strcmp (path, lastPath) ) {
+	{	
+		// Knightmare- catch repeated paths
+		if ( lastPath[0] && !strcmp (path, lastPath) ) { //mxd. V805 Decreased performance. It is inefficient to identify an empty string by using 'strlen(str) > 0' construct. A more efficient way is to check: str[0] != '\0'.
 			path = FS_NextPath( path );
 			continue;
 		}

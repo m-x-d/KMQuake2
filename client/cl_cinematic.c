@@ -1051,7 +1051,7 @@ static qboolean CIN_ReadNextFrame (cinematic_t *cin)
 	{
 		int			command;
 		
-		while (cin->remaining > 0)
+		if (cin->remaining > 0) //mxd. V612 An unconditional 'return' within a loop.
 		{
 			FS_Read(&command, sizeof(command), cin->file);
 			cin->remaining -= sizeof(command);
@@ -1069,6 +1069,7 @@ static qboolean CIN_ReadNextFrame (cinematic_t *cin)
 
 			cin->frameCount++;
 			cl.cinematicframe = cin->frameCount;
+
 			return true;
 		}
 

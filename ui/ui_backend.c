@@ -82,7 +82,7 @@ char *unformattedString (const char *string)
 		character = string[i];
 
 		if (character&128) character &= ~128;
-		if (character == '^' && i < len)
+		if (character == '^')
 		{
 			i++;
 			continue;
@@ -256,7 +256,7 @@ qboolean Field_Key (menufield_s *f, int key)
 		break;
 	}
 
-	if (key > 127)
+	/*if (key > 127) //mxd. Ths blocked Shift-Ins combo in the next block
 	{
 		switch (key)
 		{
@@ -264,7 +264,7 @@ qboolean Field_Key (menufield_s *f, int key)
 		default:
 			return false;
 		}
-	}
+	}*/
 
 	//
 	// support pasting from the clipboard
@@ -274,6 +274,7 @@ qboolean Field_Key (menufield_s *f, int key)
 	{
 		char *cbd;
 		
+		//TODO: (mxd) paste at cursor position, update text instead of replacing it?
 		if ( ( cbd = Sys_GetClipboardData() ) != 0 )
 		{
 			strtok( cbd, "\n\r\b" );
@@ -286,8 +287,13 @@ qboolean Field_Key (menufield_s *f, int key)
 
 			free( cbd );
 		}
+
 		return true;
 	}
+
+	//mxd
+	if (key > 127)
+		return false;
 
 	switch ( key )
 	{

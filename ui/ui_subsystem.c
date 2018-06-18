@@ -160,14 +160,19 @@ void UI_AddMainButton (mainmenuobject_t *thisObj, int index, int x, int y, char 
 	{
 	case 0:
 		thisObj->OpenMenu = M_Menu_Game_f;
+		break;
 	case 1:
 		thisObj->OpenMenu = M_Menu_Multiplayer_f;
+		break;
 	case 2:
 		thisObj->OpenMenu = M_Menu_Options_f;
+		break;
 	case 3:
 		thisObj->OpenMenu = M_Menu_Video_f;
+		break;
 	case 4:
 		thisObj->OpenMenu = M_Menu_Quit_f;
+		break;
 	}
 }
 

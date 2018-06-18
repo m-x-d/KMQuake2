@@ -890,7 +890,7 @@ void CL_ParsePlayerstate (frame_t *oldframe, frame_t *newframe)
 
 		// parse stats
 		statbits = MSG_ReadLong (&net_message);
-		for (i = 0; i < MAX_STATS; i++)
+		for (i = 0; i < MAX_STATS; i++) //TODO: (mxd) reading 256 bits from 32-bit int is not such a good idea...
 			if (statbits & (1<<i) )
 				state->stats[i] = MSG_ReadShort(&net_message);
 	} //end new CL_ParsePlayerstate code
@@ -1450,8 +1450,8 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.flags |= RF_MIRRORMODEL;
 
 		// if set to invisible, skip
-		if (!s1->modelindex)
-			continue;
+		//if (!s1->modelindex) //mxd. Already checked at line 1410
+			//continue;
 
 		// add to refresh list
 		if (drawEnt) //Knightmare added

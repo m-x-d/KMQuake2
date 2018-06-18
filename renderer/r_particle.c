@@ -472,7 +472,7 @@ SetParticleOverbright
 */
 void SetParticleOverbright (qboolean toggle)
 {
-	if ( (toggle && !ParticleOverbright) || (!toggle && ParticleOverbright) )
+	if ( toggle != ParticleOverbright )
 	{
 		R_SetVertexRGBScale (toggle);
 		ParticleOverbright = toggle;

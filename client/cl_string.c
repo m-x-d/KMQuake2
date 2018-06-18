@@ -175,11 +175,10 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 	len = strlen( string );
 	for ( i = 0, j = 0; i < len; i++ )
 	{
-		qboolean modified = false; //mxd
 		modifier = string[i];
 		if (modifier&128) modifier &= ~128;
 
-		if (modifier == '^' && i < len)
+		if (modifier == '^' /*&& i < len*/)
 		{
 			i++;
 
@@ -187,9 +186,9 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 			modifier = string[i];
 			if (modifier&128) modifier &= ~128;
 
-			if (modifier!='^')
+			if (modifier != '^')
 			{
-				modified = StringSetParams(modifier, &red, &green, &blue, &bold, &shadow, &italic, &reset);
+				const qboolean modified = StringSetParams(modifier, &red, &green, &blue, &bold, &shadow, &italic, &reset); //mxd
 
 				if (reset)
 				{
@@ -200,19 +199,22 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 					shadow = false;
 					bold = false;
 				}
+
 				if (modified)
 					continue;
-				else
-					i--;
+
+				i--;
 			}
 		}
 		j++;
 
 		character = string[i];
-		if (bold && character < 128)
+		if (bold) //mxd
+			character += 128;
+		/*if (bold && character < 128) //mxd. V560 A part of conditional expression is always true: character < 128. The value range of char type: [-128, 127].
 			character += 128;
 		else if (bold && character > 128)
-			character -= 128;
+			character -= 128;*/
 
 		switch (scaleType)
 		{
@@ -224,24 +226,17 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 			textSize = scaledHud(HUD_FONT_SIZE);
 			textScale = HudScale();
 			// hack for alternate text color
-			if (altBit) {
-				if (!modified) {
-					character ^= 0x80;
-					if (character & 128)
-						TextColor((int)alt_text_color->value, &red, &green, &blue);
-				}
-			}
-			else {
-				if (!modified && (character & 128))
-					TextColor((int)alt_text_color->value, &red, &green, &blue);
-			}
+			if (altBit)
+				character ^= 0x80;
+			if (character & 128)
+				TextColor((int)alt_text_color->value, &red, &green, &blue);
 			break;
 		case SCALETYPE_CONSOLE:
 		default:
 			textSize = FONT_SIZE;
 			textScale = FONT_SIZE/8.0;
 			// hack for alternate text color
-			if (!modified && (character & 128))
+			if (character & 128)
 				TextColor((int)alt_text_color->value, &red, &green, &blue);
 			break;
 		}
@@ -249,6 +244,7 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 		if (shadow)
 			R_DrawChar( ( x + (j-1)*textSize+textSize/4 ), y+(textSize/8), 
 				character, textScale, 0, 0, 0, alpha, italic, false );
+
 		R_DrawChar( ( x + (j-1)*textSize ), y,
 			character, textScale, red, green, blue, alpha, italic, (i==(len-1)) );
 	}

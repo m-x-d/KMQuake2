@@ -147,7 +147,6 @@ void S_TransferPaintBuffer(int endtime)
 	int 	out_mask;
 	int 	*p;
 	int 	step;
-	int		val;
 	unsigned long *pbuf;
 
 	pbuf = (unsigned long *)dma.buffer;
@@ -178,12 +177,12 @@ void S_TransferPaintBuffer(int endtime)
 			short *out = (short *) pbuf;
 			while (count--)
 			{
-				val = *p >> 8;
+				int val = *p >> 8;
 				p+= step;
 				if (val > 0x7fff)
 					val = 0x7fff;
-				else if (val < (short)0x8000)
-					val = (short)0x8000;
+				else if (val < -32768) //mxd. Let's be less cryptic...
+					val = -32768;
 				out[out_idx] = val;
 				out_idx = (out_idx + 1) & out_mask;
 			}
@@ -193,13 +192,14 @@ void S_TransferPaintBuffer(int endtime)
 			unsigned char *out = (unsigned char *) pbuf;
 			while (count--)
 			{
-				val = *p >> 8;
+				int val = *p >> 8;
 				p+= step;
-				if (val > 0x7fff)
+				if (val > 0x7fff) //mxd: 32767
 					val = 0x7fff;
-				else if (val < (short)0x8000)
-					val = (short)0x8000;
-				out[out_idx] = (val>>8) + 128;
+				else if (val < -32768) // mxd.Let's be less cryptic...
+					val = -32768;
+				//out[out_idx] = (val>>8) + 128;
+				out[out_idx] = (val + 32768) >> 8; //mxd. Let's apply offset before byte-shifting, so the val is always positive...
 				out_idx = (out_idx + 1) & out_mask;
 			}
 		}
@@ -306,7 +306,7 @@ void S_PaintChannels(int endtime)
 				if (!sc)
 					break;
 
-				if (count > 0 && ch->sfx)
+				if (count > 0 && ch->sfx != NULL) //mxd. V560 A part of conditional expression is always true: ch->sfx.
 				{	
 					if (sc->width == 1)// FIXME; 8 bit asm is wrong now
 						S_PaintChannelFrom8(ch, sc, count,  ltime - paintedtime);

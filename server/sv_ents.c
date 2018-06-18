@@ -466,7 +466,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	// send stats
 	statbits = 0;
-	for (i=0 ; i<MAX_STATS ; i++)
+	for (i=0 ; i<MAX_STATS ; i++) //TODO: (mxd) writing 256 bits into 32-bit int is not such a good idea...
 		if (ps->stats[i] != ops->stats[i])
 			statbits |= 1<<i;
 	MSG_WriteLong (msg, statbits);

@@ -555,14 +555,14 @@ it left.
 */
 qboolean CL_PendingHTTPDownloads (void)
 {
-	dlqueue_t	*q;
+	//dlqueue_t	*q;
 
 	if (!cls.downloadServer[0])
 		return false;
 
 	return pendingCount + handleCount;
 
-	q = &cls.downloadQueue;
+	/*q = &cls.downloadQueue;
 
 	while (q->next)
 	{
@@ -571,7 +571,7 @@ qboolean CL_PendingHTTPDownloads (void)
 			return true;
 	}
 
-	return false;
+	return false;*/
 }
 
 /*
@@ -852,11 +852,10 @@ if so, how severe. If none, rename file and other such stuff.
 */
 static void CL_FinishHTTPDownload (void)
 {
-	size_t		i;
 	int			msgs_in_queue;
 	CURLMsg		*msg;
 	CURLcode	result;
-	dlhandle_t	*dl;
+	dlhandle_t	*dl = NULL; //mxd. Fixes "Potentially uninitialized pointer" warning
 	CURL		*curl;
 	long		responseCode;
 	double		timeTaken;
@@ -883,7 +882,7 @@ static void CL_FinishHTTPDownload (void)
 		curl = msg->easy_handle;
 
 		// curl doesn't provide reverse-lookup of the void * ptr, so search for it
-		for (i = 0; i < 4; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			if (cls.HTTPHandles[i].curl == curl)
 			{
@@ -892,7 +891,7 @@ static void CL_FinishHTTPDownload (void)
 			}
 		}
 
-		if (i == 4)
+		if (dl == NULL)
 			Com_Error (ERR_DROP, "CL_FinishHTTPDownload: Handle not found");
 
 		// we mark everything as done even if it errored to prevent multiple
@@ -930,7 +929,7 @@ static void CL_FinishHTTPDownload (void)
 				curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &responseCode);
 				if (responseCode == 404)
 				{
-					i = strlen (dl->queueEntry->quakePath);
+					const size_t i = strlen (dl->queueEntry->quakePath);
 					if ( !strcmp (dl->queueEntry->quakePath + i - 4, ".pak")
 						|| !strcmp (dl->queueEntry->quakePath + i - 4, ".pk3") )
 						downloading_pak = false;
@@ -984,16 +983,19 @@ static void CL_FinishHTTPDownload (void)
 					continue;
 				CL_CancelHTTPDownloads (true);
 				continue;
+
 			default:
-				i = strlen (dl->queueEntry->quakePath);
-				if ( !strcmp (dl->queueEntry->quakePath + i - 4, ".pak") || !strcmp (dl->queueEntry->quakePath + i - 4, ".pk3") )
+			{
+				const size_t i = strlen(dl->queueEntry->quakePath);
+				if (!strcmp(dl->queueEntry->quakePath + i - 4, ".pak") || !strcmp(dl->queueEntry->quakePath + i - 4, ".pk3"))
 					downloading_pak = false;
 				if (isFile)
-					remove (dl->filePath);
-			//	Com_Printf ("HTTP download failed: %s\n", curl_easy_strerror (result));
-				Com_Printf ("HTTP download failed: %s\n", CURL_ERROR(result));
-				curl_multi_remove_handle (multi, dl->curl);
+					remove(dl->filePath);
+				//	Com_Printf ("HTTP download failed: %s\n", curl_easy_strerror (result));
+				Com_Printf("HTTP download failed: %s\n", CURL_ERROR(result));
+				curl_multi_remove_handle(multi, dl->curl);
 				continue;
+			}
 		}
 
 		if (isFile)
@@ -1005,7 +1007,7 @@ static void CL_FinishHTTPDownload (void)
 				Com_Printf ("Failed to rename %s for some odd reason...", dl->filePath);
 
 			//a pak file is very special...
-			i = strlen (tempName);
+			const size_t i = strlen (tempName);
 			if ( !strcmp (tempName + i - 4, ".pak") || !strcmp (tempName + i - 4, ".pk3") )
 			{
 			//	FS_FlushCache ();

@@ -95,21 +95,21 @@ R_AliasMeshesAreBatchable
 */
 qboolean R_AliasMeshesAreBatchable (maliasmodel_t *paliashdr, unsigned meshnum1, unsigned meshnum2, unsigned skinnum)
 {
-	maliasmesh_t	*mesh1, *mesh2;
-	renderparms_t	*skinParms1, *skinParms2;
-	int				skinnum1, skinnum2;
-
 	if (!paliashdr)
 		return false;
 
-	mesh1 = &paliashdr->meshes[meshnum1];
-	mesh2 = &paliashdr->meshes[meshnum2];
-	skinnum1 = (skinnum<mesh1->num_skins)?skinnum:0;
-	skinnum2 = (skinnum<mesh2->num_skins)?skinnum:0;
-	skinParms1 = &mesh1->skins[skinnum1].renderparms;
-	skinParms2 = &mesh2->skins[skinnum2].renderparms;
+	maliasmesh_t *mesh1 = &paliashdr->meshes[meshnum1];
+	maliasmesh_t *mesh2 = &paliashdr->meshes[meshnum2];
 
-	if (!mesh1 || !mesh2 || !skinParms1 || !skinParms2)
+	if (!mesh1 || !mesh2)
+		return false;
+
+	const int skinnum1 = (skinnum < mesh1->num_skins) ? skinnum : 0;
+	const int skinnum2 = (skinnum < mesh2->num_skins) ? skinnum : 0;
+	renderparms_t *skinParms1 = &mesh1->skins[skinnum1].renderparms;
+	renderparms_t *skinParms2 = &mesh2->skins[skinnum2].renderparms;
+
+	if (!skinParms1 || !skinParms2)
 		return false;
 
 	if (currentmodel->skins[meshnum1][skinnum1] != currentmodel->skins[meshnum2][skinnum2])

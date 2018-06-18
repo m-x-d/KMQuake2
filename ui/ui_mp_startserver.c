@@ -281,11 +281,12 @@ void UI_LoadArenas (void)
 					}
 					if (tok)	free (tok);
 
+					const size_t scratchlen = strlen(scratch) + 1; //mxd. V814 Decreased performance. The 'strlen' function was called multiple times inside the body of a loop.
 					for (j=0; j<NUM_MAPTYPES; j++)
 						if (type_supported[j]) {
-							ui_svr_arena_mapnames[j][ui_svr_arena_nummaps[j]] = malloc(strlen( scratch ) + 1);
+							ui_svr_arena_mapnames[j][ui_svr_arena_nummaps[j]] = malloc(scratchlen);
 						//	strncpy(ui_svr_arena_mapnames[j][ui_svr_arena_nummaps[j]], scratch);
-							Q_strncpyz(ui_svr_arena_mapnames[j][ui_svr_arena_nummaps[j]], scratch, strlen( scratch ) + 1);
+							Q_strncpyz(ui_svr_arena_mapnames[j][ui_svr_arena_nummaps[j]], scratch, scratchlen);
 							ui_svr_arena_nummaps[j]++;
 						}
 

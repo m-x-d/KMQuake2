@@ -232,7 +232,7 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 			area2 = CM_LeafArea (leafnum);
 			if (!CM_AreasConnected (area1, area2))
 				continue;
-			if ( mask && (!(mask[cluster>>3] & (1<<(cluster&7)) ) ) )
+			if ( !(mask[cluster>>3] & 1<<(cluster&7)) )
 				continue;
 		}
 

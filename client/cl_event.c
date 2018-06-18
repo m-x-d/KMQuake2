@@ -74,7 +74,7 @@ void ReadTextureSurfaceAssignments()
 	if (!footstep_data) return;
 	while (buf_gets(line, sizeof(line), &parsedata) && num_texsurfs < MAX_TEX_SURF)
 	{
-		sscanf(line,"%d %s",&tex_surf[num_texsurfs].step_id,tex_surf[num_texsurfs].tex);
+		sscanf(line, "%d %31s", &tex_surf[num_texsurfs].step_id, tex_surf[num_texsurfs].tex);
 		//Com_Printf("%d %s\n",tex_surf[num_texsurfs].step_id,tex_surf[num_texsurfs].tex);
 		num_texsurfs++;
 	}

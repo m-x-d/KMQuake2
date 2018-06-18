@@ -2326,10 +2326,10 @@ void CL_FlyParticles (vec3_t origin, int count)
 
 	if (!avelocities[0][0])
 	{
-		for (i=0 ; i<NUMVERTEXNORMALS*3 ; i++)
-			avelocities[0][i] = (rand()&255) * 0.01;
+		for (i = 0; i < NUMVERTEXNORMALS; i++)
+			for(int c = 0; c < 3; c++)
+				avelocities[i][c] = (rand() & 255) * 0.01f;
 	}
-
 
 	ltime = (float)cl.time / 1000.0;
 	for (i=0 ; i<count ; i+=2)
@@ -2434,10 +2434,10 @@ void CL_BfgParticles (entity_t *ent)
 	
 	if (!avelocities[0][0])
 	{
-		for (i=0 ; i<NUMVERTEXNORMALS*3 ; i++)
-			avelocities[0][i] = (rand()&255) * 0.01;
+		for (i = 0; i < NUMVERTEXNORMALS; i++)
+			for (int c = 0; c < 3; c++)
+				avelocities[i][c] = (rand() & 255) * 0.01f;
 	}
-
 
 	ltime = (float)cl.time / 1000.0;
 	for (i=0 ; i<NUMVERTEXNORMALS ; i++)

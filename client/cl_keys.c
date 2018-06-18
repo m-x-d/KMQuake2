@@ -337,21 +337,16 @@ void Key_Console (int key)
 	{
 		if (key_linepos > 1)
 		{
-			if (con.backedit && con.backedit<key_linepos)
+			if (con.backedit && con.backedit < key_linepos)
 			{
-				if (key_linepos-con.backedit<=1)
+				if (key_linepos - con.backedit <= 1)
 					return;
 
-				for (int i=key_linepos-con.backedit-1; i<key_linepos; i++)
+				for (int i = key_linepos - con.backedit - 1; i < key_linepos; i++)
 					key_lines[edit_line][i] = key_lines[edit_line][i+1];
-
-				if (key_linepos > 1)
-					key_linepos--;
 			}
-			else
-			{
-				key_linepos--;
-			}
+			
+			key_linepos--; //mxd
 		}
 		return;
 	}
@@ -1054,6 +1049,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 			Com_sprintf (cmd, sizeof(cmd), "-%s %i %i\n", kb+1, key, time);
 			Cbuf_AddText (cmd);
 		}
+
 		if (keyshift[key] != key)
 		{
 			kb = keybindings[keyshift[key]];
@@ -1063,6 +1059,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 				Cbuf_AddText (cmd);
 			}
 		}
+
 		return;
 	}
 
@@ -1093,8 +1090,8 @@ void Key_Event (int key, qboolean down, unsigned time)
 		return;
 	}
 
-	if (!down)
-		return;		// other systems only care about key down events
+	//if (!down) //mxd. Already checked at line 1044
+		//return;		// other systems only care about key down events
 
 	if (shift_down)
 		key = keyshift[key];

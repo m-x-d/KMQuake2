@@ -1932,7 +1932,8 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 					Com_Printf (S_COLOR_YELLOW"Warning: Pic >= MAX_IMAGES\n");
 					value = OLD_MAX_IMAGES-1;
 				}
-				if (cl.configstrings[OLD_CS_IMAGES+value])
+
+				if (cl.configstrings[OLD_CS_IMAGES+value][0]) //mxd. V600 Consider inspecting the condition. The pointer is always not equal to NULL.
 				{
 					R_DrawScaledPic (x, y, getScreenScale(), hud_alpha->value, cl.configstrings[OLD_CS_IMAGES+value]);
 				}
@@ -1945,7 +1946,8 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 					Com_Printf (S_COLOR_YELLOW"Warning: Pic >= MAX_IMAGES\n");
 					value = MAX_IMAGES-1;
 				}
-				if (cl.configstrings[CS_IMAGES+value])
+
+				if (cl.configstrings[CS_IMAGES+value][0]) //mxd. V600 Consider inspecting the condition. The pointer is always not equal to NULL.
 				{
 					R_DrawScaledPic (x, y, getScreenScale(), hud_alpha->value, cl.configstrings[CS_IMAGES+value]);
 				}

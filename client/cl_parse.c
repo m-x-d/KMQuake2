@@ -176,7 +176,7 @@ void CL_ParseServerData (void)
 
 	// set gamedir
 	if ( ( (*str && (!fs_gamedirvar->string || !*fs_gamedirvar->string || strcmp(fs_gamedirvar->string, str)))
-		|| (!*str && (fs_gamedirvar->string || *fs_gamedirvar->string)) )
+		|| (!*str && fs_gamedirvar->string && *fs_gamedirvar->string) ) //mxd. Otherwise we might dereference a NULL fs_gamedirvar->string
 		&& !cl.attractloop ) // Knightmare- don't allow demos to change this
 		Cvar_Set("game", str);
 
