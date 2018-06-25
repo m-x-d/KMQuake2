@@ -32,19 +32,25 @@ const byte default_pal[768] = {
 
 int	color8red (int color8)
 { 
-	return (default_pal[color8*3+0]);
+	return default_pal[color8 * 3 + 0];
 }
 
 
 int	color8green (int color8)
 {
-	return (default_pal[color8*3+1]);;
+	return default_pal[color8 * 3 + 1];
 }
 
 
 int	color8blue (int color8)
 {
-	return (default_pal[color8*3+2]);;
+	return default_pal[color8 * 3 + 2];
+}
+
+//mxd
+void color8_to_vec3 (int color8, vec3_t v)
+{
+	VectorSet(v, color8red(color8), color8green(color8), color8blue(color8));
 }
 
 //=================================================

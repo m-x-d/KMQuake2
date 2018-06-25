@@ -287,6 +287,7 @@ extern	cvar_t	*r_transrendersort; // correct trasparent sorting
 extern	cvar_t	*r_particle_lighting; //  particle lighting
 extern	cvar_t	*r_particle_min;
 extern	cvar_t	*r_particle_max;
+extern	cvar_t	*r_particle_mode; //mxd
 extern	cvar_t	*r_particledistance;
 
 extern	cvar_t	*r_dynamic;
@@ -694,7 +695,9 @@ void R_SetFogVars (qboolean enable, int model, int density,
 /*
 ** GL config stuff
 */
-/*#define GL_RENDERER_VOODOO		0x00000001
+
+/*
+#define GL_RENDERER_VOODOO		0x00000001
 #define GL_RENDERER_VOODOO2   	0x00000002
 #define GL_RENDERER_VOODOO_RUSH	0x00000004
 #define GL_RENDERER_BANSHEE		0x00000008
@@ -732,8 +735,8 @@ void R_SetFogVars (qboolean enable, int model, int density,
 #define	GL_RENDERER_SGI			0x00F00000
 
 #define GL_RENDERER_MCD			0x01000000
-#define GL_RENDERER_OTHER		0x80000000*/
-
+#define GL_RENDERER_OTHER		0x80000000
+*/
 
 enum {
 	GLREND_DEFAULT		= 1 << 0,

@@ -150,6 +150,7 @@ cvar_t	*r_transrendersort; // correct trasparent sorting
 cvar_t	*r_particle_lighting;	// particle lighting
 cvar_t	*r_particle_min;
 cvar_t	*r_particle_max;
+cvar_t	*r_particle_mode; //mxd
 
 cvar_t	*r_particledistance;
 cvar_t	*r_particle_overdraw;
@@ -676,7 +677,8 @@ void R_RenderView (refdef_t *fd)
 
 		R_RenderDlights();
 
-		if (r_transrendersort->value) {
+		if (r_transrendersort->value)
+		{
 			//R_BuildParticleList();
 			R_SortParticlesOnList();
 			R_DrawAllDecals();
@@ -684,7 +686,8 @@ void R_RenderView (refdef_t *fd)
 			R_DrawSolidEntities();
 			R_DrawEntitiesOnList(ents_trans);
 		}
-		else {
+		else
+		{
 			R_DrawAllDecals();
 			//R_DrawAllEntityShadows();
 			R_DrawAllEntities(true);
@@ -932,6 +935,7 @@ void R_Register (void)
 	r_particle_overdraw = Cvar_Get ("r_particle_overdraw", "0", CVAR_ARCHIVE );
 	r_particle_min = Cvar_Get ("r_particle_min", "0", CVAR_ARCHIVE );
 	r_particle_max = Cvar_Get ("r_particle_max", "0", CVAR_ARCHIVE );
+	r_particle_mode = Cvar_Get ("r_particle_mode", "1", CVAR_ARCHIVE ); //mxd. 0 - Vanilla, 1 - KMQ2
 
 	r_modulate = Cvar_Get ("r_modulate", "1", CVAR_ARCHIVE );
 	r_log = Cvar_Get( "r_log", "0", 0 );
@@ -1838,8 +1842,7 @@ GL_Strings_f
 */
 void GL_Strings_f (void)
 {
-	char		*extString, *extTok;
-	unsigned	line = 0;
+	unsigned line = 0;
 
 	VID_Printf (PRINT_ALL, "GL_VENDOR: %s\n", glConfig.vendor_string );
 	VID_Printf (PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
@@ -1848,10 +1851,11 @@ void GL_Strings_f (void)
 //	VID_Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
 	// print extensions 2 to a line
 	VID_Printf (PRINT_ALL, "GL_EXTENSIONS: " );
-	extString = (char *)glConfig.extensions_string;
+
+	char *extString = (char *)glConfig.extensions_string;
 	while (true)
 	{
-		extTok = COM_Parse(&extString);
+		char *extTok = COM_Parse(&extString);
 		if (!extTok[0])
 			break;
 		line++;
@@ -1860,6 +1864,7 @@ void GL_Strings_f (void)
 		else
 			VID_Printf (PRINT_ALL, "%s ", extTok );
 	}
+
 	if ((line % 2) != 0)
 		VID_Printf (PRINT_ALL, "\n" );
 }
@@ -1933,10 +1938,9 @@ void R_BeginFrame( float camera_separation )
 	// change modes if necessary
 	//
 	if ( r_mode->modified || vid_fullscreen->modified )
-	{	// FIXME: only restart if CDS is required
-		cvar_t	*ref;
-
-		ref = Cvar_Get ("vid_ref", "gl", 0);
+	{
+		// FIXME: only restart if CDS is required
+		cvar_t *ref = Cvar_Get ("vid_ref", "gl", 0);
 		ref->modified = true;
 	}
 
@@ -1978,18 +1982,18 @@ void R_BeginFrame( float camera_separation )
 	//
 	// go into 2D mode
 	//
-	qglViewport (0,0, vid.width, vid.height);
+	qglViewport(0, 0, vid.width, vid.height);
 	qglMatrixMode(GL_PROJECTION);
-    qglLoadIdentity ();
-	qglOrtho  (0, vid.width, vid.height, 0, -99999, 99999);
+    qglLoadIdentity();
+	qglOrtho(0, vid.width, vid.height, 0, -99999, 99999);
 	qglMatrixMode(GL_MODELVIEW);
-    qglLoadIdentity ();
+    qglLoadIdentity();
 
-	GL_Disable (GL_DEPTH_TEST);
-	GL_Disable (GL_CULL_FACE);
-	GL_Disable (GL_BLEND);
-	GL_Enable (GL_ALPHA_TEST);
-	qglColor4f (1,1,1,1);
+	GL_Disable(GL_DEPTH_TEST);
+	GL_Disable(GL_CULL_FACE);
+	GL_Disable(GL_BLEND);
+	GL_Enable(GL_ALPHA_TEST);
+	qglColor4f(1, 1, 1, 1);
 
 	//
 	// draw buffer stuff

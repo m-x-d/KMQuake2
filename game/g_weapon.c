@@ -384,9 +384,9 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	trace_t	tr;
 
 	//Knightmare- only change color with blaster_color cvar if self is a player or actor
-	qboolean color_changeable = false;
+	/*qboolean color_changeable = false;
 	if ( (self->client && !(self->flags & FL_TURRET_OWNER)) || !strcmp(self->classname, "target_actor"))
-		color_changeable = true;
+		color_changeable = true;*/ //mxd. Never used
 
 	VectorNormalize (dir);
 

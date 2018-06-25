@@ -29,14 +29,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 R_RenderBeam
 =======================
 */
-void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green, float blue, float alpha)
+void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green, float blue, float alpha) //mxd. red, green, blue, alpha are in [0..1] range
 {
 	//vec3_t		up		= {vup[0]    * 0.75f, vup[1]    * 0.75f, vup[2]    * 0.75f};
 	//vec3_t		right	= {vright[0] * 0.75f, vright[1] * 0.75f, vright[2] * 0.75f};
 	vec3_t		vert[4], ang_up, ang_right, vdelta;
 	vec2_t		texCoord[4];
 	vec4_t		beamColor;
-	int			i;
 
 	c_alias_polys += 2;
 
@@ -46,7 +45,8 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 	GL_Enable (GL_BLEND);
 	GL_ShadeModel (GL_SMOOTH);
 	GL_Bind(glMedia.particlebeam->texnum);
-	Vector4Set(beamColor, red/255, green/255, blue/255, alpha/255);
+	//Vector4Set(beamColor, red/255, green/255, blue/255, alpha/255);
+	Vector4Set(beamColor, red, green, blue, alpha); //mxd
 
 	VectorSubtract(start, end, ang_up);
 	VectorNormalize(ang_up);
@@ -75,7 +75,8 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 	indexArray[rb_index++] = rb_vertex+0;
 	indexArray[rb_index++] = rb_vertex+2;
 	indexArray[rb_index++] = rb_vertex+3;
-	for (i=0; i<4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
 		VA_SetElem3(vertexArray[rb_vertex], vert[i][0], vert[i][1], vert[i][2]);
 		VA_SetElem4(colorArray[rb_vertex], beamColor[0], beamColor[1], beamColor[2], beamColor[3]);
@@ -95,6 +96,58 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 
 /*
 =======================
+R_RenderClassicBeam (mxd)
+=======================
+*/
+void R_RenderClassicBeam(vec3_t start, vec3_t end, float size, float red, float green, float blue, float alpha) //mxd. red, green, blue, alpha are in [0..1] range
+{
+#define NUM_BEAM_SEGS 6
+
+	vec3_t perpvec;
+	vec3_t direction, normalized_direction;
+	vec3_t	start_points[NUM_BEAM_SEGS], end_points[NUM_BEAM_SEGS];
+
+	normalized_direction[0] = direction[0] = end[0] - start[0];
+	normalized_direction[1] = direction[1] = end[1] - start[1];
+	normalized_direction[2] = direction[2] = end[2] - start[2];
+
+	if (!VectorNormalize(normalized_direction))
+		return;
+
+	PerpendicularVector(perpvec, normalized_direction);
+	VectorScale(perpvec, size / 2, perpvec);
+
+	for (int i = 0; i < 6; i++)
+	{
+		RotatePointAroundVector(start_points[i], normalized_direction, perpvec, (360.0 / NUM_BEAM_SEGS) * i);
+		VectorAdd(start_points[i], start, start_points[i]);
+		VectorAdd(start_points[i], direction, end_points[i]);
+	}
+
+	qglDisable(GL_TEXTURE_2D);
+	qglEnable(GL_BLEND);
+	qglDepthMask(GL_FALSE);
+
+	qglColor4f(red, green, blue, alpha);
+
+	qglBegin(GL_TRIANGLE_STRIP);
+	for (int i = 0; i < NUM_BEAM_SEGS; i++)
+	{
+		qglVertex3fv(start_points[i]);
+		qglVertex3fv(end_points[i]);
+		qglVertex3fv(start_points[(i + 1)%NUM_BEAM_SEGS]);
+		qglVertex3fv(end_points[(i + 1)%NUM_BEAM_SEGS]);
+	}
+	qglEnd();
+
+	qglEnable(GL_TEXTURE_2D);
+	qglDisable(GL_BLEND);
+	qglDepthMask(GL_TRUE);
+}
+
+
+/*
+=======================
 R_DrawBeam
 =======================
 */
@@ -109,11 +162,20 @@ void R_DrawBeam( entity_t *e )
 		qglDisable(GL_FOG); // if so, disable it
 	}
 
-	R_RenderBeam( e->origin, e->oldorigin, e->frame, 
-		( d_8to24table[e->skinnum & 0xFF] ) & 0xFF,
-		( d_8to24table[e->skinnum & 0xFF] >> 8 ) & 0xFF,
-		( d_8to24table[e->skinnum & 0xFF] >> 16 ) & 0xFF,
-		e->alpha*255 );
+	//mxd
+	float r = (d_8to24table[e->skinnum & 0xFF]) & 0xFF;
+	float g = (d_8to24table[e->skinnum & 0xFF] >> 8) & 0xFF;
+	float b = (d_8to24table[e->skinnum & 0xFF] >> 16) & 0xFF;
+
+	r *= 1 / 255.0F;
+	g *= 1 / 255.0F;
+	b *= 1 / 255.0F;
+
+	//mxd
+	if (r_particle_mode->integer == 1)
+		R_RenderBeam(e->origin, e->oldorigin, e->frame, r, g, b, e->alpha);
+	else
+		R_RenderClassicBeam(e->origin, e->oldorigin, e->frame, r, g, b, e->alpha);
 
 	// re-enable fog if it was on
 	if (fog_on)

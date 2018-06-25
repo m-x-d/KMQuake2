@@ -360,8 +360,8 @@ void R_BeginParticles (qboolean decals)
 {
 	if (!decals)
 	{
-		VectorSet (particle_up, vup[0]    * 0.75f, vup[1]    * 0.75f, vup[2]    * 0.75f);
-		VectorSet (particle_right, vright[0] * 0.75f, vright[1] * 0.75f, vright[2] * 0.75f);
+		VectorScale(vup, 0.75f, particle_up); //mxd
+		VectorScale(vright, 0.75f, particle_right); //mxd
 
 		VectorAdd      (particle_up, particle_right, particle_coord[0]);
 		VectorSubtract (particle_right, particle_up, particle_coord[1]);
@@ -376,13 +376,14 @@ void R_BeginParticles (qboolean decals)
 			qglDisable(GL_FOG); // if so, disable it
 		}
 	}
+
 	// clear particle rendering state
 	memset(&currentParticleState, 0, sizeof(particleRenderState_t));
 	rb_vertex = rb_index = 0;
 	ParticleOverbright = false;
 
 	GL_TexEnv (GL_MODULATE);
-	GL_DepthMask   (false);
+	GL_DepthMask (false);
 	GL_Enable (GL_BLEND);
 	GL_ShadeModel (GL_SMOOTH);
 }
@@ -408,11 +409,9 @@ void R_FinishParticles (qboolean decals)
 	GL_Disable (GL_BLEND);
 	qglColor4f (1,1,1,1);
 
-	if (!decals)
-	{	// re-enable fog if it was on
-		if (fog_on)
-			qglEnable(GL_FOG);
-	}
+	// re-enable fog if it was on
+	if (!decals && fog_on)
+		qglEnable(GL_FOG);
 }
 
 //===================================================
@@ -425,11 +424,12 @@ TexParticle
 int TexParticle (int type)
 {	
 	// check for out of bounds image num
-	type =  max( type, 0 );
-	type =  min( type, PARTICLE_TYPES-1 );
+	type = clamp(type, 0, PARTICLE_TYPES - 1); //mxd
+	
 	// check for bad particle image num
 	if (!glMedia.particletextures[type])
 		glMedia.particletextures[type] = glMedia.notexture;
+
 	return glMedia.particletextures[type]->texnum;
 }
 
@@ -441,7 +441,7 @@ AngleFind
 */
 float AngleFind (float input)
 {
-	return 180.0/input;
+	return 180.0 / input;
 }
 
 
@@ -552,7 +552,8 @@ void R_RenderParticle (particle_t *p)
 	size = (p->size>0.1) ? p->size : 0.1;
 	shaded = (p->flags & PART_SHADED);
 
-	if (shaded) {
+	if (shaded)
+	{
 		GetParticleLight (p, p->origin, lighting, shadelight);
 		Vector4Set(partColor, shadelight[0]*DIV255, shadelight[1]*DIV255, shadelight[2]*DIV255, p->alpha);
 	}
@@ -930,21 +931,23 @@ R_DrawAllParticles
 */
 void R_DrawAllParticles (void)
 {
-	int		i;
 	particle_t	*p;
 
 	R_BeginParticles (false);
 
-	for ( i=0; i < r_newrefdef.num_particles; i++)
+	for (int i = 0; i < r_newrefdef.num_particles; i++)
 	{
 		if (r_transrendersort->value && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL))
 		{
 			p = sorted_parts[i].p;
-			if ( r_particledistance->value > 0 && sorted_parts[i].len > (100.0*r_particledistance->value))
+			if ( r_particledistance->value > 0 && sorted_parts[i].len > (100.0 * r_particledistance->value))
 				continue;
 		}
 		else
-			p=&r_newrefdef.particles[i];
+		{
+			p = &r_newrefdef.particles[i];
+		}
+
 		R_RenderParticle(p);
 	}
 

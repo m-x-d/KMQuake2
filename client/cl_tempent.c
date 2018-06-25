@@ -77,6 +77,8 @@ cl_sustain_t	cl_sustains[MAX_SUSTAINS];
 extern void CL_TeleportParticles (vec3_t org);
 //PGM
 
+void CL_ExplosionParticles(const vec3_t org); //mxd. Vanilla particles
+
 // Psychospaz's enhanced particle code
 void CL_Explosion_Particle (vec3_t org, float scale, qboolean rocket);
 void CL_Explosion_FlashParticle (vec3_t org, float size, qboolean large);
@@ -269,6 +271,45 @@ void CL_ClearTEnts (void)
 //ROGUE
 }
 
+//mxd
+beam_t* CL_FindFreeBeam2(int srcent, int dstent, beam_t *beams)
+{
+	beam_t *b;
+	int i;
+
+	// Override any beam with the same entity(s)
+	for (i = 0, b = beams; i < MAX_BEAMS; i++, b++)
+		if (b->entity == srcent && (dstent == -1 || b->dest_entity == dstent))
+			return b;
+
+	// Find a free beam
+	for (i = 0, b = beams; i < MAX_BEAMS; i++, b++)
+		if (!b->model || b->endtime < cl.time)
+			return b;
+
+	Com_Printf("Beam list overflow!\n");
+	return NULL;
+}
+
+//mxd
+beam_t* CL_FindFreeBeam(int ent, beam_t *beams)
+{
+	return CL_FindFreeBeam2(ent, -1, beams);
+}
+
+//mxd
+cl_sustain_t* CL_FindFreeSustain()
+{
+	int i;
+	cl_sustain_t *s;
+
+	for (i = 0, s = cl_sustains; i<MAX_SUSTAINS; i++, s++)
+		if (s->id == 0)
+			return s;
+
+	return NULL;
+}
+
 /*
 =================
 CL_AllocExplosion
@@ -276,11 +317,7 @@ CL_AllocExplosion
 */
 explosion_t *CL_AllocExplosion (void)
 {
-	int		i;
-	int		time;
-	int		index;
-	
-	for (i=0; i<MAX_EXPLOSIONS; i++)
+	for (int i = 0; i < MAX_EXPLOSIONS; i++)
 	{
 		if (cl_explosions[i].type == ex_free)
 		{
@@ -288,16 +325,20 @@ explosion_t *CL_AllocExplosion (void)
 			return &cl_explosions[i];
 		}
 	}
-// find the oldest explosion
-	time = cl.time;
-	index = 0;
 
-	for (i=0; i<MAX_EXPLOSIONS; i++)
+	// Find the oldest explosion
+	int time = cl.time;
+	int index = 0;
+
+	for (int i = 0; i < MAX_EXPLOSIONS; i++)
+	{
 		if (cl_explosions[i].start < time)
 		{
 			time = cl_explosions[i].start;
 			index = i;
 		}
+	}
+
 	memset (&cl_explosions[index], 0, sizeof (cl_explosions[index]));
 	return &cl_explosions[index];
 }
@@ -305,26 +346,29 @@ explosion_t *CL_AllocExplosion (void)
 
 void CL_Explosion_Flash (vec3_t origin, int dist, int size, qboolean plasma)
 {
-	int i,j,k;
-	int limit = (plasma)?1:2;
-	vec3_t org;
-
 	if (cl_particle_scale->value > 1 || plasma)
 	{
-		for (i=0; i<limit; i++)
-			CL_Explosion_FlashParticle(origin, size+2*dist, true);
+		const int limit = (plasma ? 1 : 2);
+		for (int i = 0; i < limit; i++)
+			CL_Explosion_FlashParticle(origin, size+2 * dist, true);
+
 		return;
 	}
 
-	for (i=-1; i<2; i+=2)
-		for (j=-1; j<2; j+=2)
-			for (k=-1; k<2; k+=2)
+	vec3_t org;
+	for (int i = -1; i < 2; i += 2)
+	{
+		for (int j = -1; j < 2; j += 2)
+		{
+			for (int k = -1; k < 2; k += 2)
 			{
-				org[0]=origin[0]+i*dist;
-				org[1]=origin[1]+j*dist;
-				org[2]=origin[2]+k*dist;
+				org[0] = origin[0] + i * dist;
+				org[1] = origin[1] + j * dist;
+				org[2] = origin[2] + k * dist;
 				CL_Explosion_FlashParticle(org, size, false);
 			}
+		}
+	}
 }
 
 /*
@@ -334,10 +378,22 @@ CL_SmokeAndFlash
 */
 void CL_SmokeAndFlash(vec3_t origin)
 {
-	explosion_t	*ex;
+	explosion_t *ex;
+	
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
+	{
+		ex = CL_AllocExplosion ();
+		VectorCopy(origin, ex->ent.origin);
+		ex->type = ex_misc;
+		ex->frames = 4;
+		ex->ent.flags = RF_TRANSLUCENT;
+		ex->start = cl.frame.servertime - 100;
+		ex->ent.model = clMedia.mod_smoke;
+	}
 
 	ex = CL_AllocExplosion ();
-	VectorCopy (origin, ex->ent.origin);
+	VectorCopy(origin, ex->ent.origin);
 	ex->type = ex_flash;
 	ex->ent.flags |= RF_FULLBRIGHT;
 	ex->frames = 2;
@@ -352,17 +408,14 @@ CL_ParseParticles
 */
 void CL_ParseParticles (void)
 {
-	int		color, count;
-	vec3_t	pos, dir;
+	vec3_t pos, dir;
+	MSG_ReadPos(&net_message, pos);
+	MSG_ReadDir(&net_message, dir);
 
-	MSG_ReadPos (&net_message, pos);
-	MSG_ReadDir (&net_message, dir);
+	const int color = MSG_ReadByte(&net_message);
+	const int count = MSG_ReadByte(&net_message);
 
-	color = MSG_ReadByte (&net_message);
-
-	count = MSG_ReadByte (&net_message);
-
-	CL_ParticleEffect (pos, dir, color, count);
+	CL_ParticleEffect(pos, dir, color, count);
 }
 
 /*
@@ -372,44 +425,24 @@ CL_ParseBeam
 */
 int CL_ParseBeam (struct model_s *model)
 {
-	int		ent;
+	const int ent = MSG_ReadShort(&net_message);
+	
 	vec3_t	start, end;
-	beam_t	*b;
-	int		i;
-	
-	ent = MSG_ReadShort (&net_message);
-	
-	MSG_ReadPos (&net_message, start);
-	MSG_ReadPos (&net_message, end);
+	MSG_ReadPos(&net_message, start);
+	MSG_ReadPos(&net_message, end);
 
-// override any beam with the same entity
-	for (i=0, b=cl_beams ; i< MAX_BEAMS ; i++, b++)
-		if (b->entity == ent)
-		{
-			b->entity = ent;
-			b->model = model;
-			b->endtime = cl.time + 200;
-			VectorCopy (start, b->start);
-			VectorCopy (end, b->end);
-			VectorClear (b->offset);
-			return ent;
-		}
-
-// find a free beam
-	for (i=0, b=cl_beams ; i< MAX_BEAMS ; i++, b++)
+	//mxd
+	beam_t *b = CL_FindFreeBeam(ent, cl_beams);
+	if(b != NULL)
 	{
-		if (!b->model || b->endtime < cl.time)
-		{
-			b->entity = ent;
-			b->model = model;
-			b->endtime = cl.time + 200;
-			VectorCopy (start, b->start);
-			VectorCopy (end, b->end);
-			VectorClear (b->offset);
-			return ent;
-		}
+		b->entity = ent;
+		b->model = model;
+		b->endtime = cl.time + 200;
+		VectorCopy(start, b->start);
+		VectorCopy(end, b->end);
+		VectorClear(b->offset);
 	}
-	Com_Printf ("beam list overflow!\n");	
+
 	return ent;
 }
 
@@ -420,48 +453,25 @@ CL_ParseBeam2
 */
 int CL_ParseBeam2 (struct model_s *model)
 {
-	int		ent;
+	const int ent = MSG_ReadShort (&net_message);
+	
 	vec3_t	start, end, offset;
-	beam_t	*b;
-	int		i;
-	
-	ent = MSG_ReadShort (&net_message);
-	
 	MSG_ReadPos (&net_message, start);
 	MSG_ReadPos (&net_message, end);
 	MSG_ReadPos (&net_message, offset);
 
-//	Com_Printf ("end- %f %f %f\n", end[0], end[1], end[2]);
-
-// override any beam with the same entity
-
-	for (i=0, b=cl_beams ; i< MAX_BEAMS ; i++, b++)
-		if (b->entity == ent)
-		{
-			b->entity = ent;
-			b->model = model;
-			b->endtime = cl.time + 200;
-			VectorCopy (start, b->start);
-			VectorCopy (end, b->end);
-			VectorCopy (offset, b->offset);
-			return ent;
-		}
-
-// find a free beam
-	for (i=0, b=cl_beams ; i< MAX_BEAMS ; i++, b++)
+	//mxd
+	beam_t *b = CL_FindFreeBeam(ent, cl_beams);
+	if (b != NULL)
 	{
-		if (!b->model || b->endtime < cl.time)
-		{
-			b->entity = ent;
-			b->model = model;
-			b->endtime = cl.time + 200;	
-			VectorCopy (start, b->start);
-			VectorCopy (end, b->end);
-			VectorCopy (offset, b->offset);
-			return ent;
-		}
+		b->entity = ent;
+		b->model = model;
+		b->endtime = cl.time + 200;
+		VectorCopy(start, b->start);
+		VectorCopy(end, b->end);
+		VectorCopy(offset, b->offset);
 	}
-	Com_Printf ("beam list overflow!\n");	
+
 	return ent;
 }
 
@@ -474,15 +484,12 @@ CL_ParsePlayerBeam
 */
 int CL_ParsePlayerBeam (struct model_s *model)
 {
-	int		ent;
+	const int ent = MSG_ReadShort (&net_message);
+	
 	vec3_t	start, end, offset;
-	beam_t	*b;
-	int		i;
-	
-	ent = MSG_ReadShort (&net_message);
-	
 	MSG_ReadPos (&net_message, start);
 	MSG_ReadPos (&net_message, end);
+	
 	// PMM - network optimization
 	if (model == clMedia.mod_heatbeam)
 		VectorSet(offset, 2, 7, -3);
@@ -496,41 +503,22 @@ int CL_ParsePlayerBeam (struct model_s *model)
 
 //	Com_Printf ("end- %f %f %f\n", end[0], end[1], end[2]);
 
-// override any beam with the same entity
-// PMM - For player beams, we only want one per player (entity) so..
-	for (i=0, b=cl_playerbeams; i<MAX_BEAMS; i++, b++)
+	//mxd
+	beam_t	*b = CL_FindFreeBeam(ent, cl_playerbeams);
+	if(b != NULL)
 	{
-		if (b->entity == ent)
-		{
-			b->entity = ent;
-			b->model = model;
-
-			b->endtime = cl.time + 200;
-			VectorCopy (start, b->start);
-			VectorCopy (end, b->end);
-			VectorCopy (offset, b->offset);
-			return ent;
-		}
+		b->model = model;
+		b->endtime = cl.time + (b->entity == ent ? 200 : 100); // PMM - this needs to be 100 to prevent multiple heatbeams
+		b->entity = ent;
+		VectorCopy(start, b->start);
+		VectorCopy(end, b->end);
+		VectorCopy(offset, b->offset);
 	}
 
-// find a free beam
-	for (i=0, b=cl_playerbeams; i<MAX_BEAMS; i++, b++)
-	{
-		if (!b->model || b->endtime < cl.time)
-		{
-			b->entity = ent;
-			b->model = model;
-			b->endtime = cl.time + 100;		// PMM - this needs to be 100 to prevent multiple heatbeams
-			VectorCopy (start, b->start);
-			VectorCopy (end, b->end);
-			VectorCopy (offset, b->offset);
-			return ent;
-		}
-	}
-	Com_Printf ("beam list overflow!\n");	
 	return ent;
 }
 //rogue
+
 
 /*
 =================
@@ -540,17 +528,32 @@ CL_ParseLightning
 // Psychspaz's enhanced particles
 int CL_ParseLightning ()
 {
+	const int srcEnt = MSG_ReadShort (&net_message); // len
+	const int dstEnt = MSG_ReadShort (&net_message); // dec
 
-	vec3_t start,end; // ,move,vec;
-	int		srcEnt, dstEnt; // , len, dec;
-	
-	srcEnt = MSG_ReadShort (&net_message);
-	dstEnt = MSG_ReadShort (&net_message);
-
+	vec3_t start, end; // ,move,vec;
 	MSG_ReadPos (&net_message, start);
 	MSG_ReadPos (&net_message, end);
 
-	CL_LightningBeam(start, end, srcEnt, dstEnt, 5);
+	// Psychospaz's enhanced particle code
+	if (r_particle_mode->integer == 1)
+	{
+		CL_LightningBeam(start, end, srcEnt, dstEnt, 5);
+	}
+	else // mxd. Classic beam
+	{
+		beam_t *b = CL_FindFreeBeam2(srcEnt, dstEnt, cl_beams);
+		if(b != NULL)
+		{
+			b->entity = srcEnt;
+			b->dest_entity = dstEnt;
+			b->model = clMedia.mod_lightning;
+			b->endtime = cl.time + 200;
+			VectorCopy(start, b->start);
+			VectorCopy(end, b->end);
+			VectorClear(b->offset);
+		}
+	}
 		
 	return srcEnt;
 }
@@ -566,42 +569,66 @@ CL_ParseLaser
 void CL_ParseLaser (int colors)
 {
 	vec3_t start,end;
-	vec3_t		move;
-	vec3_t		vec;
-	vec3_t		point;
-	float		len;
-	float		dec;
-
+	
 	MSG_ReadPos (&net_message, start);
 	MSG_ReadPos (&net_message, end);
 
-	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
-
-	VectorCopy (vec, point);
-	dec = 20;
-	VectorScale (vec, dec, vec);
-	VectorCopy (start, move);
-
-	while (len > 0)
+	if(r_particle_mode->integer == 1)
 	{
-		len -= dec;
+		vec3_t vec;
+		VectorSubtract(end, start, vec);
+		float len = VectorNormalize(vec);
+		
+		vec3_t point;
+		VectorCopy(vec, point);
+		const float dec = 20;
+		VectorScale(vec, dec, vec);
 
-		CL_SetupParticle (
-			point[0],	point[1],	point[2],
-			move[0],	move[1],	move[2],
-			0,	0,	0,
-			0,		0,		0,
-			50,	255,	50,
-			0,	0,	0,
-			1,		-2.5,
-			GL_SRC_ALPHA, GL_ONE,
-			dec*TWOTHIRDS,		0,			
-			particle_beam,
-			PART_DIRECTION,
-			NULL,0);
+		vec3_t move;
+		VectorCopy(start, move);
 
-		VectorAdd (move, vec, move);
+		while (len > 0)
+		{
+			len -= dec;
+
+			CL_SetupParticle(
+				point[0], point[1], point[2],
+				move[0], move[1], move[2],
+				0, 0, 0,
+				0, 0, 0,
+				50, 255, 50,
+				0, 0, 0,
+				1, -2.5,
+				GL_SRC_ALPHA, GL_ONE,
+				dec * TWOTHIRDS, 0,
+				particle_beam,
+				PART_DIRECTION,
+				NULL, false);
+
+			VectorAdd(move, vec, move);
+		}
+	}
+	else //mxd. Classic LAZORS!
+	{
+		laser_t	*l;
+		int		i;
+
+		for (i = 0, l = cl_lasers; i < MAX_LASERS; i++, l++)
+		{
+			if (l->endtime < cl.time)
+			{
+				l->ent.flags = RF_TRANSLUCENT | RF_BEAM;
+				VectorCopy(start, l->ent.origin);
+				VectorCopy(end, l->ent.oldorigin);
+				l->ent.alpha = 0.3;
+				l->ent.skinnum = (colors >> ((rand()%4) * 8)) & 0xff;
+				l->ent.model = NULL;
+				l->ent.frame = 4;
+				l->endtime = cl.time + 100;
+
+				return;
+			}
+		}
 	}
 }
 
@@ -611,27 +638,17 @@ void CL_ParseLaser (int colors)
 void CL_ParseSteam (void)
 {
 	vec3_t	pos, dir;
-	int		id, i;
 	int		r;
 	int		cnt;
-	int		color;
 	int		magnitude;
-	cl_sustain_t	*s, *free_sustain;
 
-	id = MSG_ReadShort (&net_message);		// an id of -1 is an instant effect
+	const int id = MSG_ReadShort (&net_message);		// an id of -1 is an instant effect
 	if (id != -1) // sustains
 	{
 		//Com_Printf ("Sustain effect id %d\n", id);
-		free_sustain = NULL;
-		for (i=0, s=cl_sustains; i<MAX_SUSTAINS; i++, s++)
-		{
-			if (s->id == 0)
-			{
-				free_sustain = s;
-				break;
-			}
-		}
-		if (free_sustain)
+		cl_sustain_t *s = CL_FindFreeSustain();
+
+		if (s)
 		{
 			s->id = id;
 			s->count = MSG_ReadByte (&net_message);
@@ -664,10 +681,12 @@ void CL_ParseSteam (void)
 		MSG_ReadDir (&net_message, dir);
 		r = MSG_ReadByte (&net_message);
 		magnitude = MSG_ReadShort (&net_message);
-		color = r & 0xff;
+
+		const int color = r & 0xff;
 		CL_ParticleSteamEffect (pos, dir,
 			color8red(color), color8green(color), color8blue(color),
 			-20, -20, -20, cnt, magnitude);
+
 		//CL_ParticleSteamEffect (pos, dir, 240, 240, 240, -20, -20, -20, cnt, magnitude);
 		//S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 	}
@@ -676,27 +695,16 @@ void CL_ParseSteam (void)
 void CL_ParseWidow (void)
 {
 	vec3_t	pos;
-	int		id, i;
-	cl_sustain_t	*s, *free_sustain;
+	const int id = MSG_ReadShort (&net_message);
+	cl_sustain_t *s = CL_FindFreeSustain(); //mxd
 
-	id = MSG_ReadShort (&net_message);
-
-	free_sustain = NULL;
-	for (i=0, s=cl_sustains; i<MAX_SUSTAINS; i++, s++)
-	{
-		if (s->id == 0)
-		{
-			free_sustain = s;
-			break;
-		}
-	}
-	if (free_sustain)
+	if (s)
 	{
 		s->id = id;
 		MSG_ReadPos (&net_message, s->org);
 		s->endtime = cl.time + 2100;
-		s->think = CL_Widowbeamout;
 		s->thinkinterval = 1;
+		s->think = CL_Widowbeamout;
 		s->nextthink = cl.time;
 	}
 	else // no free sustains
@@ -709,25 +717,15 @@ void CL_ParseWidow (void)
 void CL_ParseNuke (void)
 {
 	vec3_t	pos;
-	int		i;
-	cl_sustain_t	*s, *free_sustain;
+	cl_sustain_t *s = CL_FindFreeSustain(); //mxd
 
-	free_sustain = NULL;
-	for (i=0, s=cl_sustains; i<MAX_SUSTAINS; i++, s++)
-	{
-		if (s->id == 0)
-		{
-			free_sustain = s;
-			break;
-		}
-	}
-	if (free_sustain)
+	if (s)
 	{
 		s->id = 21000;
 		MSG_ReadPos (&net_message, s->org);
 		s->endtime = cl.time + 1000;
-		s->think = CL_Nukeblast;
 		s->thinkinterval = 1;
+		s->think = CL_Nukeblast;
 		s->nextthink = cl.time;
 	}
 	else // no free sustains
@@ -741,19 +739,44 @@ void CL_ParseNuke (void)
 //=============
 
 // Psychospaz's enhanced particle code
-void CL_GunSmokeEffect (vec3_t org, vec3_t dir)
+void CL_GunSmokeEffect (const vec3_t org, const vec3_t dir)
 {
-	vec3_t		velocity, origin;
-	int			j;
-
-	for (j=0 ; j<3 ; j++)
+	vec3_t velocity, origin;
+	for (int j = 0; j < 3; j++)
 	{
-		origin[j] = org[j] + dir[j]*10;
-		velocity[j] = 10*dir[j];
+		origin[j] = org[j] + dir[j] * 10;
+		velocity[j] = dir[j] * 10;
 	}
+
 	velocity[2] = 10;
 
 	CL_ParticleSmokeEffect (origin, velocity, 10);
+}
+
+//mxd
+void CL_AllocClassicExplosion(const vec3_t pos, const qboolean grenade, const qboolean big)
+{
+	explosion_t	*ex = CL_AllocExplosion();
+	VectorCopy(pos, ex->ent.origin);
+	VectorSet(ex->lightcolor, 1.0f, 0.5f, 0.5f);
+	ex->type = ex_poly;
+	ex->ent.flags = RF_FULLBRIGHT | RF_NOSHADOW; // noshadow flag
+	ex->start = cl.frame.servertime - 100;
+	ex->light = 350;
+	ex->ent.angles[1] = rand() % 360;
+	ex->ent.model = (big ? clMedia.mod_explo_big : clMedia.mod_explo);
+
+	if(grenade)
+	{
+		ex->frames = 19;
+		ex->baseframe = 30;
+	}
+	else
+	{
+		if (frand() < 0.5) 
+			ex->baseframe = 15;
+		ex->frames = 15;
+	}
 }
 
 /*
@@ -765,284 +788,279 @@ static byte splash_color[] = {0x00, 0xe0, 0xb0, 0x50, 0xd0, 0xe0, 0xe8};
 
 void CL_ParseTEnt (void)
 {
-	int		type;
 	vec3_t	pos, pos2, dir;
-	explosion_t	*ex;
-	int		cnt;
-	int		color;
-	int		r, i;
-	int		ent;
-	int		magnitude;
-
-	type = MSG_ReadByte (&net_message);
+	const int type = MSG_ReadByte(&net_message);
 
 	switch (type)
 	{
 	case TE_BLOOD:			// bullet hitting flesh
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-	// Psychospaz's enhanced particle code
-		CL_BloodHit (pos, dir);
-		break;
+	{
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
 
-	case TE_GUNSHOT:			// bullet hitting wall
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_BloodHit(pos, dir);
+		else //mxd. Classic particles
+			CL_ParticleEffect(pos, dir, 0xe8, 60);
+	}
+	break;
+
+	case TE_GUNSHOT:		// bullet hitting wall
 	case TE_SPARKS:
 	case TE_BULLET_SPARKS:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-	// Psychospaz's enhanced particle code
-		if (type == TE_BULLET_SPARKS)
-			VectorScale(dir, 2, dir);
+	{
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
 		{
+			if (type == TE_BULLET_SPARKS)
+				VectorScale(dir, 2, dir);
+
 			vec3_t c = { 255, 125, 10 };
-			CL_ParticleEffectSparks (pos, dir, c, (type == TE_GUNSHOT)? 5 : 10);
+			CL_ParticleEffectSparks(pos, dir, c, (type == TE_GUNSHOT) ? 5 : 10);
+		}
+		else //mxd. Classic particles
+		{
+			if (type == TE_GUNSHOT)
+				CL_ParticleEffect(pos, dir, 0, 40);
+			else
+				CL_ParticleEffect(pos, dir, 0xe0, 6);
 		}
 
 		if (type != TE_SPARKS)
 		{
-			CL_GunSmokeEffect (pos, dir);
-			if (type == TE_GUNSHOT || type == TE_BULLET_SPARKS)
-				CL_ParticleBulletDecal(pos, dir, 2.5);
-			// impact sound
-			cnt = rand()&15;
-			if (cnt == 1)
-				S_StartSound (pos, 0, 0, clMedia.sfx_ric[0], 1, ATTN_NORM, 0);
-			else if (cnt == 2)
-				S_StartSound (pos, 0, 0, clMedia.sfx_ric[1], 1, ATTN_NORM, 0);
-			else if (cnt == 3)
-				S_StartSound (pos, 0, 0, clMedia.sfx_ric[2], 1, ATTN_NORM, 0);
+			// Psychospaz's enhanced particle code
+			if(r_particle_mode->integer == 1)
+				CL_GunSmokeEffect(pos, dir);
+			else  //mxd. Classic particles
+				CL_SmokeAndFlash(pos);
+
+			CL_ParticleBulletDecal(pos, dir, 2.5);
+
+			// Impact sound
+			const int cnt = rand() & 15;
+			if (cnt > 0 && cnt < 4) //mxd
+				S_StartSound(pos, 0, 0, clMedia.sfx_ric[cnt], 1, ATTN_NORM, 0);
 		}
-		break;
-				
+	}
+	break;
+
 	case TE_SHOTGUN:			// bullet hitting wall
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-	// Psychospaz's enhanced particle code
-		CL_GunSmokeEffect (pos, dir);
-		CL_ParticleBulletDecal(pos, dir, 2.8);
+	{
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
+		// Psychospaz's enhanced particle code
+		if(r_particle_mode->integer == 1)
 		{
+			CL_GunSmokeEffect(pos, dir);
 			vec3_t c = { 200, 100, 10 };
-			CL_ParticleEffectSparks (pos, dir, c, 8);
+			CL_ParticleEffectSparks(pos, dir, c, 8);
 		}
-		break;
+		else //mxd. Classic particles
+		{
+			CL_ParticleEffect(pos, dir, 0, 20);
+			CL_SmokeAndFlash(pos);
+		}
+
+		CL_ParticleBulletDecal(pos, dir, 2.8);
+	}
+	break;
 
 	case TE_SCREEN_SPARKS:
 	case TE_SHIELD_SPARKS:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		if (type == TE_SCREEN_SPARKS)
-			CL_ParticleEffect (pos, dir, 0xd0, 40);
-		else
-			CL_ParticleEffect (pos, dir, 0xb0, 40);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
+		CL_ParticleEffect(pos, dir, (type == TE_SCREEN_SPARKS ? 0xd0 : 0xb0), 40);
+
 		//FIXME : replace or remove this sound
-		S_StartSound (pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
+		S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 		break;
 
 	case TE_SPLASH:			// bullet hitting water
-		cnt = MSG_ReadByte (&net_message);
+	{
+		int cnt = MSG_ReadByte(&net_message);
 		cnt = min(cnt, 40); // cap at 40
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		r = MSG_ReadByte (&net_message);
-		if (r > 6)
-			color = 0x00;
-		else
-			color = splash_color[r];
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		int r = MSG_ReadByte(&net_message);
+
+		const int color = (r > 6 ? 0x00 : splash_color[r]); //mxd
+
 		// Psychospaz's enhanced particle code
-		CL_ParticleEffectSplash (pos, dir, color, cnt);
+		if (r_particle_mode->integer == 1)
+			CL_ParticleEffectSplash(pos, dir, color, cnt);
+		else //mxd. Classic particles
+			CL_ParticleEffect(pos, dir, color, cnt);
+
 		if (r == SPLASH_SPARKS)
 		{
 			r = rand() & 3;
-			if (r == 0)
-				S_StartSound (pos, 0, 0, clMedia.sfx_spark[0], 1, ATTN_STATIC, 0);
-			else if (r == 1)
-				S_StartSound (pos, 0, 0, clMedia.sfx_spark[1], 1, ATTN_STATIC, 0);
-			else
-				S_StartSound (pos, 0, 0, clMedia.sfx_spark[2], 1, ATTN_STATIC, 0);
+			S_StartSound(pos, 0, 0, clMedia.sfx_spark[r], 1, ATTN_STATIC, 0);
 		}
-		break;
+	}
+	break;
 
 	case TE_LASER_SPARKS:
-		cnt = MSG_ReadByte (&net_message);
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		color = MSG_ReadByte (&net_message);
-		CL_ParticleEffect2 (pos, dir, color, cnt);
-		break;
+	{
+		const int cnt = MSG_ReadByte(&net_message);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		const int color = MSG_ReadByte(&net_message);
+		CL_ParticleEffect2(pos, dir, color, cnt);
+	}
+	break;
 
 	case TE_RAILTRAIL:			// railgun effect
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadPos (&net_message, pos2);
-		CL_RailTrail (pos, pos2, false);
-		S_StartSound (pos2, 0, 0, clMedia.sfx_railg, 1, ATTN_NORM, 0);
+	case TE_RAILTRAIL2:			// 12/23/2001 - red railgun trail
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadPos(&net_message, pos2);
+		CL_RailTrail(pos, pos2, type == TE_RAILTRAIL2); //mxd
+		S_StartSound(pos2, 0, 0, clMedia.sfx_railg, 1, ATTN_NORM, 0);
 		break;
+
 	// 12/23/2001 - red railgun trail
-	case TE_RAILTRAIL2:			// red railgun effect
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadPos (&net_message, pos2);
-		CL_RailTrail (pos, pos2, true);
-		S_StartSound (pos2, 0, 0, clMedia.sfx_railg, 1, ATTN_NORM, 0);
-		break;
+	/*case TE_RAILTRAIL2:			// red railgun effect
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadPos(&net_message, pos2);
+		CL_RailTrail(pos, pos2, true);
+		S_StartSound(pos2, 0, 0, clMedia.sfx_railg, 1, ATTN_NORM, 0);
+		break;*/
 
 	case TE_EXPLOSION2:
 	case TE_GRENADE_EXPLOSION:
 	case TE_GRENADE_EXPLOSION_WATER:
-		MSG_ReadPos (&net_message, pos);
+	{
+		MSG_ReadPos(&net_message, pos);
 		if (cl_old_explosions->value)
 		{
-			ex = CL_AllocExplosion ();
-			VectorCopy (pos, ex->ent.origin);
-			ex->type = ex_poly;
-			ex->ent.flags = RF_FULLBRIGHT|RF_NOSHADOW; // noshadow flag
-			ex->start = cl.frame.servertime - 100;
-			ex->light = 350;
-			ex->lightcolor[0] = 1.0;
-			ex->lightcolor[1] = 0.5;
-			ex->lightcolor[2] = 0.5;
-			ex->ent.model = clMedia.mod_explo;
-			ex->frames = 19;
-			ex->baseframe = 30;
-			ex->ent.angles[1] = rand() % 360;
+			CL_AllocClassicExplosion(pos, true, false); //mxd
 		}
-		else {
-			CL_Explosion_Particle (pos, 0, false);
-			if (type!=TE_GRENADE_EXPLOSION_WATER)
-				CL_Explosion_Flash (pos, 10, 50, false);
-		}
-		CL_Explosion_Sparks (pos, 16, 128);
-		if (type != TE_EXPLOSION2)
-			CL_Explosion_Decal (pos, 50, particle_burnmark);
-		if (type == TE_GRENADE_EXPLOSION_WATER)
-			S_StartSound (pos, 0, 0, clMedia.sfx_watrexp, 1, ATTN_NORM, 0);
 		else
-			S_StartSound (pos, 0, 0, clMedia.sfx_grenexp, 1, ATTN_NORM, 0);
-		break;
+		{
+			CL_Explosion_Particle(pos, 0, false);
+			if (type != TE_GRENADE_EXPLOSION_WATER)
+				CL_Explosion_Flash(pos, 10, 50, false);
+		}
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_Explosion_Sparks(pos, 16, 128);
+		else //mxd. Classic particles
+			CL_ExplosionParticles(pos);
+
+		if (type != TE_EXPLOSION2)
+			CL_Explosion_Decal(pos, 50, particle_burnmark);
+
+		struct sfx_s *sfx = (type == TE_GRENADE_EXPLOSION_WATER ? clMedia.sfx_watrexp : clMedia.sfx_grenexp); //mxd
+		S_StartSound(pos, 0, 0, sfx, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	// RAFAEL
 	case TE_PLASMA_EXPLOSION:
-		MSG_ReadPos (&net_message, pos);
+	{
+		MSG_ReadPos(&net_message, pos);
 		if (cl_old_explosions->value)
 		{
-			ex = CL_AllocExplosion ();
-			VectorCopy (pos, ex->ent.origin);
-			ex->type = ex_poly;
-			ex->ent.flags = RF_FULLBRIGHT|RF_NOSHADOW; // noshadow flag
-			ex->start = cl.frame.servertime - 100;
-			ex->light = 350;
-			ex->lightcolor[0] = 1.0; 
-			ex->lightcolor[1] = 0.5;
-			ex->lightcolor[2] = 0.5;
-			ex->ent.angles[1] = rand() % 360;
-			ex->ent.model = clMedia.mod_explo;
-			if (frand() < 0.5)
-				ex->baseframe = 15;
-			ex->frames = 15;
+			CL_AllocClassicExplosion(pos, false, false); //mxd
 		}
-		else {
-			CL_Explosion_Particle (pos, 0, true);
-			CL_Explosion_Flash (pos, 10, 50, true);
-		}
-		CL_Explosion_Sparks (pos, 16, 128);
-		CL_Explosion_Decal (pos, 50, particle_burnmark);
-		if (cl_plasma_explo_sound->value)
-			S_StartSound (pos, 0, 0, clMedia.sfx_plasexp, 1, ATTN_NORM, 0);
 		else
-			S_StartSound (pos, 0, 0, clMedia.sfx_rockexp, 1, ATTN_NORM, 0);
-		break;
+		{
+			CL_Explosion_Particle(pos, 0, true);
+			CL_Explosion_Flash(pos, 10, 50, true);
+		}
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_Explosion_Sparks(pos, 16, 128);
+		else //mxd. Classic particles
+			CL_ExplosionParticles(pos);
+
+		CL_Explosion_Decal(pos, 50, particle_burnmark);
+
+		struct sfx_s *sfx = (cl_plasma_explo_sound->value ? clMedia.sfx_plasexp : clMedia.sfx_rockexp); //mxd
+		S_StartSound(pos, 0, 0, sfx, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	case TE_EXPLOSION1_BIG:						// PMM
-		MSG_ReadPos (&net_message, pos);
+		MSG_ReadPos(&net_message, pos);
 		if (cl_old_explosions->value)
 		{
-			ex = CL_AllocExplosion ();
-			VectorCopy (pos, ex->ent.origin);
-			ex->type = ex_poly;
-			ex->ent.flags = RF_FULLBRIGHT|RF_NOSHADOW; // noshadow flag
-			ex->start = cl.frame.servertime - 100;
-			ex->light = 350;
-			ex->lightcolor[0] = 1.0;
-			ex->lightcolor[1] = 0.5;
-			ex->lightcolor[2] = 0.5;
-			ex->ent.angles[1] = rand() % 360;
-			ex->ent.model = clMedia.mod_explo_big;
-			if (frand() < 0.5)
-				ex->baseframe = 15;
-			ex->frames = 15;
+			CL_AllocClassicExplosion(pos, false, true); //mxd
 		}
-		else {
-			CL_Explosion_Particle (pos, 150, true); // increased size
-			CL_Explosion_Flash (pos, 30, 150, false);
+		else
+		{
+			CL_Explosion_Particle(pos, 150, true); // increased size
+			CL_Explosion_Flash(pos, 30, 150, false);
 		}
-		CL_Explosion_Sparks (pos, 48, 128);
-		S_StartSound (pos, 0, 0, clMedia.sfx_rockexp, 1, ATTN_NORM, 0);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1) //mxd
+			CL_Explosion_Sparks(pos, 48, 128);
+
+		S_StartSound(pos, 0, 0, clMedia.sfx_rockexp, 1, ATTN_NORM, 0);
 		break;
 
 	case TE_EXPLOSION1_NP:						// PMM
-		MSG_ReadPos (&net_message, pos);
+		MSG_ReadPos(&net_message, pos);
 		if (cl_old_explosions->value)
 		{
-			ex = CL_AllocExplosion ();
-			VectorCopy (pos, ex->ent.origin);
-			ex->type = ex_poly;
-			ex->ent.flags = RF_FULLBRIGHT|RF_NOSHADOW; // noshadow flag
-			ex->start = cl.frame.servertime - 100;
-			ex->light = 350;
-			ex->lightcolor[0] = 1.0;
-			ex->lightcolor[1] = 0.5;
-			ex->lightcolor[2] = 0.5;
-			ex->ent.angles[1] = rand() % 360;
-			ex->ent.model = clMedia.mod_explo;
-			if (frand() < 0.5)
-				ex->baseframe = 15;
-			ex->frames = 15;
+			CL_AllocClassicExplosion(pos, false, true); //mxd
 		}
-		else {
-			CL_Explosion_Particle (pos, 50, true);
-			CL_Explosion_Flash (pos, 7, 32, false);
+		else
+		{
+			CL_Explosion_Particle(pos, 50, true);
+			CL_Explosion_Flash(pos, 7, 32, false);
 		}
-		CL_Explosion_Sparks (pos, 10, 128);
-		S_StartSound (pos, 0, 0, clMedia.sfx_grenexp, 1, ATTN_NORM, 0);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1) //mxd
+			CL_Explosion_Sparks(pos, 10, 128);
+
+		S_StartSound(pos, 0, 0, clMedia.sfx_grenexp, 1, ATTN_NORM, 0);
 		break;
 
 	case TE_EXPLOSION1:
 	case TE_PLAIN_EXPLOSION:
 	case TE_ROCKET_EXPLOSION:
 	case TE_ROCKET_EXPLOSION_WATER:
-		MSG_ReadPos (&net_message, pos);
+	{
+		MSG_ReadPos(&net_message, pos);
 		if (cl_old_explosions->value)
 		{
-			ex = CL_AllocExplosion ();
-			VectorCopy (pos, ex->ent.origin);
-			ex->type = ex_poly;
-			ex->ent.flags = RF_FULLBRIGHT|RF_NOSHADOW; // noshadow flag
-			ex->start = cl.frame.servertime - 100;
-			ex->light = 350;
-			ex->lightcolor[0] = 1.0;
-			ex->lightcolor[1] = 0.5;
-			ex->lightcolor[2] = 0.5;
-			ex->ent.angles[1] = rand() % 360;
-			ex->ent.model = clMedia.mod_explo;
-			if (frand() < 0.5)
-				ex->baseframe = 15;
-			ex->frames = 15;
+			CL_AllocClassicExplosion(pos, false, false); //mxd
 		}
-		else {
-			CL_Explosion_Particle (pos, 0, true);
-			CL_Explosion_Flash (pos, 10, 50, false);
-		}
-		CL_Explosion_Sparks (pos, 16, 128);
-		if (type == TE_ROCKET_EXPLOSION || type == TE_ROCKET_EXPLOSION_WATER)
-			CL_Explosion_Decal (pos, 50, particle_burnmark);
-		if (type == TE_ROCKET_EXPLOSION_WATER)
-			S_StartSound (pos, 0, 0, clMedia.sfx_watrexp, 1, ATTN_NORM, 0);
 		else
-			S_StartSound (pos, 0, 0, clMedia.sfx_rockexp, 1, ATTN_NORM, 0);
-		break;
+		{
+			CL_Explosion_Particle(pos, 0, true);
+			CL_Explosion_Flash(pos, 10, 50, false);
+		}
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_Explosion_Sparks(pos, 16, 128);
+		else //mxd. Classic particles
+			CL_ExplosionParticles(pos);
+
+		if (type == TE_ROCKET_EXPLOSION || type == TE_ROCKET_EXPLOSION_WATER)
+			CL_Explosion_Decal(pos, 50, particle_burnmark);
+
+		struct sfx_s *sfx = (type == TE_ROCKET_EXPLOSION_WATER ? clMedia.sfx_watrexp : clMedia.sfx_rockexp); //mxd
+		S_StartSound(pos, 0, 0, sfx, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	case TE_BFG_EXPLOSION:
-		MSG_ReadPos (&net_message, pos);
-		ex = CL_AllocExplosion ();
-		VectorCopy (pos, ex->ent.origin);
+	{
+		MSG_ReadPos(&net_message, pos);
+		explosion_t	*ex = CL_AllocExplosion();
+		VectorCopy(pos, ex->ent.origin);
 		ex->type = ex_poly;
 		ex->ent.flags |= RF_FULLBRIGHT;
 		ex->start = cl.frame.servertime - 100;
@@ -1054,52 +1072,62 @@ void CL_ParseTEnt (void)
 		ex->ent.flags |= RF_TRANSLUCENT | RF_TRANS_ADDITIVE;
 		ex->ent.alpha = 0.30;
 		ex->frames = 4;
-		break;
+	}
+	break;
 
 	case TE_BFG_BIGEXPLOSION:
-		MSG_ReadPos (&net_message, pos);
-		CL_BFGExplosionParticles (pos);
-		CL_Explosion_Decal (pos, 75, particle_bfgmark);
+		MSG_ReadPos(&net_message, pos);
+		CL_BFGExplosionParticles(pos);
+		CL_Explosion_Decal(pos, 75, particle_bfgmark);
 		break;
 
 	case TE_BFG_LASER:
-		CL_ParseLaser (0xd0d1d2d3);
+		CL_ParseLaser(0xd0d1d2d3);
 		break;
 
 	case TE_BUBBLETRAIL:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadPos (&net_message, pos2);
-		CL_BubbleTrail (pos, pos2);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadPos(&net_message, pos2);
+		CL_BubbleTrail(pos, pos2);
 		break;
 
 	case TE_PARASITE_ATTACK:
 	case TE_MEDIC_CABLE_ATTACK:
-		CL_ParseBeam (clMedia.mod_parasite_segment);
+		CL_ParseBeam(clMedia.mod_parasite_segment);
 		break;
 
 	case TE_BOSSTPORT:			// boss teleporting to station
-		MSG_ReadPos (&net_message, pos);
-		CL_BigTeleportParticles (pos);
-		S_StartSound (pos, 0, 0, S_RegisterSound ("misc/bigtele.wav"), 1, ATTN_NONE, 0);
+		MSG_ReadPos(&net_message, pos);
+		CL_BigTeleportParticles(pos);
+		S_StartSound(pos, 0, 0, S_RegisterSound("misc/bigtele.wav"), 1, ATTN_NONE, 0);
 		break;
 
 	case TE_GRAPPLE_CABLE:
-		CL_ParseBeam2 (clMedia.mod_grapple_cable);
+		CL_ParseBeam2(clMedia.mod_grapple_cable);
 		break;
 
 	// RAFAEL
 	case TE_WELDING_SPARKS:
-		MSG_ReadByte (&net_message);
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		color = MSG_ReadByte (&net_message);
-	// Psychospaz's enhanced particle code
+	{
+		const int cnt = MSG_ReadByte(&net_message);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		const int color = MSG_ReadByte(&net_message);
+
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
 		{
-			vec3_t sparkcolor = {color8red(color), color8green(color), color8blue(color)};
-			CL_ParticleEffectSparks (pos, dir, sparkcolor, 40);
+			vec3_t sparkcolor = { color8red(color), color8green(color), color8blue(color) };
+			CL_ParticleEffectSparks(pos, dir, sparkcolor, cnt); //mxd. 40 -> cnt (32 by default)
 		}
-		ex = CL_AllocExplosion ();
-		VectorCopy (pos, ex->ent.origin);
+		else //mxd. Classic particles
+		{
+			CL_ParticleEffect2(pos, dir, color, cnt);
+		}
+
+		explosion_t	*ex = CL_AllocExplosion();
+		VectorCopy(pos, ex->ent.origin);
 		ex->type = ex_flash;
 		// note to self
 		// we need a better no draw flag
@@ -1111,23 +1139,29 @@ void CL_ParseTEnt (void)
 		ex->lightcolor[2] = 0.3;
 		ex->ent.model = clMedia.mod_flash;
 		ex->frames = 2;
-		break;
+	}
+	break;
 
 	case TE_GREENBLOOD:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-	// Psychospaz's enhanced particle code
-		CL_GreenBloodHit (pos, dir);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_GreenBloodHit(pos, dir);
+		else //mxd. Classic particles
+			CL_ParticleEffect2(pos, dir, 0xdf, 30);
 		break;
 
 	// RAFAEL
 	case TE_TUNNEL_SPARKS:
-		cnt = MSG_ReadByte (&net_message);
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		color = MSG_ReadByte (&net_message);
-		CL_ParticleEffect3 (pos, dir, color, cnt);
-		break;
+	{
+		const int cnt = MSG_ReadByte(&net_message);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		const int color = MSG_ReadByte(&net_message);
+		CL_ParticleEffect3(pos, dir, color, cnt);
+	}
+	break;
 
 //=============
 //PGM
@@ -1137,15 +1171,18 @@ void CL_ParseTEnt (void)
 	case TE_BLUEHYPERBLASTER:	// blue blaster hitting wall
 	case TE_REDBLASTER:			// red blaster hitting wall
 	case TE_FLECHETTE:			// flechette hitting wall
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		if (cl_old_explosions->value)
+	{
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
+		if (cl_old_explosions->value || r_particle_mode->integer == 0) //mxd. Also show when vanilla particles are enabled
 		{
-			ex = CL_AllocExplosion ();
-			VectorCopy (pos, ex->ent.origin);
-			ex->ent.angles[0] = acos(dir[2])/M_PI*180;
+			explosion_t	*ex = CL_AllocExplosion();
+			VectorCopy(pos, ex->ent.origin);
+			ex->ent.angles[0] = acos(dir[2]) / M_PI * 180;
+
 			if (dir[0]) // PMM - fixed to correct for pitch of 0
-				ex->ent.angles[1] = atan2(dir[1], dir[0])/M_PI*180;
+				ex->ent.angles[1] = atan2(dir[1], dir[0]) / M_PI * 180;
 			else if (dir[1] > 0)
 				ex->ent.angles[1] = 90;
 			else if (dir[1] < 0)
@@ -1154,7 +1191,7 @@ void CL_ParseTEnt (void)
 				ex->ent.angles[1] = 0;
 
 			ex->type = ex_misc;
-			ex->ent.flags |= RF_FULLBRIGHT|RF_TRANSLUCENT|RF_NOSHADOW; // no shadow on these
+			ex->ent.flags |= RF_FULLBRIGHT | RF_TRANSLUCENT | RF_NOSHADOW; // no shadow on these
 
 			if (type == TE_BLASTER2)
 				ex->ent.skinnum = 1;
@@ -1168,73 +1205,71 @@ void CL_ParseTEnt (void)
 			ex->start = cl.frame.servertime - 100;
 			ex->light = 150;
 
-			if (type == TE_BLASTER2) {
-				ex->lightcolor[0] = 0.15;
-				ex->lightcolor[1] = 1;
-				ex->lightcolor[2] = 0.15;
-			}
-			else if (type == TE_BLUEHYPERBLASTER) {
-				ex->lightcolor[0] = 0.19;
-				ex->lightcolor[1] = 0.41;
-				ex->lightcolor[2] = 0.75;
-			}
-			else if (type == TE_REDBLASTER) {
-				ex->lightcolor[0] = 0.75;
-				ex->lightcolor[1] = 0.41;
-				ex->lightcolor[2] = 0.19;
-			}
-			else if (type == TE_FLECHETTE) {
-				ex->lightcolor[0] = 0.39;
-				ex->lightcolor[1] = 0.61;
-				ex->lightcolor[2] = 0.75;
-			}
-			else { // TE_BLASTER	
-				ex->lightcolor[0] = 1;
-				ex->lightcolor[1] = 1;
-				ex->lightcolor[2] = 0;
+			switch(type) //mxd
+			{
+				case TE_BLASTER2:			VectorSet(ex->lightcolor, 0.15, 1.00, 0.15); break;
+				case TE_BLUEHYPERBLASTER:	VectorSet(ex->lightcolor, 0.19, 0.41, 0.75); break;
+				case TE_REDBLASTER:			VectorSet(ex->lightcolor, 0.75, 0.41, 0.19); break;
+				case TE_FLECHETTE:			VectorSet(ex->lightcolor, 0.39, 0.61, 0.75); break;
+				default: /* TE_BLASTER */	VectorSet(ex->lightcolor, 1.00, 1.00, 0.00); break;
 			}
 
 			ex->ent.model = clMedia.mod_explode;
 			ex->frames = 4;
 		}
+
 		// Psychospaz's enhanced particle code	
+		vec3_t color, colordelta;
+		const float	partsize = (cl_old_explosions->value ? 2 : 4);
+		const int numparts = (cl_old_explosions->value ? 12 : (32 / max(cl_particle_scale->value / 2, 1)));
+
+		if (type == TE_BLASTER2)
 		{
-			int		red, green, blue, numparts;
-			float	partsize = (cl_old_explosions->value) ? 2 : 4;
-			numparts = (cl_old_explosions->value) ? 12 : (32 / max(cl_particle_scale->value/2, 1));
-			if (type == TE_BLASTER2) {
-				CL_BlasterParticles (pos, dir, numparts, partsize, 50, 235, 50, -10, 0, -10);
-				red=50; green=235; blue=50; }
-			else if (type == TE_BLUEHYPERBLASTER) {
-				CL_BlasterParticles (pos, dir, numparts, partsize, 50, 50, 235, -10, 0, -10);
-				red=50; green=50; blue=235; }
-			else if (type == TE_REDBLASTER) {
-				CL_BlasterParticles (pos, dir, numparts, partsize, 235, 50, 50, 0, -90, -30);
-				red=235; green=50; blue=50; }
-			else if (type == TE_FLECHETTE) {
- 				CL_BlasterParticles (pos, dir, numparts, partsize, 100, 100, 195, -10, 0, -10);
-				red=100; green=100; blue=195; }
-			else { // TE_BLASTER
-				CL_BlasterParticles (pos, dir, numparts, partsize, 255, 150, 50, 0, -90, -30); // was 40
-				red=255; green=150; blue=50; }
-			CL_ParticleBlasterDecal(pos, dir, 10, red, green, blue);
+			VectorSet(color, 50, 235, 50);
+			VectorSet(colordelta, -10, 0, -10);
 		}
-		S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
-		break;
+		else if (type == TE_BLUEHYPERBLASTER)
+		{
+			VectorSet(color, 50, 50, 235);
+			VectorSet(colordelta, -10, 0, -10);
+		}
+		else if (type == TE_REDBLASTER)
+		{
+			VectorSet(color, 235, 50, 50);
+			VectorSet(colordelta, 0, -90, -30);
+		}
+		else if (type == TE_FLECHETTE)
+		{
+			VectorSet(color, 100, 100, 195);
+			VectorSet(colordelta, -10, 0, -10);
+		}
+		else // TE_BLASTER
+		{
+			VectorSet(color, 255, 150, 50);
+			VectorSet(colordelta, 0, -90, -30);
+		}
+
+		CL_BlasterParticles(pos, dir, numparts, partsize, color[0], color[1], color[2], colordelta[0], colordelta[1], colordelta[2]);
+		CL_ParticleBlasterDecal(pos, dir, 10, color[0], color[1], color[2]);
+		S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	// shockwave impact effect
 	case TE_SHOCKSPLASH:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
+	{
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
 		// Spawn 5 rings
-		for (i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++)
 		{
-			ex = CL_AllocExplosion ();
-			VectorMA (pos, 16.0*(i+1), dir, ex->ent.origin);
+			explosion_t	*ex = CL_AllocExplosion();
+			VectorMA(pos, 16.0 * (i + 1), dir, ex->ent.origin);
 			vectoangles2(dir, ex->ent.angles);
 			//VectorCopy (dir, ex->ent.angles);
 			ex->type = ex_poly2;
-			ex->ent.flags |= RF_FULLBRIGHT|RF_TRANSLUCENT|RF_NOSHADOW;
+			ex->ent.flags |= RF_FULLBRIGHT | RF_TRANSLUCENT | RF_NOSHADOW;
 			ex->start = cl.frame.servertime - 100;
 
 			ex->light = 75;
@@ -1244,127 +1279,176 @@ void CL_ParseTEnt (void)
 
 			ex->ent.model = clMedia.mod_shocksplash;
 			ex->ent.alpha = 0.70;
-			ex->baseframe = 4-i;
-			ex->frames = 4+i;
+			ex->baseframe = 4 - i;
+			ex->frames = 4 + i;
 		}
-		S_StartSound (pos,  0, 0, clMedia.sfx_shockhit, 1, ATTN_NONE, 0);
-		break;
+
+		S_StartSound(pos, 0, 0, clMedia.sfx_shockhit, 1, ATTN_NONE, 0);
+	}
+	break;
 
 	case TE_LIGHTNING:
+	{
 		// Psychospaz's enhanced particle code
-		ent = CL_ParseLightning ();
-		S_StartSound (NULL, ent, CHAN_WEAPON, clMedia.sfx_lightning, 1, ATTN_NORM, 0);
-		break;
+		const int ent = CL_ParseLightning();
+		S_StartSound(NULL, ent, CHAN_WEAPON, clMedia.sfx_lightning, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	case TE_DEBUGTRAIL:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadPos (&net_message, pos2);
-		CL_DebugTrail (pos, pos2);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadPos(&net_message, pos2);
+		CL_DebugTrail(pos, pos2);
 		break;
 
 	case TE_FLASHLIGHT:
+	{
 		MSG_ReadPos(&net_message, pos);
-		ent = MSG_ReadShort(&net_message);
+		const int ent = MSG_ReadShort(&net_message);
 		CL_Flashlight(ent, pos);
-		break;
+	}
+	break;
 
 	case TE_FORCEWALL:
+	{
 		MSG_ReadPos(&net_message, pos);
 		MSG_ReadPos(&net_message, pos2);
-		color = MSG_ReadByte (&net_message);
+		const int color = MSG_ReadByte(&net_message);
 		CL_ForceWall(pos, pos2, color);
-		break;
+	}
+	break;
 
 	case TE_HEATBEAM:
-		CL_ParsePlayerBeam (clMedia.mod_heatbeam);
+		CL_ParsePlayerBeam(clMedia.mod_heatbeam);
 		break;
 
 	case TE_MONSTER_HEATBEAM:
-		CL_ParsePlayerBeam (clMedia.mod_monster_heatbeam);
+		CL_ParsePlayerBeam(clMedia.mod_monster_heatbeam);
 		break;
 
 	case TE_HEATBEAM_SPARKS:
-		cnt = 50;
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		//r = 8; //mxd. Assigned value never used
-		magnitude = 60;
-		CL_ParticleSteamEffect (pos, dir, 240, 240, 240, -20, -20, -20, cnt, magnitude);
-		S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
-		break;
-	
+	{
+		const int cnt = 50;
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		const int magnitude = 60;
+
+		vec3_t color; //mxd
+		if (r_particle_mode->integer == 1)
+			VectorSet(color, 240, 240, 240);
+		else
+			VectorSet(color, 123, 123, 123);
+
+		CL_ParticleSteamEffect(pos, dir, color[0], color[1], color[2], -20, -20, -20, cnt, magnitude);
+		S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
+	}
+	break;
+
 	case TE_HEATBEAM_STEAM:
-		cnt = 20;
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		magnitude = 60;
-		CL_ParticleSteamEffect (pos, dir, 255, 150, 50, 0, -90, -30, cnt, magnitude);
-		CL_ParticlePlasmaBeamDecal (pos, dir, 10); // added burnmark
-		S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
-		break;
+	{
+		const int cnt = 20;
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		const int magnitude = 60;
+
+		vec3_t color; //mxd
+		if (r_particle_mode->integer == 1)
+			VectorSet(color, 255, 150, 50);
+		else
+			VectorSet(color, 255, 171, 7);
+
+		CL_ParticleSteamEffect(pos, dir, color[0], color[1], color[2], 0, -90, -30, cnt, magnitude);
+		CL_ParticlePlasmaBeamDecal(pos, dir, 10); // added burnmark
+		S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	case TE_STEAM:
 		CL_ParseSteam();
 		break;
 
 	case TE_BUBBLETRAIL2:
-		cnt = 3; // was 8
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadPos (&net_message, pos2);
-		CL_BubbleTrail2 (pos, pos2, cnt);
-		S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
-		break;
+	{
+		const int cnt = 3; // was 8
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadPos(&net_message, pos2);
+		CL_BubbleTrail2(pos, pos2, cnt);
+		S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
+	}
+	break;
 
 	case TE_MOREBLOOD:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-	// Psychospaz's enhanced particle code
-		CL_BloodHit (pos, dir);
-		CL_BloodHit (pos, dir);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+		{
+			CL_BloodHit(pos, dir);
+			CL_BloodHit(pos, dir);
+		}
+		else //mxd. Classic particles
+		{
+			CL_ParticleEffect(pos, dir, 0xe8, 250);
+		}
 		break;
 
 	case TE_CHAINFIST_SMOKE:
-		dir[0]=0; dir[1]=0; dir[2]=1;
+		dir[0] = 0; dir[1] = 0; dir[2] = 1;
 		MSG_ReadPos(&net_message, pos);
-	// Psychospaz's enhanced particle code
-		CL_ParticleSmokeEffect (pos, dir, 8);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_ParticleSmokeEffect(pos, dir, 8);
+		else //mxd. Classic particles
+			CL_ClassicParticleSmokeEffect(pos, dir, 0, 20, 20);
 		break;
 
 	case TE_ELECTRIC_SPARKS:
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-	// new blue electric sparks
-		CL_ElectricParticles (pos, dir, 40);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_ElectricParticles(pos, dir, 40); // new blue electric sparks
+		else //mxd. Classic particles
+			CL_ParticleEffect(pos, dir, 0x75, 40);
+
 		//FIXME : replace or remove this sound
-		S_StartSound (pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
+		S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 		break;
 
 	case TE_TRACKER_EXPLOSION:
-		MSG_ReadPos (&net_message, pos);
-		CL_ColorFlash (pos, 0, 150, -1, -1, -1);
-	//	CL_ColorExplosionParticles (pos, 0, 1);
-		CL_Tracker_Explode (pos);
-		CL_Explosion_Decal (pos, 14, particle_trackermark);
-		S_StartSound (pos, 0, 0, clMedia.sfx_disrexp, 1, ATTN_NORM, 0);
+		MSG_ReadPos(&net_message, pos);
+		CL_ColorFlash(pos, 0, 150, -1, -1, -1);
+
+		// Psychospaz's enhanced particle code
+		if (r_particle_mode->integer == 1)
+			CL_Tracker_Explode(pos);
+		else //mxd. Classic particles
+			CL_ColorExplosionParticles(pos, 0, 1);
+
+		CL_Explosion_Decal(pos, 14, particle_trackermark);
+		S_StartSound(pos, 0, 0, clMedia.sfx_disrexp, 1, ATTN_NORM, 0);
 		break;
 
 	case TE_TELEPORT_EFFECT:
 	case TE_DBALL_GOAL:
-		MSG_ReadPos (&net_message, pos);
-		CL_TeleportParticles (pos);
+		MSG_ReadPos(&net_message, pos);
+		CL_TeleportParticles(pos);
 		break;
 
 	case TE_WIDOWBEAMOUT:
-		CL_ParseWidow ();
+		CL_ParseWidow();
 		break;
 
 	case TE_NUKEBLAST:
-		CL_ParseNuke ();
+		CL_ParseNuke();
 		break;
 
 	case TE_WIDOWSPLASH:
-		MSG_ReadPos (&net_message, pos);
-		CL_WidowSplash (pos);
+		MSG_ReadPos(&net_message, pos);
+		CL_WidowSplash(pos);
 		break;
 //PGM
 //==============
@@ -1385,45 +1469,29 @@ CL_AddBeams
  
 void CL_AddBeams (void)
 {
-	int			i,j;
-	beam_t		*b;
 	vec3_t		dist, org;
-	float		d;
 	entity_t	ent;
 	float		yaw, pitch;
-	float		forward;
-	float		len, steps;
 	float		model_length;
-	frame_t		*oldframe; 	// added
-	player_state_t	*ps, *ops;
-	qboolean	firstperson, chasecam;
-	int			handmult;
-	vec3_t		thirdp_grapple_offset;
 	vec3_t		grapple_offset_dir;
 
 	// chasecam grapple offset stuff
-	if (hand)
-	{
-		if (hand->value == 2)
-			handmult = 1;
-		else if (hand->value == 1)
-			handmult = -1;
-		else
-			handmult = 1;
-	}
-	else 
-		handmult = 1;
+	const int handmult = (hand && hand->value == 1 ? -1 : 1); //mxd
+
+	vec3_t thirdp_grapple_offset;
 	VectorSet(thirdp_grapple_offset, 6, 16, 16);
 	// end third person grapple
 
-// update beams
-	for (i=0, b=cl_beams; i< MAX_BEAMS; i++, b++)
+	// Update beams
+	int	i;
+	beam_t *b;
+	for (i = 0, b = cl_beams; i < MAX_BEAMS; i++, b++)
 	{
 		if (!b->model || b->endtime < cl.time)
 			continue;
 
-		firstperson = ((b->entity == cl.playernum+1) && !cg_thirdperson->value);
-		chasecam = ((b->entity == cl.playernum+1) && cg_thirdperson->value);
+		const qboolean firstperson = ((b->entity == cl.playernum + 1) && !cg_thirdperson->value);
+		const qboolean chasecam = ((b->entity == cl.playernum + 1) && cg_thirdperson->value);
 
 		// if coming from the player, update the start position
 		if (firstperson)	// entity 0 is the world
@@ -1433,30 +1501,32 @@ void CL_AddBeams (void)
 		}
 		else if (chasecam)
 		{
-			vec3_t		f,r,u;
+			player_state_t *ps = &cl.frame.playerstate;
+			const int ofi = (cl.frame.serverframe - 1) & UPDATE_MASK;
+			frame_t *oldframe = &cl.frames[ofi];
 
-			ps = &cl.frame.playerstate;
-			j = (cl.frame.serverframe - 1) & UPDATE_MASK;
-			oldframe = &cl.frames[j];
 			if (oldframe->serverframe != cl.frame.serverframe-1 || !oldframe->valid)
 				oldframe = &cl.frame;
-			ops = &oldframe->playerstate;
 
+			player_state_t *ops = &oldframe->playerstate;
+
+			vec3_t		f, r, u;
 			AngleVectors(old_viewangles, f, r, u);
 			VectorClear (grapple_offset_dir);
-			for (j=0; j<3; j++)
+			for (int j = 0; j < 3; j++)
 			{
-				grapple_offset_dir[j] += f[j]*thirdp_grapple_offset[1];
-				grapple_offset_dir[j] += r[j]*thirdp_grapple_offset[0]*handmult;
-				grapple_offset_dir[j] += u[j]*(-thirdp_grapple_offset[2]);
+				grapple_offset_dir[j] += f[j] * thirdp_grapple_offset[1];
+				grapple_offset_dir[j] += r[j] * thirdp_grapple_offset[0] * handmult;
+				grapple_offset_dir[j] += u[j] * (-thirdp_grapple_offset[2]);
 			}
 
-			for (j=0; j<3; j++)
+			for (int j = 0; j < 3; j++)
 				b->start[j] = cl.predicted_origin[j] + ops->viewoffset[j]
 				+ cl.lerpfrac * (ps->viewoffset[j] - ops->viewoffset[j])
 				+ grapple_offset_dir[j];
 		//	Com_Printf("%f, %f, %f\n", grapple_offset_dir[0], grapple_offset_dir[1], grapple_offset_dir[2]);
 		}
+
 		if (chasecam)
 			VectorCopy (b->start, org);
 		else
@@ -1482,17 +1552,19 @@ void CL_AddBeams (void)
 				yaw = 90;
 			else
 				yaw = 270;
+
 			if (yaw < 0)
 				yaw += 360;
-	
-			forward = sqrtf (dist[0]*dist[0] + dist[1]*dist[1]);
+
+			const float forward = sqrtf (dist[0]*dist[0] + dist[1]*dist[1]);
 			pitch = (atan2(dist[2], forward) * -180.0 / M_PI);
+
 			if (pitch < 0)
-				pitch += 360.0;
+				pitch += 360;
 		}
 
 	// add new entities for the beams
-		d = VectorNormalize(dist);
+		float d = VectorNormalize(dist);
 
 		memset (&ent, 0, sizeof(ent));
 		if (b->model == clMedia.mod_lightning)
@@ -1504,8 +1576,9 @@ void CL_AddBeams (void)
 		{
 			model_length = 30.0;
 		}
-		steps = ceilf(d/model_length);
-		len = (d-model_length)/(steps-1);
+
+		const float steps = ceilf(d / model_length);
+		const float len = (d - model_length) / (steps - 1);
 
 		// PMM - special case for lightning model .. if the real length is shorter than the model,
 		// flip it around & draw it from the end to the start.  This prevents the model from going
@@ -1524,9 +1597,11 @@ void CL_AddBeams (void)
 			ent.angles[1] = yaw;
 			ent.angles[2] = rand()%360;
 			//AnglesToAxis(ent.angles, ent.axis);
-			V_AddEntity (&ent);			
+			V_AddEntity (&ent);
+			
 			return;
 		}
+
 		while (d > 0)
 		{
 			VectorCopy (org, ent.origin);
@@ -1550,8 +1625,8 @@ void CL_AddBeams (void)
 //			Com_Printf("B: %d -> %d\n", b->entity, b->dest_entity);
 			V_AddEntity (&ent);
 
-			for (j=0 ; j<3 ; j++)
-				org[j] += dist[j]*len;
+			for (int j = 0; j < 3; j++)
+				org[j] += dist[j] * len;
 			d -= model_length;
 		}
 	}
@@ -1990,7 +2065,7 @@ void CL_AddLasers (void)
 	laser_t		*l;
 	int			i;
 
-	for (i=0, l=cl_lasers ; i< MAX_LASERS ; i++, l++)
+	for (i = 0, l = cl_lasers; i < MAX_LASERS; i++, l++)
 	{
 		if (l->endtime >= cl.time)
 			V_AddEntity (&l->ent);
@@ -2003,7 +2078,7 @@ void CL_ProcessSustain ()
 	cl_sustain_t	*s;
 	int				i;
 
-	for (i=0, s=cl_sustains; i< MAX_SUSTAINS; i++, s++)
+	for (i = 0, s = cl_sustains; i < MAX_SUSTAINS; i++, s++)
 	{
 		if (!s->id) continue;
 

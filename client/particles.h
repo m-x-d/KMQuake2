@@ -42,6 +42,7 @@ typedef enum
 	particle_bulletmark,
 	particle_trackermark,
 //	particle_footprint,
+	particle_classic, //mxd
 } particle_type;
 
 #define  GL_ZERO						0x0

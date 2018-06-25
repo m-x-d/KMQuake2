@@ -51,6 +51,7 @@ static menulist_s  		s_texshader_warp_box;
 static menuslider_s  	s_waterwave_slider;
 static menulist_s  		s_caustics_box;
 static menulist_s		s_particle_overdraw_box;
+static menulist_s		s_particle_mode_box; //mxd
 static menulist_s		s_lightbloom_box;
 static menulist_s		s_modelshading_box;
 static menulist_s		s_shadows_box;
@@ -67,13 +68,11 @@ static menuaction_s		s_back_action;
 
 static void Video_Advanced_MenuSetValues ( void )
 {
-	char	*sshotformat;
-
 	Cvar_SetValue( "r_modulate", ClampCvar( 1, 2, Cvar_VariableValue("r_modulate") ) );
-	s_lightmapscale_slider.curvalue = (Cvar_VariableValue("r_modulate") -1) * 10;
+	s_lightmapscale_slider.curvalue = (Cvar_VariableValue("r_modulate") - 1) * 10;
 
 	Cvar_SetValue( "r_intensity", ClampCvar( 1, 2, Cvar_VariableValue("r_intensity") ) );
-	s_textureintensity_slider.curvalue = (Cvar_VariableValue("r_intensity") -1) * 10;
+	s_textureintensity_slider.curvalue = (Cvar_VariableValue("r_intensity") - 1) * 10;
 
 	Cvar_SetValue( "r_rgbscale", ClampCvar( 1, 2, Cvar_VariableValue("r_rgbscale") ) );
 	if (Cvar_VariableValue("r_rgbscale") == 1)
@@ -105,6 +104,9 @@ static void Video_Advanced_MenuSetValues ( void )
 	Cvar_SetValue( "r_caustics", ClampCvar( 0, 2, Cvar_VariableValue("r_caustics") ) );
 	s_caustics_box.curvalue = Cvar_VariableValue("r_caustics");
 
+	Cvar_SetValue("r_particle_mode", ClampCvar( 0, 1, Cvar_VariableValue("r_particle_mode") ) ); //mxd
+	s_particle_mode_box.curvalue = Cvar_VariableValue("r_particle_mode");
+
 	Cvar_SetValue( "r_particle_overdraw", ClampCvar( 0, 1, Cvar_VariableValue("r_particle_overdraw") ) );
 	s_particle_overdraw_box.curvalue = Cvar_VariableValue("r_particle_overdraw");
 
@@ -126,7 +128,7 @@ static void Video_Advanced_MenuSetValues ( void )
 //	Cvar_SetValue( "r_screenshot_jpeg", ClampCvar( 0, 1, Cvar_VariableValue("r_screenshot_jpeg") ) );
 //	s_screenshotjpeg_box.curvalue = Cvar_VariableValue("r_screenshot_jpeg");
 
-	sshotformat = Cvar_VariableString("r_screenshot_format");
+	char *sshotformat = Cvar_VariableString("r_screenshot_format");
 	if ( !Q_strcasecmp(sshotformat, "jpg") )
 		s_screenshotformat_box.curvalue = 0;
 	else if ( !Q_strcasecmp(sshotformat, "png") )
@@ -194,6 +196,11 @@ static void WaterWaveCallback ( void *unused )
 static void CausticsCallback ( void *unused )
 {
 	Cvar_SetValue( "r_caustics", s_caustics_box.curvalue);
+}
+
+static void ParticleModeCallback(void *unused) //mxd
+{
+	Cvar_SetValue("r_particle_mode", s_particle_mode_box.curvalue);
 }
 
 static void ParticleOverdrawCallback( void *unused )
@@ -330,12 +337,12 @@ void Menu_Video_Advanced_Init (void)
 		"TGA",
 		0
 	};
-	int y = 0;
 
+	int y = 0;
 	r_intensity = Cvar_Get ("r_intensity", "1", 0);
 
-	s_video_advanced_menu.x = SCREEN_WIDTH*0.5;
-	s_video_advanced_menu.y = SCREEN_HEIGHT*0.5 - 100;
+	s_video_advanced_menu.x = SCREEN_WIDTH * 0.5;
+	s_video_advanced_menu.y = SCREEN_HEIGHT * 0.5 - 100;
 	s_video_advanced_menu.nitems = 0;
 
 	s_options_advanced_header.generic.type		= MTYPE_SEPARATOR;
@@ -435,9 +442,17 @@ void Menu_Video_Advanced_Init (void)
 	s_caustics_box.itemnames				= caustics_names;
 	s_caustics_box.generic.statusbar		= "caustic effect on underwater surfaces";
 
+	s_particle_mode_box.generic.type		= MTYPE_SPINCONTROL; //mxd
+	s_particle_mode_box.generic.x			= 0;
+	s_particle_mode_box.generic.y			= y += 2 * MENU_LINE_SIZE;
+	s_particle_mode_box.generic.name		= "enhanced particles";
+	s_particle_mode_box.generic.callback	= ParticleModeCallback;
+	s_particle_mode_box.itemnames			= yesno_names;
+	s_particle_mode_box.generic.statusbar	= "enhanced particle and beam effects";
+
 	s_particle_overdraw_box.generic.type		= MTYPE_SPINCONTROL;
 	s_particle_overdraw_box.generic.x			= 0;
-	s_particle_overdraw_box.generic.y			= y += 2*MENU_LINE_SIZE;
+	s_particle_overdraw_box.generic.y			= y += MENU_LINE_SIZE;
 	s_particle_overdraw_box.generic.name		= "particle overdraw";
 	s_particle_overdraw_box.generic.callback	= ParticleOverdrawCallback;
 	s_particle_overdraw_box.itemnames			= yesno_names;
@@ -543,6 +558,7 @@ void Menu_Video_Advanced_Init (void)
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_texshader_warp_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_waterwave_slider );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_caustics_box );
+	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_particle_mode_box ); //mxd
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_particle_overdraw_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_lightbloom_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_modelshading_box );
@@ -569,8 +585,6 @@ Menu_Video_Advanced_Draw
 */
 void Menu_Video_Advanced_Draw (void)
 {
-	//int w, h;
-
 	// draw the banner
 	Menu_DrawBanner("m_banner_video");
 
@@ -589,7 +603,6 @@ Video_Advanced_MenuKey
 const char *Video_Advanced_MenuKey( int key )
 {
 	return Default_MenuKey( &s_video_advanced_menu, key );
-
 }
 
 void M_Menu_Video_Advanced_f (void)

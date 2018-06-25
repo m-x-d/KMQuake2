@@ -138,15 +138,12 @@ void AngleVectors (vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 
 void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up)
 {
-	float		d;
-
-	// this rotate and negat guarantees a vector
-	// not colinear with the original
+	// this rotate and negate guarantees a vector not colinear with the original
 	right[1] = -forward[0];
 	right[2] = forward[1];
 	right[0] = forward[2];
 
-	d = DotProduct (right, forward);
+	const float d = DotProduct (right, forward);
 	VectorMA (right, -d, forward, right);
 	VectorNormalize (right);
 	CrossProduct (right, forward, up);
@@ -154,18 +151,16 @@ void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up)
 
 void VecToAngleRolled (vec3_t value1, float angleyaw, vec3_t angles)
 {
-	float	forward, yaw, pitch;
-
-	yaw = (int) (atan2(value1[1], value1[0]) * 180 / M_PI);
-	forward = sqrt (value1[0]*value1[0] + value1[1]*value1[1]);
-	pitch = (int) (atan2(value1[2], forward) * 180 / M_PI);
+	const float yaw = (int) (atan2(value1[1], value1[0]) * 180 / M_PI);
+	const float forward = sqrtf (value1[0]*value1[0] + value1[1]*value1[1]);
+	float pitch = (int) (atan2(value1[2], forward) * 180 / M_PI);
 
 	if (pitch < 0)
 		pitch += 360;
 
 	angles[PITCH] = -pitch;
 	angles[YAW] =  yaw;
-	angles[ROLL] = - angleyaw;
+	angles[ROLL] = -angleyaw;
 }
 
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal )

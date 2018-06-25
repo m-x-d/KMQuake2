@@ -103,21 +103,23 @@ CL_LightningBeam
 		PART_BEAM,
 		NULL,0);
 }*/
+
 void CL_LightningBeam (vec3_t start, vec3_t end, int srcEnt, int dstEnt, float size)
 {
-	cparticle_t *list;
 	cparticle_t *p;
 
-	for (list=active_particles; list; list=list->next)
+	for (cparticle_t *list = active_particles; list; list = list->next)
+	{
 		if (list->src_ent == srcEnt && list->dst_ent == dstEnt && list->image == particle_lightning)
 		{
-			p=list;
+			p = list;
 			/*p->start =*/ p->time = cl.time;
 			VectorCopy(start, p->angle);
 			VectorCopy(end, p->org);
 
 			return;
 		}
+	}
 
 	p = CL_SetupParticle (
 		start[0],	start[1],	start[2],
@@ -136,10 +138,9 @@ void CL_LightningBeam (vec3_t start, vec3_t end, int srcEnt, int dstEnt, float s
 	if (!p)
 		return;
 
-	p->src_ent=srcEnt;
-	p->dst_ent=dstEnt;
+	p->src_ent = srcEnt;
+	p->dst_ent = dstEnt;
 }
-
 
 /*
 ===============
@@ -150,10 +151,9 @@ void CL_Explosion_Decal (vec3_t org, float size, int decalnum)
 {
 	if (r_decals->value)
 	{
-		int			i, j, offset=8;	//size/2
+		int offset = 8;	//size/2
 		//cparticle_t	*p; //mxd. Never used
 		vec3_t		angle[6], ang;
-		trace_t		trace1, trace2;
 		vec3_t		end1, end2, normal, sorg, dorg;
 		vec3_t		planenormals[6];
 
@@ -164,23 +164,23 @@ void CL_Explosion_Decal (vec3_t org, float size, int decalnum)
 		VectorSet(angle[4], 0, 0, 1);
 		VectorSet(angle[5], 0, 0, -1);
 
-		for (i=0; i<6; i++)
+		for (int i = 0; i < 6; i++)
 		{
 			VectorMA(org, -offset, angle[i], sorg); // move origin 8 units back
-			VectorMA(sorg, size/2+offset, angle[i], end1);
-			trace1 = CL_Trace (sorg, end1, 0, CONTENTS_SOLID);
+			VectorMA(sorg, size/2 + offset, angle[i], end1);
+			trace_t trace1 = CL_Trace (sorg, end1, 0, CONTENTS_SOLID);
 			if (trace1.fraction < 1) // hit a surface
 			{	
 				// make sure we haven't hit this plane before
 				VectorCopy(trace1.plane.normal, planenormals[i]);
 
-				for (j = 0; j < i; j++)
+				for (int j = 0; j < i; j++)
 					if (VectorCompare(planenormals[j], planenormals[i])) goto skip; //mxd. Actually skip the plane
 
 				// try tracing directly to hit plane
 				VectorNegate(trace1.plane.normal, normal);
 				VectorMA(sorg, size/2, normal, end2);
-				trace2 = CL_Trace (sorg, end2, 0, CONTENTS_SOLID);
+				trace_t trace2 = CL_Trace (sorg, end2, 0, CONTENTS_SOLID);
 
 				// if second trace hit same plane
 				if (trace2.fraction < 1 && VectorCompare(trace2.plane.normal, trace1.plane.normal))
@@ -295,7 +295,7 @@ void CL_Explosion_Particle (vec3_t org, float size, qboolean rocket)
 		1,		(rocket)? -2 : -1.5,
 		GL_SRC_ALPHA, GL_ONE,
 		//GL_ONE, GL_ONE,
-		(size != 0) ? size : ((150 - !rocket) ? 75 : 0),	0, //mxd. Operator '?:' has lower precedence than '-'; '-' will be evaluated first
+		(size != 0 ? size : (150 - (rocket ? 0 : 75))),	0, //mxd. Operator '?:' has lower precedence than '-'; '-' will be evaluated first
 		particle_rexplosion1,
 		PART_DEPTHHACK_SHORT,
 		CL_ExplosionThink, true);
@@ -313,6 +313,42 @@ void CL_Explosion_Particle (vec3_t org, float size, qboolean rocket)
 
 /*
 ===============
+CL_ExplosionParticles (mxd. Vanilla version)
+===============
+*/
+void CL_ExplosionParticles(const vec3_t org)
+{
+	for (int i = 0; i < 256; i++)
+	{
+		const int color8 = 0xe0 + (rand() & 7);
+		vec3_t color = { color8red(color8), color8green(color8), color8blue(color8) };
+		
+		vec3_t origin, velocity;
+		for (int j = 0; j < 3; j++)
+		{
+			origin[j] = org[j] + ((rand()%32) - 16);
+			velocity[j] = (rand()%384) - 192;
+		}
+		
+		CL_SetupParticle(
+			0, 0, 0,
+			origin[0], origin[1], origin[2],
+			velocity[0], velocity[1], velocity[2],
+			0, 0, 0,
+			color[0], color[1], color[2],
+			0, 0, 0,
+			1.0, -0.8 / (0.5 + frand()*0.3),
+			GL_SRC_ALPHA, GL_ONE,
+			1, 0,
+			particle_classic,
+			PART_GRAVITY,
+			NULL,
+			false);
+	}
+}
+
+/*
+===============
 CL_Explosion_FlashParticle
 
 Explosion fash
@@ -320,41 +356,21 @@ Explosion fash
 */
 void CL_Explosion_FlashParticle (vec3_t org, float size, qboolean large)
 {
-	if (large)
-	{
-		CL_SetupParticle (
-			0,		0,		0,
-			org[0],	org[1],	org[2],
-			0,		0,		0,
-			0,		0,		0,
-			255,	175,	100,
-			0,		0,		0,
-			1,		-1.75,
-			GL_SRC_ALPHA, GL_ONE,
-			//GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-			(size!=0)?size:50,	-10,			
-			//100-(!rocket)?50:0,	-10,			
-			particle_rflash,
-			PART_DEPTHHACK_SHORT,
-			NULL,0);
-	}
-	else
-	{
-		CL_SetupParticle (
-			0,		0,		0,
-			org[0],	org[1],	org[2],
-			0,		0,		0,
-			0,		0,		0,
-			255,	175,	100,
-			0,		0,		0,
-			1,		-1.75,
-			GL_SRC_ALPHA, GL_ONE,
-			(size!=0)?size:50,	-10,	
-			//100-(!rocket)?50:0,	-10,			
-			particle_blaster,
-			0,
-			NULL,0);
-	}
+	const int flags = (large ? PART_DEPTHHACK_SHORT : 0); //mxd
+	const int image = (large ? particle_rflash : particle_blaster);
+
+	CL_SetupParticle(
+		0, 0, 0,
+		org[0], org[1], org[2],
+		0, 0, 0,
+		0, 0, 0,
+		255, 175, 100,
+		0, 0, 0,
+		1, -1.75,
+		GL_SRC_ALPHA, GL_ONE,
+		(size != 0 ? size : 50), -10,
+		image, flags,
+		NULL, false);
 }
 
 
@@ -365,19 +381,13 @@ CL_ParticleExplosionSparksThink
 */
 void CL_ParticleExplosionSparksThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	int i;
-
 	//setting up angle for sparks
-	{
-		float time1, time2;
+	const float time1 = *time;
+	const float time2 = time1 * time1;
 
-		time1 = *time;
-		time2 = time1*time1;
-
-		for (i=0;i<2;i++)
-			angle[i] = 0.25*(p->vel[i]*time1 + (p->accel[i])*time2);
-		angle[2] = 0.25*(p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
-	}
+	for (int i = 0; i < 2; i++)
+		angle[i] = 0.25 * (p->vel[i] * time1 + p->accel[i] * time2);
+	angle[2] = 0.25 * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
 
 	p->thinknext = true;
 }
@@ -389,9 +399,7 @@ CL_Explosion_Sparks
 */
 void CL_Explosion_Sparks (vec3_t org, int size, int count)
 {
-	int	i;
-
-	for (i=0; i < (count/cl_particle_scale->value); i++) // was 256
+	for (int i = 0; i < (count / cl_particle_scale->value); i++) // was 256
 	{
 		CL_SetupParticle (
 			0,	0,	0,
@@ -453,17 +461,11 @@ CL_ParticleBloodDropThink
 */
 void CL_ParticleBloodDropThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	float length;
-	vec3_t len;
+	CL_CalcPartVelocity(p, 0.2, time, angle);
 
-	VectorSubtract(p->angle, org, len);
-	{
-		CL_CalcPartVelocity(p, 0.2, time, angle);
-
-		length = VectorNormalize(angle);
-		if (length>MAXBLEEDSIZE) length = MAXBLEEDSIZE;
-		VectorScale(angle, -length, angle);
-	}
+	float length = VectorNormalize(angle);
+	if (length > MAXBLEEDSIZE) length = MAXBLEEDSIZE;
+	VectorScale(angle, -length, angle);
 
 	//now to trace for impact...
 	CL_ParticleBloodThink (p, org, angle, alpha, size, image, time);
@@ -476,7 +478,7 @@ CL_ParticleBloodPuffThink
 */
 void CL_ParticleBloodPuffThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	angle[2] =	angle[0] + *time*angle[1] + *time**time*angle[2];
+	angle[2] = angle[0] + *time * angle[1] + *time * *time * angle[2];
 
 	//now to trace for impact...
 	CL_ParticleBloodThink (p, org, angle, alpha, size, image, time);
@@ -499,17 +501,18 @@ void CL_ParticleBloodThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 			&& !(CM_PointContents(p->oldorg,0) & MASK_WATER)) // no blood splatters underwater...
 		{
 			vec3_t	normal, dir;
-			int		i;
 			qboolean greenblood = false;
 			qboolean timedout = false;
 			if (p->color[1] > 0 && p->color[2] > 0)
 				greenblood = true;
+
 			// time cutoff for gib trails
 			if (p->flags & PART_GRAVITY && !(p->flags & PART_DIRECTION))
-			{	// gekk gibs go flyin faster...
-				if ((greenblood) && (cl.time - p->time)*0.001 > 1.0F)
+			{
+				// gekk gibs go flyin faster...
+				if (greenblood && (cl.time - p->time)*0.001 > 1.0F)
 					timedout = true;
-				if ((!greenblood) && (cl.time - p->time)*0.001 > 0.5F)
+				if (!greenblood && (cl.time - p->time)*0.001 > 0.5F)
 					timedout = true;
 			}
 
@@ -527,11 +530,12 @@ void CL_ParticleBloodThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 				p->flags = PART_DECAL|PART_SHADED|PART_ALPHACOLOR;
 				p->alpha = *alpha;
 				p->alphavel = -1/r_decal_life->value;
+
 				if (greenblood)
 					p->color[1] = 210;
 				else
-					for (i=0; i<3; i++)
-						p->color[i] *= 0.5;
+					VectorScale(p->color, 0.5, p->color); //mxd
+
 				p->start = CL_NewParticleTime();
 				p->think = CL_ParticleBloodDecalThink;
 				p->thinknext = true;
@@ -544,12 +548,14 @@ void CL_ParticleBloodThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 				AngleVectors (p->angle, dir, NULL, NULL);
 				VectorNegate(dir, dir);
 				CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);
+
 				if (p->decalnum)
 					became_decal = true;
 				//else
 				//	Com_Printf(S_COLOR_YELLOW"Blood decal not clipped!\n");
 			}
 		}
+
 		if (!became_decal)
 		{
 			*alpha = 0;
@@ -595,20 +601,17 @@ CL_BloodBleed
 */
 void CL_BloodBleed (vec3_t org, vec3_t dir, int count)
 {
-	cparticle_t *p;
 	vec3_t	pos;
-	int		i;
-
 	VectorScale(dir, 10, pos);
-	for (i=0; i<count; i++)
-	{
-		VectorSet(pos,
-			dir[0]+random()*(cl_blood->value-2)*0.01,
-			dir[1]+random()*(cl_blood->value-2)*0.01,
-			dir[2]+random()*(cl_blood->value-2)*0.01);
-		VectorScale(pos, 10 + (cl_blood->value-2)*0.0001*random(), pos);
 
-		p = CL_SetupParticle (
+	for (int i = 0; i < count; i++)
+	{
+		for (int c = 0; c < 3; c++) //mxd
+			pos[c] = dir[c] + random() * (cl_blood->value - 2) * 0.01;
+		
+		VectorScale(pos, 10 + (cl_blood->value-2) * 0.0001 * random(), pos);
+
+		cparticle_t *p = CL_SetupParticle (
 			org[0], org[1], org[2],
 			org[0] + ((rand()&7)-4) + dir[0],	org[1] + ((rand()&7)-4) + dir[1],	org[2] + ((rand()&7)-4) + dir[2],
 			pos[0]*(random()*3+5),	pos[1]*(random()*3+5),	pos[2]*(random()*3+5),
@@ -635,14 +638,10 @@ CL_BloodPuff
 */
 void CL_BloodPuff (vec3_t org, vec3_t dir, int count)
 {
-	cparticle_t *p;
-	int		i;
-	float	d;
-
-	for (i=0; i<count; i++)
+	for (int i = 0; i < count; i++)
 	{
-		d = rand()&31;
-		p = CL_SetupParticle (
+		const float d = rand()&31;
+		cparticle_t *p = CL_SetupParticle (
 			crand()*180, crand()*100, 0,
 			org[0] + ((rand()&7)-4) + d*dir[0],	org[1] + ((rand()&7)-4) + d*dir[1],	org[2] + ((rand()&7)-4) + d*dir[2],
 			dir[0]*(crand()*3+5),	dir[1]*(crand()*3+5),	dir[2]*(crand()*3+5),
@@ -654,7 +653,7 @@ void CL_BloodPuff (vec3_t org, vec3_t dir, int count)
 			10,			0,
 			particle_blood,
 			PART_SHADED,
-			CL_ParticleBloodPuffThink,true);
+			CL_ParticleBloodPuffThink, true);
 
 		if (p && i == 0 && random() < BLOOD_DECAL_CHANCE)
 			p->flags |= PART_LEAVEMARK;
@@ -689,29 +688,25 @@ green blood spray
 */
 void CL_GreenBloodHit (vec3_t org, vec3_t dir)
 {
-	cparticle_t *p;
-	int		i;
-	float	d;
-
 	if (cl_blood->value < 1) // disable blood option
 		return;
 
-	for (i=0;i<5;i++)
+	for (int i = 0; i < 5; i++)
 	{
-		d = rand()&31;
-		p = CL_SetupParticle (
-				crand()*180, crand()*100, 0,
-				org[0] + ((rand()&7)-4) + d*dir[0],	org[1] + ((rand()&7)-4) + d*dir[1],	org[2] + ((rand()&7)-4) + d*dir[2],
-				dir[0]*(crand()*3+5),	dir[1]*(crand()*3+5),	dir[2]*(crand()*3+5),
-				0,		0,		-100,
-				255,	180,	50,
-				0,		0,		0,
-				1,		-1.0,
-				GL_SRC_ALPHA, GL_ONE,
-				10,			0,			
-				particle_blood,
-				PART_SHADED|PART_OVERBRIGHT,
-				CL_ParticleBloodPuffThink,true);
+		const float d = rand()&31;
+		cparticle_t *p = CL_SetupParticle (
+			crand()*180, crand()*100, 0,
+			org[0] + ((rand()&7)-4) + d*dir[0],	org[1] + ((rand()&7)-4) + d*dir[1],	org[2] + ((rand()&7)-4) + d*dir[2],
+			dir[0]*(crand()*3+5),	dir[1]*(crand()*3+5),	dir[2]*(crand()*3+5),
+			0,		0,		-100,
+			255,	180,	50,
+			0,		0,		0,
+			1,		-1.0,
+			GL_SRC_ALPHA, GL_ONE,
+			10,			0,			
+			particle_blood,
+			PART_SHADED|PART_OVERBRIGHT,
+			CL_ParticleBloodPuffThink, true);
 
 		if (p && i == 0 && random() < BLOOD_DECAL_CHANCE)
 			p->flags |= PART_LEAVEMARK;
@@ -728,26 +723,24 @@ Wall impact puffs
 */
 void CL_ParticleEffect (vec3_t org, vec3_t dir, int color8, int count)
 {
-	int			i;
-	float		d;
-	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
-
-	for (i=0 ; i<count ; i++)
+	for (int i = 0; i < count; i++)
 	{
-		d = rand()&31;
-		CL_SetupParticle (
-			0,		0,		0,
-			org[0] + ((rand()&7)-4) + d*dir[0],	org[1] + ((rand()&7)-4) + d*dir[1],	org[2] + ((rand()&7)-4) + d*dir[2],
-			crand()*20,			crand()*20,			crand()*20,
-			0,		0,		0,
-			color[0],		color[1],		color[2],
-			0,	0,	0,
-			1.0,		-1.0 / (0.5 + frand()*0.3),
-			GL_SRC_ALPHA, GL_ONE,
-			1,			0,			
-			particle_generic,
-			PART_GRAVITY,
-			NULL,0);
+		//mxd
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(color8 + (rand()&7), p->color);
+
+		const float d = rand()&31;
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = org[j] + ((rand()&7) - 4) + d * dir[j];
+			p->vel[j] = crand() * 20;
+		}
+
+		p->accel[2] = -PARTICLE_GRAVITY;
+		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->flags = PART_GRAVITY;
 	}
 }
 
@@ -760,26 +753,27 @@ CL_ParticleEffect2
 #define colorAdd 25
 void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color8, int count)
 {
-	int			i;
-	float		d;
-	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
-
-	for (i=0 ; i<count ; i++)
+	for (int i = 0; i < count; i++)
 	{
-		d = rand()&7;
-		CL_SetupParticle (
-			0,	0,	0,
-			org[0]+((rand()&7)-4)+d*dir[0],	org[1]+((rand()&7)-4)+d*dir[1],	org[2]+((rand()&7)-4)+d*dir[2],
-			crand()*20,			crand()*20,			crand()*20,
-			0,		0,		0,
-			color[0] + colorAdd,		color[1] + colorAdd,		color[2] + colorAdd,
-			0,	0,	0,
-			1,		-1.0 / (0.5 + frand()*0.3),
-			GL_SRC_ALPHA, GL_ONE,
-			1,			0,			
-			particle_generic,
-			PART_GRAVITY,
-			NULL,0);
+		//mxd
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(color8, p->color);
+
+		const float d = rand()&7;
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = org[j] + ((rand()&7) - 4) + d * dir[j];
+			p->vel[j] = crand() * 20;
+
+			if (r_particle_mode->integer != 0)
+				p->color[j] += colorAdd;
+		}
+
+		p->accel[2] = -PARTICLE_GRAVITY;
+		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->flags = PART_GRAVITY;
 	}
 }
 
@@ -792,26 +786,27 @@ CL_ParticleEffect3
 
 void CL_ParticleEffect3 (vec3_t org, vec3_t dir, int color8, int count)
 {
-	int			i;
-	float		d;
-	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
-
-	for (i=0 ; i<count ; i++)
+	for (int i = 0; i < count; i++)
 	{
-		d = rand()&7;
-		CL_SetupParticle (
-			0,	0,	0,
-			org[0]+((rand()&7)-4)+d*dir[0],	org[1]+((rand()&7)-4)+d*dir[1],	org[2]+((rand()&7)-4)+d*dir[2],
-			crand()*20,			crand()*20,			crand()*20,
-			0,		0,		0,
-			color[0] + colorAdd,		color[1] + colorAdd,		color[2] + colorAdd,
-			0,	0,	0,
-			1,		-0.25 / (0.5 + frand()*0.3),
-			GL_SRC_ALPHA, GL_ONE,
-			2,			-0.25,			
-			particle_generic,
-			PART_GRAVITY,
-			NULL, false);
+		//mxd
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(color8, p->color);
+
+		const float d = rand()&7;
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = org[j] + ((rand()&7) - 4) + d * dir[j];
+			p->vel[j] = crand() * 20;
+
+			if (r_particle_mode->integer != 0)
+				p->color[j] += colorAdd;
+		}
+
+		p->accel[2] = PARTICLE_GRAVITY; //mxd. The only difference between this and CL_ParticleEffect2...
+		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->flags = PART_GRAVITY;
 	}
 }
 
@@ -824,7 +819,6 @@ CL_ParticleSplashThink
 #define SplashSize 7.5
 void CL_ParticleSplashThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	int i;
 	vec3_t len;
 	VectorSubtract(p->angle, org, len);
 	
@@ -833,16 +827,12 @@ void CL_ParticleSplashThink (cparticle_t *p, vec3_t org, vec3_t angle, float *al
 //		*size = SplashSize;
 
 	//setting up angle for sparks
-	{
-		float time1, time2;
+	const float time1 = *time;
+	const float time2 = time1*time1;
 
-		time1 = *time;
-		time2 = time1*time1;
-
-		for (i=0;i<2;i++)
-			angle[i] = 0.5*(p->vel[i]*time1 + (p->accel[i])*time2);
-		angle[2] = 0.5*(p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
-	}
+	for (int i = 0; i<2; i++)
+		angle[i] = 0.5 * (p->vel[i]*time1 + p->accel[i]*time2);
+	angle[2] = 0.5 * (p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
 
 	p->thinknext = true;
 }
@@ -856,13 +846,11 @@ Water Splashing
 */
 void CL_ParticleEffectSplash (vec3_t org, vec3_t dir, int color8, int count)
 {
-	int			i;
-	float		d;
 	vec3_t color = {color8red(color8), color8green(color8), color8blue(color8)};
 
-	for (i=0 ; i<count ; i++)
+	for (int i = 0; i < count; i++)
 	{
-		d = rand()&5;
+		const float d = rand()&5;
 		CL_SetupParticle (
 			org[0],	org[1],	org[2],
 			org[0]+d*dir[0],	org[1]+d*dir[1],	org[2]+d*dir[2],
@@ -886,20 +874,13 @@ CL_ParticleSparksThink
 */
 void CL_ParticleSparksThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	//vec3_t dir;
-	int i;
-
 	//setting up angle for sparks
-	{
-		float time1, time2;
+	const float time1 = *time;
+	const float time2 = time1*time1;
 
-		time1 = *time;
-		time2 = time1*time1;
-
-		for (i=0;i<2;i++)
-			angle[i] = 0.25*(p->vel[i]*time1 + (p->accel[i])*time2);
-		angle[2] = 0.25*(p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
-	}
+	for (int i = 0; i < 2; i++)
+		angle[i] = 0.25 * (p->vel[i]*time1 + p->accel[i]*time2);
+	angle[2] = 0.25 * (p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
 
 	p->thinknext = true;
 }
@@ -946,22 +927,18 @@ CL_ParticleBulletDecal
 void CL_ParticleBulletDecal (vec3_t org, vec3_t dir, float size)
 {
 	vec3_t		ang, angle, end, origin;
-	trace_t		tr;
 
 	if (!r_decals->value)
 		return;
 
 	VectorMA(org, DECAL_OFFSET, dir, origin);
 	VectorMA(org, -DECAL_OFFSET, dir, end);
-	tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
-	//tr = CL_Trace (origin, end, 1, 1);
+	trace_t tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
 
-	if (tr.fraction == 1)
-	//if (!tr.allsolid)
+	if (tr.fraction == 1 || VectorCompare(tr.plane.normal, vec3_origin)) //mxd. Other CL_*Decal have VectorCompare, why this was an exception?
 		return;
 
 	VectorNegate(tr.plane.normal, angle);
-	//VectorNegate(dir, angle);
 	VecToAngleRolled(angle, rand()%360, ang);
 	VectorCopy(tr.endpos, origin);
 
@@ -990,18 +967,15 @@ CL_ParticleRailDecal
 void CL_ParticleRailDecal (vec3_t org, vec3_t dir, float size, qboolean isRed)
 {
 	vec3_t		ang, angle, end, origin;
-	trace_t		tr;
 
 	if (!r_decals->value)
 		return;
 
 	VectorMA(org, -RAIL_DECAL_OFFSET, dir, origin);
 	VectorMA(org, 2*RAIL_DECAL_OFFSET, dir, end);
-	tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
+	trace_t tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
 
-	if (tr.fraction==1)
-		return;
-	if (VectorCompare(tr.plane.normal, vec3_origin))
+	if (tr.fraction == 1 || VectorCompare(tr.plane.normal, vec3_origin))
 		return;
 
 	VectorNegate(tr.plane.normal, angle);
@@ -1060,18 +1034,15 @@ CL_ParticleBlasterDecal
 void CL_ParticleBlasterDecal (vec3_t org, vec3_t dir, float size, int red, int green, int blue)
 {
 	vec3_t		ang, angle, end, origin;
-	trace_t		tr;
 
 	if (!r_decals->value)
 		return;
  
 	VectorMA(org, DECAL_OFFSET, dir, origin);
 	VectorMA(org, -DECAL_OFFSET, dir, end);
-	tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
+	trace_t tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
 
-	if (tr.fraction==1)
-		return;
-	if (VectorCompare(tr.plane.normal, vec3_origin))
+	if (tr.fraction == 1 || VectorCompare(tr.plane.normal, vec3_origin))
 		return;
 
 	VectorNegate(tr.plane.normal, angle);
@@ -1130,18 +1101,15 @@ CL_ParticlePlasmaBeamDecal
 void CL_ParticlePlasmaBeamDecal (vec3_t org, vec3_t dir, float size)
 {
 	vec3_t		ang, angle, end, origin;
-	trace_t		tr;
 
 	if (!r_decals->value)
 		return;
  
 	VectorMA(org, DECAL_OFFSET, dir, origin);
 	VectorMA(org, -DECAL_OFFSET, dir, end);
-	tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
+	trace_t tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
 
-	if (tr.fraction==1)
-		return;
-	if (VectorCompare(tr.plane.normal, vec3_origin))
+	if (tr.fraction == 1 || VectorCompare(tr.plane.normal, vec3_origin))
 		return;
 
 	VectorNegate(tr.plane.normal, angle);
@@ -1171,9 +1139,7 @@ CL_TeleporterParticles
 */
 void CL_TeleporterParticles (entity_state_t *ent)
 {
-	int			i;
-
-	for (i = 0; i < 8; i++)
+	for (int i = 0; i < 8; i++)
 	{
 		CL_SetupParticle (
 			0,	0,	0,
@@ -1187,7 +1153,7 @@ void CL_TeleporterParticles (entity_state_t *ent)
 			2,		0,			
 			particle_generic,
 			PART_GRAVITY,
-			NULL,0);
+			NULL, false);
 	}
 }
 
@@ -1199,30 +1165,17 @@ CL_LogoutEffect
 */
 void CL_LogoutEffect (vec3_t org, int type)
 {
-	int			i;
 	vec3_t	color;
 
-	for (i=0 ; i<500 ; i++)
+	switch (type) //mxd
 	{
-		if (type == MZ_LOGIN)// green
-		{
-			color[0] = 20;
-			color[1] = 200;
-			color[2] = 20;
-		}
-		else if (type == MZ_LOGOUT)// red
-		{
-			color[0] = 200;
-			color[1] = 20;
-			color[2] = 20;
-		}
-		else// yellow
-		{
-			color[0] = 200;
-			color[1] = 200;
-			color[2] = 20;
-		}
-		
+		case MZ_LOGIN:	VectorSet(color, 20, 200, 20); break; // green
+		case MZ_LOGOUT: VectorSet(color, 200, 20, 20); break; // red
+		default:		VectorSet(color, 200, 200, 20); break; // yeller
+	}
+
+	for (int i = 0; i < 500; i++)
+	{
 		CL_SetupParticle (
 			0,	0,	0,
 			org[0] - 16 + frand()*32,	org[1] - 16 + frand()*32,	org[2] - 24 + frand()*56,
@@ -1235,7 +1188,7 @@ void CL_LogoutEffect (vec3_t org, int type)
 			1,			0,			
 			particle_generic,
 			PART_GRAVITY,
-			NULL,0);
+			NULL, false);
 	}
 }
 
@@ -1247,9 +1200,7 @@ CL_ItemRespawnParticles
 */
 void CL_ItemRespawnParticles (vec3_t org)
 {
-	int			i;
-
-	for (i=0 ; i<64 ; i++)
+	for (int i = 0; i < 64; i++)
 	{
 		CL_SetupParticle (
 			0,	0,	0,
@@ -1263,7 +1214,7 @@ void CL_ItemRespawnParticles (vec3_t org)
 			1,			0,			
 			particle_generic,
 			PART_GRAVITY,
-			NULL,0);
+			NULL, false);
 	}
 }
 
@@ -1275,18 +1226,16 @@ CL_BigTeleportParticles
 */
 void CL_BigTeleportParticles (vec3_t org)
 {
-	int			i, index;
-	float		angle, dist;
-	static int colortable0[4] = {10,50,150,50};
-	static int colortable1[4] = {150,150,50,10};
-	static int colortable2[4] = {50,10,10,150};
+	static int colortable0[4] = {10,  50,  150, 50};
+	static int colortable1[4] = {150, 150, 50,  10};
+	static int colortable2[4] = {50,  10,  10,  150};
 
-	for (i=0; i<(1024/cl_particle_scale->value); i++) // was 4096
+	for (int i = 0; i < (1024 / cl_particle_scale->value); i++) // was 4096
 	{
+		const int index = rand()&3;
+		const float angle = M_PI * 2 * (rand()&1023) / 1023.0;
+		const float dist = rand()&31;
 
-		index = rand()&3;
-		angle = M_PI*2*(rand()&1023)/1023.0;
-		dist = rand()&31;
 		CL_SetupParticle (
 			0,	0,	0,
 			org[0]+cos(angle)*dist,	org[1] + sin(angle)*dist,org[2] + 8 + (rand()%90),
@@ -1299,7 +1248,7 @@ void CL_BigTeleportParticles (vec3_t org)
 			5,		0.15 / (0.5 + frand()*0.3),	 // was 2, 0.05	
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 	}
 }
 
@@ -1317,26 +1266,18 @@ Wall impact puffs
 
 void CL_ParticleBlasterThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	vec_t  length;
 	vec3_t len;
 	float clipsize = 1.0;
 	VectorSubtract(p->angle, org, len);
 
-	*size *= (float)(pBlasterMaxSize/VectorLength(len)) * 1.0/((4-*size));
+	*size *= (float)(pBlasterMaxSize / VectorLength(len)) * 1.0 / (4 - *size);
 	*size += *time * p->sizevel;
-
-	if (*size > pBlasterMaxSize)
-		*size = pBlasterMaxSize;
-	if (*size < pBlasterMinSize)
-		*size = pBlasterMinSize;
+	*size = clamp(*size, pBlasterMinSize, pBlasterMaxSize); //mxd
 
 	CL_ParticleBounceThink (p, org, angle, alpha, &clipsize, image, time); // was size
 
-	length = VectorNormalize(p->vel);
-	if (length>pBlasterMaxVelocity)
-		VectorScale(p->vel,	pBlasterMaxVelocity,	p->vel);
-	else
-		VectorScale(p->vel,	length, p->vel);
+	const vec_t length = min(pBlasterMaxVelocity, VectorNormalize(p->vel)); //mxd
+	VectorScale(p->vel,	length, p->vel);
 
 /*	vec3_t len;
 	VectorSubtract(p->angle, org, len);
@@ -1351,6 +1292,35 @@ void CL_ParticleBlasterThink (cparticle_t *p, vec3_t org, vec3_t angle, float *a
 
 /*
 ===============
+CL_ClassicBlasterParticles (mxd)
+===============
+*/
+void CL_ClassicBlasterParticles(vec3_t org, vec3_t dir)
+{
+	for (int i = 0; i < 40; i++)
+	{
+		cparticle_t	*p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(0xe0 + (rand()&7), p->color);
+
+		const float d = rand()&15;
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
+			p->vel[j] = dir[j] * 30 + crand() * 40;
+		}
+
+		p->accel[2] = -PARTICLE_GRAVITY;
+		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->image = particle_classic;
+		p->flags = PART_GRAVITY;
+	}
+}
+
+
+/*
+===============
 CL_BlasterParticles
 
 Wall impact puffs
@@ -1359,18 +1329,21 @@ Wall impact puffs
 void CL_BlasterParticles (vec3_t org, vec3_t dir, int count, float size,
 		int red, int green, int blue, int reddelta, int greendelta, int bluedelta)
 {
-	int			i;
-	float		speed = .75;
-	cparticle_t *p = NULL;
-	vec3_t		origin;
-
-	for (i = 0; i < count; i++)
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
 	{
-		VectorSet(origin,
-			org[0] + dir[0]*(1 + random()*3 + pBlasterMaxSize/2.0),
-			org[1] + dir[1]*(1 + random()*3 + pBlasterMaxSize/2.0),
-			org[2] + dir[2]*(1 + random()*3 + pBlasterMaxSize/2.0)
-			);
+		CL_ClassicBlasterParticles(org, dir);
+		return;
+	}
+	
+	const float speed = 0.75;
+	cparticle_t *p = NULL;
+	vec3_t origin;
+
+	for (int i = 0; i < count; i++)
+	{
+		for (int j = 0; j < 3; j++) //mxd
+			origin[j] = org[j] + dir[j] * (1 + random() * 3 + pBlasterMaxSize / 2.0);
 
 		p = CL_SetupParticle (
 			org[0],	org[1],	org[2],
@@ -1381,10 +1354,10 @@ void CL_BlasterParticles (vec3_t org, vec3_t dir, int count, float size,
 			reddelta,	greendelta,	bluedelta,
 			1,		-0.5 / (0.5 + frand()*0.3),
 			GL_SRC_ALPHA, GL_ONE,
-			size,	size*-0.125,		// was 4, -0.5
+			size,	size * -0.125,		// was 4, -0.5
 			particle_generic,
 			PART_GRAVITY,
-			CL_ParticleBlasterThink,true);
+			CL_ParticleBlasterThink, true);
 	
 	/*	d = rand()&5;
 		p = CL_SetupParticle (
@@ -1401,10 +1374,49 @@ void CL_BlasterParticles (vec3_t org, vec3_t dir, int count, float size,
 			PART_GRAVITY,
 			CL_ParticleBlasterThink,true);*/
 	}
+
 	if (p) // added light effect
 		CL_AddParticleLight (p, 150, 0, ((float)red)/255, ((float)green)/255, ((float)blue)/255);
 }
 
+/*
+===============
+CL_ClassicBlasterTrail (mxd)
+===============
+*/
+void CL_ClassicBlasterTrail(vec3_t start, vec3_t end)
+{
+	vec3_t move, vec;
+
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	float len = VectorNormalize(vec);
+
+	const int dec = 5;
+	VectorScale(vec, dec, vec);
+
+	// FIXME: this is a really silly way to have a loop
+	while (len > 0)
+	{
+		len -= dec;
+
+		cparticle_t	*p = CL_InitParticle();
+		if (!p) return;
+
+		p->alphavel = -1.0 / (0.3 + frand()*0.2);
+		color8_to_vec3(0xe0, p->color);
+
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = move[j] + crand();
+			p->vel[j] = crand() * 5;
+		}
+
+		p->image = particle_classic;
+
+		VectorAdd(move, vec, move);
+	}
+}
 
 /*
 ===============
@@ -1414,18 +1426,22 @@ CL_BlasterTrail
 void CL_BlasterTrail (vec3_t start, vec3_t end, int red, int green, int blue,
 									int reddelta, int greendelta, int bluedelta)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
-	int			dec;
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicBlasterTrail(start, end);
+		return;
+	}
+	
+	vec3_t		move, vec;
 
 	VectorCopy (start, move);
 //	VectorSubtract (end, start, vec);
 	VectorSubtract (start, end, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 	VectorMA (move, -5.0f, vec, move);
 
-	dec = 4 * cl_particle_scale->value; 
+	const int dec = 4 * cl_particle_scale->value; 
 	VectorScale (vec, dec, vec);
 
 	// FIXME: this is a really silly way to have a loop
@@ -1445,7 +1461,7 @@ void CL_BlasterTrail (vec3_t start, vec3_t end, int red, int green, int blue,
 			3,			-7,	// was 4, -6;
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -1463,20 +1479,18 @@ Hyperblaster particle glow effect
 void CL_HyperBlasterGlow (vec3_t start, vec3_t end, int red, int green, int blue,
 										int reddelta, int greendelta, int bluedelta)
 {
-	vec3_t		move, vec;
-	float		dec, size;
-	int			i;
+	vec3_t move, vec;
 
 	VectorCopy (start, move);
 	VectorSubtract (start, end, vec);
 	VectorMA (move, -16.5f, vec, move);
 
-	dec = 3.0f; // was 1, 5
+	const float dec = 3.0f; // was 1, 5
 	VectorScale (vec, dec, vec);
 
-	for (i = 0; i < 12; i++) // was 18
+	for (int i = 0; i < 12; i++) // was 18
 	{
-		size = 4.2f - (0.1f*(float)i);
+		const float size = 4.2f - (0.1f * i);
 
 		CL_SetupParticle (
 			0,			0,			0,
@@ -1490,7 +1504,7 @@ void CL_HyperBlasterGlow (vec3_t start, vec3_t end, int red, int green, int blue
 			size,			0, // was 3, -36; 5, -60
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -1529,7 +1543,7 @@ void CL_HyperBlasterTrail (vec3_t start, vec3_t end, int red, int green, int blu
 			5,			-60, // was 3, -36			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -1543,11 +1557,10 @@ CL_BlasterTracer
 */
 void CL_BlasterTracer (vec3_t origin, vec3_t angle, int red, int green, int blue, float len, float size)
 {
-//	int		i;
 	vec3_t	dir;
 	
 	AngleVectors (angle, dir, NULL, NULL);
-	VectorScale (dir, len,dir);
+	VectorScale (dir, len, dir);
 
 	//for (i=0; i<3; i++)
 	CL_SetupParticle (
@@ -1562,14 +1575,14 @@ void CL_BlasterTracer (vec3_t origin, vec3_t angle, int red, int green, int blue
 		size,		0,			
 		particle_blasterblob, // was particle_generic
 		PART_DIRECTION|PART_INSTANT|PART_OVERBRIGHT,
-		NULL,0);
+		NULL, false);
 }
 
 void CL_HyperBlasterEffect (vec3_t start, vec3_t end, vec3_t angle, int red, int green, int blue,
 										int reddelta, int greendelta, int bluedelta, float len, float size)
 {
 	if (cl_particle_scale->value < 2)
-	//	CL_HyperBlasterTrail (start, end, red, green, blue, reddelta, greendelta, bluedelta);
+		//CL_HyperBlasterTrail (start, end, red, green, blue, reddelta, greendelta, bluedelta);
 		CL_HyperBlasterGlow (start, end, red, green, blue, reddelta, greendelta, bluedelta);
 	//else //if (cl_particle_scale->value >= 2)
 		CL_BlasterTracer (end, angle, red, green, blue, len, size);
@@ -1583,16 +1596,13 @@ CL_QuadTrail
 */
 void CL_QuadTrail (vec3_t start, vec3_t end)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
-	int			dec;
+	vec3_t move, vec;
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 
-	dec = 5;
+	const int dec = 5;
 	VectorScale (vec, 5, vec);
 
 	while (len > 0)
@@ -1611,7 +1621,7 @@ void CL_QuadTrail (vec3_t start, vec3_t end)
 			1,			0,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -1625,16 +1635,13 @@ CL_FlagTrail
 */
 void CL_FlagTrail (vec3_t start, vec3_t end, qboolean isred, qboolean isgreen)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
-	int			dec;
+	vec3_t move, vec;
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 
-	dec = 5;
+	const int dec = 5;
 	VectorScale (vec, 5, vec);
 
 	while (len > 0)
@@ -1653,9 +1660,89 @@ void CL_FlagTrail (vec3_t start, vec3_t end, qboolean isred, qboolean isgreen)
 			1,			0,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
+	}
+}
+
+
+/*
+===============
+CL_ClassicDiminishingTrail (mxd)
+===============
+*/
+void CL_ClassicDiminishingTrail(vec3_t start, vec3_t end, centity_t *old, int flags)
+{
+	vec3_t move, vec;
+	float orgscale, velscale;
+
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	float len = VectorNormalize(vec);
+
+	const float dec = 0.5;
+	VectorScale(vec, dec, vec);
+
+	if (old->trailcount > 900)
+	{
+		orgscale = 4;
+		velscale = 15;
+	}
+	else if (old->trailcount > 800)
+	{
+		orgscale = 2;
+		velscale = 10;
+	}
+	else
+	{
+		orgscale = 1;
+		velscale = 5;
+	}
+
+	while (len > 0)
+	{
+		len -= dec;
+
+		if (!free_particles)
+			return;
+
+		// Drop less particles as it flies
+		if ((rand()&1023) < old->trailcount)
+		{
+			cparticle_t *p = CL_InitParticle2(flags);
+			if (!p) return;
+
+			for (int i = 0; i < 3; i++)
+			{
+				p->org[i] = move[i] + crand() * orgscale;
+				p->vel[i] = crand() * velscale;
+			}
+
+			if (flags & EF_GIB)
+			{
+				p->alphavel = -1.0 / (1 + frand()*0.4);
+				color8_to_vec3(0xe8 + (rand()&7), p->color);
+				p->vel[2] -= PARTICLE_GRAVITY;
+			}
+			else if (flags & EF_GREENGIB)
+			{
+				p->alphavel = -1.0 / (1 + frand()*0.4);
+				color8_to_vec3(0xdb + (rand()&7), p->color);
+				p->vel[2] -= PARTICLE_GRAVITY;
+			}
+			else
+			{
+				p->alphavel = -1.0 / (1 + frand()*0.2);
+				color8_to_vec3(4 + (rand()&7), p->color);
+				p->accel[2] = 20;
+			}
+		}
+
+		old->trailcount -= 5;
+		if (old->trailcount < 100)
+			old->trailcount = 100;
+		VectorAdd(move, vec, move);
 	}
 }
 
@@ -1667,19 +1754,24 @@ CL_DiminishingTrail
 */
 void CL_DiminishingTrail (vec3_t start, vec3_t end, centity_t *old, int flags)
 {
+	//mxd. Classic particles...
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicDiminishingTrail(start, end, old, flags);
+		return;
+	}
+	
 	cparticle_t	*p;
 	vec3_t		move;
 	vec3_t		vec;
-	float		len;
-	float		dec;
 	float		orgscale;
 	float		velscale;
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 
-	dec = (flags & EF_ROCKET) ? 10 : 2;
+	float dec = (flags & EF_ROCKET) ? 10 : 2;
 	dec *= cl_particle_scale->value;
 	VectorScale (vec, dec, vec);
 
@@ -1855,6 +1947,53 @@ void CL_DiminishingTrail (vec3_t start, vec3_t end, centity_t *old, int flags)
 	}
 }
 
+/*
+===============
+CL_ClassicRocketTrail (mxd)
+===============
+*/
+void CL_ClassicRocketTrail(vec3_t start, vec3_t end, centity_t *old)
+{
+	// Smoke
+	CL_ClassicDiminishingTrail(start, end, old, EF_ROCKET);
+
+	// Fire
+	vec3_t move, vec;
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	float len = VectorNormalize(vec);
+
+	while (len > 0)
+	{
+		len -= 1;
+
+		if (!free_particles)
+			return;
+
+		// falling particles
+		if ((rand() & 7) == 0)
+		{
+			cparticle_t *p = CL_InitParticle();
+			if (!p) return;
+
+			p->alphavel = -1.0 / (1 + frand()*0.2);
+			color8_to_vec3(0xdc + (rand()&3), p->color);
+
+			for (int j = 0; j < 3; j++)
+			{
+				p->org[j] = move[j] + crand() * 5;
+				p->vel[j] = crand() * 20;
+			}
+
+			p->accel[2] = -PARTICLE_GRAVITY;
+			p->flags = PART_GRAVITY;
+			p->image = particle_classic;
+		}
+
+		VectorAdd(move, vec, move);
+	}
+}
+
 
 /*
 ===============
@@ -1863,10 +2002,14 @@ CL_RocketTrail
 */
 void CL_RocketTrail (vec3_t start, vec3_t end, centity_t *old)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
-	float		dec;
+	//mxd. Classic particles...
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicRocketTrail(start, end, old);
+		return;
+	}
+	
+	vec3_t move, vec;
 
 	// smoke
 	CL_DiminishingTrail (start, end, old, EF_ROCKET);
@@ -1874,9 +2017,9 @@ void CL_RocketTrail (vec3_t start, vec3_t end, centity_t *old)
 	// fire
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 
-	dec = 1*cl_particle_scale->value;
+	float dec = cl_particle_scale->value;
 	VectorScale (vec, dec, vec);
 
 	while (len > 0)
@@ -1887,7 +2030,7 @@ void CL_RocketTrail (vec3_t start, vec3_t end, centity_t *old)
 			return;
 
 		// falling particles
-		if ( (rand()&7) == 0)
+		if ((rand()&7) == 0)
 		{
 			CL_SetupParticle (
 				0,	0,	0,
@@ -1901,15 +2044,16 @@ void CL_RocketTrail (vec3_t start, vec3_t end, centity_t *old)
 				2,			-2,			
 				particle_blaster,
 				PART_GRAVITY,
-				NULL,0);
+				NULL, false);
 		}
+
 		VectorAdd (move, vec, move);
 	}
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
 	len = VectorNormalize (vec);
-	dec = 1.5*cl_particle_scale->value;
+	dec = 1.5 * cl_particle_scale->value;
 	VectorScale (vec, dec, vec);
 /*	len = totallen;
 	VectorCopy (start, move);
@@ -2012,7 +2156,7 @@ void CL_RailSprial (vec3_t start, vec3_t end, qboolean isRed)
 			3,	0,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -2025,25 +2169,20 @@ CL_ParticleDevRailThink
 */
 void CL_ParticleDevRailThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	int i;
 	vec3_t len;
 	VectorSubtract(p->angle, org, len);
 	
-	*size *= (float)(SplashSize/VectorLength(len)) * 0.5/((4-*size));
+	*size *= (float)(SplashSize/VectorLength(len)) * 0.5 / (4 - *size);
 	if (*size > SplashSize)
 		*size = SplashSize;
 
 	//setting up angle for sparks
-	{
-		float time1, time2;
+	const float time1 = *time;
+	const float time2 = time1 * time1;
 
-		time1 = *time;
-		time2 = time1*time1;
-
-		for (i=0;i<2;i++)
-			angle[i] = 3*(p->vel[i]*time1 + (p->accel[i])*time2);
-		angle[2] = 3*(p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
-	}
+	for (int i = 0; i < 2; i++)
+		angle[i] = 3 * (p->vel[i]*time1 + p->accel[i]*time2);
+	angle[2] = 3 * (p->vel[2]*time1 + (p->accel[2] - PARTICLE_GRAVITY)*time2);
 
 	p->thinknext = true;
 }
@@ -2057,24 +2196,32 @@ void CL_DevRailTrail (vec3_t start, vec3_t end, qboolean isRed)
 {
 	vec3_t		move;
 	vec3_t		vec, point;
-	float		len;
-	int			dec, i=0;
+	int i = 0;
 
 	// Draw from closest point
-	if (FartherPoint(start, end)) {
+	if (FartherPoint(start, end))
+	{
 		VectorCopy (end, move);
 		VectorSubtract (start, end, vec);
 	}
-	else {
+	else
+	{
 		VectorCopy (start, move);
 		VectorSubtract (end, start, vec);
 	}
-	len = VectorNormalize (vec);
+
+	float len = VectorNormalize (vec);
 	len = min (len, cl_rail_length->value);  // cap length
 	VectorCopy(vec, point);
 
-	dec = 4;
+	const int dec = 4;
 	VectorScale (vec, dec, vec);
+
+	vec3_t railcolor; //mxd
+	if (isRed)
+		VectorSet(railcolor, 255, 20, 20);
+	else
+		VectorSet(railcolor, cl_railred->value, cl_railgreen->value, cl_railblue->value);
 
 	// FIXME: this is a really silly way to have a loop
 	while (len > 0)
@@ -2082,22 +2229,24 @@ void CL_DevRailTrail (vec3_t start, vec3_t end, qboolean isRed)
 		len -= dec;
 		i++;
 
-		if (i>=DEVRAILSTEPS)
+		if (i >= DEVRAILSTEPS)
 		{
-			for (i=3;i>0;i--)
-			CL_SetupParticle (
-				point[0],	point[1],	point[2],
-				move[0],	move[1],	move[2],
-				0,		0,		0,
-				0,		0,		0,
-				(isRed)?255:cl_railred->value,	(isRed)?20:cl_railgreen->value,	(isRed)?20:cl_railblue->value,
-				0,		-90,	-30,
-				0.75,		-.75,
-				GL_SRC_ALPHA, GL_ONE,
-				dec*DEVRAILSTEPS*TWOTHIRDS,	0,			
-				particle_beam2,
-				PART_DIRECTION,
-				NULL,0);
+			for (i = 3; i > 0; i--)
+			{
+				CL_SetupParticle(
+					point[0], point[1], point[2],
+					move[0], move[1], move[2],
+					0, 0, 0,
+					0, 0, 0,
+					railcolor[0], railcolor[1], railcolor[2],
+					0, -90, -30,
+					0.75, -.75,
+					GL_SRC_ALPHA, GL_ONE,
+					dec * DEVRAILSTEPS * TWOTHIRDS, 0,
+					particle_beam2,
+					PART_DIRECTION,
+					NULL, false);
+			}
 		}
 
 		CL_SetupParticle (
@@ -2105,7 +2254,7 @@ void CL_DevRailTrail (vec3_t start, vec3_t end, qboolean isRed)
 			move[0],	move[1],	move[2],
 			crand()*10,	crand()*10,	crand()*10+20,
 			0,		0,		0,
-			(isRed)?255:cl_railred->value,	(isRed)?20:cl_railgreen->value,	(isRed)?20:cl_railblue->value,
+			railcolor[0], railcolor[1], railcolor[2],
 			0,	0,	0,
 			1,		-0.75 / (0.5 + frand()*0.3),
 			GL_SRC_ALPHA, GL_ONE,
@@ -2134,11 +2283,86 @@ void CL_DevRailTrail (vec3_t start, vec3_t end, qboolean isRed)
 
 /*
 ===============
+CL_ClassicRailTrail (mxd)
+===============
+*/
+void CL_ClassicRailTrail(vec3_t start, vec3_t end, qboolean isRed)
+{
+	vec3_t move, vec, dir;
+
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	float len = VectorNormalize(vec);
+
+	vec3_t right, up;
+	MakeNormalVectors(vec, right, up);
+
+	const int color8 = (isRed ? 0x44 : 0x74);
+
+	for (int i = 0; i < len; i++)
+	{
+		cparticle_t	*p = CL_InitParticle();
+		if (!p) return;
+
+		const float d = i * 0.1f;
+		const float c = cosf(d);
+		const float s = sinf(d);
+
+		VectorScale(right, c, dir);
+		VectorMA(dir, s, up, dir);
+
+		p->alphavel = -1.0 / (1 + frand()*0.2);
+		color8_to_vec3(color8 + (rand()&7), p->color);
+
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = move[j] + dir[j] * 3;
+			p->vel[j] = dir[j] * 6;
+		}
+
+		p->image = particle_classic;
+		VectorAdd(move, vec, move);
+	}
+
+	const float dec = 0.75;
+	VectorScale(vec, dec, vec);
+	VectorCopy(start, move);
+
+	while (len > 0)
+	{
+		len -= dec;
+
+		cparticle_t	*p = CL_InitParticle();
+		if (!p) return;
+
+		p->alphavel = -1.0 / (0.6 + frand()*0.2);
+		color8_to_vec3((rand()&7), p->color);
+
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = move[j] + crand() * 3;
+			p->vel[j] = crand() * 3;
+		}
+
+		p->image = particle_classic;
+		VectorAdd(move, vec, move);
+	}
+}
+
+/*
+===============
 CL_RailTrail
 ===============
 */
 void CL_RailTrail (vec3_t start, vec3_t end, qboolean isRed)
 {
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicRailTrail(start, end, isRed);
+		return;
+	}
+	
 	vec3_t		move, last;
 	vec3_t		vec, point;
 	//vec3_t	right, up;
@@ -2203,11 +2427,12 @@ void CL_RailTrail (vec3_t start, vec3_t end, qboolean isRed)
 				0,	0,	0,
 				0.75,		-0.75,
 				GL_SRC_ALPHA, GL_ONE,
-				RAILTRAILSPACE*TWOTHIRDS,	(colored)?0:-5,			
+				RAILTRAILSPACE * TWOTHIRDS,	(colored ? 0 : -5),
 				particle_beam2,
 				PART_BEAM,
 				NULL,0);
 	}
+
 	if (cl_railtype->value == 0)
 		CL_RailSprial (start, end, isRed);
 }
@@ -2216,11 +2441,55 @@ void CL_RailTrail (vec3_t start, vec3_t end, qboolean isRed)
 // RAFAEL
 /*
 ===============
+CL_ClassicIonripperTrail (mxd)
+===============
+*/
+void CL_ClassicIonripperTrail(vec3_t start, vec3_t ent)
+{
+	qboolean left = false;
+
+	vec3_t move, vec;
+	VectorCopy(start, move);
+	VectorSubtract(ent, start, vec);
+	float len = VectorNormalize(vec);
+
+	const int dec = 5;
+	VectorScale(vec, dec, vec);
+
+	while (len > 0)
+	{
+		len -= dec;
+
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		p->alpha = 0.5f;
+		p->alphavel = -1.0 / (0.3 + frand() * 0.2);
+		color8_to_vec3(0xe4 + (rand()&3), p->color);
+
+		VectorCopy(move, p->org);
+		p->vel[0] = 10 * (left ? 1 : -1);
+		p->image = particle_classic;
+		left = !left;
+
+		VectorAdd(move, vec, move);
+	}
+}
+
+/*
+===============
 CL_IonripperTrail
 ===============
 */
 void CL_IonripperTrail (vec3_t start, vec3_t ent)
 {
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicIonripperTrail(start, ent);
+		return;
+	}
+	
 	vec3_t	move;
 	vec3_t	vec;
 	vec3_t  leftdir,up;
@@ -2252,9 +2521,45 @@ void CL_IonripperTrail (vec3_t start, vec3_t ent)
 			3,			0,			// was dec
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
+	}
+}
+
+/*
+===============
+CL_ClassicBubbleTrail (mxd)
+===============
+*/
+void CL_ClassicBubbleTrail(vec3_t start, vec3_t end)
+{
+	vec3_t move, vec;
+
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	const float len = VectorNormalize(vec);
+
+	const float dec = 32;
+	VectorScale(vec, dec, vec);
+
+	for (int i = 0; i < len; i += dec)
+	{
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		p->alphavel = -1.0 / (1 + frand()*0.2);
+		color8_to_vec3(4 + (rand()&7), p->color);
+
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = move[j] + crand() * 2;
+			p->vel[j] = crand() * 5;
+		}
+		p->vel[2] += 6;
+		p->image = particle_classic;
+
+		VectorAdd(move, vec, move);
 	}
 }
 
@@ -2262,43 +2567,45 @@ void CL_IonripperTrail (vec3_t start, vec3_t ent)
 /*
 ===============
 CL_BubbleTrail
-
 ===============
 */
 void CL_BubbleTrail (vec3_t start, vec3_t end)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
-	int			i;
-	float		dec, size;
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicBubbleTrail(start, end);
+		return;
+	}
+	
+	vec3_t move, vec;
 
-	VectorCopy (start, move);
-	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
 
-	dec = 32;
+	const float len = VectorNormalize(vec);
+	const float dec = 32;
 	VectorScale (vec, dec, vec);
 
-	for (i=0 ; i<len ; i+=dec)
+	for (int i = 0; i < len; i += dec)
 	{
-		size = (frand()>0.25)? 1 : (frand()>0.5) ? 2 : (frand()>0.75) ? 3 : 4;
+		const float size = (frand() > 0.25 ? 1 : (frand() > 0.5 ? 2 : (frand() > 0.75 ? 3 : 4)));
 
-		CL_SetupParticle (
-			0,	0,	0,
-			move[0]+crand()*2,	move[1]+crand()*2,	move[2]+crand()*2,
-			crand()*5,	crand()*5,	crand()*5+6,
-			0,		0,		0,
-			255,	255,	255,
-			0,	0,	0,
-			0.75,		-0.5 / (1 + frand() * 0.2),
+		CL_SetupParticle(
+			0, 0, 0,
+			move[0] + crand() * 2, move[1] + crand() * 2, move[2] + crand() * 2,
+			crand() * 5, crand() * 5, crand() * 5 + 6,
+			0, 0, 0,
+			255, 255, 255,
+			0, 0, 0,
+			0.75, -0.5 / (1 + frand() * 0.2),
 			GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-			size,	1,			
+			size, 1,
 			particle_bubble,
-			PART_TRANS|PART_SHADED,
-			NULL,0);
+			PART_TRANS | PART_SHADED,
+			NULL, false);
 
-		VectorAdd (move, vec, move);
+		VectorAdd(move, vec, move);
 	}
 }
 
@@ -2327,7 +2634,7 @@ void CL_FlyParticles (vec3_t origin, int count)
 	if (!avelocities[0][0])
 	{
 		for (i = 0; i < NUMVERTEXNORMALS; i++)
-			for(int c = 0; c < 3; c++)
+			for (int c = 0; c < 3; c++)
 				avelocities[i][c] = (rand() & 255) * 0.01f;
 	}
 
@@ -2360,7 +2667,7 @@ void CL_FlyParticles (vec3_t origin, int count)
 			1+sin(i+ltime),	1,			
 			particle_generic,
 			PART_TRANS,
-			NULL,0);
+			NULL, false);
 	}
 }
 
@@ -2523,7 +2830,7 @@ void CL_TrapParticles (entity_t *ent)
 			3,			-3,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -2563,7 +2870,7 @@ void CL_TrapParticles (entity_t *ent)
 					1,			1,			
 					particle_generic,
 					PART_GRAVITY,
-					NULL,0);
+					NULL, false);
 
 			}
 	}
@@ -2578,9 +2885,7 @@ CL_BFGExplosionParticles
 //FIXME combined with CL_ExplosionParticles
 void CL_BFGExplosionParticles (vec3_t org)
 {
-	int			i;
-
-	for (i=0 ; i<256 ; i++)
+	for (int i = 0; i < 256; i++)
 	{
 		CL_SetupParticle (
 			0,	0,	0,
@@ -2594,7 +2899,7 @@ void CL_BFGExplosionParticles (vec3_t org)
 			10,			-10,			
 			particle_generic,
 			PART_GRAVITY,
-			NULL,0);
+			NULL, false);
 	}
 }
 
@@ -2606,55 +2911,35 @@ CL_TeleportParticles
 */
 void CL_TeleportParticles (vec3_t org)
 {
-	int			i, j, k;
-	float		vel;
-	vec3_t		dir;
+	vec3_t dir, color;
 
-	for (i=-16 ; i<=16 ; i+=4)
-		for (j=-16 ; j<=16 ; j+=4)
-			for (k=-16 ; k<=32 ; k+=4)
+	for (int i = -16; i <= 16; i += 4)
+		for (int j = -16; j <= 16; j += 4)
+			for (int k = -16; k <= 32; k += 4)
 			{
-				dir[0] = j*16;
-				dir[1] = i*16;
-				dir[2] = k*16;
+				VectorSet(dir, j * 16, i * 16, k * 16);
+				VectorNormalize(dir);
+				const float vel = 150 + (rand()&63);
 
-				VectorNormalize (dir);						
-				vel = 150 + (rand()&63);
+				if (r_particle_mode->integer == 1) //mxd
+					VectorSet(color, 200 + 55 * rand(), 200 + 55 * rand(), 200 + 55 * rand());
+				else
+					color8_to_vec3(7 + (rand()&7), color);
 
 				CL_SetupParticle (
 					0,	0,	0,
-					org[0]+i+(rand()&3), org[1]+j+(rand()&3),	org[2]+k+(rand()&3),
-					dir[0]*vel,	dir[1]*vel,	dir[2]*vel,
+					org[0] + i + (rand()&3), org[1] + j + (rand()&3), org[2] + k + (rand()&3),
+					dir[0] * vel,	dir[1] * vel,	dir[2] * vel,
 					0,		0,		0,
-					200 + 55*rand(),	200 + 55*rand(),	200 + 55*rand(),
+					color[0], color[1], color[2],
 					0,		0,		0,
 					1,		-1.0 / (0.3 + (rand()&7) * 0.02),
 					GL_SRC_ALPHA, GL_ONE,
 					1,			3,			
 					particle_generic,
 					PART_GRAVITY,
-					NULL,0);
+					NULL, false);
 			}
-}
-
-
-/*
-===============
-CL_Flashlight
-===============
-*/
-void CL_Flashlight (int ent, vec3_t pos)
-{
-	cdlight_t	*dl;
-
-	dl = CL_AllocDlight (ent);
-	VectorCopy (pos,  dl->origin);
-	dl->radius = 400;
-	dl->minlight = 250;
-	dl->die = cl.time + 100;
-	dl->color[0] = 1;
-	dl->color[1] = 1;
-	dl->color[2] = 1;
 }
 
 
@@ -2665,16 +2950,22 @@ CL_ColorFlash - flash of light
 */
 void CL_ColorFlash (vec3_t pos, int ent, int intensity, float r, float g, float b)
 {
-	cdlight_t	*dl;
-
-	dl = CL_AllocDlight (ent);
+	cdlight_t *dl = CL_AllocDlight (ent);
 	VectorCopy (pos,  dl->origin);
 	dl->radius = intensity;
 	dl->minlight = 250;
 	dl->die = cl.time + 100;
-	dl->color[0] = r;
-	dl->color[1] = g;
-	dl->color[2] = b;
+	VectorSet(dl->color, r, g, b); //mxd
+}
+
+/*
+===============
+CL_Flashlight
+===============
+*/
+void CL_Flashlight(int ent, vec3_t pos)
+{
+	CL_ColorFlash(pos, ent, 400, 1, 1, 1); //mxd
 }
 
 
@@ -2687,17 +2978,15 @@ void CL_DebugTrail (vec3_t start, vec3_t end)
 {
 	vec3_t		move;
 	vec3_t		vec;
-	float		len;
-	float		dec;
 	vec3_t		right, up;
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 
 	MakeNormalVectors (vec, right, up);
 
-	dec = 8; // was 2
+	const float dec = 8; // was 2
 	VectorScale (vec, dec, vec);
 	VectorCopy (start, move);
 
@@ -2717,7 +3006,7 @@ void CL_DebugTrail (vec3_t start, vec3_t end)
 			7.5,			0,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -2731,14 +3020,12 @@ CL_ForceWall
 */
 void CL_ForceWall (vec3_t start, vec3_t end, int color8)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
+	vec3_t move, vec;
 	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	float len = VectorNormalize (vec);
 
 	VectorScale (vec, 4, vec);
 
@@ -2760,9 +3047,48 @@ void CL_ForceWall (vec3_t start, vec3_t end, int color8)
 				5,			0,			
 				particle_generic,
 				0,
-				NULL,0);
+				NULL, false);
 
 		VectorAdd (move, vec, move);
+	}
+}
+
+
+/*
+===============
+CL_ClassicBubbleTrail2 (mxd)
+===============
+*/
+void CL_ClassicBubbleTrail2(vec3_t start, vec3_t end, int dist)
+{
+	vec3_t move, vec;
+
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	const float len = VectorNormalize(vec);
+
+	const float dec = dist;
+	VectorScale(vec, dec, vec);
+
+	for (int i = 0; i < len; i += dec)
+	{
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		p->alphavel = -1.0 / (1 + frand()*0.1);
+		color8_to_vec3(4 + (rand()&7), p->color);
+
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = move[j] + crand() * 2;
+			p->vel[j] = crand() * 10;
+		}
+
+		p->org[2] -= 4;
+		p->vel[2] += 20;
+		p->image = particle_classic;
+
+		VectorAdd(move, vec, move);
 	}
 }
 
@@ -2774,35 +3100,40 @@ CL_BubbleTrail2 (lets you control the # of bubbles by setting the distance betwe
 */
 void CL_BubbleTrail2 (vec3_t start, vec3_t end, int dist)
 {
-	vec3_t		move;
-	vec3_t		vec;
-	float		len;
-	int			i;
-	float		dec, size;
-
+	//mxd. Classic particles
+	if(r_particle_mode->integer == 0)
+	{
+		CL_ClassicBubbleTrail2(start, end, dist);
+		return;
+	}
+	
+	vec3_t move, vec;
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
 
-	dec = dist;
-	VectorScale (vec, dec, vec);
+	const float len = VectorNormalize (vec);
+	VectorScale (vec, dist, vec);
 
-	for (i=0 ; i<len ; i+=dec)
+	for (int i = 0; i < len; i += dist)
 	{
-		size = (frand()>0.25)? 1 : (frand()>0.5) ? 2 : (frand()>0.75) ? 3 : 4;
+		vec3_t color, velocity; //mxd
+		VectorSet(color, 255, 255, 255);
+		VectorSet(velocity, crand() * 5, crand() * 5, crand() * 5 + 6);
+
+		const float size = (frand() > 0.25 ? 1 : (frand() > 0.5 ? 2 : (frand() > 0.75 ? 3 : 4)));
 		CL_SetupParticle (
 			0,	0,	0,
-			move[0]+crand()*2,	move[1]+crand()*2,	move[2]+crand()*2,
-			crand()*5,	crand()*5,	crand()*5+6,
+			move[0]+crand()*2,	move[1]+crand()*2,	move[2]+crand()*2 - 4,
+			velocity[0], velocity[1], velocity[2],
 			0,		0,		0,
-			255,	255,	255,
+			color[0], color[1], color[2],
 			0,	0,	0,
 			0.75,	-0.5 / (1 + frand() * 0.2),
 			GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
 			size,		1,			
 			particle_bubble,
 			PART_TRANS|PART_SHADED,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -2820,13 +3151,9 @@ void CL_HeatbeamParticles (vec3_t start, vec3_t forward)
 	vec3_t		vec;
 	float		len;
 	vec3_t		right, up;
-	int			i;
-	float		c, s;
 	vec3_t		dir;
 	float		ltime;
-	float		step, rstep;
-	float		start_pt;
-	float		rot;
+	float		step;
 	float		variance;
 	float		size;
 	int			maxsteps;
@@ -2843,14 +3170,16 @@ void CL_HeatbeamParticles (vec3_t start, vec3_t forward)
 	VectorCopy (cl.v_right, right);
 	VectorCopy (cl.v_up, up);
 
-	if (cg_thirdperson->value) {
+	if (cg_thirdperson->value)
+	{
 		ltime = (float) cl.time/250.0;
 		step = 96;
 		maxsteps = 10;
 		variance = 1.2;
 		size = 2;
 	}
-	else {
+	else
+	{
 		ltime = (float) cl.time/1000.0;
 		step = 32;
 		maxsteps = 7;
@@ -2863,29 +3192,29 @@ void CL_HeatbeamParticles (vec3_t start, vec3_t forward)
 	//VectorMA (move, -0.5, up, move);
 
 	//ltime = (float) cl.time/1000.0;
-	start_pt = fmod(ltime*96.0,step);
+	const float start_pt = fmod(ltime * 96.0, step);
 	VectorMA (move, start_pt, vec, move);
 
 	VectorScale (vec, step, vec);
 
 	//Com_Printf ("%f\n", ltime);
-	rstep = M_PI/10.0*min(cl_particle_scale->value, 2);
-	for (i=start_pt; i<len; i+=step)
+	const float rstep = M_PI / 10.0 * min(cl_particle_scale->value, 2);
+	for (int i = start_pt; i<len; i+=step)
 	{
-		if (i>step*maxsteps) // don't bother after the nth ring
+		if (i > step * maxsteps) // don't bother after the nth ring
 			break;
 
-		for (rot = 0; rot < M_PI*2; rot += rstep)
+		for (float rot = 0; rot < M_PI * 2; rot += rstep)
 		{
 		//	variance = 0.5;
-			c = cosf(rot)*variance;
-			s = sinf(rot)*variance;
+			const float c = cosf(rot)*variance;
+			const float s = sinf(rot)*variance;
 			
 			// trim it so it looks like it's starting at the origin
 			if (i < 10)
 			{
-				VectorScale (right, c*(i/10.0), dir);
-				VectorMA (dir, s*(i/10.0), up, dir);
+				VectorScale (right, c * (i / 10.0), dir);
+				VectorMA (dir, s * (i / 10.0), up, dir);
 			}
 			else
 			{
@@ -2922,40 +3251,34 @@ Puffs with velocity along direction, with some randomness thrown in
 void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int red, int green, int blue,
 							 int reddelta, int greendelta, int bluedelta, int count, int magnitude)
 {
-	int			i;
-	cparticle_t	*p;
-	float		d;
-	vec3_t		r, u;
-	//vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
-
-	//vectoangles2 (dir, angle_dir);
-	//AngleVectors (angle_dir, f, r, u);
-
+	vec3_t r, u;
 	MakeNormalVectors (dir, r, u);
 
-	for (i=0 ; i<count ; i++)
+	const int particletype = (r_particle_mode->integer == 1 ? particle_smoke : particle_classic); //mxd
+
+	for (int i = 0; i < count; i++)
 	{
-		p = CL_SetupParticle (
+		cparticle_t *p = CL_SetupParticle (
 			0,	0,	0,
-			org[0]+magnitude*0.1*crand(),	org[1]+magnitude*0.1*crand(),	org[2]+magnitude*0.1*crand(),
+			org[0] + magnitude * 0.1 * crand(), org[1] + magnitude * 0.1 * crand(), org[2] + magnitude * 0.1 * crand(),
 			0,	0,	0,
-			0,		0,		0,
+			0,	0,	0,
 			red,	green,	blue,
 			reddelta,	greendelta,	bluedelta,
 			0.5,		-1.0 / (0.5 + frand()*0.3),
 			GL_SRC_ALPHA, GL_ONE,
 			4,			-2,			
-			particle_smoke,
+			particletype,
 			0,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
 
 		VectorScale (dir, magnitude, p->vel);
-		d = crand()*magnitude/3;
+		float d = crand() * magnitude / 3;
 		VectorMA (p->vel, d, r, p->vel);
-		d = crand()*magnitude/3;
+		d = crand() * magnitude / 3;
 		VectorMA (p->vel, d, u, p->vel);
 	}
 }
@@ -2971,25 +3294,20 @@ Puffs with velocity along direction, with some randomness thrown in
 void CL_ParticleSteamEffect2 (cl_sustain_t *self)
 //vec3_t org, vec3_t dir, int color, int count, int magnitude)
 {
-	int			i;
-	cparticle_t	*p;
-	float		d;
-	vec3_t		r, u;
-	vec3_t		dir;
-	int			color8 = self->color + (rand()&7);
+	const int color8 = self->color + (rand()&7);
 	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
 
-	//vectoangles2 (dir, angle_dir);
-	//AngleVectors (angle_dir, f, r, u);
-
+	vec3_t dir, r, u;
 	VectorCopy (self->dir, dir);
 	MakeNormalVectors (dir, r, u);
 
-	for (i=0; i<self->count; i++)
+	const int particletype = (r_particle_mode->integer == 1 ? particle_smoke : particle_classic); //mxd
+
+	for (int i = 0; i < self->count; i++)
 	{
-		p = CL_SetupParticle (
+		cparticle_t *p = CL_SetupParticle (
 			0,		0,		0,
-			self->org[0] + self->magnitude*0.1*crand(),	self->org[1] + self->magnitude*0.1*crand(),	self->org[2] + self->magnitude*0.1*crand(),
+			self->org[0] + self->magnitude * 0.1 * crand(), self->org[1] + self->magnitude * 0.1 * crand(), self->org[2] + self->magnitude * 0.1 * crand(),
 			0,		0,		0,
 			0,		0,		0,
 			color[0],	color[1],	color[2],
@@ -2997,19 +3315,20 @@ void CL_ParticleSteamEffect2 (cl_sustain_t *self)
 			1.0,		-1.0 / (0.5 + frand()*0.3),
 			GL_SRC_ALPHA, GL_ONE,
 			4,			0,			
-			particle_smoke,
+			particletype,
 			PART_GRAVITY,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
 
 		VectorScale (dir, self->magnitude, p->vel);
-		d = crand()*self->magnitude/3;
+		float d = crand() * self->magnitude / 3;
 		VectorMA (p->vel, d, r, p->vel);
-		d = crand()*self->magnitude/3;
+		d = crand() * self->magnitude / 3;
 		VectorMA (p->vel, d, u, p->vel);
 	}
+
 	self->nextthink += self->thinkinterval;
 }
 
@@ -3057,7 +3376,7 @@ void CL_TrackerTrail (vec3_t start, vec3_t end)
 			2,		0,			
 			particle_generic,
 			PART_TRANS,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
@@ -3095,7 +3414,7 @@ void CL_Tracker_Shell(vec3_t origin)
 			1,		0,	//Knightmare- changed size		
 			particle_generic,
 			PART_TRANS,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
@@ -3134,7 +3453,7 @@ void CL_MonsterPlasma_Shell(vec3_t origin)
 			2,		0,			
 			particle_generic,
 			PART_TRANS|PART_INSTANT,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
@@ -3148,6 +3467,32 @@ void CL_MonsterPlasma_Shell(vec3_t origin)
 	}
 }
 
+/*
+===============
+CL_ClassicWidowbeamout (mxd)
+===============
+*/
+void CL_ClassicWidowbeamout(cl_sustain_t *self)
+{
+	static int colortable[4] = { 2 * 8, 13 * 8, 21 * 8, 18 * 8 };
+	const float ratio = 1.0 - (((float)self->endtime - (float)cl.time) / 2100.0);
+
+	for (int i = 0; i < 300; i++)
+	{
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(colortable[rand() & 3], p->color);
+		p->alphavel = INSTANT_PARTICLE;
+		p->flags = PART_INSTANT;
+
+		vec3_t dir;
+		VectorSet(dir, crand(), crand(), crand());
+		VectorNormalize(dir);
+		VectorMA(self->org, 45.0 * ratio, dir, p->org);
+	}
+}
+
 
 /*
 ===============
@@ -3156,21 +3501,24 @@ CL_Widowbeamout
 */
 void CL_Widowbeamout (cl_sustain_t *self)
 {
-	vec3_t			dir;
-	int				i;
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicWidowbeamout(self);
+		return;
+	}
+	
+	vec3_t dir;
 	static int colortable0[6] = {125,	255,	185,	125,	185,	255};
 	static int colortable1[6] = {185,	125,	255,	255,	125,	185};
 	static int colortable2[6] = {255,	185,	125,	185,	255,	125};
-	cparticle_t		*p;
-	float			ratio;
-	int				index;
 
-	ratio = 1.0 - (((float)self->endtime - (float)cl.time)/2100.0);
+	const float ratio = 1.0 - (((float)self->endtime - (float)cl.time) / 2100.0);
 
-	for(i=0; i<300; i++)
+	for(int i = 0; i < 300; i++)
 	{
-		index = rand()&5;
-		p = CL_SetupParticle (
+		const int index = rand()&5;
+		cparticle_t *p = CL_SetupParticle (
 			0,	0,	0,
 			0,	0,	0,
 			0,	0,	0,
@@ -3182,7 +3530,7 @@ void CL_Widowbeamout (cl_sustain_t *self)
 			2,		0,			
 			particle_generic,
 			PART_TRANS|PART_INSTANT,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
@@ -3196,6 +3544,34 @@ void CL_Widowbeamout (cl_sustain_t *self)
 	}
 }
 
+/*
+============
+CL_ClassicNukeblast (mxd)
+============
+*/
+void CL_ClassicNukeblast(cl_sustain_t *self)
+{
+	vec3_t dir;
+	static int colortable[4] = { 110, 112, 114, 116 };
+
+	const float ratio = 1.0 - (((float)self->endtime - (float)cl.time) / 1000.0);
+
+	for (int i = 0; i < (700 / cl_particle_scale->value); i++)
+	{
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(colortable[rand() & 3], p->color);
+		p->alphavel = INSTANT_PARTICLE;
+		p->flags = PART_INSTANT;
+		p->image = particle_classic;
+
+		VectorSet(dir, crand(), crand(), crand());
+		VectorNormalize(dir);
+		VectorMA(self->org, 200.0 * ratio, dir, p->org);
+	}
+}
+
 
 /*
 ============
@@ -3204,22 +3580,25 @@ CL_Nukeblast
 */
 void CL_Nukeblast (cl_sustain_t *self)
 {
+	//mxd. Classic particles...
+	if (r_particle_mode->integer == 0)
+	{
+		CL_ClassicNukeblast(self);
+		return;
+	}
+	
 	vec3_t			dir;
-	int				i;
-	cparticle_t		*p;
 	static int colortable0[4] = {185,	155,	125,	95};
 	static int colortable1[4] = {185,	155,	125,	95};
 	static int colortable2[4] = {255,	255,	255,	255};
-	float			ratio, size;
-	int				index;
 
-	ratio = 1.0 - (((float)self->endtime - (float)cl.time)/1000.0);
-	size = ratio*ratio;
+	const float ratio = 1.0 - (((float)self->endtime - (float)cl.time) / 1000.0);
+	const float size = ratio * ratio;
 
-	for(i=0; i<(700/cl_particle_scale->value); i++)
+	for(int i = 0; i < (700 / cl_particle_scale->value); i++)
 	{
-		index = rand()&3;
-		p = CL_SetupParticle (
+		const int index = rand()&3;
+		cparticle_t *p = CL_SetupParticle (
 			0,	0,	0,
 			0,	0,	0,
 			0,	0,	0,
@@ -3228,23 +3607,47 @@ void CL_Nukeblast (cl_sustain_t *self)
 			0,	0,	0,
 			1-size,	INSTANT_PARTICLE,
 			GL_SRC_ALPHA, GL_ONE,
-			10*(0.5+ratio*0.5),	-1,			
+			10 * (0.5 + ratio * 0.5),	-1,
 			particle_generic,
 			PART_INSTANT,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
 
-
-		dir[0] = crand();
-		dir[1] = crand();
-		dir[2] = crand();
+		VectorSet(dir, crand(), crand(), crand());
 		VectorNormalize(dir);
 		VectorScale(dir, -1, p->angle);
-		VectorMA(self->org, 200.0*size, dir, p->org); //was 100
-		VectorMA(vec3_origin, 400.0*size, dir, p->vel); //was 100
+		VectorMA(self->org, 200.0 * size, dir, p->org); //was 100
+		VectorMA(vec3_origin, 400.0 * size, dir, p->vel); //was 100
 
+	}
+}
+
+
+/*
+==============
+CL_ClassicWidowSplash (mxd)
+==============
+*/
+void CL_ClassicWidowSplash(vec3_t org)
+{
+	static int colortable[4] = { 2 * 8, 13 * 8, 21 * 8, 18 * 8 };
+	
+	for (int i = 0; i < 256; i++)
+	{
+		cparticle_t *p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(colortable[rand() & 3], p->color);
+
+		vec3_t dir;
+		VectorSet(dir, crand(), crand(), crand());
+		VectorNormalize(dir);
+		VectorMA(org, 45.0, dir, p->org);
+		VectorMA(vec3_origin, 40.0, dir, p->vel);
+
+		p->alphavel = -0.8 / (0.5 + frand()*0.3);
 	}
 }
 
@@ -3256,14 +3659,16 @@ CL_WidowSplash
 */
 void CL_WidowSplash (vec3_t org)
 {
-	//static int colortable[4] = {2*8,13*8,21*8,18*8}; //mxd. Never used
-	int			i;
-	cparticle_t	*p;
-	vec3_t		dir;
-
-	for (i=0; i<256; i++)
+	//mxd. Classic particles
+	if (r_particle_mode->integer == 0)
 	{
-		p = CL_SetupParticle (
+		CL_ClassicWidowSplash(org);
+		return;
+	}
+	
+	for (int i = 0; i < 256; i++)
+	{
+		cparticle_t *p = CL_SetupParticle (
 			0,	0,	0,
 			0,	0,	0,
 			0,	0,	0,
@@ -3275,14 +3680,13 @@ void CL_WidowSplash (vec3_t org)
 			3,			0,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
 
-		dir[0] = crand();
-		dir[1] = crand();
-		dir[2] = crand();
+		vec3_t dir;
+		VectorSet(dir, crand(), crand(), crand()); //mxd
 		VectorNormalize(dir);
 		VectorMA(org, 45.0, dir, p->org);
 		VectorMA(vec3_origin, 40.0, dir, p->vel);
@@ -3297,13 +3701,9 @@ CL_Tracker_Explode
 */
 void CL_Tracker_Explode (vec3_t	origin)
 {
-	vec3_t			dir, backdir;
-	int				i;
-	cparticle_t		*p;
-
-	for (i=0; i<(300/cl_particle_scale->value); i++)
+	for (int i = 0; i < (300 / cl_particle_scale->value); i++)
 	{
-		p = CL_SetupParticle (
+		cparticle_t *p = CL_SetupParticle (
 			0,		0,		0,
 			0,		0,		0,
 			0,		0,		0,
@@ -3315,16 +3715,15 @@ void CL_Tracker_Explode (vec3_t	origin)
 			2,		0,			
 			particle_generic,
 			PART_TRANS,
-			NULL,0);
+			NULL, false);
 
 		if (!p)
 			return;
 
-		dir[0] = crand();
-		dir[1] = crand();
-		dir[2] = crand();
+		vec3_t dir;
+		VectorSet(dir, crand(), crand(), crand()); //mxd
 		VectorNormalize(dir);
-		VectorScale(dir, -1, backdir);
+		//VectorScale(dir, -1, backdir);
 
 		VectorCopy (origin, p->org); //Knightmare- start at center, not edge
 	//	VectorMA(origin, 64, dir, p->org); 
@@ -3370,7 +3769,7 @@ void CL_TagTrail (vec3_t start, vec3_t end, int color8)
 			1.5,			0,			
 			particle_generic,
 			0,
-			NULL,0);
+			NULL, false);
 
 		VectorAdd (move, vec, move);
 	}
@@ -3384,24 +3783,23 @@ CL_ColorExplosionParticles
 */
 void CL_ColorExplosionParticles (vec3_t org, int color8, int run)
 {
-	int			i;
-	vec3_t color = {color8red(color8), color8green(color8), color8blue(color8)};
-
-	for (i=0 ; i<128 ; i++)
+	for (int i = 0; i < 128; i++) //mxd. Classic implementation
 	{
-		CL_SetupParticle (
-			0,	0,	0,
-			org[0] + ((rand()%32)-16),	org[1] + ((rand()%32)-16),	org[2] + ((rand()%32)-16),
-			(rand()%256)-128,	(rand()%256)-128,	(rand()%256)-128,
-			0,		0,		20,
-			color[0] + (rand() % run),	color[1] + (rand() % run),	color[2] + (rand() % run),
-			0,	0,	0,
-			1.0,		-0.4 / (0.6 + frand()*0.2),
-			GL_SRC_ALPHA, GL_ONE,
-			2,			1,			
-			particle_generic,
-			0,
-			NULL,0);
+		cparticle_t	*p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(color8 + (rand()%run), p->color);
+
+		for (int j = 0; j < 3; j++)
+		{
+			p->org[j] = org[j] + ((rand()%32) - 16);
+			p->vel[j] = (rand()%256) - 128;
+		}
+
+		p->accel[2] = -PARTICLE_GRAVITY;
+		p->alphavel = -0.4 / (0.6 + frand()*0.2);
+		p->blendfunc_dst = GL_ONE_MINUS_SRC_ALPHA;
+		p->size = 2;
 	}
 }
 
@@ -3414,7 +3812,7 @@ CL_ParticleSmokeEffect - like the steam effect, but unaffected by gravity
 */
 void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, float size)
 {
-	float alpha = fabsf(crand())*0.25 + 0.750;
+	const float alpha = fabsf(crand())*0.25 + 0.75;
 
 	CL_SetupParticle (
 		crand()*180, crand()*100, 0,
@@ -3428,7 +3826,34 @@ void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, float size)
 		size,			5,			
 		particle_smoke,
 		PART_TRANS|PART_SHADED|PART_OVERBRIGHT,
-		CL_ParticleRotateThink,true);
+		CL_ParticleRotateThink, true);
+}
+
+//mxd
+void CL_ClassicParticleSmokeEffect(vec3_t org, vec3_t dir, int color8, int count, int magnitude)
+{
+	vec3_t r, u;
+	MakeNormalVectors(dir, r, u);
+
+	for (int i = 0; i < count; i++)
+	{
+		cparticle_t	*p = CL_InitParticle();
+		if (!p) return;
+
+		color8_to_vec3(color8 + (rand()&7), p->color);
+
+		for (int j = 0; j < 3; j++)
+			p->org[j] = org[j] + magnitude * 0.1 * crand();
+
+		VectorScale(dir, magnitude, p->vel);
+		float d = crand()*magnitude / 3;
+		VectorMA(p->vel, d, r, p->vel);
+		d = crand() * magnitude / 3;
+		VectorMA(p->vel, d, u, p->vel);
+
+		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->image = particle_classic;
+	}
 }
 
 
@@ -3439,19 +3864,12 @@ CL_ParticleElectricSparksThink
 */
 void CL_ParticleElectricSparksThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	int i;
+	const float time1 = *time;
+	const float time2 = time1 * time1;
 
-	//setting up angle for sparks
-	{
-		float time1, time2;
-
-		time1 = *time;
-		time2 = time1*time1;
-
-		for (i=0;i<2;i++)
-			angle[i] = 0.25*(p->vel[i]*time1 + (p->accel[i])*time2);
-		angle[2] = 0.25*(p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
-	}
+	for (int i = 0; i < 2; i++)
+		angle[i] = 0.25 * (p->vel[i] * time1 + p->accel[i] * time2);
+	angle[2] = 0.25 * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
 
 	p->thinknext = true;
 }

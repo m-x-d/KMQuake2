@@ -32,36 +32,85 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 R_CreateNullTexture
 ==================
 */
+
 #define NULLTEX_SIZE 16
+
+byte nulltexture[NULLTEX_SIZE][NULLTEX_SIZE] = //mxd. Lets actually draw some shit :)
+{
+	{ 1,1,0,0,0,0,0,0,0,0,0,0,0,0,2,2 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2 },
+	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,3,3,0,0,0,0,0,0,3,3,0,0,0 },
+	{ 0,0,0,3,3,3,0,0,0,0,3,3,3,0,0,0 },
+	{ 0,0,0,0,3,3,3,0,0,3,3,3,0,0,0,0 },
+	{ 0,0,0,0,0,3,3,3,3,3,3,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,3,3,3,3,3,3,0,0,0,0,0 },
+	{ 0,0,0,0,3,3,3,0,0,3,3,3,0,0,0,0 },
+	{ 0,0,0,3,3,3,0,0,0,0,3,3,3,0,0,0 },
+	{ 0,0,0,3,3,0,0,0,0,0,0,3,3,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+	{ 2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+};
+
+byte nulltexturecolors[4][4] = //mxd
+{
+	{ 0, 0, 0, 255 },	   //black
+	{ 141, 208, 6, 255 },  //green
+	{ 88, 194, 229, 255 }, //blue
+	{ 243, 4, 75, 255 },   //red
+};
+
 image_t * R_CreateNullTexture (void)
 {
-	byte	nulltex[NULLTEX_SIZE][NULLTEX_SIZE][4];
-	int		x;
-
+	byte nulltex[NULLTEX_SIZE][NULLTEX_SIZE][4];
 	memset (nulltex, 32, sizeof(nulltex));
-	for (x=0; x<NULLTEX_SIZE; x++)
-	{
-		nulltex[0][x][0]=
-		nulltex[0][x][1]=
-		nulltex[0][x][2]=
-		nulltex[0][x][3]= 255;
 
-		nulltex[x][0][0]=
-		nulltex[x][0][1]=
-		nulltex[x][0][2]=
-		nulltex[x][0][3]= 255;
+	for (int x = 0; x < NULLTEX_SIZE; x++) //mxd
+		for (int y = 0; y < NULLTEX_SIZE; y++)
+			for (int c = 0; c < 4; c++)
+				nulltex[x][y][c] = nulltexturecolors[nulltexture[x][y]][c];
 
-		nulltex[NULLTEX_SIZE-1][x][0]=
-		nulltex[NULLTEX_SIZE-1][x][1]=
-		nulltex[NULLTEX_SIZE-1][x][2]=
-		nulltex[NULLTEX_SIZE-1][x][3]= 255;
-
-		nulltex[x][NULLTEX_SIZE-1][0]=
-		nulltex[x][NULLTEX_SIZE-1][1]=
-		nulltex[x][NULLTEX_SIZE-1][2]=
-		nulltex[x][NULLTEX_SIZE-1][3]= 255;
-	}
 	return R_LoadPic ("***notexture***", (byte *)nulltex, NULLTEX_SIZE, NULLTEX_SIZE, it_wall, 32);
+}
+
+
+/*
+==================
+R_InitParticleTexture (mxd. Vanilla particles)
+==================
+*/
+byte dottexture[8][8] =
+{
+	{ 0,0,0,0,0,0,0,0 },
+	{ 0,0,1,1,0,0,0,0 },
+	{ 0,1,1,1,1,0,0,0 },
+	{ 0,1,1,1,1,0,0,0 },
+	{ 0,0,1,1,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0 },
+};
+
+void R_InitParticleTexture(void)
+{
+	byte	data[8][8][4];
+
+	// particle texture
+	for (int x = 0; x < 8; x++)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			data[y][x][0] = 255;
+			data[y][x][1] = 255;
+			data[y][x][2] = 255;
+			data[y][x][3] = dottexture[x][y] * 255;
+		}
+	}
+
+	R_LoadPic("***particle***", (byte *)data, 8, 8, it_part, 32);
 }
 
 
@@ -186,6 +235,7 @@ void R_InitMedia (void)
 	byte	data2D[256*256*4]; // Raw texture
 #endif // ROQ_SUPPORT
 
+	R_InitParticleTexture(); //mxd
 	glMedia.notexture = R_CreateNullTexture (); // Generate null texture
 
 	memset (whitetex, 255, sizeof(whitetex));

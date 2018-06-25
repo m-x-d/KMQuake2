@@ -74,6 +74,9 @@ void CL_SetParticleImages (void)
 	R_SetParticlePicture(particle_bulletmark,	"gfx/decals/bulletmark.tga");
 	R_SetParticlePicture(particle_trackermark,	"gfx/decals/trackermark.tga");
 //	R_SetParticlePicture(particle_footprint,	"gfx/decals/footprint.tga");
+
+	//mxd. Classic particles...
+	R_SetParticlePicture(particle_classic, "***particle***");
 }
 
 
@@ -113,29 +116,34 @@ Cleans up the active_particles linked list
 */
 void CL_CleanDecalPolys (void)
 {
-	decalpolys_t		*d, *next;
-	decalpolys_t		*active = NULL, *tail = NULL;
+	decalpolys_t *next;
+	decalpolys_t *active = NULL, *tail = NULL;
 
-	for (d=active_decals; d; d=next)
+	for (decalpolys_t *d = active_decals; d; d = next)
 	{
 		next = d->next;
-		if (d->clearflag) {
+		if (d->clearflag)
+		{
 			d->clearflag = false;
 			d->numpolys = 0;
 			d->nextpoly = NULL;
 			d->node = NULL; // vis node
 			d->next = free_decals;
 			free_decals = d;
+
 			continue;
 		}
 		d->next = NULL;
+
 		if (!tail)
 			active = tail = d;
-		else {
+		else
+		{
 			tail->next = d;
 			tail = d;
 		}
 	}
+
 	active_decals = active;
 }
 
@@ -164,18 +172,18 @@ Clears all decal polys
 */
 void CL_ClearAllDecalPolys (void)
 {
-	int		i;
 	free_decals = &decalfrags[0];
 	active_decals = NULL;
 
-	for (i=0 ;i < cl_numdecalfrags ; i++) {
+	for (int i = 0 ;i < cl_numdecalfrags ; i++)
+	{
 		decalfrags[i].next = &decalfrags[i+1];
 		decalfrags[i].clearflag = false;
 		decalfrags[i].numpolys = 0;
 		decalfrags[i].nextpoly = NULL;
 		decalfrags[i].node = NULL; // vis node
 	}
-	decalfrags[cl_numdecalfrags-1].next = NULL;
+	decalfrags[cl_numdecalfrags - 1].next = NULL;
 }
 
 
@@ -188,8 +196,7 @@ Retuns number of available decalpoly_t fields
 int CL_NumFreeDecalPolys (void)
 {
 	int count = 0;
-	decalpolys_t *d;
-	for (d = free_decals; d; d = d->next)
+	for (decalpolys_t *d = free_decals; d; d = d->next)
 		count++;
 	return count;
 }
@@ -203,11 +210,10 @@ Retuns first free decal poly
 */
 decalpolys_t *CL_NewDecalPoly(void)
 {
-	decalpolys_t *d;
 	if (!free_decals)
 		return NULL;
 
-	d = free_decals;
+	decalpolys_t *d = free_decals;
 	free_decals = d->next;
 	d->next = active_decals;
 	active_decals = d;
@@ -223,7 +229,7 @@ CL_ClipDecal
 void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir)
 {
 	vec3_t	axis[3], verts[MAX_DECAL_VERTS];
-	int		numfragments, j, i;
+	int i;
 	markFragment_t *fr, fragments[MAX_FRAGMENTS_PER_DECAL];
 	
 	// invalid decal
@@ -236,12 +242,9 @@ void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin,
 	RotatePointAroundVector ( axis[2], axis[0], axis[1], orient );
 	CrossProduct ( axis[0], axis[2], axis[1] );
 
-	numfragments = R_MarkFragments (origin, axis, radius, MAX_DECAL_VERTS, verts, 
-		MAX_FRAGMENTS_PER_DECAL, fragments);
-
-	if (!numfragments)
-		return;
-	if (numfragments > CL_NumFreeDecalPolys()) // not enough decalpolys free
+	const int numfragments = R_MarkFragments (origin, axis, radius, MAX_DECAL_VERTS, verts, MAX_FRAGMENTS_PER_DECAL, fragments);
+	
+	if (numfragments == 0 || numfragments > CL_NumFreeDecalPolys()) // nothing to display / not enough decalpolys free
 		return;
 	
 	VectorScale ( axis[1], 0.5f / radius, axis[1] );
@@ -255,12 +258,13 @@ void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin,
 
 		if (!decal)
 			return;
+
 		decal->nextpoly = part->decal;
 		part->decal = decal;
 		//Com_Printf("Number of verts in fragment: %i\n", fr->numPoints);
 		decal->node = fr->node; // vis node
 
-		for ( j = 0; j < fr->numPoints && j < MAX_VERTS_PER_FRAGMENT; j++ )
+		for (int j = 0; j < fr->numPoints && j < MAX_VERTS_PER_FRAGMENT; j++ )
 		{
 			VectorCopy ( verts[fr->firstPoint+j], decal->polys[j] );
 			VectorSubtract ( decal->polys[j], origin, v );
@@ -301,77 +305,68 @@ cparticle_t *CL_SetupParticle (
 			float size,			float sizevel,			
 			int	image,
 			int flags,
-			void (*think)(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time),
+			void (*think)(cparticle_t *p, vec3_t p_org, vec3_t p_angle, float *p_alpha, float *p_size, int *p_image, float *p_time),
 			qboolean thinknext)
 {
-	int j;
-	cparticle_t	*p;
-
 	if (!free_particles)
 		return NULL;
-	p = free_particles;
+
+	cparticle_t *p = free_particles;
 	free_particles = p->next;
 	p->next = active_particles;
 	active_particles = p;
 
 	p->time = cl.time;
 
-	p->angle[0]=angle0;
-	p->angle[1]=angle1;
-	p->angle[2]=angle2;
+	//mxd. Gross hacks
+	if (image == particle_generic && r_particle_mode->integer == 0)
+	{
+		alpha = 1;
+		image = particle_classic;
+		size = 1;
+		sizevel = 0;
+		colorvel0 = 0;
+		colorvel1 = 0;
+		colorvel2 = 0;
+		blendfunc_src = GL_SRC_ALPHA;
+		blendfunc_dst = GL_ONE;
+	}
 
-	p->org[0]=org0;
-	p->org[1]=org1;
-	p->org[2]=org2;
-	p->oldorg[0]=org0;
-	p->oldorg[1]=org1;
-	p->oldorg[2]=org2;
+	VectorSet(p->angle, angle0, angle1, angle2);
 
-	p->vel[0]=vel0;
-	p->vel[1]=vel1;
-	p->vel[2]=vel2;
+	VectorSet(p->org, org0, org1, org2);
+	VectorSet(p->oldorg, org0, org1, org2);
 
-	p->accel[0]=accel0;
-	p->accel[1]=accel1;
-	p->accel[2]=accel2;
+	VectorSet(p->vel, vel0, vel1, vel2);
+	VectorSet(p->accel, accel0, accel1, accel2);
 
-	p->color[0]=color0;
-	p->color[1]=color1;
-	p->color[2]=color2;
-
-	p->colorvel[0]=colorvel0;
-	p->colorvel[1]=colorvel1;
-	p->colorvel[2]=colorvel2;
+	VectorSet(p->color, color0, color1, color2);
+	VectorSet(p->colorvel, colorvel0, colorvel1, colorvel2);
 
 	p->blendfunc_src = blendfunc_src;
 	p->blendfunc_dst = blendfunc_dst;
 
-	p->alpha=alpha;
-	p->alphavel=alphavel;
-	p->size=size;
-	p->sizevel=sizevel;
+	p->alpha = alpha;
+	p->alphavel = alphavel;
+	p->size = size;
+	p->sizevel = sizevel;
 
-	p->image=image;
-	p->flags=flags;
+	p->image = image;
+	p->flags = flags;
 
-	p->src_ent=0;
-	p->dst_ent=0;
+	p->src_ent = 0;
+	p->dst_ent = 0;
 
-	if (think)
-		p->think = think;
-	else
-		p->think = NULL;
-	p->thinknext=thinknext;
+	p->think = think;
+	p->thinknext = thinknext;
 
-	for (j=0;j<P_LIGHTS_MAX;j++)
+	for (int j = 0; j < P_LIGHTS_MAX; j++)
 	{
 		cplight_t *plight = &p->lights[j];
 		plight->isactive = false;
 		plight->light = 0;
 		plight->lightvel = 0;
-		plight->lightcol[0] = 0;
-		plight->lightcol[1] = 0;
-		plight->lightcol[2] = 0;
+		VectorClear(plight->lightcol); //mxd
 	}
 
 	p->decalnum = 0;
@@ -391,19 +386,89 @@ cparticle_t *CL_SetupParticle (
 	return p;
 }
 
+/*
+===============
+CL_InitParticle (mxd)
+===============
+*/
+cparticle_t *CL_InitParticle2(int flags)
+{
+	if (!free_particles)
+		return NULL;
+
+	cparticle_t *p = free_particles;
+	free_particles = p->next;
+	p->next = active_particles;
+	active_particles = p;
+
+	p->time = cl.time;
+
+	VectorClear(p->angle);
+	VectorClear(p->org);
+	VectorClear(p->oldorg);
+	VectorClear(p->vel);
+	VectorClear(p->accel);
+	VectorSet(p->color, 255, 255, 255);
+	VectorClear(p->colorvel);
+
+	p->blendfunc_src = GL_SRC_ALPHA;
+	p->blendfunc_dst = GL_ONE;
+
+	p->alpha = 1;
+	p->alphavel = 0;
+	p->size = 1;
+	p->sizevel = 0;
+
+	p->image = (r_particle_mode->integer == 0 ? particle_classic : particle_generic);
+	p->flags = flags;
+
+	p->src_ent = 0;
+	p->dst_ent = 0;
+
+	p->think = NULL;
+	p->thinknext = false;
+
+	for (int i = 0; i < P_LIGHTS_MAX; i++)
+	{
+		cplight_t *plight = &p->lights[i];
+		plight->isactive = false;
+		plight->light = 0;
+		plight->lightvel = 0;
+		VectorClear(plight->lightcol);
+	}
+
+	p->decalnum = 0;
+	p->decal = NULL;
+
+	if (flags & PART_DECAL)
+	{
+		vec3_t dir;
+		AngleVectors(p->angle, dir, NULL, NULL);
+		VectorNegate(dir, dir);
+		CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);
+
+		if (!p->decalnum) // kill on viewframe
+			p->alpha = 0;
+	}
+
+	return p;
+}
+
+cparticle_t *CL_InitParticle()
+{
+	cparticle_t *p = CL_InitParticle2(0);
+	return p;
+}
+
 
 /*
 ===============
 CL_AddParticleLight
 ===============
 */
-void CL_AddParticleLight (cparticle_t *p,
-				  float light, float lightvel,
-				  float lcol0, float lcol1, float lcol2)
+void CL_AddParticleLight (cparticle_t *p, float light, float lightvel, float lcol0, float lcol1, float lcol2)
 {
-	int i;
-
-	for (i=0; i<P_LIGHTS_MAX; i++)
+	for (int i = 0; i < P_LIGHTS_MAX; i++)
 	{
 		cplight_t *plight = &p->lights[i];
 		if (!plight->isactive)
@@ -411,9 +476,8 @@ void CL_AddParticleLight (cparticle_t *p,
 			plight->isactive = true;
 			plight->light = light;
 			plight->lightvel = lightvel;
-			plight->lightcol[0] = lcol0;
-			plight->lightcol[1] = lcol1;
-			plight->lightcol[2] = lcol2;
+			VectorSet(plight->lightcol, lcol0, lcol1, lcol2); //mxd
+
 			return;
 		}
 	}
@@ -427,16 +491,16 @@ CL_ClearParticles
 */
 void CL_ClearParticles (void)
 {
-	int		i;
-	
 	free_particles = &particles[0];
 	active_particles = NULL;
 
-	for (i=0 ;i < cl_numparticles ; i++) {
+	for (int i = 0; i < cl_numparticles; i++)
+	{
 		particles[i].next = &particles[i+1];
 		particles[i].decalnum = 0; // Knightmare added
 		particles[i].decal = NULL; // Knightmare added
 	}
+
 	particles[cl_numparticles-1].next = NULL;
 }
 
@@ -458,11 +522,11 @@ CL_CalcPartVelocity
 */
 void CL_CalcPartVelocity (cparticle_t *p, float scale, float *time, vec3_t velocity)
 {
-	float time1 = *time;
-	float time2 = time1*time1;
+	const float time1 = *time;
+	const float time2 = time1*time1;
 
-	velocity[0] = scale * (p->vel[0]*time1 + (p->accel[0])*time2);
-	velocity[1] = scale * (p->vel[1]*time1 + (p->accel[1])*time2);
+	velocity[0] = scale * (p->vel[0]*time1 + p->accel[0]*time2);
+	velocity[1] = scale * (p->vel[1]*time1 + p->accel[1]*time2);
 
 	if (p->flags & PART_GRAVITY)
 		velocity[2] = scale * (p->vel[2]*time1 + (p->accel[2]-(PARTICLE_GRAVITY))*time2);
@@ -477,14 +541,11 @@ CL_ClipParticleVelocity
 */
 void CL_ClipParticleVelocity (vec3_t in, vec3_t normal, vec3_t out)
 {
-	float	backoff, change;
-	int		i;
-	
-	backoff = VectorLength(in)*0.25 + DotProduct (in, normal) * 3.0f;
+	const float backoff = VectorLength(in) * 0.25 + DotProduct(in, normal) * 3.0f;
 
-	for (i=0; i<3; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		change = normal[i]*backoff;
+		const float change = normal[i] * backoff;
 		out[i] = in[i] - change;
 		if (out[i] > -STOP_EPSILON && out[i] < STOP_EPSILON)
 			out[i] = 0;
@@ -498,16 +559,13 @@ CL_ParticleBounceThink
 */
 void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	float clipsize;
-	trace_t tr;
-	vec3_t velocity;
-
-	clipsize = *size*0.5;
-	if (clipsize<0.25) clipsize = 0.25;
-	tr = CL_BrushTrace (p->oldorg, org, clipsize, MASK_SOLID); // was 1
+	float clipsize = *size * 0.5;
+	if (clipsize < 0.25) clipsize = 0.25;
+	trace_t tr = CL_BrushTrace (p->oldorg, org, clipsize, MASK_SOLID); // was 1
 	
 	if (tr.fraction < 1)
 	{
+		vec3_t velocity;
 		CL_CalcPartVelocity(p, 1, time, velocity);
 		CL_ClipParticleVelocity(velocity, tr.plane.normal, p->vel);
 
@@ -535,7 +593,7 @@ CL_ParticleRotateThink
 */
 void CL_ParticleRotateThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	angle[2] =	angle[0] + *time*angle[1] + *time**time*angle[2];
+	angle[2] = angle[0] + *time * angle[1] + *time * *time * angle[2];
 	p->thinknext=true;
 }
 
@@ -560,31 +618,30 @@ CL_AddParticles
 */
 void CL_AddParticles (void)
 {
-	cparticle_t		*p, *next;
-	float			alpha, size, light;
-	float			time=0, time2;
+	float			alpha;
 	vec3_t			org, color, angle;
-	int				i, image, flags, decals;
-	cparticle_t		*active, *tail;
 
-	active = NULL;
-	tail = NULL;
-	decals = 0;
+	cparticle_t *active = NULL;
+	cparticle_t *tail = NULL;
+	int decals = 0;
+	float time = 0;
 
-	for (p=active_particles; p; p=next)
+	cparticle_t *next;
+	for (cparticle_t *p = active_particles; p; p = next)
 	{
 		next = p->next;
-		flags = p->flags;
+		const int flags = p->flags;
 
 		// PMM - added INSTANT_PARTICLE handling for heat beam
 		if (p->alphavel != INSTANT_PARTICLE)
 		{
-			time = (cl.time - p->time)*0.001;
+			time = (cl.time - p->time) * 0.001;
 			alpha = p->alpha + time*p->alphavel;
-			if (flags&PART_DECAL)
+			if (flags & PART_DECAL)
 			{
 				if (decals >= r_decals->value || alpha <= 0)
-				{	// faded out
+				{
+					// faded out
 					p->alpha = 0;
 					p->flags = 0;
 					CL_ClearDecalPoly (p->decal); // flag decal chain for cleaning
@@ -592,15 +649,18 @@ void CL_AddParticles (void)
 					p->decal = NULL;
 					p->next = free_particles;
 					free_particles = p;
+
 					continue;
 				}
 			}
 			else if (alpha <= 0)
-			{	// faded out
+			{
+				// faded out
 				p->alpha = 0;
 				p->flags = 0;
 				p->next = free_particles;
 				free_particles = p;
+
 				continue;
 			}
 		}
@@ -618,35 +678,31 @@ void CL_AddParticles (void)
 			tail = p;
 		}
 
-		if (alpha > 1.0)
-			alpha = 1;
-		if (alpha < 0.0)
-			alpha = 0;
+		alpha = clamp(alpha, 0.0, 1.0); //mxd
 
-		time2 = time*time;
-		image = p->image;
+		const float time2 = time*time;
+		int image = p->image;
 
-		for (i=0;i<3;i++)
+		for (int i = 0; i < 3; i++)
 		{
 			color[i] = p->color[i] + p->colorvel[i]*time;
-			if (color[i]>255) color[i]=255;
-			if (color[i]<0) color[i]=0;
+			color[i] = clamp(color[i], 0, 255); //mxd
 			
 			angle[i] = p->angle[i];
 			org[i] = p->org[i] + p->vel[i]*time + p->accel[i]*time2;
 		}
 
-		if (p->flags&PART_GRAVITY)
-			org[2]+=time2*-PARTICLE_GRAVITY;
+		if (p->flags & PART_GRAVITY)
+			org[2] += time2 * -PARTICLE_GRAVITY;
 
-		size = p->size + p->sizevel*time;
+		float size = p->size + p->sizevel*time;
 
-		for (i=0;i<P_LIGHTS_MAX;i++)
+		for (int i = 0; i < P_LIGHTS_MAX; i++)
 		{
 			const cplight_t *plight = &p->lights[i];
 			if (plight->isactive)
 			{
-				light = plight->light*alpha + plight->lightvel*time;
+				const float light = plight->light*alpha + plight->lightvel*time;
 				V_AddLight (org, light, plight->lightcol[0], plight->lightcol[1], plight->lightcol[2]);
 			}
 		}
@@ -659,12 +715,12 @@ void CL_AddParticles (void)
 
 		if (flags & PART_DECAL)
 		{
-			decalpolys_t *d;
 			if (p->decalnum > 0 && p->decal)
-				for (d=p->decal; d; d=d->nextpoly)
+				for (decalpolys_t *d = p->decal; d; d = d->nextpoly)
 					V_AddDecal (org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, d);
 			else
 				V_AddDecal (org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, NULL);
+
 			decals++;
 		}
 		else
@@ -675,6 +731,7 @@ void CL_AddParticles (void)
 			p->alphavel = 0.0;
 			p->alpha = 0.0;
 		}
+
 		VectorCopy(org, p->oldorg);
 	}
 
@@ -701,21 +758,19 @@ void CL_ClearEffects (void)
 /*
 ==============
 CL_UnclipDecals
-Removes decal fragment pointers
-and resets decal fragment data
+Removes decal fragment pointers and resets decal fragment data
 Called during a vid_restart
 ==============
 */
 void CL_UnclipDecals (void)
 {
-	cparticle_t	*p;
-
 	//Com_Printf ("Unclipping decals\n");
-	for (p=active_particles; p; p=p->next)
+	for (cparticle_t *p = active_particles; p; p=p->next)
 	{
 		p->decalnum = 0;
 		p->decal = NULL;
 	}
+
 	CL_ClearAllDecalPolys();
 }
 
@@ -729,16 +784,14 @@ Called during a vid_restart
 */
 void CL_ReclipDecals (void)
 {
-	cparticle_t	*p;
-	vec3_t		dir;
-
 	//Com_Printf ("Reclipping decals\n");
-	for (p=active_particles; p; p=p->next)
+	for (cparticle_t *p = active_particles; p; p = p->next)
 	{
 		p->decalnum = 0;
 		p->decal = NULL;
 		if (p->flags & PART_DECAL)
 		{
+			vec3_t dir;
 			AngleVectors (p->angle, dir, NULL, NULL);
 			VectorNegate(dir, dir);
 			CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);

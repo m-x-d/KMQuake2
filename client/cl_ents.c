@@ -1120,40 +1120,33 @@ CL_AddPacketEntities
 void CL_AddPacketEntities (frame_t *frame)
 {
 	entity_t			ent;
-	entity_state_t		*s1;
-	float				autorotate;
-	int					i;
-	int					pnum;
-	centity_t			*cent;
-	int					autoanim;
 	clientinfo_t		*ci;
-	unsigned int		effects, renderfx;
 
 	// bonus items rotate at a fixed rate
-	autorotate = anglemod(cl.time/10);
+	const float autorotate = anglemod(cl.time/10);
 
 	// brush models can auto animate their frames
-	autoanim = 2*cl.time/1000;
+	const int autoanim = 2 * cl.time / 1000;
 
 	memset (&ent, 0, sizeof(ent));
 
 	// Knightmare added
-	VectorCopy( vec3_origin, clientOrg);
+	VectorCopy(vec3_origin, clientOrg);
 
 	// Knightmare- reset current weapon model
 	currentweaponmodel = NULL;
 
-	for (pnum = 0 ; pnum<frame->num_entities ; pnum++)
+	for (int pnum = 0; pnum < frame->num_entities; pnum++)
 	{
 		qboolean isclientviewer = false;
 		qboolean drawEnt = true; //Knightmare added
 
-		s1 = &cl_parse_entities[(frame->parse_entities+pnum)&(MAX_PARSE_ENTITIES-1)];
+		entity_state_t *s1 = &cl_parse_entities[(frame->parse_entities + pnum)&(MAX_PARSE_ENTITIES - 1)];
 
-		cent = &cl_entities[s1->number];
+		centity_t *cent = &cl_entities[s1->number];
 
-		effects = s1->effects;
-		renderfx = s1->renderfx;
+		unsigned int effects = s1->effects;
+		unsigned int renderfx = s1->renderfx;
 
 		// if i want to multiply alpha, then id better do this...
 		ent.alpha = 1.0F;
@@ -1210,15 +1203,16 @@ void CL_AddPacketEntities (frame_t *frame)
 		ent.oldframe = cent->prev.frame;
 		ent.backlerp = 1.0 - cl.lerpfrac;
 
-		if (renderfx & (RF_FRAMELERP|RF_BEAM))
-		{	// step origin discretely, because the frames
-			// do the animation properly
+		if (renderfx & (RF_FRAMELERP|RF_BEAM)) //TODO: (mxd) check beam interpolation
+		{
+			// step origin discretely, because the frames do the animation properly
 			VectorCopy (cent->current.origin, ent.origin);
 			VectorCopy (cent->current.old_origin, ent.oldorigin);
 		}
 		else
-		{	// interpolate origin
-			for (i=0 ; i<3 ; i++)
+		{
+			// interpolate origin
+			for (int i = 0; i < 3; i++)
 			{
 				ent.origin[i] = ent.oldorigin[i] = cent->prev.origin[i] + cl.lerpfrac * 
 					(cent->current.origin[i] - cent->prev.origin[i]);
@@ -1229,7 +1223,8 @@ void CL_AddPacketEntities (frame_t *frame)
 	
 		// tweak the color of beams
 		if ( renderfx & RF_BEAM )
-		{	// the four beam colors are encoded in 32 bits of skinnum (hack)
+		{
+			// the four beam colors are encoded in 32 bits of skinnum (hack)
 			ent.alpha = 0.30;
 			ent.skinnum = (s1->skinnum >> ((rand() % 4)*8)) & 0xff;
 			ent.model = NULL;
@@ -1237,14 +1232,16 @@ void CL_AddPacketEntities (frame_t *frame)
 		else
 		{
 			// set skin
-			if ( s1->modelindex == MAX_MODELS-1 //was 255
+			if ( s1->modelindex == MAX_MODELS - 1 //was 255
 				//Knightmare- GROSS HACK for old demos, use modelindex 255
 				|| ( LegacyProtocol() && s1->modelindex == OLD_MAX_MODELS-1 ) )
-			{	// use custom player skin
+			{
+				// use custom player skin
 				ent.skinnum = 0;
 				ci = &cl.clientinfo[s1->skinnum & 0xff];
 				ent.skin = ci->skin;
 				ent.model = ci->model;
+
 				if (!ent.skin || !ent.model)
 				{
 					ent.skin = cl.baseclientinfo.skin;
@@ -1283,34 +1280,34 @@ void CL_AddPacketEntities (frame_t *frame)
 		}
 		
 		//**** MODEL / EFFECT SWAPPING ETC *** - per gametype...
-		if (ent.model)
+		if (ent.model && !(effects & EF_BLASTER) && r_particle_mode->integer > 0) //mxd. Not when classic particles are enabled
 		{
-			if (!Q_strcasecmp((char *)ent.model, "models/objects/laser/tris.md2")
-				&& !(effects & EF_BLASTER))
-			{	// replace the bolt with a particle glow
+			if (!Q_strcasecmp((char *)ent.model, "models/objects/laser/tris.md2"))
+			{
+				// replace the bolt with a particle glow
 				CL_HyperBlasterEffect (cent->lerp_origin, ent.origin, s1->angles,
 					255, 150, 50, 0, -90, -30, 10, 3);
 				drawEnt = false;
 			}
-			if ( (!Q_strcasecmp((char *)ent.model, "models/proj/laser2/tris.md2")
-				|| !Q_strcasecmp((char *)ent.model, "models/objects/laser2/tris.md2")
-				|| !Q_strcasecmp((char *)ent.model, "models/objects/glaser/tris.md2") )
-				&& !(effects & EF_BLASTER))
-			{	// give the bolt a green particle glow
+			else if (!Q_strcasecmp((char *)ent.model, "models/proj/laser2/tris.md2")
+				  || !Q_strcasecmp((char *)ent.model, "models/objects/laser2/tris.md2")
+				  || !Q_strcasecmp((char *)ent.model, "models/objects/glaser/tris.md2"))
+			{
+				// give the bolt a green particle glow
 				CL_HyperBlasterEffect (cent->lerp_origin, ent.origin, s1->angles,
 					50, 235, 50, -10, 0, -10, 10, 3);
 				drawEnt = false;
 			}
-			if (!Q_strcasecmp((char *)ent.model, "models/objects/blaser/tris.md2")
-				&& !(effects & EF_BLASTER))
-			{	// give the bolt a blue particle glow
+			else if (!Q_strcasecmp((char *)ent.model, "models/objects/blaser/tris.md2"))
+			{
+				// give the bolt a blue particle glow
 				CL_HyperBlasterEffect (cent->lerp_origin, ent.origin, s1->angles,
 					50, 50, 235, 0, -10, 0, -10, 3);
 				drawEnt = false;
 			}
-			if (!Q_strcasecmp((char *)ent.model, "models/objects/rlaser/tris.md2")
-				&& !(effects & EF_BLASTER))
-			{	// give the bolt a red particle glow
+			else if (!Q_strcasecmp((char *)ent.model, "models/objects/rlaser/tris.md2"))
+			{
+				// give the bolt a red particle glow
 				CL_HyperBlasterEffect (cent->lerp_origin, ent.origin, s1->angles,
 					235, 50, 50, 0, -90, -30, -10, 3);
 				drawEnt = false;
@@ -1329,14 +1326,17 @@ void CL_AddPacketEntities (frame_t *frame)
 
 		// calculate angles
 		if (effects & EF_ROTATE)
-		{	// some bonus items auto-rotate
+		{
+			// some bonus items auto-rotate
 			ent.angles[0] = 0;
 			ent.angles[1] = autorotate;
 			ent.angles[2] = 0;
+
 			// bobbing items by QuDos
-			if (cl_item_bobbing->value) {
-				float	bob_scale = (0.005 + s1->number * 0.00001) * 0.5;
-				float	bob = cosf((cl.time + 1000) * bob_scale) * 5;
+			if (cl_item_bobbing->value)
+			{
+				const float	bob_scale = (0.005 + s1->number * 0.00001) * 0.5;
+				const float	bob = cosf((cl.time + 1000) * bob_scale) * 5;
 				ent.oldorigin[2] += bob;
 				ent.origin[2] += bob;
 			}
@@ -1357,25 +1357,25 @@ void CL_AddPacketEntities (frame_t *frame)
 			}
 		}
 		else
-		{	// interpolate angles
-			float	a1, a2;
-
-			for (i=0 ; i<3 ; i++)
+		{
+			// interpolate angles
+			for (int i = 0; i < 3; i++)
 			{
-				a1 = cent->current.angles[i];
-				a2 = cent->prev.angles[i];
+				const float a1 = cent->current.angles[i];
+				const float a2 = cent->prev.angles[i];
 				ent.angles[i] = LerpAngle (a2, a1, cl.lerpfrac);
 			}
 		}
 		//AnglesToAxis(ent.angles, ent.axis);
 
-		if (s1->number == cl.playernum+1)
+		if (s1->number == cl.playernum + 1)
 		{
 			ent.flags |= RF_VIEWERMODEL;	// only draw from mirrors
 			isclientviewer = true;
 
 			// EF_FLAG1|EF_FLAG2 is a special case for EF_FLAG3...  plus de fromage!
-			if (effects & EF_FLAG1) {
+			if (effects & EF_FLAG1)
+			{
 				if (effects & EF_FLAG2)
 					V_AddLight (ent.origin, 255, 0.1, 1.0, 0.1);
 				else
@@ -1389,14 +1389,13 @@ void CL_AddPacketEntities (frame_t *frame)
 				V_AddLight (ent.origin, 225, -1.0, -1.0, -1.0);	//PGM
 
 			// Knightmare- save off current player weapon model for player config menu
-			if (s1->modelindex2 == MAX_MODELS-1
-				|| ( LegacyProtocol() && s1->modelindex2 == OLD_MAX_MODELS-1 ) )
+			if (s1->modelindex2 == MAX_MODELS - 1 || (LegacyProtocol() && s1->modelindex2 == OLD_MAX_MODELS - 1) )
 			{
 				//ci = &cl.clientinfo[s1->skinnum & 0xff]; //mxd. Assigned value never used
-				i = (s1->skinnum >> 8); // 0 is default weapon model
-				if (!cl_vwep->value || i > MAX_CLIENTWEAPONMODELS - 1)
-					i = 0;
-				currentweaponmodel = cl_weaponmodels[i];
+				int index = (s1->skinnum >> 8); // 0 is default weapon model
+				if (!cl_vwep->value || index > MAX_CLIENTWEAPONMODELS - 1)
+					index = 0;
+				currentweaponmodel = cl_weaponmodels[index];
 			}
 
 		//	if (!cg_thirdperson->value)
@@ -1463,8 +1462,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			&& !(cl.attractloop && !(cl.cinematictime > 0 && cls.realtime - cl.cinematictime > 1000)))))
 		{
 			// PMM - at this point, all of the shells have been handled
-			// if we're in the rogue pack, set up the custom mixing, otherwise just
-			// keep going
+			// if we're in the rogue pack, set up the custom mixing, otherwise just keep going
 			// Knightmare 6/06/2002
 			if (roguepath())
 			{
@@ -1514,14 +1512,17 @@ void CL_AddPacketEntities (frame_t *frame)
 			if (s1->modelindex2 == MAX_MODELS-1
 				//Knightmare- GROSS HACK for old demos, use modelindex 255
 				|| ( LegacyProtocol() && s1->modelindex2 == OLD_MAX_MODELS-1 ) )
-			{	// custom weapon
+			{
+				// custom weapon
 				ci = &cl.clientinfo[s1->skinnum & 0xff];
-				i = (s1->skinnum >> 8); // 0 is default weapon model
-				if (!cl_vwep->value || i > MAX_CLIENTWEAPONMODELS - 1)
-					i = 0;
-				ent.model = ci->weaponmodel[i];
-				if (!ent.model) {
-					if (i != 0)
+				int index = (s1->skinnum >> 8); // 0 is default weapon model
+				if (!cl_vwep->value || index > MAX_CLIENTWEAPONMODELS - 1)
+					index = 0;
+				ent.model = ci->weaponmodel[index];
+
+				if (!ent.model)
+				{
+					if (index != 0)
 						ent.model = ci->weaponmodel[0];
 					if (!ent.model)
 						ent.model = cl.baseclientinfo.weaponmodel[0];
@@ -1568,6 +1569,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.model = cl.model_draw[s1->modelindex3];
 			V_AddEntity (&ent);
 		}
+
 		if (s1->modelindex4)
 		{
 			// Knightmare added for Psychospaz's chasecam
@@ -1581,6 +1583,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.model = cl.model_draw[s1->modelindex4];
 			V_AddEntity (&ent);
 		}
+
 #ifdef NEW_ENTITY_STATE_MEMBERS
 		// 1/18/2002- extra model indices
 		if (s1->modelindex5)
@@ -1596,6 +1599,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.model = cl.model_draw[s1->modelindex5];
 			V_AddEntity (&ent);
 		}
+
 		if (s1->modelindex6)
 		{
 			// Knightmare added for Psychospaz's chasecam
@@ -1652,9 +1656,10 @@ void CL_AddPacketEntities (frame_t *frame)
 				else
 				{
 					if ((effects & EF_GREENGIB) && cl_blood->value >= 1) // EF_BLASTER|EF_GREENGIB effect
-						CL_DiminishingTrail (cent->lerp_origin, ent.origin, cent, effects);
+						CL_DiminishingTrail(cent->lerp_origin, ent.origin, cent, effects);
 					else
-						CL_BlasterTrail (cent->lerp_origin, ent.origin, 255, 150, 50, 0, -90, -30);
+						CL_BlasterTrail(cent->lerp_origin, ent.origin, 255, 150, 50, 0, -90, -30);
+						
 					V_AddLight (ent.origin, 200, 1, 1, 0.15);
 				}
 
@@ -1678,7 +1683,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			else if (effects & EF_GIB)
 			{
 				if (cl_blood->value >= 1)
-					CL_DiminishingTrail (cent->lerp_origin, ent.origin, cent, effects);
+					CL_DiminishingTrail(cent->lerp_origin, ent.origin, cent, effects);
 			}
 			else if (effects & EF_GRENADE)
 			{
@@ -1692,42 +1697,47 @@ void CL_AddPacketEntities (frame_t *frame)
 			{
 				static int bfg_lightramp[6] = {300, 400, 600, 300, 150, 75};
 
+				int intensity;
 				if (effects & EF_ANIM_ALLFAST)
 				{
 					CL_BfgParticles (&ent);
-					i = 200;
+					intensity = 200;
 				}
 				else
 				{
-					i = bfg_lightramp[s1->frame];
+					intensity = bfg_lightramp[s1->frame];
 				}
-				V_AddLight (ent.origin, i, 0, 1, 0);
+				V_AddLight (ent.origin, intensity, 0, 1, 0);
 			}
 			// RAFAEL
 			else if (effects & EF_TRAP)
 			{
 				ent.origin[2] += 32;
 				CL_TrapParticles (&ent);
-				i = (rand()%100) + 100;
-				V_AddLight (ent.origin, i, 1, 0.8, 0.1);
+				const int intensity = (rand()%100) + 100;
+				V_AddLight (ent.origin, intensity, 1, 0.8, 0.1);
 			}
 			else if (effects & EF_FLAG1)
-			{	// Knightmare 1/3/2002
+			{
+				// Knightmare 1/3/2002
 				// EF_FLAG1|EF_FLAG2 is a special case for EF_FLAG3...  More cheese!
 				if (effects & EF_FLAG2)
-				{	//Knightmare- Psychospaz's enhanced particle code
+				{
+					//Knightmare- Psychospaz's enhanced particle code
 					CL_FlagTrail (cent->lerp_origin, ent.origin, false, true);
 					V_AddLight (ent.origin, 255, 0.1, 1, 0.1);
 				}
 				else
-				{	//Knightmare- Psychospaz's enhanced particle code
+				{
+					//Knightmare- Psychospaz's enhanced particle code
 					CL_FlagTrail (cent->lerp_origin, ent.origin, true, false);
 					V_AddLight (ent.origin, 225, 1, 0.1, 0.1);
 				}
 				//end Knightmare
 			}
 			else if (effects & EF_FLAG2)
-			{	//Knightmare- Psychospaz's enhanced particle code
+			{
+				//Knightmare- Psychospaz's enhanced particle code
 				CL_FlagTrail (cent->lerp_origin, ent.origin, false, false);
 				V_AddLight (ent.origin, 225, 0.1, 0.1, 1);
 			}
@@ -1742,9 +1752,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			{
 				if (effects & EF_TRACKER)
 				{
-					float intensity;
-
-					intensity = 50 + (500 * (sin(cl.time/500.0) + 1.0));
+					const float intensity = 50 + (500 * (sin(cl.time/500.0) + 1.0));
 					V_AddLight (ent.origin, intensity, -1.0, -1.0, -1.0);
 				}
 				else
@@ -1754,7 +1762,8 @@ void CL_AddPacketEntities (frame_t *frame)
 				}
 			}
 			else if (effects & EF_TRACKER)
-			{	//Knightmare- this is replaced for Psychospaz's enhanced particle code
+			{
+				//Knightmare- this is replaced for Psychospaz's enhanced particle code
 				CL_TrackerTrail (cent->lerp_origin, ent.origin);
 				V_AddLight (ent.origin, 200, -1, -1, -1);
 			}
@@ -1764,7 +1773,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			else if (effects & EF_GREENGIB)
 			{
 				if (cl_blood->value >= 1) // disable blood option
-					CL_DiminishingTrail (cent->lerp_origin, ent.origin, cent, effects);				
+					CL_DiminishingTrail(cent->lerp_origin, ent.origin, cent, effects);
 			}
 			// RAFAEL
 			else if (effects & EF_IONRIPPER)

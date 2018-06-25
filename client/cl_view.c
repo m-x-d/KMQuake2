@@ -160,18 +160,13 @@ V_AddParticle
 void V_AddParticle (vec3_t org, vec3_t angle, vec3_t color, float alpha,
 				int alpha_src, int alpha_dst, float size, int image, int flags)
 {
-	int i;
-	particle_t	*p;
-
 	if (r_numparticles >= MAX_PARTICLES)
 		return;
-	p = &r_particles[r_numparticles++];
 
-	for (i=0;i<3;i++)
-	{
-		p->origin[i] = org[i];
-		p->angle[i] = angle[i];
-	}
+	particle_t *p = &r_particles[r_numparticles++];
+
+	VectorCopy(org, p->origin); //mxd
+	VectorCopy(angle, p->angle); //mxd
 	p->red = color[0];
 	p->green = color[1];
 	p->blue = color[2];
@@ -193,18 +188,13 @@ V_AddDecal
 void V_AddDecal (vec3_t org, vec3_t angle, vec3_t color, float alpha,
 				int alpha_src, int alpha_dst, float size, int image, int flags, decalpolys_t *decal)
 {
-	int i;
-	particle_t	*d;
-
 	if (r_numdecalfrags >= MAX_DECAL_FRAGS)
 		return;
-	d = &r_decalfrags[r_numdecalfrags++];
 
-	for (i=0;i<3;i++)
-	{
-		d->origin[i] = org[i];
-		d->angle[i] = angle[i];
-	}
+	particle_t *d = &r_decalfrags[r_numdecalfrags++];
+
+	VectorCopy(org, d->origin); //mxd
+	VectorCopy(angle, d->angle); //mxd
 	d->red = color[0];
 	d->green = color[1];
 	d->blue = color[2];
@@ -226,11 +216,10 @@ V_AddLight
 */
 void V_AddLight (vec3_t org, float intensity, float r, float g, float b)
 {
-	dlight_t	*dl;
-
 	if (r_numdlights >= MAX_DLIGHTS)
 		return;
-	dl = &r_dlights[r_numdlights++];
+
+	dlight_t *dl = &r_dlights[r_numdlights++];
 	VectorCopy (org, dl->origin);
 	dl->intensity = intensity;
 	dl->color[0] = r;
@@ -248,19 +237,18 @@ V_AddSpotLight
 */
 void V_AddSpotLight (vec3_t org, vec3_t direction, float intensity, float r, float g, float b)
 {
-	dlight_t	*dl;
-
 	if (r_numdlights >= MAX_DLIGHTS)
 		return;
-	dl = &r_dlights[r_numdlights++];
-	VectorCopy (org, dl->origin);
+
+	dlight_t *dl = &r_dlights[r_numdlights++];
+	VectorCopy(org, dl->origin);
 	VectorCopy(direction, dl->direction);
 	dl->intensity = intensity;
 	dl->color[0] = r;
 	dl->color[1] = g;
 	dl->color[2] = b;
 
-	dl->spotlight=true;
+	dl->spotlight = true;
 }
 
 /*
@@ -271,13 +259,12 @@ V_AddLightStyle
 */
 void V_AddLightStyle (int style, float r, float g, float b)
 {
-	lightstyle_t	*ls;
-
 	if (style < 0 || style > MAX_LIGHTSTYLES)
 		Com_Error (ERR_DROP, "Bad light style %i", style);
-	ls = &r_lightstyles[style];
 
-	ls->white = r+g+b;
+	lightstyle_t *ls = &r_lightstyles[style];
+
+	ls->white = r + g + b;
 	ls->rgb[0] = r;
 	ls->rgb[1] = g;
 	ls->rgb[2] = b;

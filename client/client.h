@@ -68,7 +68,6 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *p
 #define random()	((rand () & 0x7fff) / ((float)0x7fff))
 #define crandom()	(2.0 * (random() - 0.5))
 
-
 //=============================================================================
 
 //  added for Psychospaz's chasecam
@@ -416,6 +415,8 @@ extern	cvar_t	*cl_footstep_override;
 extern	cvar_t	*r_decals; // decal control
 extern	cvar_t	*r_decal_life; // decal duration in seconds
 
+extern	cvar_t	*r_particle_mode; // mxd
+
 extern	cvar_t	*con_font_size;
 extern	cvar_t	*alt_text_color;
 
@@ -675,11 +676,11 @@ void CL_ParseConfigString (void);
 void CL_PlayBackgroundTrack (void); // Knightmare added
 void CL_ParseMuzzleFlash (void);
 void CL_ParseMuzzleFlash2 (void);
-void SmokeAndFlash(vec3_t origin);
+//void SmokeAndFlash(vec3_t origin);
 
 void CL_SetLightstyle (int i);
 
-void CL_RunParticles (void);
+//void CL_RunParticles (void);
 void CL_RunDLights (void);
 void CL_RunLightStyles (void);
 
@@ -695,9 +696,9 @@ void CL_RegisterSounds (void);
 
 void CL_Quit_f (void);
 
-void IN_Accumulate (void);
+//void IN_Accumulate (void);
 
-void CL_ParseLayout (void);
+//void CL_ParseLayout (void);
 
 
 /*
@@ -981,6 +982,29 @@ int CL_GetRandomBloodParticle (void);
 void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir);
 float CL_NewParticleTime (void);
 
+/*color = 255, 255, 255
+image = particle_generic
+blendfunc_src = GL_SRC_ALPHA
+blendfunc_dst = GL_ONE
+p->alpha = 1
+p->size = 1
+p->time = cl.time
+The rest is 0 (mxd). */
+cparticle_t *CL_InitParticle();
+cparticle_t *CL_InitParticle2(int flags);
+
+/*angle X Y Z
+origin X Y Z
+velocity X Y Z
+acceleration X Y Z
+color R G B
+color verlocity R G B
+alpha, alpha velocity
+blendfunc_src, blendfunc_dst
+size, size velocity
+image
+flags
+think, thinknext */
 cparticle_t *CL_SetupParticle (
 			float angle0,		float angle1,		float angle2,
 			float org0,			float org1,			float org2,
@@ -993,7 +1017,7 @@ cparticle_t *CL_SetupParticle (
 			float size,			float sizevel,			
 			int	image,
 			int flags,
-			void (*think)(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time),
+			void (*think)(cparticle_t *p, vec3_t p_org, vec3_t p_angle, float *p_alpha, float *p_size, int *p_image, float *p_time),
 			qboolean thinknext);
 
 void CL_AddParticleLight (cparticle_t *p,
@@ -1026,7 +1050,7 @@ void CL_BlasterTrail (vec3_t start, vec3_t end, int red, int green, int blue,
 void CL_HyperBlasterEffect (vec3_t start, vec3_t end, vec3_t angle, int red, int green, int blue,
 									int reddelta, int greendelta, int bluedelta, float len, float size);
 
-void CL_HyperBlasterTrail (vec3_t start, vec3_t end, int red, int green, int blue, int reddelta, int greendelta, int bluedelta);
+//void CL_HyperBlasterTrail (vec3_t start, vec3_t end, int red, int green, int blue, int reddelta, int greendelta, int bluedelta); //mxd. Unused
 void CL_BlasterTracer (vec3_t origin, vec3_t angle, int red, int green, int blue, float len, float size);
 void CL_BlasterParticles (vec3_t org, vec3_t dir, int count, float size,
 		int red, int green, int blue, int reddelta, int greendelta, int bluedelta);
@@ -1042,7 +1066,7 @@ void CL_DebugTrail (vec3_t start, vec3_t end);
 void CL_Flashlight (int ent, vec3_t pos);
 void CL_ForceWall (vec3_t start, vec3_t end, int color);
 void CL_BubbleTrail2 (vec3_t start, vec3_t end, int dist);
-void CL_HeatbeamParticles (vec3_t start, vec3_t end);
+void CL_HeatbeamParticles (vec3_t start, vec3_t forward);
 void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int red, int green, int blue,
 							 int reddelta, int greendelta, int bluedelta, int count, int magnitude);
 
@@ -1052,8 +1076,9 @@ void CL_TagTrail (vec3_t start, vec3_t end, int color8);
 void CL_ColorFlash (vec3_t pos, int ent, int intensity, float r, float g, float b);
 void CL_Tracker_Shell(vec3_t origin);
 void CL_MonsterPlasma_Shell(vec3_t origin);
-void CL_ColorExplosionParticles (vec3_t org, int color, int run);
+void CL_ColorExplosionParticles (vec3_t org, int color8, int run);
 void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, float size);
+void CL_ClassicParticleSmokeEffect(vec3_t org, vec3_t dir, int color, int count, int magnitude); //mxd
 void CL_Widowbeamout (cl_sustain_t *self);
 void CL_Nukeblast (cl_sustain_t *self);
 void CL_WidowSplash (vec3_t org);
@@ -1066,6 +1091,7 @@ void CL_WidowSplash (vec3_t org);
 int	color8red (int color8);
 int	color8green (int color8);
 int	color8blue (int color8);
+void color8_to_vec3(int color8, vec3_t v); //mxd
 void vectoangles (vec3_t value1, vec3_t angles);
 void vectoangles2 (vec3_t value1, vec3_t angles);
 
