@@ -762,98 +762,166 @@ Cmd_CompleteCommand
 */
 
 // Knightmare - added command auto-complete
-char			retval[256];
-char *Cmd_CompleteCommand (char *partial)
+char *Cmd_CompleteCommand(char *partial, qboolean *exactmatch)
 {
-	cmd_function_t	*cmd;
-	int				len,i,o,p;
-	cmdalias_t		*a;
-	cvar_t			*cvar;
-	char			*pmatch[1024];
-	qboolean		diff = false;
-	
-	len = strlen(partial);
-	
+	*exactmatch = false;
+	const int len = strlen(partial);
+
 	if (!len)
 		return NULL;
-		
-// check for exact match
-	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
-		if (!_stricmp (partial,cmd->name))
-			return cmd->name;
-	for (a=cmd_alias ; a ; a=a->next)
-		if (!_stricmp (partial, a->name))
-			return a->name;
-	for (cvar=cvar_vars ; cvar ; cvar=cvar->next)
-		if (!_stricmp (partial,cvar->name))
-			return cvar->name;
 
-	for (i=0; i<1024; i++)
-		pmatch[i]=NULL;
-	i=0;
-
-// check for partial match
-	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
-		if (!_strnicmp (partial,cmd->name, len)) {
-			pmatch[i]=cmd->name;
-			i++;
-		}
-	for (a=cmd_alias ; a ; a=a->next)
-		if (!_strnicmp (partial, a->name, len)) {
-			pmatch[i]=a->name;
-			i++;
-		}
-	for (cvar=cvar_vars ; cvar ; cvar=cvar->next)
-		if (!_strnicmp (partial,cvar->name, len)) {
-			pmatch[i]=cvar->name;
-			i++;
-		}
-
-	if (i) {
-		if (i == 1)
-			return pmatch[0];
-
-		Com_Printf("\nListing matches for '%s'...\n",partial);
-		for (o=0; o<i; o++)
-			Com_Printf("  %s\n",pmatch[o]);
-
-	//	strncpy(retval,""); p=0;
-		Q_strncpyz(retval, "", sizeof(retval)); p=0;
-		while (!diff && p < 256) {
-			retval[p]=pmatch[0][p];
-			for (o=0; o<i; o++) {
-				if (p > strlen(pmatch[o]))
-					continue;
-				if (retval[p] != pmatch[o][p]) {
-					retval[p] = 0;
-					diff=false;
-				}
-			}
-			p++;
-		}
-		Com_Printf("Found %i matches\n",i);
-		return retval;
+	//mxd. Init collection
+	char *pmatch[2][1024];
+	for (int i = 0; i < 1024; i++)
+	{
+		pmatch[0][i] = NULL; // Name
+		pmatch[1][i] = NULL; // Type
 	}
 
-	return NULL;
-}
+	int nummatches = 0;
 
-qboolean Cmd_IsComplete (char *command)
-{
-	// check for exact match
-	for (cmd_function_t *c = cmd_functions; c; c = c->next)
-		if (!_stricmp (command, c->name))
-			return true;
+	//mxd. Collect partial matches, which contain specified string
+	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
+	{
+		if (Q_strcasestr(cmd->name, partial))
+		{
+			pmatch[0][nummatches] = cmd->name;
+			pmatch[1][nummatches] = "command";
+			nummatches++;
+		}
+	}
 
-	for (cmdalias_t *c = cmd_alias; c; c = c->next)
-		if (!_stricmp (command, c->name))
-			return true;
+	for (cmdalias_t *a = cmd_alias; a; a = a->next)
+	{
+		if (Q_strcasestr(a->name, partial))
+		{
+			pmatch[0][nummatches] = a->name;
+			pmatch[1][nummatches] = "alias";
+			nummatches++;
+		}
+	}
 
-	for (cvar_t *c = cvar_vars; c; c = c->next)
-		if (!_stricmp (command, c->name))
-			return true;
+	for (cvar_t *cvar = cvar_vars; cvar; cvar = cvar->next)
+	{
+		if (Q_strcasestr(cvar->name, partial))
+		{
+			pmatch[0][nummatches] = cvar->name;
+			pmatch[1][nummatches] = "cvar";
+			nummatches++;
+		}
+	}
 
-	return false;
+	// Check results
+	if (nummatches > 0)
+	{
+		Com_Printf("\n%i %s for \"%s\":\n", nummatches, (nummatches > 1 ? "matches" : "match"), partial);
+
+		//mxd. Sort'em... https://stackoverflow.com/questions/3893937/c-array-sorting-tips
+		for (int i = 0; i < nummatches - 1; ++i)
+		{
+			for (int j = 0; j < nummatches - 1 - i; ++j)
+			{
+				int pos = 0;
+				while (pmatch[0][j][pos] && pmatch[0][j][pos] == pmatch[0][j + 1][pos])
+					pos++;
+
+				if (pmatch[0][j][pos] > pmatch[0][j + 1][pos])
+				{
+					char *temp = pmatch[0][j + 1];
+					pmatch[0][j + 1] = pmatch[0][j];
+					pmatch[0][j] = temp;
+
+					temp = pmatch[1][j + 1];
+					pmatch[1][j + 1] = pmatch[1][j];
+					pmatch[1][j] = temp;
+				}
+			}
+		}
+
+		// Print'em
+		int exactmatchindex = -1;
+		for (int i = 0; i < nummatches; i++)
+		{
+			// Exact match?
+			if (!Q_strcasecmp(partial, pmatch[0][i]))
+			{
+				char *highlight = (nummatches > 1 ? ">>" : "  "); // Marking a single match looks silly...
+				Com_Printf(S_COLOR_GREEN"%s%s (%s)\n", highlight, pmatch[0][i], pmatch[1][i]);
+				exactmatchindex = i;
+			}
+			else // Partial match. Highlight matching part
+			{
+				char *matchchar = Q_strcasestr(pmatch[0][i], partial);
+
+				char *before = malloc(sizeof(char) * 64);
+				Q_strncpyz(before, pmatch[0][i], matchchar - pmatch[0][i] + 1);
+
+				char *match = malloc(sizeof(char) * 64);
+				Q_strncpyz(match, matchchar, len + 1);
+
+				char *after = malloc(sizeof(char) * 64);
+				Q_strncpyz(after, matchchar + len, strlen(pmatch[0][i]) - len + 1);
+
+				Com_Printf(S_COLOR_WHITE"  %s"S_COLOR_YELLOW"%s"S_COLOR_WHITE"%s (%s)\n", before, match, after, pmatch[1][i]);
+			}
+		}
+
+		// If there's exact match or a single match, return it
+		if (exactmatchindex != -1)
+		{
+			*exactmatch = true;
+			return pmatch[0][exactmatchindex];
+		}
+
+		if (nummatches == 1)
+		{
+			*exactmatch = true;
+			return pmatch[0][0];
+		}
+	}
+	else
+	{
+		// No matches...
+		return NULL;
+	}
+
+	//mxd. Proceed only when all matches start with specified string
+	for (int i = 0; i < nummatches; ++i)
+	{
+		int pos = 0;
+		while (pmatch[0][i][pos] && partial[pos] && pmatch[0][i][pos] == partial[pos])
+			pos++;
+
+		if (pos != len)
+			return NULL;
+	}
+
+	//mxd. Find the common part among all found matches, which start with specified string
+	char *retval = malloc(sizeof(char) * 256);
+	Q_strncpyz(retval, partial, len + 1);
+	int c = len;
+	qboolean diff = false;
+
+	while (!diff && c < 256)
+	{
+		retval[c] = pmatch[0][0][c];
+		for (int i = 0; i < nummatches; i++)
+		{
+			if (c > strlen(pmatch[0][i]))
+				continue;
+
+			if (retval[c] != pmatch[0][i][c])
+			{
+				retval[c] = 0;
+				diff = true;
+				break;
+			}
+		}
+
+		c++;
+	}
+
+	return retval;
 }
 
 /*

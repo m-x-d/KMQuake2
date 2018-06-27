@@ -174,15 +174,14 @@ keyname_t keynames[] =
 ==============================================================================
 */
 
-qboolean Cmd_IsComplete (char *cmd);
-
 void CompleteCommand (void)
 {
 	char *s = key_lines[edit_line] + 1;
 	if (*s == '\\' || *s == '/')
 		s++;
 
-	char *cmd = Cmd_CompleteCommand(s);
+	qboolean exactmatch = false; //mxd
+	char *cmd = Cmd_CompleteCommand(s, &exactmatch);
 	// Knightmare - added command auto-complete
 	if (cmd)
 	{
@@ -190,16 +189,10 @@ void CompleteCommand (void)
 		Q_strncpyz(key_lines[edit_line] + 2, cmd, sizeof(key_lines[edit_line]) - 2);
 		key_linepos = strlen(cmd) + 2;
 
-		if (Cmd_IsComplete(cmd))
-		{
-			key_lines[edit_line][key_linepos] = ' ';
-			key_linepos++;
-			key_lines[edit_line][key_linepos] = 0;
-		}
-		else
-		{
-			key_lines[edit_line][key_linepos] = 0;
-		}
+		if (exactmatch) //mxd. Add trailing space only when a single/exact match was found
+			key_lines[edit_line][key_linepos++] = ' ';
+
+		key_lines[edit_line][key_linepos] = 0;
 	}
 }
 

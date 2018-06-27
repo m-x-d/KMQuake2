@@ -1577,6 +1577,37 @@ int Q_stricmp (char *s1, char *s2)
 }
 
 
+//mxd. Case-insensitive version of strstr. https://stackoverflow.com/questions/27303062/strstr-function-like-that-ignores-upper-or-lower-case
+char *Q_strcasestr(const char *haystack, const char *needle)
+{
+#if defined(WIN32)
+	const int c = tolower((unsigned char)*needle);
+
+	if (c == '\0')
+		return (char *)haystack;
+
+	for (; *haystack; haystack++)
+	{
+		if (tolower((unsigned char)*haystack) == c)
+		{
+			for (size_t i = 0;;)
+			{
+				if (needle[++i] == '\0')
+					return (char *)haystack;
+
+				if (tolower((unsigned char)haystack[i]) != tolower((unsigned char)needle[i]))
+					break;
+			}
+		}
+	}
+
+	return NULL;
+#else
+	return strcasestr(s1, s2); // Never tested...
+#endif
+}
+
+
 int Q_strncasecmp (char *s1, char *s2, int n)
 {
 	int		c1, c2;

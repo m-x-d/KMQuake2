@@ -435,6 +435,9 @@ int Q_stricmp (char *s1, char *s2);
 int Q_strcasecmp (char *s1, char *s2);
 int Q_strncasecmp (char *s1, char *s2, int n);
 
+//mxd. Portable case insensitive strstr
+char *Q_strcasestr(const char *haystack, const char *needle);
+
 void Q_strncpyz (char *dst, const char *src, int dstSize);
 void Q_strncatz (char *dst, const char *src, int dstSize);
 void Q_snprintfz (char *dst, int dstSize, const char *fmt, ...);
