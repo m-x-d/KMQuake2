@@ -376,16 +376,16 @@ Call before entering a new level, or after changing dlls
 =================
 */
 qboolean needLoadingPlaque (void);
+
 void CL_PrepRefresh (void)
 {
 	char		mapname[64];
 	int			i, max;
 	char		pname[MAX_QPATH];
-	float		rotate;
 	vec3_t		axis;
-	qboolean	newPlaque = needLoadingPlaque();
+	const qboolean	newPlaque = needLoadingPlaque();
 
-	if (!cl.configstrings[CS_MODELS+1][0])
+	if (!cl.configstrings[CS_MODELS + 1][0])
 		return;		// no map loaded
 
 	if (newPlaque)
@@ -399,8 +399,8 @@ void CL_PrepRefresh (void)
 
 	// let the render dll load the map
 //	strncpy (mapname, cl.configstrings[CS_MODELS+1] + 5);	// skip "maps/"
-	Q_strncpyz (mapname, cl.configstrings[CS_MODELS+1] + 5, sizeof(mapname));	// skip "maps/"
-	mapname[strlen(mapname)-4] = 0;		// cut off ".bsp"
+	Q_strncpyz (mapname, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapname));	// skip "maps/"
+	mapname[strlen(mapname) - 4] = 0;		// cut off ".bsp"
 
 	// register models, pics, and skins
 	Com_Printf ("Map: %s\r", mapname); 
@@ -426,13 +426,13 @@ void CL_PrepRefresh (void)
 	Q_strncpyz(cl_weaponmodels[0], "weapon.md2", sizeof(cl_weaponmodels[0]));
 
 	// Knightmare- for Psychospaz's map loading screen
-	for (i=1, max=0 ; i<MAX_MODELS && cl.configstrings[CS_MODELS+i][0] ; i++)
+	for (i = 1, max = 0; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
 		max++;
 
-	for (i=1; i<MAX_MODELS && cl.configstrings[CS_MODELS+i][0]; i++)
+	for (i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
 	{
 	//	strncpy (pname, cl.configstrings[CS_MODELS+i]);
-		Q_strncpyz (pname, cl.configstrings[CS_MODELS+i], sizeof(pname));
+		Q_strncpyz (pname, cl.configstrings[CS_MODELS + i], sizeof(pname));
 		pname[37] = 0;	// never go beyond one line
 		if (pname[0] != '*')
 		{
@@ -441,7 +441,7 @@ void CL_PrepRefresh (void)
 			//only make max of 40 chars long
 			if (i > 1)
 				Com_sprintf (loadingMessages, sizeof(loadingMessages),
-					S_COLOR_ALT"loading %s", (strlen(pname)>40)? &pname[strlen(pname)-40]: pname);
+					S_COLOR_ALT"loading %s", (strlen(pname) > 40 ? &pname[strlen(pname) - 40] : pname));
 		}
 
 		SCR_UpdateScreen ();
@@ -451,24 +451,27 @@ void CL_PrepRefresh (void)
 			// special player weapon model
 			if (num_cl_weaponmodels < MAX_CLIENTWEAPONMODELS)
 			{
-				strncpy(cl_weaponmodels[num_cl_weaponmodels], cl.configstrings[CS_MODELS+i]+1,
+				strncpy(cl_weaponmodels[num_cl_weaponmodels], cl.configstrings[CS_MODELS + i] + 1,
 					sizeof(cl_weaponmodels[num_cl_weaponmodels]) - 1);
 				num_cl_weaponmodels++;
 			}
 		} 
 		else
 		{
-			cl.model_draw[i] = R_RegisterModel (cl.configstrings[CS_MODELS+i]);
+			cl.model_draw[i] = R_RegisterModel (cl.configstrings[CS_MODELS + i]);
 			if (pname[0] == '*')
-				cl.model_clip[i] = CM_InlineModel (cl.configstrings[CS_MODELS+i]);
+				cl.model_clip[i] = CM_InlineModel (cl.configstrings[CS_MODELS + i]);
 			else
 				cl.model_clip[i] = NULL;
 		}
+
 		if (pname[0] != '*')
 			Com_Printf ("                                     \r");
+
 		// Knightmare- for Psychospaz's map loading screen
 		loadingPercent += 40.0f/(float)max;
 	}
+
 	// Knightmare- for Psychospaz's map loading screen
 	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading pics...");
 
@@ -477,56 +480,42 @@ void CL_PrepRefresh (void)
 
 	// Knightmare- BIG UGLY HACK for connected to server using old protocol
 	// Changed configstrings require different parsing
-	if (LegacyProtocol() )
-	{	// Knightmare- for Psychospaz's map loading screen
-		for (i=1, max=0; i<OLD_MAX_IMAGES && cl.configstrings[OLD_CS_IMAGES+i][0]; i++)
-			max++;
-		for (i=1; i<OLD_MAX_IMAGES && cl.configstrings[OLD_CS_IMAGES+i][0]; i++)
-		{
-			cl.image_precache[i] = R_DrawFindPic (cl.configstrings[OLD_CS_IMAGES+i]);
-			Sys_SendKeyEvents ();	// pump message loop
-			// Knightmare- for Psychospaz's map loading screen
-			loadingPercent += 20.0f/(float)max;
-		}
+	const int maximages = (LegacyProtocol() ? OLD_MAX_IMAGES : MAX_IMAGES); //mxd
+	const int csimages = (LegacyProtocol() ? OLD_CS_IMAGES : CS_IMAGES); //mxd
+
+	// Knightmare- for Psychospaz's map loading screen
+	for (i = 1, max = 0; i < maximages && cl.configstrings[csimages + i][0]; i++)
+		max++;
+
+	for (i = 1; i < maximages && cl.configstrings[csimages + i][0]; i++)
+	{
+		cl.image_precache[i] = R_DrawFindPic(cl.configstrings[csimages + i]);
+		Sys_SendKeyEvents();	// pump message loop
+		
+		// Knightmare- for Psychospaz's map loading screen
+		loadingPercent += 20.0f / (float)max;
 	}
-	else
-	{	// Knightmare- for Psychospaz's map loading screen
-		for (i=1, max=0; i<MAX_IMAGES && cl.configstrings[CS_IMAGES+i][0]; i++)
-			max++;
-		for (i=1; i<MAX_IMAGES && cl.configstrings[CS_IMAGES+i][0]; i++)
-		{
-			cl.image_precache[i] = R_DrawFindPic (cl.configstrings[CS_IMAGES+i]);
-			Sys_SendKeyEvents ();	// pump message loop
-			// Knightmare- for Psychospaz's map loading screen
-			loadingPercent += 20.0f/(float)max;
-		}
-	}
+
 	// Knightmare- for Psychospaz's map loading screen
 	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading players...");
 
 	Com_Printf ("                                     \r");
 
 	// Knightmare- for Psychospaz's map loading screen
-	for (i=1, max=0 ; i<MAX_CLIENTS ; i++)
-		if ( LegacyProtocol() ) {
-			if (cl.configstrings[OLD_CS_PLAYERSKINS+i][0])
-				max++;
-		} else {
-			if (cl.configstrings[CS_PLAYERSKINS+i][0])
-				max++;
-		}
+	const int playerskinsoffset = (LegacyProtocol() ? OLD_CS_PLAYERSKINS : CS_PLAYERSKINS); //mxd
+	for (i = 1, max = 0; i < MAX_CLIENTS; i++)
+	{
+		if (cl.configstrings[playerskinsoffset + i][0]) //mxd
+			max++;
+	}
 
-	for (i=0; i < MAX_CLIENTS; i++)
+	for (i = 0; i < MAX_CLIENTS; i++)
 	{
 		// Knightmare- BIG UGLY HACK for old connected to server using old protocol
 		// Changed configstrings require different parsing
-		if ( LegacyProtocol() ) {
-			if (!cl.configstrings[OLD_CS_PLAYERSKINS+i][0])
-				continue;
-		} else {
-			if (!cl.configstrings[CS_PLAYERSKINS+i][0])
-				continue;
-		}
+		if (!cl.configstrings[playerskinsoffset + i][0]) //mxd
+			continue;
+		
 		Com_Printf ("client %i\r", i); 
 		SCR_UpdateScreen ();
 		Sys_SendKeyEvents ();	// pump message loop
@@ -534,8 +523,9 @@ void CL_PrepRefresh (void)
 		Com_Printf ("                                     \r");
 
 		// Knightmare- for Psychospaz's map loading screen
-		loadingPercent += 20.0f/(float)max;
+		loadingPercent += 20.0f / (float)max;
 	}
+
 	// Knightmare- for Psychospaz's map loading screen
 	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading players...done");
 	//hack hack hack - psychospaz
@@ -551,9 +541,8 @@ void CL_PrepRefresh (void)
 	// set sky textures and speed
 	Com_Printf ("sky\r", i); 
 	SCR_UpdateScreen ();
-	rotate = atof (cl.configstrings[CS_SKYROTATE]);
-	sscanf (cl.configstrings[CS_SKYAXIS], "%f %f %f", 
-		&axis[0], &axis[1], &axis[2]);
+	const float rotate = atof (cl.configstrings[CS_SKYROTATE]);
+	sscanf (cl.configstrings[CS_SKYAXIS], "%f %f %f", &axis[0], &axis[1], &axis[2]);
 	R_SetSky (cl.configstrings[CS_SKY], rotate, axis);
 	Com_Printf ("                                     \r");
 

@@ -31,7 +31,7 @@ static int	m_main_cursor;
 
 // for checking if quad cursor model is available
 #define QUAD_CURSOR_MODEL	"models/ui/quad_cursor.md2"
-qboolean	quadModel_loaded;
+qboolean quadModel_loaded;
 
 
 /*
@@ -62,12 +62,12 @@ FindMenuCoords
 */
 void FindMenuCoords (int *xoffset, int *ystart, int *totalheight, int *widest)
 {
-	int w, h, i;
+	int w, h;
 
 	*totalheight = 0;
 	*widest = -1;
 
-	for (i = 0; main_names[i] != 0; i++)
+	for (int i = 0; main_names[i] != 0; i++)
 	{
 		R_DrawGetPicSize (&w, &h, main_names[i]);
 		if (w > *widest)
@@ -76,7 +76,7 @@ void FindMenuCoords (int *xoffset, int *ystart, int *totalheight, int *widest)
 	}
 
 	*xoffset = (SCREEN_WIDTH - *widest + 70) * 0.5;
-	*ystart = SCREEN_HEIGHT*0.5 - 100;
+	*ystart = SCREEN_HEIGHT * 0.5 - 100;
 }
 
 
@@ -93,22 +93,21 @@ void UI_DrawMainCursor (int x, int y, int f)
 {
 	char	cursorname[80];
 	static	qboolean cached;
-	int		w,h;
+	int		w, h;
 
 	if (!cached)
 	{
-		int i;
-
-		for (i = 0; i < NUM_MAINMENU_CURSOR_FRAMES; i++) {
-			Com_sprintf (cursorname, sizeof(cursorname), "m_cursor%d", i);
-			R_DrawFindPic (cursorname);
+		for (int i = 0; i < NUM_MAINMENU_CURSOR_FRAMES; i++)
+		{
+			Com_sprintf(cursorname, sizeof(cursorname), "m_cursor%d", i);
+			R_DrawFindPic(cursorname);
 		}
 		cached = true;
 	}
 
-	Com_sprintf (cursorname, sizeof(cursorname), "m_cursor%d", f);
-	R_DrawGetPicSize (&w, &h, cursorname);
-	SCR_DrawPic (x, y, w, h, ALIGN_CENTER, cursorname, 1.0);
+	Com_sprintf(cursorname, sizeof(cursorname), "m_cursor%d", f);
+	R_DrawGetPicSize(&w, &h, cursorname);
+	SCR_DrawPic(x, y, w, h, ALIGN_CENTER, cursorname, 1.0);
 }
 
 
@@ -122,23 +121,26 @@ Draws a rotating quad damage model.
 void UI_DrawMainCursor3D (int x, int y)
 {
 	refdef_t	refdef;
-	entity_t	quadEnt, *ent;
-	float		rx, ry, rw, rh;
-	int			yaw;
+	entity_t	quadEnt;
 
-	yaw = anglemod(cl.time/10);
+	const int yaw = anglemod(cl.time / 10);
 
 	memset(&refdef, 0, sizeof(refdef));
-	memset (&quadEnt, 0, sizeof(quadEnt));
+	memset(&quadEnt, 0, sizeof(quadEnt));
 
 	// size 24x34
-	rx = x;				ry = y;
-	rw = 24;			rh = 34;
-	SCR_AdjustFrom640 (&rx, &ry, &rw, &rh, ALIGN_CENTER);
-	refdef.x = rx;		refdef.y = ry;
-	refdef.width = rw;	refdef.height = rh;
+	float rx = x;
+	float ry = y;
+	float rw = 24;
+	float rh = 34;
+	SCR_AdjustFrom640(&rx, &ry, &rw, &rh, ALIGN_CENTER);
+
+	refdef.x = rx;
+	refdef.y = ry;
+	refdef.width = rw;
+	refdef.height = rh;
 	refdef.fov_x = 40;
-	refdef.fov_y = CalcFov (refdef.fov_x, refdef.width, refdef.height);
+	refdef.fov_y = CalcFov(refdef.fov_x, refdef.width, refdef.height);
 	refdef.time = cls.realtime*0.001;
 	refdef.areabits = 0;
 	refdef.lightstyles = 0;
@@ -146,18 +148,18 @@ void UI_DrawMainCursor3D (int x, int y)
 	refdef.num_entities = 0;
 	refdef.entities = &quadEnt;
 
-	ent = &quadEnt;
-	ent->model = R_RegisterModel (QUAD_CURSOR_MODEL);
-	ent->flags = RF_FULLBRIGHT|RF_NOSHADOW|RF_DEPTHHACK;
-	VectorSet (ent->origin, 40, 0, -18);
-	VectorCopy( ent->origin, ent->oldorigin );
+	entity_t *ent = &quadEnt;
+	ent->model = R_RegisterModel(QUAD_CURSOR_MODEL);
+	ent->flags = RF_FULLBRIGHT | RF_NOSHADOW | RF_DEPTHHACK;
+	VectorSet(ent->origin, 40, 0, -18);
+	VectorCopy(ent->origin, ent->oldorigin);
 	ent->frame = 0;
 	ent->oldframe = 0;
 	ent->backlerp = 0.0;
 	ent->angles[1] = yaw;
 	refdef.num_entities++;
 
-	R_RenderFrame( &refdef );
+	R_RenderFrame(&refdef);
 }
 
 
@@ -185,8 +187,7 @@ M_Main_Draw
 */
 void M_Main_Draw (void)
 {
-	int i;
-	int w, h, last_h;
+	int w, h;
 	int ystart;
 	int	xoffset;
 	int widest = -1;
@@ -195,31 +196,34 @@ void M_Main_Draw (void)
 
 	FindMenuCoords (&xoffset, &ystart, &totalheight, &widest);
 
-	for (i = 0; main_names[i] != 0; i++)
-		if (i != m_main_cursor) {
-			R_DrawGetPicSize (&w, &h, main_names[i]);
-			SCR_DrawPic (xoffset, (ystart + i*40+3), w, h, ALIGN_CENTER, main_names[i], 1.0);
+	for (int i = 0; main_names[i] != 0; i++)
+	{
+		if (i != m_main_cursor)
+		{
+			R_DrawGetPicSize(&w, &h, main_names[i]);
+			SCR_DrawPic(xoffset, (ystart + i * 40 + 3), w, h, ALIGN_CENTER, main_names[i], 1.0);
 		}
+	}
 
 //	strncpy (litname, main_names[m_main_cursor]);
 //	strncat (litname, "_sel");
 	Q_strncpyz (litname, main_names[m_main_cursor], sizeof(litname));
 	Q_strncatz (litname, "_sel", sizeof(litname));
 	R_DrawGetPicSize (&w, &h, litname);
-	SCR_DrawPic (xoffset-1, (ystart + m_main_cursor*40+2), w+2, h+2, ALIGN_CENTER, litname, 1.0);
+	SCR_DrawPic (xoffset - 1, (ystart + m_main_cursor * 40 + 2), w + 2, h + 2, ALIGN_CENTER, litname, 1.0);
 
 	// Draw our nifty quad damage model as a cursor if it's loaded.
 	if (quadModel_loaded)
-		UI_DrawMainCursor3D (xoffset-27, ystart+(m_main_cursor*40+1));
+		UI_DrawMainCursor3D (xoffset - 27, ystart + (m_main_cursor * 40 + 1));
 	else
-		UI_DrawMainCursor (xoffset-25, ystart+(m_main_cursor*40+1), (int)(cls.realtime/100)%NUM_MAINMENU_CURSOR_FRAMES);
+		UI_DrawMainCursor (xoffset - 25, ystart + (m_main_cursor * 40 + 1), (int)(cls.realtime / 100)%NUM_MAINMENU_CURSOR_FRAMES);
 
 	R_DrawGetPicSize (&w, &h, "m_main_plaque");
-	SCR_DrawPic (xoffset-(w/2+50), ystart, w, h, ALIGN_CENTER, "m_main_plaque", 1.0);
-	last_h = h;
+	SCR_DrawPic (xoffset - (w / 2 + 50), ystart, w, h, ALIGN_CENTER, "m_main_plaque", 1.0);
+	const int last_h = h;
 
 	R_DrawGetPicSize (&w, &h, "m_main_logo");
-	SCR_DrawPic (xoffset-(w/2+50), ystart+last_h+20, w, h, ALIGN_CENTER, "m_main_logo", 1.0);
+	SCR_DrawPic (xoffset - (w / 2 + 50), ystart + last_h + 20, w, h, ALIGN_CENTER, "m_main_logo", 1.0);
 }
 
 
@@ -266,16 +270,16 @@ void UI_CheckMainMenuMouse (void)
 	int	xoffset;
 	int widest;
 	int totalheight;
-	int i, oldhover;
+	int i;
 	char *sound = NULL;
 	mainmenuobject_t buttons[MAIN_ITEMS];
 
-	oldhover = MainMenuMouseHover;
+	const int oldhover = MainMenuMouseHover;
 	MainMenuMouseHover = 0;
 
 	FindMenuCoords(&xoffset, &ystart, &totalheight, &widest);
 	for (i = 0; main_names[i] != 0; i++)
-		UI_AddMainButton (&buttons[i], i, xoffset, ystart+(i*40+3), main_names[i]);
+		UI_AddMainButton (&buttons[i], i, xoffset, ystart + (i * 40 + 3), main_names[i]);
 
 	// Exit with double click 2nd mouse button
 	if (!cursor.buttonused[MOUSEBUTTON2] && cursor.buttonclicks[MOUSEBUTTON2]==2)
@@ -286,10 +290,10 @@ void UI_CheckMainMenuMouse (void)
 		cursor.buttonclicks[MOUSEBUTTON2] = 0;
 	}
 
-	for (i=MAIN_ITEMS-1; i>=0; i--)
+	for (i = MAIN_ITEMS - 1; i >= 0; i--)
 	{
-		if (cursor.x>=buttons[i].min[0] && cursor.x<=buttons[i].max[0] &&
-			cursor.y>=buttons[i].min[1] && cursor.y<=buttons[i].max[1])
+		if (cursor.x >= buttons[i].min[0] && cursor.x <= buttons[i].max[0] &&
+			cursor.y >= buttons[i].min[1] && cursor.y <= buttons[i].max[1])
 		{
 			if (cursor.mouseaction)
 				m_main_cursor = i;
@@ -304,6 +308,7 @@ void UI_CheckMainMenuMouse (void)
 				cursor.buttonused[MOUSEBUTTON1] = true;
 				cursor.buttonclicks[MOUSEBUTTON1] = 0;
 			}
+
 			break;
 		}
 	}

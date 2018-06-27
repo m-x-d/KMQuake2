@@ -475,9 +475,8 @@ Mod_InitFailedTexList
 */
 void Mod_InitFailedTexList (void)
 {
-	int		i;
-
-	for (i=0; i<NUM_FAIL_TEXTURES; i++) {
+	for (int i = 0; i < NUM_FAIL_TEXTURES; i++)
+	{
 		Com_sprintf(lastFailedTexture[i], sizeof(lastFailedTexture[i]), "\0");
 		lastFailedTextureHash[i] = 0;
 	}
@@ -568,9 +567,8 @@ Mod_InitWalSizeList
 */
 void Mod_InitWalSizeList (void)
 {
-	int		i;
-
-	for (i=0; i<NUM_WALSIZES; i++) {
+	for (int i = 0; i<NUM_WALSIZES; i++)
+	{
 		Com_sprintf(walSizeList[i].name, sizeof(walSizeList[i].name), "\0");
 		walSizeList[i].hash = 0;
 		walSizeList[i].width = 0;
@@ -2431,7 +2429,6 @@ Specifies the model that will be used as the world
 void R_BeginRegistration (char *model)
 {
 	char	fullname[MAX_QPATH];
-	cvar_t	*flushmap;
 
 	registration_sequence++;
 	r_oldviewcluster = -1;		// force markleafs
@@ -2443,8 +2440,9 @@ void R_BeginRegistration (char *model)
 
 	// explicitly free the old map if different
 	// this guarantees that mod_known[0] is the world map
-	flushmap = Cvar_Get ("flushmap", "0", 0);
-	if (strcmp(mod_known[0].name, fullname) || flushmap->value) {
+	cvar_t *flushmap = Cvar_Get ("flushmap", "0", 0);
+	if (strcmp(mod_known[0].name, fullname) || flushmap->value)
+	{
 		Mod_Free (&mod_known[0]);
 		// clear this on map change (case of different server and autodownloading)
 		R_InitFailedImgList ();
@@ -2547,14 +2545,10 @@ void R_EndRegistration (void)
 	int		i;
 	model_t	*mod;
 
-	for (i=0, mod=mod_known ; i<mod_numknown ; i++, mod++)
+	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
 	{
-		if (!mod->name[0])
-			continue;
-		if (mod->registration_sequence != registration_sequence)
-		{	// don't need this model
-			Mod_Free (mod);
-		}
+		if (mod->name[0] && mod->registration_sequence != registration_sequence)
+			Mod_Free (mod); // don't need this model
 	}
 
 	R_FreeUnusedImages ();

@@ -178,28 +178,28 @@ qboolean Cmd_IsComplete (char *cmd);
 
 void CompleteCommand (void)
 {
-	char	*cmd, *s;
-
-	s = key_lines[edit_line]+1;
+	char *s = key_lines[edit_line] + 1;
 	if (*s == '\\' || *s == '/')
 		s++;
 
-	cmd = Cmd_CompleteCommand (s);
+	char *cmd = Cmd_CompleteCommand(s);
 	// Knightmare - added command auto-complete
 	if (cmd)
 	{
 		key_lines[edit_line][1] = '/';
-	//	strncpy (key_lines[edit_line]+2, cmd);
-		Q_strncpyz (key_lines[edit_line]+2, cmd, sizeof(key_lines[edit_line])-2);
-		key_linepos = strlen(cmd)+2;
-		if (Cmd_IsComplete(cmd)) {
+		Q_strncpyz(key_lines[edit_line] + 2, cmd, sizeof(key_lines[edit_line]) - 2);
+		key_linepos = strlen(cmd) + 2;
+
+		if (Cmd_IsComplete(cmd))
+		{
 			key_lines[edit_line][key_linepos] = ' ';
 			key_linepos++;
 			key_lines[edit_line][key_linepos] = 0;
-		} else {
+		}
+		else
+		{
 			key_lines[edit_line][key_linepos] = 0;
 		}
-		return;
 	}
 }
 
@@ -327,7 +327,8 @@ void Key_Console (int key)
 	}
 
 	if (key == K_TAB)
-	{	// command completion
+	{
+		// command completion
 		CompleteCommand ();
 		con.backedit = 0; // Knightmare added
 		return;
@@ -912,18 +913,16 @@ extern int scr_draw_loading;
 
 void Key_Event (int key, qboolean down, unsigned time)
 {
-	char	*kb;
-	char	cmd[1024];
-
-	// hack for modal presses
+	// Hack for modal presses
 	if (key_waiting == -1)
 	{
 		if (down)
 			key_waiting = key;
+
 		return;
 	}
 
-	// update auto-repeat status
+	// Update auto-repeat status
 	if (down)
 	{
 		key_repeats[key]++;
@@ -940,7 +939,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 			&& key != K_DEL
 			&& !(key>='a' && key<='z')
 			&& key_repeats[key] > 1)
-			return;	// ignore most autorepeats
+			return; // Ignore most autorepeats
 			
 		if (key >= 200 && !keybindings[key])
 			Com_Printf ("%s is unbound, hit F4 to set.\n", Key_KeynumToString (key) );
@@ -953,12 +952,12 @@ void Key_Event (int key, qboolean down, unsigned time)
 	if (key == K_SHIFT)
 		shift_down = down;
 
-	// console key is hardcoded, so the user can never unbind it
+	// Console key is hardcoded, so the user can never unbind it
 	if (key == '`' || key == '~')
 	{
-		if (!down)
-			return;
-		Con_ToggleConsole_f ();
+		if (down)
+			Con_ToggleConsole_f ();
+
 		return;
 	}
 
@@ -973,7 +972,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 		&& !(key >= K_F1 && key <= K_F12))
 		key = K_ESCAPE;*/
 
-	// menu key is hardcoded, so the user can never unbind it
+	// Menu key is hardcoded, so the user can never unbind it
 	if (key == K_ESCAPE)
 	{
 		if (!down)
@@ -988,39 +987,40 @@ void Key_Event (int key, qboolean down, unsigned time)
 			cls.consoleActive = false;
 
 			M_Menu_Main_f();
+
 			return;
 		}
 
 		// Knightmare- skip cinematic
 		if (cl.cinematictime > 0 && !cl.attractloop && cls.realtime - cl.cinematictime > 1000)
-		{	// skip the rest of the cinematic
+		{
+			// Skip the rest of the cinematic
 			SCR_FinishCinematic ();
 		}
 
 		if (cl.frame.playerstate.stats[STAT_LAYOUTS] && cls.key_dest == key_game)
-		{	// put away help computer / inventory
+		{
+			// Put away help computer / inventory
 			Cbuf_AddText ("cmd putaway\n");
+
 			return;
 		}
+
 		switch (cls.key_dest)
 		{
-		case key_message:
-			Key_Message (key);
-			break;
-		case key_menu:
-			UI_Keydown (key);
-			break;
-		case key_game:
-		case key_console:
-			M_Menu_Main_f ();
-			break;
-		default:
-			Com_Error (ERR_FATAL, "Bad cls.key_dest");
+			case key_message: Key_Message(key); break;
+			case key_menu:    UI_Keydown(key); break;
+		
+			case key_game:
+			case key_console: M_Menu_Main_f(); break;
+
+			default: Com_Error (ERR_FATAL, "Bad cls.key_dest");
 		}
+
 		return;
 	}
 
-	// track if any key is down for BUTTON_ANY
+	// Track if any key is down for BUTTON_ANY
 	keydown[key] = down;
 	if (down)
 	{
@@ -1035,15 +1035,14 @@ void Key_Event (int key, qboolean down, unsigned time)
 	}
 
 //
-// key up events only generate commands if the game key binding is
-// a button command (leading + sign).  These will occur even in console mode,
-// to keep the character from continuing an action started before a console
-// switch.  Button commands include the kenum as a parameter, so multiple
-// downs can be matched with ups
+// Key up events only generate commands if the game key binding is a button command (leading + sign).
+// These will occur even in console mode, to keep the character from continuing an action started before a console switch.
+// Button commands include the kenum as a parameter, so multiple downs can be matched with ups.
 //
 	if (!down)
 	{
-		kb = keybindings[key];
+		char cmd[1024];
+		char *kb = keybindings[key];
 		if (kb && kb[0] == '+')
 		{
 			Com_sprintf (cmd, sizeof(cmd), "-%s %i %i\n", kb+1, key, time);
@@ -1064,7 +1063,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 	}
 
 //
-// if not a consolekey, send to the interpreter no matter what mode is
+// If not a consolekey, send to the interpreter no matter what mode is
 //
 	// Knightmare changed
 	if ( (cls.key_dest == key_menu && menubound[key])
@@ -1073,11 +1072,13 @@ void Key_Event (int key, qboolean down, unsigned time)
 	//|| (cls.key_dest == key_console && !consolekeys[key])
 	//|| (cls.key_dest == key_game && ( cls.state == ca_active || !consolekeys[key] ) ) )
 	{
-		kb = keybindings[key];
+		char cmd[1024];
+		char *kb = keybindings[key];
 		if (kb)
 		{
 			if (kb[0] == '+')
-			{	// button commands add keynum and time as a parm
+			{
+				// Button commands add keynum and time as a parm
 				Com_sprintf (cmd, sizeof(cmd), "%s %i %i\n", kb, key, time);
 				Cbuf_AddText (cmd);
 			}
@@ -1087,34 +1088,28 @@ void Key_Event (int key, qboolean down, unsigned time)
 				Cbuf_AddText ("\n");
 			}
 		}
+
 		return;
 	}
-
-	//if (!down) //mxd. Already checked at line 1044
-		//return;		// other systems only care about key down events
 
 	if (shift_down)
 		key = keyshift[key];
 
 	if (cls.consoleActive) // Knightmare added
-		Key_Console (key);
+	{
+		Key_Console(key);
+	}
 	else if (!scr_draw_loading) // added check from Quake2Max
 	{
 		switch (cls.key_dest)
 		{
-		case key_message:
-			Key_Message (key);
-			break;
-		case key_menu:
-			UI_Keydown (key);
-			break;
+			case key_message: Key_Message(key); break;
+			case key_menu:	  UI_Keydown(key); break;
 
-		case key_game:
-		case key_console:
-			Key_Console (key);
-			break;
-		default:
-			Com_Error (ERR_FATAL, "Bad cls.key_dest");
+			case key_game:
+			case key_console: Key_Console (key); break;
+
+			default: Com_Error (ERR_FATAL, "Bad cls.key_dest");
 		}
 	} // end Knightmare
 }

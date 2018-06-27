@@ -1448,20 +1448,24 @@ char *COM_ParseExt (char **data_p, qboolean allowNewLines)
 	com_token[0] = 0;
 
 	// Make sure incoming data is valid
-	if (!data) {
+	if (!data)
+	{
 		*data_p = NULL;
 		return com_token;
 	}
 
-	while (1)
-	{	// Skip whitespace
+	while (true)
+	{	
+		// Skip whitespace
 		data = COM_SkipWhiteSpace (data, &hasNewLines);
-		if (!data) {
+		if (!data)
+		{
 			*data_p = NULL;
 			return com_token;
 		}
 
-		if (hasNewLines && !allowNewLines) {
+		if (hasNewLines && !allowNewLines)
+		{
 			*data_p = data;
 			return com_token;
 		}
@@ -1469,7 +1473,8 @@ char *COM_ParseExt (char **data_p, qboolean allowNewLines)
 		c = *data;
 	
 		// Skip // comments
-		if (c == '/' && data[1] == '/') {
+		if (c == '/' && data[1] == '/')
+		{
 			while (*data && *data != '\n')
 				data++;
 		}
@@ -1477,7 +1482,8 @@ char *COM_ParseExt (char **data_p, qboolean allowNewLines)
 		{
 			data += 2;
 
-			while (*data && (*data != '*' || data[1] != '/')) {
+			while (*data && (*data != '*' || data[1] != '/'))
+			{
 			//	if (*data == '\n')
 			//		com_parseLine++;
 				data++;
@@ -1494,7 +1500,7 @@ char *COM_ParseExt (char **data_p, qboolean allowNewLines)
 	if (c == '\"')
 	{
 		data++;
-		while (1)
+		while (true)
 		{
 			c = *data++;
 		//	if (c == '\n')
@@ -1546,9 +1552,7 @@ int	paged_total;
 
 void Com_PageInMemory (byte *buffer, int size)
 {
-	int		i;
-
-	for (i=size-1 ; i>0 ; i-=4096)
+	for (int i = size - 1; i > 0; i -= 4096)
 		paged_total += buffer[i];
 }
 
@@ -1615,24 +1619,11 @@ Safe strncpy that ensures a trailing zero
 */
 void Q_strncpyz (char *dst, const char *src, int dstSize)
 {
-	if (!dst) {
-	//	Com_Error (ERR_FATAL, "Q_strncpyz: NULL dst");
-	//	Com_Printf ("Q_strncpyz: NULL dst\n");
+	if (!src || !dst || dstSize < 1) 
 		return;
-	}
-	if (!src) {
-	//	Com_Error (ERR_FATAL, "Q_strncpyz: NULL src");
-	//	Com_Printf ("Q_strncpyz: NULL src\n");
-		return;
-	}
-	if (dstSize < 1) {
-	//	Com_Error (ERR_FATAL, "Q_strncpyz: dstSize < 1");
-	//	Com_Printf ("Q_strncpyz: dstSize < 1\n");
-		return;
-	}
-
-	strncpy(dst, src, dstSize-1);
-	dst[dstSize-1] = 0;
+	
+	strncpy(dst, src, dstSize - 1);
+	dst[dstSize - 1] = 0;
 }
 
 
@@ -1645,26 +1636,14 @@ Safe strncat that ensures a trailing zero
 */
 void Q_strncatz (char *dst, const char *src, int dstSize)
 {
-	if (!dst) {
-	//	Com_Error (ERR_FATAL, "Q_strncatz: NULL dst");
-	//	Com_Printf ("Q_strncatz: NULL dst\n");
+	if (!src || !dst || dstSize < 1) 
 		return;
-	}
-	if (!src) {
-	//	Com_Error (ERR_FATAL, "Q_strncatz: NULL src");
-	//	Com_Printf ("Q_strncatz: NULL src\n");
-		return;
-	}
-	if (dstSize < 1) {
-	//	Com_Error (ERR_FATAL, "Q_strncatz: dstSize < 1");
-	//	Com_Printf ("Q_strncatz: dstSize < 1\n");
-		return;
-	}
-
+	
 	while (--dstSize && *dst)
 		dst++;
 
-	if (dstSize > 0){
+	if (dstSize > 0)
+	{
 		while (--dstSize && *src)
 			*dst++ = *src++;
 
@@ -1682,47 +1661,42 @@ Safe snprintf that ensures a trailing zero
 */
 void Q_snprintfz (char *dst, int dstSize, const char *fmt, ...)
 {
+	if (!dst || dstSize < 1) 
+		return;
+
 	va_list	argPtr;
-
-	if (!dst) {
-	//	Com_Error(ERR_FATAL, "Q_snprintfz: NULL dst");
-	//	Com_Printf("Q_snprintfz: NULL dst\n");
-		return;
-	}
-	if (dstSize < 1) {
-	//	Com_Error(ERR_FATAL, "Q_snprintfz: dstSize < 1");
-	//	Com_Printf("Q_snprintfz: dstSize < 1\n");
-		return;
-	}
-
 	va_start(argPtr, fmt);
 	Q_vsnprintf(dst, dstSize, fmt, argPtr);
 	va_end(argPtr);
 
-	dst[dstSize-1] = 0;
+	dst[dstSize - 1] = 0;
 }
 
 
 char *Q_strlwr (char *string)
 {
-	char	*s = string;
+	char *s = string;
 
-	while (*s) {
+	while (*s)
+	{
 		*s = tolower(*s);
 		s++;
 	}
+
 	return string;
 }
 
 
 char *Q_strupr (char *string)
 {
-	char	*s = string;
+	char *s = string;
 
-	while (*s) {
+	while (*s)
+	{
 		*s = toupper(*s);
 		s++;
 	}
+
 	return string;
 }
 
@@ -1730,18 +1704,19 @@ char *Q_strupr (char *string)
 void Com_sprintf (char *dest, int size, char *fmt, ...)
 {
 	char		bigbuffer[0x10000];
-	int			len;
 	va_list		argptr;
 
 	va_start (argptr, fmt);
-	len = Q_vsnprintf (bigbuffer, sizeof(bigbuffer), fmt, argptr);
+	const int len = Q_vsnprintf (bigbuffer, sizeof(bigbuffer), fmt, argptr);
 	va_end (argptr);
+
 	if (len < 0)
 		Com_Printf ("Com_sprintf: overflow in temp buffer of size %i\n", sizeof(bigbuffer));
 	else if (len >= size)
 		Com_Printf ("Com_sprintf: overflow of %i in dest buffer of size %i\n", len, size);
-	strncpy (dest, bigbuffer, size-1);
-	dest[size-1] = 0;
+
+	strncpy (dest, bigbuffer, size - 1);
+	dest[size - 1] = 0;
 }
 
 
@@ -1754,21 +1729,21 @@ long Com_HashFileName (const char *fname, int hashSize, qboolean sized)
 {
 	int		i = 0;
 	long	hash = 0;
-	char	letter;
 
 	if (fname[0] == '/' || fname[0] == '\\') i++;	// skip leading slash
 	while (fname[i] != '\0')
 	{
-		letter = tolower(fname[i]);
+		char letter = tolower(fname[i]);
 	//	if (letter == '.') break;
 		if (letter == '\\') letter = '/';	// fix filepaths
-		hash += (long)(letter)*(i+119);
+		hash += (long)(letter) * (i + 119);
 		i++;
 	}
 	hash = (hash ^ (hash >> 10) ^ (hash >> 20));
-	if (sized) {
-		hash &= (hashSize-1);
-	}
+
+	if (sized) 
+		hash &= (hashSize - 1);
+
 	return hash;
 }
 
@@ -1791,17 +1766,15 @@ key and returns the associated value, or an empty string.
 char *Info_ValueForKey (char *s, char *key)
 {
 	char	pkey[512];
-	static	char value[2][512];	// use two buffers so compares
-								// work without stomping on each other
+	static	char value[2][512];	// use two buffers so compares work without stomping on each other
 	static	int	valueindex;
-	char	*o;
-	
+
 	valueindex ^= 1;
 	if (*s == '\\')
 		s++;
-	while (1)
+	while (true)
 	{
-		o = pkey;
+		char *o = pkey;
 		while (*s != '\\')
 		{
 			if (!*s)
@@ -1832,10 +1805,8 @@ char *Info_ValueForKey (char *s, char *key)
 
 void Info_RemoveKey (char *s, char *key)
 {
-	char	*start;
 	char	pkey[512];
 	char	value[512];
-	char	*o;
 
 	if (strstr (key, "\\"))
 	{
@@ -1843,12 +1814,12 @@ void Info_RemoveKey (char *s, char *key)
 		return;
 	}
 
-	while (1)
+	while (true)
 	{
-		start = s;
+		char *start = s;
 		if (*s == '\\')
 			s++;
-		o = pkey;
+		char *o = pkey;
 		while (*s != '\\')
 		{
 			if (!*s)
@@ -1876,7 +1847,6 @@ void Info_RemoveKey (char *s, char *key)
 		if (!*s)
 			return;
 	}
-
 }
 
 
@@ -1899,8 +1869,7 @@ qboolean Info_Validate (char *s)
 
 void Info_SetValueForKey (char *s, char *key, char *value)
 {
-	char	newi[MAX_INFO_STRING], *v;
-	int		c;
+	char	newi[MAX_INFO_STRING];
 
 	if (strstr (key, "\\") || strstr (value, "\\") )
 	{
@@ -1920,11 +1889,12 @@ void Info_SetValueForKey (char *s, char *key, char *value)
 		return;
 	}
 
-	if (strlen(key) > MAX_INFO_KEY-1 || (value && strlen(value) > MAX_INFO_KEY-1))
+	if (strlen(key) > MAX_INFO_KEY - 1 || (value && strlen(value) > MAX_INFO_KEY - 1))
 	{
 		Com_Printf ("Keys and values must be < 64 characters.\n");
 		return;
 	}
+
 	Info_RemoveKey (s, key);
 	if (!value || !strlen(value))
 		return;
@@ -1939,10 +1909,10 @@ void Info_SetValueForKey (char *s, char *key, char *value)
 
 	// only copy ascii values
 	s += strlen(s);
-	v = newi;
+	char *v = newi;
 	while (*v)
 	{
-		c = *v++;
+		int c = *v++;
 		c &= 127;		// strip high bits
 		if (c >= 32 && c < 127)
 			*s++ = c;

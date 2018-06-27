@@ -205,12 +205,10 @@ typedef struct
 	// and teleport direction changes
 	vec3_t		viewangles;
 
-	int			time;			// this is the time value that the client
-								// is rendering at.  always <= cls.realtime
+	int			time;			// This is the time value that the client is rendering at. Always <= cls.realtime
 	float		lerpfrac;		// between oldframe and frame
 
-	float		base_fov;		// the fov set by the game code, unaltered by
-								// widescreen scaling or other effects
+	float		base_fov;		// the fov set by the game code, unaltered by widescreen scaling or other effects
 
 	refdef_t	refdef;
 
@@ -823,14 +821,14 @@ void CL_RefreshCmd (void);
 void CL_RefreshMove (void);
 #endif
 
-void CL_SendMove (usercmd_t *cmd);
+//void CL_SendMove (usercmd_t *cmd);
 
 void CL_ClearState (void);
 
 void CL_ReadPackets (void);
 
-int  CL_ReadFromServer (void);
-void CL_WriteToServer (usercmd_t *cmd);
+//int  CL_ReadFromServer (void);
+//void CL_WriteToServer (usercmd_t *cmd);
 void CL_BaseMove (usercmd_t *cmd);
 
 void IN_CenterView (void);
@@ -953,8 +951,8 @@ void CL_SmokeAndFlash(vec3_t origin);
 //
 // cl_pred.c
 //
-void CL_InitPrediction (void);
-void CL_PredictMove (void);
+//void CL_InitPrediction (void);
+//void CL_PredictMove (void);
 void CL_CheckPredictionError (void);
 //Knightmare added
 trace_t CL_Trace (vec3_t start, vec3_t end, float size,  int contentmask);
@@ -1124,7 +1122,7 @@ void M_Menu_Main_f (void);
 // cl_inv.c
 //
 void CL_ParseInventory (void);
-void CL_KeyInventory (int key);
+//void CL_KeyInventory (int key);
 void CL_DrawInventory (void);
 
 //

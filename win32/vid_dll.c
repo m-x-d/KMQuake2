@@ -560,19 +560,17 @@ VID_UpdateWindowPosAndSize
 void VID_UpdateWindowPosAndSize ( int x, int y )
 {
 	RECT r;
-	int		style;
-	int		w, h;
 
 	r.left   = 0;
 	r.top    = 0;
 	r.right  = viddef.width;
 	r.bottom = viddef.height;
 
-	style = GetWindowLong( cl_hwnd, GWL_STYLE );
+	const int style = GetWindowLong( cl_hwnd, GWL_STYLE );
 	AdjustWindowRect( &r, style, FALSE );
 
-	w = r.right - r.left;
-	h = r.bottom - r.top;
+	const int w = r.right - r.left;
+	const int h = r.bottom - r.top;
 
 	MoveWindow( cl_hwnd, vid_xpos->value, vid_ypos->value, w, h, TRUE );
 }
@@ -596,9 +594,9 @@ void VID_FreeReflib (void)
 }
 
 
-extern	decalpolys_t	*active_decals;
+extern	decalpolys_t *active_decals;
 static qboolean reclip_decals = false;
-qboolean	vid_reloading; // Knightmare- flag to not unnecessarily drop console
+qboolean vid_reloading; // Knightmare- flag to not unnecessarily drop console
 
 /*
 ==============
@@ -615,7 +613,8 @@ void UpdateVideoRef (void)
 		S_StopAllSounds();
 
 		// unclip decals
-		if (active_decals) {
+		if (active_decals)
+		{
 			CL_UnclipDecals();
 			reclip_decals = true;
 		}
@@ -624,7 +623,8 @@ void UpdateVideoRef (void)
 	vid_reloading = false;
 
 	while (vid_ref->modified)
-	{	// refresh has changed
+	{
+		// refresh has changed
 		vid_ref->modified = false;
 		vid_fullscreen->modified = true;
 		cl.refresh_prepped = false;
@@ -664,7 +664,8 @@ void UpdateVideoRef (void)
 		cls.disable_screen = false;
 
 	// re-clip decals
-	if (cl.refresh_prepped && reclip_decals) {
+	if (cl.refresh_prepped && reclip_decals)
+	{
 		CL_ReclipDecals();
 		reclip_decals = false;
 	}

@@ -129,18 +129,12 @@ SV_CheckForSavegame
 */
 void SV_CheckForSavegame (void)
 {
-	char		name[MAX_OSPATH];
-	FILE		*f;
-	int			i;
-
-	if (sv_noreload->value)
+	if (sv_noreload->value || Cvar_VariableValue("deathmatch"))
 		return;
 
-	if (Cvar_VariableValue ("deathmatch"))
-		return;
-
+	char name[MAX_OSPATH];
 	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
-	f = fopen (name, "rb");
+	FILE *f = fopen (name, "rb");
 	if (!f)
 		return;		// no savegame
 
@@ -152,17 +146,14 @@ void SV_CheckForSavegame (void)
 	SV_ReadLevelFile ();
 
 	if (!sv.loadgame)
-	{	// coming back to a level after being in a different
-		// level, so run it for ten seconds
+	{
+		// coming back to a level after being in a different level, so run it for ten seconds
 
-		// rlava2 was sending too many lightstyles, and overflowing the
-		// reliable data. temporarily changing the server state to loading
-		// prevents these from being passed down.
-		server_state_t		previousState;		// PGM
-
-		previousState = sv.state;				// PGM
+		// rlava2 was sending too many lightstyles, and overflowing the reliable data.
+		// Temporarily changing the server state to loading prevents these from being passed down.
+		const server_state_t previousState = sv.state; // PGM
 		sv.state = ss_loading;					// PGM
-		for (i=0 ; i<100 ; i++)
+		for (int i = 0; i < 100; i++)
 			ge->RunFrame ();
 
 		sv.state = previousState;				// PGM
@@ -181,7 +172,6 @@ clients along with it.
 */
 void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
-	int			i;
 	unsigned	checksum;
 	fileHandle_t	f;
 
@@ -190,12 +180,11 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	Com_Printf ("------- Server Initialization -------\n");
 
-	Com_DPrintf ("SpawnServer: %s\n",server);
+	Com_DPrintf ("SpawnServer: %s\n", server);
 	if (sv.demofile)
 		FS_FCloseFile (sv.demofile);
 
-	svs.spawncount++;		// any partially connected client will be
-							// restarted
+	svs.spawncount++;		// any partially connected client will be restarted
 	sv.state = ss_dead;
 	Com_SetServerState (sv.state);
 
@@ -226,7 +215,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Q_strncpyz (sv.name, server, sizeof(sv.name));
 
 	// leave slots at start for clients only
-	for (i=0 ; i<maxclients->value ; i++)
+	for (int i = 0; i < maxclients->value; i++)
 	{
 		// needs to reconnect
 		if (svs.clients[i].state > cs_connected)
@@ -258,6 +247,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	
 		sv.models[1] = CM_LoadMap (sv.configstrings[CS_MODELS+1], false, &checksum);
 	}
+
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]),
 		"%i", checksum);
 
@@ -266,11 +256,10 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	//
 	SV_ClearWorld ();
 	
-	for (i=1 ; i< CM_NumInlineModels() ; i++)
+	for (int i = 1; i < CM_NumInlineModels(); i++)
 	{
-		Com_sprintf (sv.configstrings[CS_MODELS+1+i], sizeof(sv.configstrings[CS_MODELS+1+i]),
-			"*%i", i);
-		sv.models[i+1] = CM_InlineModel (sv.configstrings[CS_MODELS+1+i]);
+		Com_sprintf (sv.configstrings[CS_MODELS + 1 + i], sizeof(sv.configstrings[CS_MODELS + 1 + i]), "*%i", i);
+		sv.models[i + 1] = CM_InlineModel (sv.configstrings[CS_MODELS + 1 + i]);
 	}
 
 	//
@@ -316,8 +305,6 @@ void PF_Configstring (int index, char *val);
 
 void SV_InitGame (void)
 {
-	int		i;
-	edict_t	*ent;
 	char	idmaster[32];
 
 	if (svs.initialized)
@@ -384,9 +371,9 @@ void SV_InitGame (void)
 
 	// init game
 	SV_InitGameProgs ();
-	for (i = 0; i < maxclients->value; i++)
+	for (int i = 0; i < maxclients->value; i++)
 	{
-		ent = EDICT_NUM(i+1);
+		edict_t *ent = EDICT_NUM(i + 1);
 		ent->s.number = i+1;
 		svs.clients[i].edict = ent;
 		memset (&svs.clients[i].lastcmd, 0, sizeof(svs.clients[i].lastcmd));
@@ -413,8 +400,6 @@ another level:
 void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 {
 	char	level[MAX_QPATH];
-	char	*ch;
-	int		l;
 	char	spawnpoint[MAX_QPATH];
 
 	sv.loadgame = loadgame;
@@ -426,16 +411,16 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 	// r1ch fix: buffer overflow
 //	strncpy (level, levelstring);
 	if (levelstring[0] == '*')
-		Q_strncpyz (level, levelstring+1, sizeof(level));
+		Q_strncpyz (level, levelstring + 1, sizeof(level));
 	else
 		Q_strncpyz (level, levelstring, sizeof(level));
 
 	// if there is a + in the map, set nextserver to the remainder
-	ch = strstr(level, "+");
+	char *ch = strstr(level, "+");
 	if (ch)
 	{
 		*ch = 0;
-			Cvar_Set ("nextserver", va("gamemap \"%s\"", ch+1));
+		Cvar_Set ("nextserver", va("gamemap \"%s\"", ch + 1));
 	}
 	else
 		Cvar_Set ("nextserver", "");
@@ -459,9 +444,9 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 //	if (level[0] == '*')
 //		strncpy (level, level+1);
 
-	l = strlen(level);
+	const int l = strlen(level);
 #ifdef	ROQ_SUPPORT
-	if (l > 4 && (!strcmp (level+l-4, ".cin") || !strcmp (level+l-4, ".roq")) )
+	if (l > 4 && (!strcmp (level + l - 4, ".cin") || !strcmp (level + l - 4, ".roq")) )
 #else
 	if (l > 4 && !strcmp (level+l-4, ".cin") )
 #endif // ROQ_SUPPORT
@@ -471,14 +456,14 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_cinematic, attractloop, loadgame);
 	}
-	else if (l > 4 && !strcmp (level+l-4, ".dm2") )
+	else if (l > 4 && !strcmp (level + l - 4, ".dm2") )
 	{
 		if (!dedicated->value)
 			SCR_BeginLoadingPlaque ();			// for local system
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_demo, attractloop, loadgame);
 	}
-	else if (l > 4 && !strcmp (level+l-4, ".pcx"))
+	else if (l > 4 && !strcmp (level + l - 4, ".pcx"))
 	{
 		if (!dedicated->value)
 			SCR_BeginLoadingPlaque ();			// for local system

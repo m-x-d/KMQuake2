@@ -1177,6 +1177,7 @@ void UI_Think_MouseCursor (void)
 		UI_CheckMainMenuMouse();
 		return;
 	}
+
 	if (m_drawfunc == M_Credits_MenuDraw) // have to hack for credits :p
 	{
 		if (cursor.buttonclicks[MOUSEBUTTON2])
@@ -1186,9 +1187,11 @@ void UI_Think_MouseCursor (void)
 			cursor.buttonused[MOUSEBUTTON1] = true;
 			cursor.buttonclicks[MOUSEBUTTON1] = 0;
 			S_StartLocalSound( menu_out_sound );
+
 			if (creditsBuffer)
 				FS_FreeFile (creditsBuffer);
 			UI_PopMenu();
+
 			return;
 		}
 	}
@@ -1237,6 +1240,7 @@ void UI_Think_MouseCursor (void)
 				}
 			}
 		}
+
 		// MOUSE2
 		if (cursor.buttondown[MOUSEBUTTON2] && cursor.buttonclicks[MOUSEBUTTON2])
 		{
@@ -1262,8 +1266,7 @@ void UI_Think_MouseCursor (void)
 			}
 		}
 	}
-	else if (!cursor.buttonused[MOUSEBUTTON2] && (cursor.buttonclicks[MOUSEBUTTON2] == 2)
-		&& cursor.buttondown[MOUSEBUTTON2])
+	else if (!cursor.buttonused[MOUSEBUTTON2] && (cursor.buttonclicks[MOUSEBUTTON2] == 2) && cursor.buttondown[MOUSEBUTTON2])
 	{
 		if (m_drawfunc==PlayerConfig_MenuDraw)
 			PConfigAccept();
@@ -1280,6 +1283,7 @@ void UI_Think_MouseCursor (void)
 	// clicking on the player model menu...
 	if (m_drawfunc == PlayerConfig_MenuDraw)
 		PlayerConfig_MouseClick();
+
 	// clicking on the screen menu
 	if (m_drawfunc == Options_Screen_MenuDraw)
 		MenuCrosshair_MouseClick();
