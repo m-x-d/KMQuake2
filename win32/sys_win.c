@@ -198,7 +198,7 @@ Sys_Sleep
 */
 void Sys_Sleep (int msec)
 {
-	Sleep (msec);
+	Sleep(msec);
 }
 
 /*
@@ -220,15 +220,16 @@ Send Key_Event calls
 */
 void Sys_SendKeyEvents (void)
 {
-    MSG        msg;
+	MSG msg;
 
-	while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
+	while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
 	{
-		if (!GetMessage (&msg, NULL, 0, 0))
-			Sys_Quit ();
+		if (!GetMessage(&msg, NULL, 0, 0))
+			Sys_Quit();
+
 		sys_msg_time = msg.time;
-      	TranslateMessage (&msg);
-      	DispatchMessage (&msg);
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
 
 	// grab frame time 
@@ -242,27 +243,27 @@ Sys_GetClipboardData
 
 ================
 */
-char *Sys_GetClipboardData( void )
+char *Sys_GetClipboardData(void)
 {
 	char *data = NULL;
-	char *cliptext;
 
-	if ( OpenClipboard( NULL ) != 0 )
+	if (OpenClipboard(NULL) != 0)
 	{
-		HANDLE hClipboardData;
-
-		if ( ( hClipboardData = GetClipboardData( CF_TEXT ) ) != 0 )
+		HANDLE hClipboardData = GetClipboardData(CF_TEXT);
+		if (hClipboardData)
 		{
-			if ( ( cliptext = GlobalLock( hClipboardData ) ) != 0 ) 
+			char *cliptext = GlobalLock(hClipboardData);
+			if (cliptext)
 			{
-				data = malloc( GlobalSize( hClipboardData ) + 1 );
-			//	strncpy( data, cliptext );
-				Q_strncpyz( data, cliptext, GlobalSize( hClipboardData ) + 1 );
-				GlobalUnlock( hClipboardData );
+				data = malloc(GlobalSize(hClipboardData) + 1);
+				Q_strncpyz(data, cliptext, GlobalSize(hClipboardData) + 1);
+				GlobalUnlock(hClipboardData);
 			}
 		}
+
 		CloseClipboard();
 	}
+
 	return data;
 }
 
@@ -304,22 +305,22 @@ void Sys_Error (char *error, ...)
 
 void Sys_Quit (void)
 {
-	timeEndPeriod( 1 );
+	timeEndPeriod(1);
 
 	CL_Shutdown();
-	Qcommon_Shutdown ();
-	CloseHandle (qwclsemaphore);
+	Qcommon_Shutdown();
+	CloseHandle(qwclsemaphore);
 	if (dedicated && dedicated->value)
-		FreeConsole ();
+		FreeConsole();
 
 // shut down QHOST hooks if necessary
-	DeinitConProc ();
+	DeinitConProc();
 
 #ifdef NEW_DED_CONSOLE
 	Sys_ShutdownConsole();
 #endif
 
-	exit (0);
+	exit(0);
 }
 
 
@@ -338,10 +339,10 @@ void WinError (void)
 	);
 
 	// Display the string.
-	MessageBox( NULL, lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
+	MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
 
 	// Free the buffer.
-	LocalFree( lpMsgBuf );
+	LocalFree(lpMsgBuf);
 }
 
 //================================================================
@@ -357,10 +358,8 @@ char *Sys_ScanForCD (void)
 	static char	cddir[MAX_OSPATH];
 	static qboolean	done;
 	char		drive[4];
-	FILE		*f;
 	char		test[MAX_QPATH];
 	qboolean	missionpack = false; // Knightmare added
-	int			i; // Knightmare added
 
 	if (done)		// don't re-check
 		return cddir;
@@ -378,33 +377,38 @@ char *Sys_ScanForCD (void)
 	done = true;
 
 	// Knightmare- check if mission pack gamedir is set
-	for (i=0; i<argc; i++)
-		if (!strcmp(argv[i], "game") && (i+1<argc))
+	for (int i = 0; i < argc; i++)
+	{
+		if (!strcmp(argv[i], "game") && (i + 1 < argc))
 		{
-			if (!strcmp(argv[i+1], "rogue") || !strcmp(argv[i+1], "xatrix"))
+			if (!strcmp(argv[i + 1], "rogue") || !strcmp(argv[i + 1], "xatrix"))
 				missionpack = true;
+
 			break; // game parameter only appears once in command line
 		}
+	}
 
 	// scan the drives
-	for (drive[0] = 'c' ; drive[0] <= 'z' ; drive[0]++)
+	for (drive[0] = 'c'; drive[0] <= 'z'; drive[0]++)
 	{
 		// where activision put the stuff...
 		if (missionpack) // Knightmare- mission packs have cinematics in different path
 		{
-			sprintf (cddir, "%sdata\\max", drive);
-			sprintf (test, "%sdata\\patch\\quake2.exe", drive);
+			sprintf(cddir, "%sdata\\max", drive);
+			sprintf(test, "%sdata\\patch\\quake2.exe", drive);
 		}
 		else
 		{
-			sprintf (cddir, "%sinstall\\data", drive);
-			sprintf (test, "%sinstall\\data\\quake2.exe", drive);
+			sprintf(cddir, "%sinstall\\data", drive);
+			sprintf(test, "%sinstall\\data\\quake2.exe", drive);
 		}
-		f = fopen(test, "r");
+
+		FILE *f = fopen(test, "r");
 		if (f)
 		{
 			fclose (f);
-			if (GetDriveType (drive) == DRIVE_CDROM) {
+			if (GetDriveType(drive) == DRIVE_CDROM)
+			{
 				Com_Printf(" found %s\n", cddir);
 				return cddir;
 			}
@@ -939,7 +943,6 @@ NoExtFunction:
 	return true;
 
 #else
-
 	Q_strncpyz(cpuString, "Alpha AXP", maxSize);
 	return true;
 #endif
@@ -977,7 +980,7 @@ void Sys_Init (void)
         "qwcl"); /* Semaphore name      */
 #endif
 
-	timeBeginPeriod( 1 );
+	timeBeginPeriod(1);
 
 	osInfo.dwOSVersionInfoSize = sizeof(osInfo);
 
@@ -985,14 +988,16 @@ void Sys_Init (void)
 		Sys_Error ("Couldn't get OS info");
 
 	if (osInfo.dwMajorVersion < 4)
-		Sys_Error ("KMQuake2 requires windows version 4 or greater");
+		Sys_Error ("KMQuake2 requires Windows 95 or newer");
+
 	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32s)
 		Sys_Error ("KMQuake2 doesn't run on Win32s");
 	else if ( osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS )
 		s_win95 = true;
 
 // from Q2E - OS & CPU detection
-	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
+	{
 		if (osInfo.dwMajorVersion == 4)
 			strncpy(string, "Windows NT", sizeof(string));
 		else if (osInfo.dwMajorVersion == 5 && osInfo.dwMinorVersion == 0)
@@ -1010,14 +1015,17 @@ void Sys_Init (void)
 		else
 			strncpy(string, va("Windows %i.%i", osInfo.dwMajorVersion, osInfo.dwMinorVersion), sizeof(string));
 	}
-	else if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-		if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 0) {
+	else if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+	{
+		if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 0)
+		{
 			if (osInfo.szCSDVersion[1] == 'C' || osInfo.szCSDVersion[1] == 'B')
 				strncpy(string, "Windows 95 OSR2", sizeof(string));
 			else
 				strncpy(string, "Windows 95", sizeof(string));
 		}
-		else if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 10) {
+		else if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 10)
+		{
 			if (osInfo.szCSDVersion[1] == 'A')
 				strncpy(string, "Windows 98 SE", sizeof(string));
 			else
@@ -1029,24 +1037,29 @@ void Sys_Init (void)
 			strncpy(string, va("Windows %i.%i", osInfo.dwMajorVersion, osInfo.dwMinorVersion), sizeof(string));
 	}
 	else
+	{
 		strncpy(string, va("Windows %i.%i", osInfo.dwMajorVersion, osInfo.dwMinorVersion), sizeof(string));
+	}
+
 	Com_Printf("OS: %s\n", string);
 	Cvar_Get("sys_osVersion", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 
 	// Detect CPU
 	Com_Printf("Detecting CPU... ");
-	if (Sys_DetectCPU(string, sizeof(string))) {
+	if (Sys_DetectCPU(string, sizeof(string)))
+	{
 		Com_Printf("Found %s\n", string);
 		Cvar_Get("sys_cpuString", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 	}
-	else {
+	else
+	{
 		Com_Printf("Unknown CPU found\n");
 		Cvar_Get("sys_cpuString", "Unknown", CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 	}
 
 	// Get physical memory
-	GlobalMemoryStatus(&memStatus);
-	strncpy(string, va("%u",memStatus.dwTotalPhys >> 20), sizeof(string));
+	GlobalMemoryStatus(&memStatus); //TODO: use GlobalMemoryStatusEx 
+	strncpy(string, va("%u", memStatus.dwTotalPhys >> 20), sizeof(string));
 	Com_Printf("Memory: %s MB\n", string);
 	Cvar_Get("sys_ramMegs", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 // end Q2E detection
@@ -1072,8 +1085,8 @@ Sys_AppActivate
 */
 void Sys_AppActivate (void)
 {
-	ShowWindow ( cl_hwnd, SW_RESTORE);
-	SetForegroundWindow ( cl_hwnd );
+	ShowWindow(cl_hwnd, SW_RESTORE);
+	SetForegroundWindow(cl_hwnd );
 }
 
 /*
@@ -1093,8 +1106,8 @@ Sys_UnloadGame
 */
 void Sys_UnloadGame (void)
 {
-	if (!FreeLibrary (game_library))
-		Com_Error (ERR_FATAL, "FreeLibrary failed for game library");
+	if (!FreeLibrary(game_library))
+		Com_Error(ERR_FATAL, "FreeLibrary failed for game library");
 	game_library = NULL;
 }
 
@@ -1111,6 +1124,7 @@ void *Sys_GetGameAPI (void *parms)
 	char	name[MAX_OSPATH];
 	char	*path;
 	char	cwd[MAX_OSPATH];
+
 #if defined _M_IX86
 	//Knightmare- changed DLL name for better cohabitation
 	const char *gamename = "kmq2gamex86.dll"; 
@@ -1137,7 +1151,7 @@ void *Sys_GetGameAPI (void *parms)
 
 	// check the current debug directory first for development purposes
 	_getcwd (cwd, sizeof(cwd));
-	Com_sprintf (name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
+	Com_sprintf(name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
 	game_library = LoadLibrary ( name );
 	if (game_library)
 	{
@@ -1147,11 +1161,11 @@ void *Sys_GetGameAPI (void *parms)
 	{
 #ifdef DEBUG
 		// check the current directory for other development purposes
-		Com_sprintf (name, sizeof(name), "%s/%s", cwd, gamename);
-		game_library = LoadLibrary ( name );
+		Com_sprintf(name, sizeof(name), "%s/%s", cwd, gamename);
+		game_library = LoadLibrary( name );
 		if (game_library)
 		{
-			Com_DPrintf ("LoadLibrary (%s)\n", name);
+			Com_DPrintf("LoadLibrary (%s)\n", name);
 		}
 		else
 #endif
@@ -1160,28 +1174,29 @@ void *Sys_GetGameAPI (void *parms)
 			path = NULL;
 			while (true)
 			{
-				path = FS_NextPath (path);
+				path = FS_NextPath(path);
 				if (!path)
-					return NULL;		// couldn't find one anywhere
-				Com_sprintf (name, sizeof(name), "%s/%s", path, gamename);
-				game_library = LoadLibrary (name);
+					return NULL; // couldn't find one anywhere
+
+				Com_sprintf(name, sizeof(name), "%s/%s", path, gamename);
+				game_library = LoadLibrary(name);
 				if (game_library)
 				{
-					Com_DPrintf ("LoadLibrary (%s)\n",name);
+					Com_DPrintf("LoadLibrary (%s)\n",name);
 					break;
 				}
 			}
 		}
 	}
 
-	GetGameAPI = (void *)GetProcAddress (game_library, "GetGameAPI");
+	GetGameAPI = (void *)GetProcAddress(game_library, "GetGameAPI");
 	if (!GetGameAPI)
 	{
 		Sys_UnloadGame ();		
 		return NULL;
 	}
 
-	return GetGameAPI (parms);
+	return GetGameAPI(parms);
 }
 
 //=======================================================================
@@ -1198,9 +1213,9 @@ void ParseCommandLine (LPSTR lpCmdLine)
 	argc = 1;
 	argv[0] = "exe";
 
-	while (*lpCmdLine && (argc < MAX_NUM_ARGVS))
+	while (*lpCmdLine && argc < MAX_NUM_ARGVS)
 	{
-		while (*lpCmdLine && ((*lpCmdLine <= 32) || (*lpCmdLine > 126)))
+		while (*lpCmdLine && (*lpCmdLine <= 32 || *lpCmdLine > 126))
 			lpCmdLine++;
 
 		if (*lpCmdLine)
@@ -1208,7 +1223,7 @@ void ParseCommandLine (LPSTR lpCmdLine)
 			argv[argc] = lpCmdLine;
 			argc++;
 
-			while (*lpCmdLine && ((*lpCmdLine > 32) && (*lpCmdLine <= 126)))
+			while (*lpCmdLine && (*lpCmdLine > 32 && *lpCmdLine <= 126))
 				lpCmdLine++;
 
 			if (*lpCmdLine)
@@ -1231,18 +1246,18 @@ HWND		hwnd_dialog; // Knightmare added
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG				msg;
+	MSG				msg;
 	int				time, oldtime, newtime;
 	char			*cddir;
 	qboolean		cdscan = false; // Knightmare added
 
-    /* previous instances do not exist in Win32 */
-    if (hPrevInstance)
-        return 0;
+	/* previous instances do not exist in Win32 */
+	if (hPrevInstance)
+		return 0;
 
 	global_hInstance = hInstance;
 
-	ParseCommandLine (lpCmdLine);
+	ParseCommandLine(lpCmdLine);
 
 #ifndef NEW_DED_CONSOLE
 	// Knightmare- startup logo, code from TomazQuake
@@ -1271,28 +1286,32 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 #ifdef NEW_DED_CONSOLE // init debug console
 	Sys_InitDedConsole ();
-	Com_Printf("KMQ2 %4.2f %s %s %s\n", VERSION, CPUSTRING, BUILDSTRING, __DATE__);
+	Com_Printf("KMQuake 2 SBE %4.2f %s %s %s\n", VERSION, CPUSTRING, BUILDSTRING, __DATE__); //mxd. Version
 #endif
 
 	// Knightmare- scan for cd command line option
-	for (int i=0; i<argc; i++)
-		if (!strcmp(argv[i], "scanforcd")) {
+	for (int i = 0; i < argc; i++)
+	{
+		if (!strcmp(argv[i], "scanforcd"))
+		{
 			cdscan = true;
 			break;
 		}
+	}
 
 	// if we find the CD, add a +set cddir xxx command line
 	if (cdscan)
 	{
-		cddir = Sys_ScanForCD ();
+		cddir = Sys_ScanForCD();
 		if (cddir && argc < MAX_NUM_ARGVS - 3)
 		{
-			int		i;
+			int i;
 
 			// don't override a cddir on the command line
-			for (i=0 ; i<argc ; i++)
+			for (i = 0; i < argc ; i++)
 				if (!strcmp(argv[i], "cddir"))
 					break;
+
 			if (i == argc)
 			{
 				argv[argc++] = "+set";
@@ -1302,25 +1321,24 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
 	}
 
-	Qcommon_Init (argc, argv);
-	oldtime = Sys_Milliseconds ();
+	Qcommon_Init(argc, argv);
+	oldtime = Sys_Milliseconds();
 
-    /* main window message loop */
+	/* main window message loop */
 	while (true)
 	{
 		// if at a full screen console, don't update unless needed
 		if (Minimized || (dedicated && dedicated->value) )
-		{
-			Sleep (1);
-		}
+			Sleep(1);
 
-		while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
+		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
 		{
 			if (!GetMessage (&msg, NULL, 0, 0))
-				Com_Quit ();
+				Com_Quit();
+
 			sys_msg_time = msg.time;
-			TranslateMessage (&msg);
-   			DispatchMessage (&msg);
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 		}
 
 		// DarkOne's CPU usage fix
@@ -1331,20 +1349,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			if (time > 0) break;
 			Sleep(0); // may also use Speep(1); to free more CPU, but it can lower your fps
 		}
-		/*do
-		{
-			newtime = Sys_Milliseconds ();
-			time = newtime - oldtime;
-		} while (time < 1);*/
-		//	Con_Printf ("time:%5.2f - %5.2f = %5.2f\n", newtime, oldtime, time);
 
-		//	_controlfp( ~( _EM_ZERODIVIDE /*| _EM_INVALID*/ ), _MCW_EM );
 		_controlfp( _PC_24, _MCW_PC );
-		Qcommon_Frame (time);
+		Qcommon_Frame(time);
 
 		oldtime = newtime;
 	}
-
-	// never gets here
-    //return TRUE;
 }

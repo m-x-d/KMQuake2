@@ -24,14 +24,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int	nostatus = 0;
 
-
+// Rotates input angles [in] by delta angles around the local coordinate system, returns new angles in [out].
 void RotateAngles(vec3_t in, vec3_t delta, vec3_t out)
 {
-	// Rotates input angles (in) by delta angles around
-	// the local coordinate system, returns new angles
-	// in out.
-	vec3_t	X={1,0,0};
-	vec3_t	Y={0,1,0};
+	vec3_t	X = { 1, 0, 0 };
+	vec3_t	Y = { 0, 1, 0 };
 	float	angle, c, s;
 	float	xtemp, ytemp, ztemp;
 
@@ -39,131 +36,150 @@ void RotateAngles(vec3_t in, vec3_t delta, vec3_t out)
 	{
 		// Rotate about the X axis by delta roll
 		angle = DEG2RAD(delta[ROLL]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		ytemp = c*X[1] - s*X[2];
 		ztemp = c*X[2] + s*X[1];
-		X[1] = ytemp; X[2] = ztemp;
+		X[1] = ytemp; 
+		X[2] = ztemp;
 		ytemp = c*Y[1] - s*Y[2];
 		ztemp = c*Y[2] + s*Y[1];
-		Y[1] = ytemp; Y[2] = ztemp;
+		Y[1] = ytemp; 
+		Y[2] = ztemp;
 	}
+
 	if(delta[PITCH] != 0)
 	{
 		// Rotate about the Y axis by delta yaw
 		angle = -DEG2RAD(delta[PITCH]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		ztemp = c*X[2] - s*X[0];
 		xtemp = c*X[0] + s*X[2];
-		X[0] = xtemp; X[2] = ztemp;
+		X[0] = xtemp; 
+		X[2] = ztemp;
 		ztemp = c*Y[2] - s*Y[0];
 		xtemp = c*Y[0] + s*Y[2];
-		Y[0] = xtemp; Y[2] = ztemp;
+		Y[0] = xtemp; 
+		Y[2] = ztemp;
 	}
+
 	if(delta[YAW] != 0)
 	{
 		// Rotate about the Z axis by delta yaw
 		angle = DEG2RAD(delta[YAW]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		xtemp = c*X[0] - s*X[1];
 		ytemp = c*X[1] + s*X[0];
-		X[0] = xtemp; X[1] = ytemp;
+		X[0] = xtemp;
+		X[1] = ytemp;
 		xtemp = c*Y[0] - s*Y[1];
 		ytemp = c*Y[1] + s*Y[0];
-		Y[0] = xtemp; Y[1] = ytemp;
+		Y[0] = xtemp;
+		Y[1] = ytemp;
 	}
+
 	if(in[ROLL] != 0)
 	{
 		// Rotate about X axis by input roll
 		angle = DEG2RAD(in[ROLL]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		ytemp = c*X[1] - s*X[2];
 		ztemp = c*X[2] + s*X[1];
-		X[1] = ytemp; X[2] = ztemp;
+		X[1] = ytemp;
+		X[2] = ztemp;
 		ytemp = c*Y[1] - s*Y[2];
 		ztemp = c*Y[2] + s*Y[1];
-		Y[1] = ytemp; Y[2] = ztemp;
+		Y[1] = ytemp;
+		Y[2] = ztemp;
 	}
+
 	if(in[PITCH] != 0)
 	{
 		// Rotate about Y axis by input pitch
 		angle = -DEG2RAD(in[PITCH]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		ztemp = c*X[2] - s*X[0];
 		xtemp = c*X[0] + s*X[2];
-		X[0] = xtemp; X[2] = ztemp;
+		X[0] = xtemp;
+		X[2] = ztemp;
 		ztemp = c*Y[2] - s*Y[0];
 		xtemp = c*Y[0] + s*Y[2];
-		Y[0] = xtemp; Y[2] = ztemp;
+		Y[0] = xtemp;
+		Y[2] = ztemp;
 	}
+
 	if(in[YAW] != 0)
 	{
 		// Rotate about Z axis by input yaw
 		angle = DEG2RAD(in[YAW]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		xtemp = c*X[0] - s*X[1];
 		ytemp = c*X[1] + s*X[0];
-		X[0] = xtemp; X[1] = ytemp;
+		X[0] = xtemp;
+		X[1] = ytemp;
 		xtemp = c*Y[0] - s*Y[1];
 		ytemp = c*Y[1] + s*Y[0];
-		Y[0] = xtemp; Y[1] = ytemp;
+		Y[0] = xtemp;
+		Y[1] = ytemp;
 	}
 
-	out[YAW]   = (180./M_PI) * atan2(X[1],X[0]);
+	out[YAW] = (180.0 / M_PI) * atan2(X[1], X[0]);
 	if(out[YAW] != 0)
 	{
 		angle = -DEG2RAD(out[YAW]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		xtemp = c*X[0] - s*X[1];
 		ytemp = c*X[1] + s*X[0];
-		X[0] = xtemp; X[1] = ytemp;
+		X[0] = xtemp;
+		X[1] = ytemp;
 		xtemp = c*Y[0] - s*Y[1];
 		ytemp = c*Y[1] + s*Y[0];
-		Y[0] = xtemp; Y[1] = ytemp;
+		Y[0] = xtemp;
+		Y[1] = ytemp;
 	}
 	
-	out[PITCH] = (180./M_PI) * atan2(X[2],X[0]);
+	out[PITCH] = (180.0 / M_PI) * atan2(X[2], X[0]);
 	if(out[PITCH] != 0)
 	{
 		angle = DEG2RAD(out[PITCH]);
-		c = cos(angle);
-		s = sin(angle);
+		c = cosf(angle);
+		s = sinf(angle);
 		ztemp = c*Y[2] - s*Y[0];
 		xtemp = c*Y[0] + s*Y[2];
-		Y[0] = xtemp; Y[2] = ztemp;
+		Y[0] = xtemp;
+		Y[2] = ztemp;
 	}
-	out[ROLL]  = (180./M_PI) * atan2(Y[2],Y[1]);
 
+	out[ROLL]  = (180.0 / M_PI) * atan2(Y[2], Y[1]);
 }
 
 void laser_sight_think(edict_t *laser)
 {
-	edict_t	*player;
-	vec3_t	end, forward, right, offset;
-	trace_t	tr;
-
-
 	if(!laser->activator)
 		return;
-	player = laser->activator;
 
+	edict_t *player = laser->activator;
+
+	vec3_t end, forward, right, offset;
 	AngleVectors (player->client->v_angle, forward, right, NULL);
-	VectorSet(offset, 16, 8, player->viewheight-8);
+	VectorSet(offset, 16, 8, player->viewheight - 8);
 
 	if (player->client->pers.hand == LEFT_HANDED)
 		offset[1] *= -1;
 	else if (player->client->pers.hand == CENTER_HANDED)
 		offset[1] = 0;
-	G_ProjectSource (player->s.origin, offset, forward, right, laser->s.origin);
-	VectorMA (laser->s.origin, 2048, forward, end);
-	tr = gi.trace (laser->s.origin, laser->mins, laser->maxs, end, player, MASK_SHOT);
-	VectorCopy (tr.endpos, laser->s.origin);
+
+	G_ProjectSource(player->s.origin, offset, forward, right, laser->s.origin);
+	VectorMA(laser->s.origin, 2048, forward, end);
+	const trace_t tr = gi.trace (laser->s.origin, laser->mins, laser->maxs, end, player, MASK_SHOT);
+	VectorCopy(tr.endpos, laser->s.origin);
+
 	gi.linkentity(laser);
 	laser->nextthink = level.time + FRAMETIME;
 }
@@ -191,16 +207,18 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"   solid       = 0x%08x\n"
 		"   sound       = %d\n"
 		"   event       = %d\n",
-		e->s.number,vtos(e->s.origin),vtos(e->s.angles),
-		vtos(e->s.old_origin),e->s.modelindex,e->s.modelindex2,
-		e->s.modelindex3,e->s.modelindex4,
+		e->s.number, vtos(e->s.origin), vtos(e->s.angles),
+		vtos(e->s.old_origin), e->s.modelindex, e->s.modelindex2,
+		e->s.modelindex3, e->s.modelindex4,
 #ifdef KMQUAKE2_ENGINE_MOD
-		e->s.modelindex5,e->s.modelindex6,
+		e->s.modelindex5, e->s.modelindex6,
 #endif
 		e->s.frame,
-		e->s.skinnum,e->s.effects,e->s.solid,e->s.sound,
+		e->s.skinnum, e->s.effects, e->s.solid, e->s.sound,
 		e->s.event);
-	fprintf(f,"inuse       = %d\n"
+
+	fprintf(f,
+		"inuse       = %d\n"
 		"linkcount   = %d\n"
 		"svflags     = 0x%08x\n"
 		"mins        = %s\n"
@@ -210,10 +228,12 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"size        = %s\n"
 		"solid       = 0x%08x\n"
 		"clipmask    = 0x%08x\n",
-		e->inuse,e->linkcount,e->svflags,vtos(e->mins),
-		vtos(e->maxs),vtos(e->absmin),vtos(e->absmax),
-		vtos(e->size),e->solid,e->clipmask);
-	fprintf(f,"movetype    = 0x%08x\n"
+		e->inuse, e->linkcount, e->svflags,
+		vtos(e->mins), vtos(e->maxs), vtos(e->absmin), vtos(e->absmax),
+		vtos(e->size), e->solid, e->clipmask);
+
+	fprintf(f,
+		"movetype    = 0x%08x\n"
 		"flags       = 0x%08x\n"
 		"freetime    = %g\n"
 		"message     = %s\n"
@@ -230,11 +250,13 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"deathtarget = %s\n"
 		"combattarget= %s\n"
 		"dmgteam     = %s\n",
-		e->movetype,e->flags,e->freetime,e->message,e->key_message,
-		e->classname,e->spawnflags,e->timestamp,e->angle,e->target,
-		e->targetname,e->killtarget,e->team,e->pathtarget,e->deathtarget,
-		e->combattarget,e->dmgteam);
-	fprintf(f,"speed       = %g\n"
+		e->movetype, e->flags, e->freetime, e->message, e->key_message,
+		e->classname, e->spawnflags, e->timestamp, e->angle, e->target,
+		e->targetname, e->killtarget, e->team, e->pathtarget, e->deathtarget,
+		e->combattarget, e->dmgteam);
+
+	fprintf(f,
+		"speed       = %g\n"
 		"accel       = %g\n"
 		"decel       = %g\n"
 		"movedir     = %s\n"
@@ -252,21 +274,25 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"ideal_roll  = %g\n"
 		"roll        = %g\n"
 		"groundentity= %s\n",
-		e->speed,e->accel,e->decel,vtos(e->movedir),vtos(e->pos1),
-		vtos(e->pos2),vtos(e->velocity),vtos(e->avelocity),
-		e->mass,e->air_finished,e->gravity,e->yaw_speed,e->ideal_yaw,
-		e->pitch_speed,e->ideal_pitch,e->ideal_roll,e->roll,
+		e->speed, e->accel, e->decel, vtos(e->movedir), vtos(e->pos1),
+		vtos(e->pos2), vtos(e->velocity), vtos(e->avelocity),
+		e->mass, e->air_finished, e->gravity, e->yaw_speed, e->ideal_yaw,
+		e->pitch_speed, e->ideal_pitch, e->ideal_roll, e->roll,
 		(e->groundentity ? e->groundentity->classname : "None") );
-	fprintf(f,"touch_debounce_time  = %g\n"
+
+	fprintf(f,
+		"touch_debounce_time  = %g\n"
 		"pain_debounce_time   = %g\n"
 		"damage_debounce_time = %g\n"
 		"gravity_debounce_time= %g\n"
 		"fly_debounce_time    = %g\n"
 		"last_move_time       = %g\n",
-		e->touch_debounce_time,e->pain_debounce_time,
-		e->damage_debounce_time,e->gravity_debounce_time,
-		e->fly_sound_debounce_time,e->last_move_time);
-	fprintf(f,"health      = %d\n"
+		e->touch_debounce_time, e->pain_debounce_time,
+		e->damage_debounce_time, e->gravity_debounce_time,
+		e->fly_sound_debounce_time, e->last_move_time);
+
+	fprintf(f,
+		"health      = %d\n"
 		"max_health  = %d\n"
 		"gib_health  = %d\n"
 		"deadflag    = %d\n"
@@ -274,8 +300,9 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"health2     = %d\n"
 		"mass2       = %d\n"
 		"powerarmor_time=%g\n",
-		e->health,e->max_health,e->gib_health,e->deadflag,e->show_hostile,
-		e->health2,e->mass2,e->powerarmor_time);
+		e->health, e->max_health, e->gib_health, e->deadflag, e->show_hostile,
+		e->health2, e->mass2, e->powerarmor_time);
+
 	fprintf(f,"viewheight  = %d\n"
 		"takedamage  = %d\n"
 		"dmg         = %d\n"
@@ -283,9 +310,10 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"dmg_radius  = %g\n"
 		"sounds      = %d\n"
 		"count       = %d\n",
-		e->viewheight,e->takedamage,e->dmg,e->radius_dmg,e->dmg_radius,
-		e->sounds,e->count);
-	fprintf(f,"noise_index = %d\n"
+		e->viewheight, e->takedamage, e->dmg, e->radius_dmg, e->dmg_radius, e->sounds, e->count);
+
+	fprintf(f,
+		"noise_index = %d\n"
 		"noise_index2= %d\n"
 		"volume      = %g\n"
 		"attenuation = %g\n"
@@ -299,15 +327,20 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"waterlevel  = %d\n"
 		"move_origin = %s\n"
 		"move_angles = %s\n",
-		e->noise_index,e->noise_index2,e->volume,e->attenuation,
-		e->wait,e->delay,e->random,e->starttime,e->endtime,e->teleport_time,
-		e->watertype,e->waterlevel,vtos(e->move_origin),vtos(e->move_angles));
-	fprintf(f,"light_level = %d\n"
+		e->noise_index, e->noise_index2, e->volume, e->attenuation,
+		e->wait, e->delay, e->random, e->starttime, e->endtime, e->teleport_time,
+		e->watertype, e->waterlevel, vtos(e->move_origin), vtos(e->move_angles));
+
+	fprintf(f,
+		"light_level = %d\n"
 		"style       = %d\n",
-		e->light_level,e->style);
-	fprintf(f,"enemy = %s\n",(e->enemy ? e->enemy->classname : "NULL"));
-	fprintf(f,"enemy->inuse? %s\n",(e->enemy && e->enemy->inuse ? "Y" : "N"));
-	fprintf(f,"moveinfo_t\n"
+		e->light_level, e->style);
+
+	fprintf(f,"enemy = %s\n", (e->enemy ? e->enemy->classname : "NULL"));
+	fprintf(f,"enemy->inuse: %s\n",(e->enemy && e->enemy->inuse ? "Yes" : "No"));
+
+	fprintf(f,
+		"moveinfo:\n"
 		"   start_origin    = %s\n"
 		"   start_angles    = %s\n"
 		"   end_origin      = %s\n"
@@ -331,13 +364,15 @@ void SaveEntProps(edict_t *e, FILE *f)
 		vtos(e->moveinfo.start_angles),
 		vtos(e->moveinfo.end_origin),
 		vtos(e->moveinfo.end_angles),
-		e->moveinfo.sound_start,e->moveinfo.sound_middle,
-		e->moveinfo.sound_end,e->moveinfo.accel,e->moveinfo.speed,
-		e->moveinfo.decel,e->moveinfo.distance,e->moveinfo.wait,
-		e->moveinfo.state,vtos(e->moveinfo.dir),e->moveinfo.current_speed,
-		e->moveinfo.move_speed,e->moveinfo.next_speed,
-		e->moveinfo.remaining_distance,e->moveinfo.decel_distance);
-	fprintf(f,"monsterinfo\n"
+		e->moveinfo.sound_start, e->moveinfo.sound_middle,
+		e->moveinfo.sound_end, e->moveinfo.accel, e->moveinfo.speed,
+		e->moveinfo.decel, e->moveinfo.distance, e->moveinfo.wait,
+		e->moveinfo.state, vtos(e->moveinfo.dir), e->moveinfo.current_speed,
+		e->moveinfo.move_speed, e->moveinfo.next_speed,
+		e->moveinfo.remaining_distance, e->moveinfo.decel_distance);
+
+	fprintf(f,
+		"monsterinfo:\n"
 		"   aiflags          = 0x%08x\n"
 		"   nextframe        = %d\n"
 		"   scale            = %g\n"
@@ -354,14 +389,14 @@ void SaveEntProps(edict_t *e, FILE *f)
 		"   power_armor_type = %d\n"
 		"   power_armor_power= %d\n"
 		"   min_range        = %g\n",
-		e->monsterinfo.aiflags,e->monsterinfo.nextframe,
-		e->monsterinfo.scale,e->monsterinfo.pausetime,
-		e->monsterinfo.attack_finished,vtos(e->monsterinfo.saved_goal),
-		e->monsterinfo.search_time,e->monsterinfo.trail_time,
-		vtos(e->monsterinfo.last_sighting),e->monsterinfo.attack_state,
-		e->monsterinfo.lefty,e->monsterinfo.idle_time,
-		e->monsterinfo.linkcount,e->monsterinfo.power_armor_type,
-		e->monsterinfo.power_armor_power,e->monsterinfo.min_range);
+		e->monsterinfo.aiflags, e->monsterinfo.nextframe,
+		e->monsterinfo.scale, e->monsterinfo.pausetime,
+		e->monsterinfo.attack_finished, vtos(e->monsterinfo.saved_goal),
+		e->monsterinfo.search_time, e->monsterinfo.trail_time,
+		vtos(e->monsterinfo.last_sighting), e->monsterinfo.attack_state,
+		e->monsterinfo.lefty, e->monsterinfo.idle_time,
+		e->monsterinfo.linkcount, e->monsterinfo.power_armor_type,
+		e->monsterinfo.power_armor_power, e->monsterinfo.min_range);
 }
 
 void ShiftItem(edict_t *ent, int direction)
@@ -369,21 +404,22 @@ void ShiftItem(edict_t *ent, int direction)
 	vec3_t      end, forward, start;
 	vec3_t		move;
 
-	edict_t		*target;
+	if(!ent->client)
+		return;
 
-	if(!ent->client) return;
-
-	target = LookingAt(ent,0,NULL,NULL);
-	if(!target) return;
+	edict_t *target = LookingAt(ent, 0, NULL, NULL);
+	if(!target)
+		return;
 
 	ent->client->shift_dir = direction;
 	
 	VectorClear(move);
-	VectorCopy(ent->s.origin,start);
-	VectorAdd(target->s.origin,target->origin_offset,end);
-	VectorSubtract(end,start,forward);
+	VectorCopy(ent->s.origin, start);
+	VectorAdd(target->s.origin, target->origin_offset, end);
+	VectorSubtract(end, start, forward);
 	VectorNormalize(forward);
-	VectorScale(forward,shift_distance->value,forward);
+	VectorScale(forward, shift_distance->value, forward);
+
 	if(direction & 1)
 	{
 		if(fabs(forward[0]) > fabs(forward[1]))
@@ -391,6 +427,7 @@ void ShiftItem(edict_t *ent, int direction)
 		else
 			move[0] -= forward[1];
 	}
+
 	if(direction & 2)
 	{
 		if(fabs(forward[0]) > fabs(forward[1]))
@@ -398,6 +435,7 @@ void ShiftItem(edict_t *ent, int direction)
 		else
 			move[0] += forward[1];
 	}
+
 	if(direction & 4)
 	{
 		if(fabs(forward[0]) > fabs(forward[1]))
@@ -405,6 +443,7 @@ void ShiftItem(edict_t *ent, int direction)
 		else
 			move[1] += forward[1];
 	}
+
 	if(direction & 8)
 	{
 		if(fabs(forward[0]) > fabs(forward[1]))
@@ -412,46 +451,55 @@ void ShiftItem(edict_t *ent, int direction)
 		else
 			move[1] -= forward[1];
 	}
+
 	if(direction & 16)
 		move[2] += shift_distance->value;
 
 	if(direction & 32)
 		move[2] -= shift_distance->value;
 
-	if(direction & 64) {
+	if(direction & 64)
+	{
 		if( target->movetype == MOVETYPE_TOSS     ||
 			target->movetype == MOVETYPE_BOUNCE   ||
 			target->movetype == MOVETYPE_STEP     ||
 			target->movetype == MOVETYPE_PUSHABLE ||
-			target->movetype == MOVETYPE_DEBRIS      ) {
+			target->movetype == MOVETYPE_DEBRIS)
+		{
 			M_droptofloor(target);
 		}
 	}
 
-	if(direction & 128) {
+	if(direction & 128)
+	{
 		target->s.angles[PITCH] += rotate_distance->value;
 		if(target->s.angles[PITCH] > 360) target->s.angles[PITCH] -= 360;
-		if(target->s.angles[PITCH] <   0) target->s.angles[PITCH] += 360;
+		if(target->s.angles[PITCH] < 0)   target->s.angles[PITCH] += 360;
 	}
-	if(direction & 256) {
+
+	if(direction & 256)
+	{
 		target->s.angles[YAW] += rotate_distance->value;
 		if(target->s.angles[YAW] > 360) target->s.angles[YAW] -= 360;
-		if(target->s.angles[YAW] <   0) target->s.angles[YAW] += 360;
+		if(target->s.angles[YAW] < 0)   target->s.angles[YAW] += 360;
 	}
-	if(direction & 512) {
+
+	if(direction & 512)
+	{
 		target->s.angles[ROLL] += rotate_distance->value;
 		if(target->s.angles[ROLL] > 360) target->s.angles[ROLL] -= 360;
-		if(target->s.angles[ROLL] <   0) target->s.angles[ROLL] += 360;
+		if(target->s.angles[ROLL] < 0)   target->s.angles[ROLL] += 360;
 	}
 
 	VectorAdd(target->s.origin,move,target->s.origin);
-	if(!(direction & 64)) target->gravity_debounce_time = level.time + 1.0;
+	if(!(direction & 64)) 
+		target->gravity_debounce_time = level.time + 1.0;
+
 	gi.linkentity(target);
 }
 
 char *ClientTeam (edict_t *ent)
 {
-	char		*p;
 	static char	value[512];
 
 	value[0] = 0;
@@ -459,9 +507,8 @@ char *ClientTeam (edict_t *ent)
 	if (!ent->client)
 		return value;
 
-//	strncpy(value, Info_ValueForKey (ent->client->pers.userinfo, "skin"));
 	Q_strncpyz(value, Info_ValueForKey (ent->client->pers.userinfo, "skin"), sizeof(value));
-	p = strchr(value, '/');
+	char *p = strchr(value, '/');
 	if (!p)
 		return value;
 
@@ -477,8 +524,8 @@ char *ClientTeam (edict_t *ent)
 
 qboolean OnSameTeam (edict_t *ent1, edict_t *ent2)
 {
-	char	ent1Team [512];
-	char	ent2Team [512];
+	char ent1Team[512];
+	char ent2Team[512];
 
 	if (!ent1->client || !ent2->client) // Knightmare added
 		return false;
@@ -489,46 +536,43 @@ qboolean OnSameTeam (edict_t *ent1, edict_t *ent2)
 	if (!((int)(dmflags->value) & (DF_MODELTEAMS | DF_SKINTEAMS)))
 		return false;
 
-//	strncpy (ent1Team, ClientTeam (ent1));
-//	strncpy (ent2Team, ClientTeam (ent2));
-	Q_strncpyz (ent1Team, ClientTeam (ent1), sizeof(ent1Team));
-	Q_strncpyz (ent2Team, ClientTeam (ent2), sizeof(ent2Team));
+	Q_strncpyz(ent1Team, ClientTeam(ent1), sizeof(ent1Team));
+	Q_strncpyz(ent2Team, ClientTeam(ent2), sizeof(ent2Team));
 
-	if (strcmp(ent1Team, ent2Team) == 0)
-		return true;
-	return false;
+	return (strcmp(ent1Team, ent2Team) == 0);
 }
 
 
 void SelectNextItem (edict_t *ent, int itflags)
 {
-	gclient_t	*cl;
-	int			i, index;
-	gitem_t		*it;
-
-	cl = ent->client;
-
-	if (cl->menu) {
+	gclient_t *cl = ent->client;
+	if (cl->menu)
+	{
 		PMenu_Next(ent);
 		return;
-	} else if (cl->textdisplay) {
-		Text_Next (ent);
+	} 
+	
+	if (cl->textdisplay)
+	{
+		Text_Next(ent);
 		return;
-	} else if (cl->chase_target) {
+	} 
+	
+	if (cl->chase_target)
+	{
 		ChaseNext(ent);
 		return;
 	}
 
-	// scan  for the next valid one
-	for (i=1 ; i<=MAX_ITEMS ; i++)
+	// scan for the next valid one
+	for (int i = 1; i <= MAX_ITEMS; i++)
 	{
-		index = (cl->pers.selected_item + i)%MAX_ITEMS;
+		const int index = (cl->pers.selected_item + i)%MAX_ITEMS;
 		if (!cl->pers.inventory[index])
 			continue;
-		it = &itemlist[index];
-		if (!it->use)
-			continue;
-		if (!(it->flags & itflags))
+
+		gitem_t *it = &itemlist[index];
+		if (!it->use || !(it->flags & itflags))
 			continue;
 
 		cl->pers.selected_item = index;
@@ -540,33 +584,35 @@ void SelectNextItem (edict_t *ent, int itflags)
 
 void SelectPrevItem (edict_t *ent, int itflags)
 {
-	gclient_t	*cl;
-	int			i, index;
-	gitem_t		*it;
+	gclient_t *cl = ent->client;
 
-	cl = ent->client;
-
-	if (cl->menu) {
+	if (cl->menu)
+	{
 		PMenu_Prev(ent);
 		return;
-	} else if (cl->textdisplay) {
-		Text_Prev (ent);
+	} 
+	
+	if (cl->textdisplay)
+	{
+		Text_Prev(ent);
 		return;
-	} else if (cl->chase_target) {
+	} 
+	
+	if (cl->chase_target)
+	{
 		ChasePrev(ent);
 		return;
 	}
 
-	// scan  for the next valid one
-	for (i=1 ; i<=MAX_ITEMS ; i++)
+	// scan for the previous valid one
+	for (int i = 1; i <= MAX_ITEMS; i++)
 	{
-		index = (cl->pers.selected_item + MAX_ITEMS - i)%MAX_ITEMS;
+		const int index = (cl->pers.selected_item + MAX_ITEMS - i)%MAX_ITEMS;
 		if (!cl->pers.inventory[index])
 			continue;
-		it = &itemlist[index];
-		if (!it->use)
-			continue;
-		if (!(it->flags & itflags))
+
+		gitem_t *it = &itemlist[index];
+		if (!it->use || !(it->flags & itflags))
 			continue;
 
 		cl->pers.selected_item = index;
@@ -578,14 +624,12 @@ void SelectPrevItem (edict_t *ent, int itflags)
 
 void ValidateSelectedItem (edict_t *ent)
 {
-	gclient_t	*cl;
-
-	cl = ent->client;
+	gclient_t *cl = ent->client;
 
 	if (cl->pers.inventory[cl->pers.selected_item])
-		return;		// valid
+		return; // valid
 
-	SelectNextItem (ent, -1);
+	SelectNextItem(ent, -1);
 }
 
 
@@ -614,7 +658,7 @@ void Cmd_Give_f (edict_t *ent)
 	}
 
 	//Knightmare- override ammo pickup values with cvars
-	SetAmmoPickupValues ();
+	SetAmmoPickupValues();
 
 	name = gi.args();
 
@@ -807,21 +851,20 @@ argv(0) god
 */
 void Cmd_God_f (edict_t *ent)
 {
-	char	*msg;
-
 	if (deathmatch->value && !sv_cheats->value)
 	{
-		safe_cprintf (ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
+		safe_cprintf(ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
 		return;
 	}
 
+	char *msg;
 	ent->flags ^= FL_GODMODE;
 	if (!(ent->flags & FL_GODMODE) )
 		msg = "godmode OFF\n";
 	else
 		msg = "godmode ON\n";
 
-	safe_cprintf (ent, PRINT_HIGH, msg);
+	safe_cprintf(ent, PRINT_HIGH, msg);
 }
 
 
@@ -836,21 +879,20 @@ argv(0) notarget
 */
 void Cmd_Notarget_f (edict_t *ent)
 {
-	char	*msg;
-
 	if (deathmatch->value && !sv_cheats->value)
 	{
-		safe_cprintf (ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
+		safe_cprintf(ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
 		return;
 	}
 
+	char *msg;
 	ent->flags ^= FL_NOTARGET;
 	if (!(ent->flags & FL_NOTARGET) )
 		msg = "notarget OFF\n";
 	else
 		msg = "notarget ON\n";
 
-	safe_cprintf (ent, PRINT_HIGH, msg);
+	safe_cprintf(ent, PRINT_HIGH, msg);
 }
 
 
@@ -863,14 +905,13 @@ argv(0) noclip
 */
 void Cmd_Noclip_f (edict_t *ent)
 {
-	char	*msg;
-
 	if (deathmatch->value && !sv_cheats->value)
 	{
-		safe_cprintf (ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
+		safe_cprintf(ent, PRINT_HIGH, "You must run the server with '+set cheats 1' to enable this command.\n");
 		return;
 	}
 
+	char *msg;
 	if (ent->movetype == MOVETYPE_NOCLIP)
 	{
 		ent->movetype = MOVETYPE_WALK;
@@ -884,7 +925,7 @@ void Cmd_Noclip_f (edict_t *ent)
 		msg = "noclip ON\n";
 	}
 
-	safe_cprintf (ent, PRINT_HIGH, msg);
+	safe_cprintf(ent, PRINT_HIGH, msg);
 }
 
 
@@ -1392,33 +1433,35 @@ void Cmd_Wave_f (edict_t *ent)
 	}
 }
 
+// Returns true when player was a flooder
 qboolean CheckFlood(edict_t *ent)
 {
-	int		i;
-	gclient_t *cl;
+	if (flood_msgs->value)
+	{
+		gclient_t *cl = ent->client;
 
-	if (flood_msgs->value) {
-		cl = ent->client;
-
-        if (level.time < cl->flood_locktill) {
-			safe_cprintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
-				(int)(cl->flood_locktill - level.time));
+		if (level.time < cl->flood_locktill)
+		{
+			safe_cprintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n", (int)(cl->flood_locktill - level.time));
             return true;
         }
-        i = cl->flood_whenhead - flood_msgs->value + 1;
+
+        int i = cl->flood_whenhead - flood_msgs->value + 1;
         if (i < 0)
-            i = (sizeof(cl->flood_when)/sizeof(cl->flood_when[0])) + i;
-		if (cl->flood_when[i] && 
-			level.time - cl->flood_when[i] < flood_persecond->value) {
+            i = (sizeof(cl->flood_when) / sizeof(cl->flood_when[0])) + i;
+
+		if (cl->flood_when[i] && level.time - cl->flood_when[i] < flood_persecond->value)
+		{
 			cl->flood_locktill = level.time + flood_waitdelay->value;
-			safe_cprintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
-				(int)flood_waitdelay->value);
+			safe_cprintf(ent, PRINT_CHAT, "Flood protection: you can't talk for %d more seconds.\n", (int)flood_waitdelay->value);
+
             return true;
         }
-		cl->flood_whenhead = (cl->flood_whenhead + 1) %
-			(sizeof(cl->flood_when)/sizeof(cl->flood_when[0]));
+
+		cl->flood_whenhead = (cl->flood_whenhead + 1) % (sizeof(cl->flood_when)/sizeof(cl->flood_when[0]));
 		cl->flood_when[cl->flood_whenhead] = level.time;
 	}
+
 	return false;
 }
 
@@ -1429,42 +1472,35 @@ Cmd_Say_f
 */
 void Cmd_Say_f (edict_t *ent, qboolean team, qboolean arg0)
 {
-	int		i, j;
-	edict_t	*other;
-	char	*p;
-	char	text[2048];
-	gclient_t *cl;
+	if (gi.argc() < 2 && !arg0)
+		return;
 
-	if (gi.argc () < 2 && !arg0)
+	if (CheckFlood(ent)) //mxd
 		return;
 
 	if (!((int)(dmflags->value) & (DF_MODELTEAMS | DF_SKINTEAMS)))
 		team = false;
 
-	if (team)
-		Com_sprintf (text, sizeof(text), "(%s): ", ent->client->pers.netname);
-	else
-		Com_sprintf (text, sizeof(text), "%s: ", ent->client->pers.netname);
+	char text[2048];
+	char *format = (team ? "(%s): " : "%s: "); //mxd
+	Com_sprintf(text, sizeof(text), format, ent->client->pers.netname);
 
 	if (arg0)
 	{
-	//	strncat (text, gi.argv(0));
-	//	strncat (text, " ");
-	//	strncat (text, gi.args());
-		Q_strncatz (text, gi.argv(0), sizeof(text));
-		Q_strncatz (text, " ", sizeof(text));
-		Q_strncatz (text, gi.args(), sizeof(text));
+		Q_strncatz(text, gi.argv(0), sizeof(text));
+		Q_strncatz(text, " ", sizeof(text));
+		Q_strncatz(text, gi.args(), sizeof(text));
 	}
 	else
 	{
-		p = gi.args();
+		char *p = gi.args();
 
 		if (*p == '"')
 		{
 			p++;
-			p[strlen(p)-1] = 0;
+			p[strlen(p) - 1] = 0;
 		}
-	//	strncat(text, p);
+
 		Q_strncatz(text, p, sizeof(text));
 	}
 
@@ -1472,47 +1508,17 @@ void Cmd_Say_f (edict_t *ent, qboolean team, qboolean arg0)
 	if (strlen(text) > 150)
 		text[150] = 0;
 
-//	strncat(text, "\n");
 	Q_strncatz(text, "\n", sizeof(text));
-
-	if (flood_msgs->value) {
-		cl = ent->client;
-
-        if (level.time < cl->flood_locktill) {
-			safe_cprintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
-				(int)(cl->flood_locktill - level.time));
-            return;
-        }
-        i = cl->flood_whenhead - flood_msgs->value + 1;
-        if (i < 0)
-            i = (sizeof(cl->flood_when)/sizeof(cl->flood_when[0])) + i;
-		if (cl->flood_when[i] && 
-			level.time - cl->flood_when[i] < flood_persecond->value) {
-			cl->flood_locktill = level.time + flood_waitdelay->value;
-			safe_cprintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
-				(int)flood_waitdelay->value);
-            return;
-        }
-		cl->flood_whenhead = (cl->flood_whenhead + 1) %
-			(sizeof(cl->flood_when)/sizeof(cl->flood_when[0]));
-		cl->flood_when[cl->flood_whenhead] = level.time;
-	}
 
 	if (dedicated->value)
 		safe_cprintf(NULL, PRINT_CHAT, "%s", text);
 
-	for (j = 1; j <= game.maxclients; j++)
+	for (int j = 1; j <= game.maxclients; j++)
 	{
-		other = &g_edicts[j];
-		if (!other->inuse)
+		edict_t *other = &g_edicts[j];
+		if (!other->inuse || !other->client || (team && !OnSameTeam(ent, other)))
 			continue;
-		if (!other->client)
-			continue;
-		if (team)
-		{
-			if (!OnSameTeam(ent, other))
-				continue;
-		}
+
 		safe_cprintf(other, PRINT_CHAT, "%s", text);
 	}
 }
@@ -1526,7 +1532,8 @@ void Cmd_PlayerList_f(edict_t *ent)
 
 	// connect time, ping, score, name
 	*text = 0;
-	for (i = 0, e2 = g_edicts + 1; i < maxclients->value; i++, e2++) {
+	for (i = 0, e2 = g_edicts + 1; i < maxclients->value; i++, e2++)
+	{
 		if (!e2->inuse)
 			continue;
 
@@ -1537,14 +1544,18 @@ void Cmd_PlayerList_f(edict_t *ent)
 			e2->client->resp.score,
 			e2->client->pers.netname,
 			e2->client->resp.spectator ? " (spectator)" : "");
-		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
-			sprintf(text+strlen(text), "And more...\n");
+
+		if (strlen(text) + strlen(st) > sizeof(text) - 50)
+		{
+			sprintf(text + strlen(text), "And more...\n");
 			safe_cprintf(ent, PRINT_HIGH, "%s", text);
+
 			return;
 		}
-	//	strncat(text, st);
+
 		Q_strncatz(text, st, sizeof(text));
 	}
+
 	safe_cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
@@ -1553,95 +1564,93 @@ void DrawBBox(edict_t *ent)
 	vec3_t	p1, p2;
 	vec3_t	origin;
 
-	VectorCopy(ent->s.origin,origin);
-	VectorSet(p1,origin[0]+ent->mins[0],origin[1]+ent->mins[1],origin[2]+ent->mins[2]);
-	VectorSet(p2,origin[0]+ent->mins[0],origin[1]+ent->mins[1],origin[2]+ent->maxs[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->mins[0],origin[1]+ent->maxs[1],origin[2]+ent->mins[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->maxs[0],origin[1]+ent->mins[1],origin[2]+ent->mins[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
+	VectorCopy(ent->s.origin, origin);
+	VectorSet(p1, origin[0] + ent->mins[0], origin[1] + ent->mins[1], origin[2] + ent->mins[2]);
+	VectorSet(p2, origin[0] + ent->mins[0], origin[1] + ent->mins[1], origin[2] + ent->maxs[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->mins[0], origin[1] + ent->maxs[1], origin[2] + ent->mins[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->maxs[0], origin[1] + ent->mins[1], origin[2] + ent->mins[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
 
-	VectorSet(p1,origin[0]+ent->maxs[0],origin[1]+ent->maxs[1],origin[2]+ent->mins[2]);
-	VectorSet(p2,origin[0]+ent->maxs[0],origin[1]+ent->maxs[1],origin[2]+ent->maxs[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->maxs[0],origin[1]+ent->mins[1],origin[2]+ent->mins[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->mins[0],origin[1]+ent->maxs[1],origin[2]+ent->mins[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
+	VectorSet(p1, origin[0] + ent->maxs[0], origin[1] + ent->maxs[1], origin[2] + ent->mins[2]);
+	VectorSet(p2, origin[0] + ent->maxs[0], origin[1] + ent->maxs[1], origin[2] + ent->maxs[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->maxs[0], origin[1] + ent->mins[1], origin[2] + ent->mins[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->mins[0], origin[1] + ent->maxs[1], origin[2] + ent->mins[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
 
-	VectorSet(p1,origin[0]+ent->maxs[0],origin[1]+ent->mins[1],origin[2]+ent->maxs[2]);
-	VectorSet(p2,origin[0]+ent->maxs[0],origin[1]+ent->mins[1],origin[2]+ent->mins[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->maxs[0],origin[1]+ent->maxs[1],origin[2]+ent->maxs[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->mins[0],origin[1]+ent->mins[1],origin[2]+ent->maxs[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
+	VectorSet(p1, origin[0] + ent->maxs[0], origin[1] + ent->mins[1], origin[2] + ent->maxs[2]);
+	VectorSet(p2, origin[0] + ent->maxs[0], origin[1] + ent->mins[1], origin[2] + ent->mins[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->maxs[0], origin[1] + ent->maxs[1], origin[2] + ent->maxs[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->mins[0], origin[1] + ent->mins[1], origin[2] + ent->maxs[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
 
-	VectorSet(p1,origin[0]+ent->mins[0],origin[1]+ent->maxs[1],origin[2]+ent->maxs[2]);
-	VectorSet(p2,origin[0]+ent->mins[0],origin[1]+ent->maxs[1],origin[2]+ent->mins[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->mins[0],origin[1]+ent->mins[1],origin[2]+ent->maxs[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
-	VectorSet(p2,origin[0]+ent->maxs[0],origin[1]+ent->maxs[1],origin[2]+ent->maxs[2]);
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_DEBUGTRAIL);
-	gi.WritePosition (p1);
-	gi.WritePosition (p2);
-	gi.multicast (p1, MULTICAST_ALL);
+	VectorSet(p1, origin[0] + ent->mins[0], origin[1] + ent->maxs[1], origin[2] + ent->maxs[2]);
+	VectorSet(p2, origin[0] + ent->mins[0], origin[1] + ent->maxs[1], origin[2] + ent->mins[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->mins[0], origin[1] + ent->mins[1], origin[2] + ent->maxs[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
+	VectorSet(p2, origin[0] + ent->maxs[0], origin[1] + ent->maxs[1], origin[2] + ent->maxs[2]);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_DEBUGTRAIL);
+	gi.WritePosition(p1);
+	gi.WritePosition(p2);
+	gi.multicast(p1, MULTICAST_ALL);
 }
 
 void Cmd_Bbox_f (edict_t *ent)
 {
-	edict_t	*viewing;
-
-	viewing = LookingAt(ent, 0, NULL, NULL);
-	if(!viewing) return;
-	DrawBBox(viewing);
+	edict_t *viewing = LookingAt(ent, 0, NULL, NULL);
+	if(viewing)
+		DrawBBox(viewing);
 }
 
 void SetLazarusCrosshair (edict_t *ent)
@@ -1652,8 +1661,8 @@ void SetLazarusCrosshair (edict_t *ent)
 	if (ent->client->zoomed || ent->client->zooming)
 		return;
 
-	gi.cvar_forceset("lazarus_crosshair",      va("%d",(int)(crosshair->value)));
-	gi.cvar_forceset("lazarus_cl_gun",         va("%d",(int)(cl_gun->value)));
+	gi.cvar_forceset("lazarus_crosshair", va("%d", (int)(crosshair->value)));
+	gi.cvar_forceset("lazarus_cl_gun",    va("%d", (int)(cl_gun->value)));
 }
 
 void SetSensitivities (edict_t *ent, qboolean reset)

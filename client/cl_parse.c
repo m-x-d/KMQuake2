@@ -140,62 +140,52 @@ CL_ParseServerData
 */
 void CL_ParseServerData (void)
 {
-	//extern cvar_t	*fs_gamedirvar; //mxd. Redundant declaration
-	char	*str;
-	int		i;
-	
-	Com_DPrintf ("Serverdata packet received.\n");
+	Com_DPrintf("Serverdata packet received.\n");
 //
 // wipe the client_state_t struct
 //
-	CL_ClearState ();
+	CL_ClearState();
 	cls.state = ca_connected;
 
 // parse protocol version number
-	i = MSG_ReadLong (&net_message);
+	const int i = MSG_ReadLong(&net_message);
 	cls.serverProtocol = i;
 
 	// BIG HACK to let demos from release work with the 3.0x patch!!!
 	// Knightmare- also allow connectivity with servers using the old protocol
-//	if (Com_ServerState() && (i < PROTOCOL_VERSION) /*== 35*/)
-	if ( LegacyProtocol() ) {} // do nothing
-/*	else if (i == OLD_PROTOCOL_VERSION)
-		Cvar_ForceSet ("cl_servertrick", "1");
-	else if (i == PROTOCOL_VERSION)
-		Cvar_ForceSet ("cl_servertrick", "0");	// force this off for local games
-	else if (i != PROTOCOL_VERSION)	*/
-	else if ( (i != PROTOCOL_VERSION) && (i != OLD_PROTOCOL_VERSION) )
-		Com_Error (ERR_DROP,"Server returned version %i, not %i", i, PROTOCOL_VERSION);
+	if (!LegacyProtocol() && i != PROTOCOL_VERSION && i != OLD_PROTOCOL_VERSION)
+		Com_Error(ERR_DROP, "Server returned version %i, not %i", i, PROTOCOL_VERSION);
 
-	cl.servercount = MSG_ReadLong (&net_message);
-	cl.attractloop = MSG_ReadByte (&net_message);
+	cl.servercount = MSG_ReadLong(&net_message);
+	cl.attractloop = MSG_ReadByte(&net_message);
 
 	// game directory
-	str = MSG_ReadString (&net_message);
-	strncpy (cl.gamedir, str, sizeof(cl.gamedir)-1);
+	char *str = MSG_ReadString(&net_message);
+	strncpy(cl.gamedir, str, sizeof(cl.gamedir) - 1);
 
 	// set gamedir
-	if ( ( (*str && (!fs_gamedirvar->string || !*fs_gamedirvar->string || strcmp(fs_gamedirvar->string, str)))
+	if (((*str && (!fs_gamedirvar->string || !*fs_gamedirvar->string || strcmp(fs_gamedirvar->string, str)))
 		|| (!*str && fs_gamedirvar->string && *fs_gamedirvar->string) ) //mxd. Otherwise we might dereference a NULL fs_gamedirvar->string
 		&& !cl.attractloop ) // Knightmare- don't allow demos to change this
 		Cvar_Set("game", str);
 
 	// parse player entity number
-	cl.playernum = MSG_ReadShort (&net_message);
+	cl.playernum = MSG_ReadShort(&net_message);
 
 	// get the full level name
-	str = MSG_ReadString (&net_message);
+	str = MSG_ReadString(&net_message);
 
 	if (cl.playernum == -1)
-	{	// playing a cinematic or showing a pic, not a level
-		SCR_PlayCinematic (str);
+	{
+		// playing a cinematic or showing a pic, not a level
+		SCR_PlayCinematic(str);
 	}
 	else
 	{
 		// seperate the printfs so the server message can have a color
 		Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
 		con.ormask = 128;
-		Com_Printf ("%c"S_COLOR_SHADOW S_COLOR_ALT"%s\n", 2, str);
+		Com_Printf("%c"S_COLOR_SHADOW S_COLOR_ALT"%s\n", 2, str);
 		con.ormask = 0;
 
 		// need to prep refresh at next oportunity
@@ -210,15 +200,13 @@ CL_ParseBaseline
 */
 void CL_ParseBaseline (void)
 {
-	entity_state_t	*es;
 	int				bits;
-	int				newnum;
 	entity_state_t	nullstate;
 
-	memset (&nullstate, 0, sizeof(nullstate));
+	memset(&nullstate, 0, sizeof(nullstate));
 
-	newnum = CL_ParseEntityBits (&bits);
-	es = &cl_entities[newnum].baseline;
+	const int newnum = CL_ParseEntityBits(&bits);
+	entity_state_t *es = &cl_entities[newnum].baseline;
 	CL_ParseDelta (&nullstate, es, newnum, bits);
 }
 
@@ -231,8 +219,6 @@ CL_LoadClientinfo
 */
 void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 {
-	int i;
-	char		*t;
 	char		model_name[MAX_QPATH];
 	char		skin_name[MAX_QPATH];
 	char		model_filename[MAX_QPATH];
@@ -240,35 +226,36 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 	char		weapon_filename[MAX_QPATH];
 
 	strncpy(ci->cinfo, s, sizeof(ci->cinfo));
-	ci->cinfo[sizeof(ci->cinfo)-1] = 0;
+	ci->cinfo[sizeof(ci->cinfo) - 1] = 0;
 
 	// isolate the player's name
 	strncpy(ci->name, s, sizeof(ci->name));
 	ci->name[sizeof(ci->name)-1] = 0;
-	t = strstr (s, "\\");
+	char *t = strstr(s, "\\");
 	if (t)
 	{
-		ci->name[t-s] = 0;
-		s = t+1;
+		ci->name[t - s] = 0;
+		s = t + 1;
 	}
 
 	if (cl_noskins->value || *s == 0)
 	{
-		Com_sprintf (model_filename, sizeof(model_filename), "players/male/tris.md2");
-		Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/male/weapon.md2");
-		Com_sprintf (skin_filename, sizeof(skin_filename), "players/male/grunt.pcx");
-		Com_sprintf (ci->iconname, sizeof(ci->iconname), "/players/male/grunt_i.pcx");
-		ci->model = R_RegisterModel (model_filename);
+		Com_sprintf(model_filename, sizeof(model_filename), "players/male/tris.md2");
+		Com_sprintf(weapon_filename, sizeof(weapon_filename), "players/male/weapon.md2");
+		Com_sprintf(skin_filename, sizeof(skin_filename), "players/male/grunt.pcx");
+		Com_sprintf(ci->iconname, sizeof(ci->iconname), "/players/male/grunt_i.pcx");
+
+		ci->model = R_RegisterModel(model_filename);
 		memset(ci->weaponmodel, 0, sizeof(ci->weaponmodel));
-		ci->weaponmodel[0] = R_RegisterModel (weapon_filename);
-		ci->skin = R_RegisterSkin (skin_filename);
-		ci->icon = R_DrawFindPic (ci->iconname);
+
+		ci->weaponmodel[0] = R_RegisterModel(weapon_filename);
+		ci->skin = R_RegisterSkin(skin_filename);
+		ci->icon = R_DrawFindPic(ci->iconname);
 	}
 	else
 	{
 		// isolate the model name
-	//	strncpy (model_name, s);
-		Q_strncpyz (model_name, s, sizeof(model_name));
+		Q_strncpyz(model_name, s, sizeof(model_name));
 		t = strstr(model_name, "/");
 		if (!t)
 			t = strstr(model_name, "\\");
@@ -277,63 +264,63 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		*t = 0;
 
 		// isolate the skin name
-//		strncpy (skin_name, s + strlen(model_name) + 1);
-		Q_strncpyz (skin_name, s + strlen(model_name) + 1, sizeof(skin_name));
+		Q_strncpyz(skin_name, s + strlen(model_name) + 1, sizeof(skin_name));
 
 		// model file
-		Com_sprintf (model_filename, sizeof(model_filename), "players/%s/tris.md2", model_name);
-		ci->model = R_RegisterModel (model_filename);
+		Com_sprintf(model_filename, sizeof(model_filename), "players/%s/tris.md2", model_name);
+		ci->model = R_RegisterModel(model_filename);
 		if (!ci->model)
 		{
-		//	strncpy(model_name, "male");
 			Q_strncpyz(model_name, "male", sizeof(model_name));
-			Com_sprintf (model_filename, sizeof(model_filename), "players/male/tris.md2");
-			ci->model = R_RegisterModel (model_filename);
+			Com_sprintf(model_filename, sizeof(model_filename), "players/male/tris.md2");
+			ci->model = R_RegisterModel(model_filename);
 		}
 
 		// skin file
-		Com_sprintf (skin_filename, sizeof(skin_filename), "players/%s/%s.pcx", model_name, skin_name);
-		ci->skin = R_RegisterSkin (skin_filename);
+		Com_sprintf(skin_filename, sizeof(skin_filename), "players/%s/%s.pcx", model_name, skin_name);
+		ci->skin = R_RegisterSkin(skin_filename);
 
-		// if we don't have the skin and the model wasn't male,
-		// see if the male has it (this is for CTF's skins)
+		// if we don't have the skin and the model wasn't male, see if the male has it (this is for CTF's skins)
  		if (!ci->skin && Q_stricmp(model_name, "male"))
 		{
 			// change model to male
-		//	strncpy(model_name, "male");
 			Q_strncpyz(model_name, "male", sizeof(model_name));
-			Com_sprintf (model_filename, sizeof(model_filename), "players/male/tris.md2");
-			ci->model = R_RegisterModel (model_filename);
+			Com_sprintf(model_filename, sizeof(model_filename), "players/male/tris.md2");
+			ci->model = R_RegisterModel(model_filename);
 
 			// see if the skin exists for the male model
-			Com_sprintf (skin_filename, sizeof(skin_filename), "players/%s/%s.pcx", model_name, skin_name);
-			ci->skin = R_RegisterSkin (skin_filename);
+			Com_sprintf(skin_filename, sizeof(skin_filename), "players/%s/%s.pcx", model_name, skin_name);
+			ci->skin = R_RegisterSkin(skin_filename);
 		}
 
-		// if we still don't have a skin, it means that the male model didn't have
-		// it, so default to grunt
-		if (!ci->skin) {
+		// if we still don't have a skin, it means that the male model didn't have it, so default to grunt
+		if (!ci->skin)
+		{
 			// see if the skin exists for the male model
-			Com_sprintf (skin_filename, sizeof(skin_filename), "players/%s/grunt.pcx", model_name, skin_name);
-			ci->skin = R_RegisterSkin (skin_filename);
+			Com_sprintf(skin_filename, sizeof(skin_filename), "players/%s/grunt.pcx", model_name, skin_name);
+			ci->skin = R_RegisterSkin(skin_filename);
 		}
 
 		// weapon file
-		for (i = 0; i < num_cl_weaponmodels; i++) {
+		for (int i = 0; i < num_cl_weaponmodels; i++)
+		{
 			Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/%s/%s", model_name, cl_weaponmodels[i]);
 			ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
-			if (!ci->weaponmodel[i] && strcmp(model_name, "cyborg") == 0) {
+
+			if (!ci->weaponmodel[i] && strcmp(model_name, "cyborg") == 0)
+			{
 				// try male
 				Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/male/%s", cl_weaponmodels[i]);
 				ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
 			}
+
 			if (!cl_vwep->value)
 				break; // only one when vwep is off
 		}
 
 		// icon file
-		Com_sprintf (ci->iconname, sizeof(ci->iconname), "/players/%s/%s_i.pcx", model_name, skin_name);
-		ci->icon = R_DrawFindPic (ci->iconname);
+		Com_sprintf(ci->iconname, sizeof(ci->iconname), "/players/%s/%s_i.pcx", model_name, skin_name);
+		ci->icon = R_DrawFindPic(ci->iconname);
 	}
 
 	// must have loaded all data types to be valud
@@ -343,7 +330,6 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		ci->icon = NULL;
 		ci->model = NULL;
 		ci->weaponmodel[0] = NULL;
-		return;
 	}
 }
 
@@ -356,21 +342,14 @@ Load the skin, icon, and model for a client
 */
 void CL_ParseClientinfo (int player)
 {
-	char			*s;
-	clientinfo_t	*ci;
-
-	// Knightmare- 1/2/2002- GROSS HACK for old demos or
-	// connected to server using old protocol
+	// Knightmare- 1/2/2002- GROSS HACK for old demos or connected to server using old protocol
 	// Changed config strings require different offsets
-	if ( LegacyProtocol() )
-		s = cl.configstrings[player+OLD_CS_PLAYERSKINS];
-	else
-		s = cl.configstrings[player+CS_PLAYERSKINS];
+	const int csplayerskins = (LegacyProtocol() ? OLD_CS_PLAYERSKINS : CS_PLAYERSKINS); //mxd
+	char *s = cl.configstrings[player + csplayerskins];
 	//end Knightmare
 
-	ci = &cl.clientinfo[player];
-
-	CL_LoadClientinfo (ci, s);
+	clientinfo_t *ci = &cl.clientinfo[player];
+	CL_LoadClientinfo(ci, s);
 }
 
 
@@ -378,8 +357,7 @@ void CL_ParseClientinfo (int player)
 ================
 CL_MissionPackCDTrack
 Returns correct OGG track number for mission packs.
-This assumes that the standard Q2 CD was ripped
-as track02-track11, and the Rogue CD as track12-track21.
+This assumes that the standard Q2 CD was ripped as track02-track11, and the Rogue CD as track12-track21.
 ================
 */
 int CL_MissionPackCDTrack (int tracknum)
@@ -388,29 +366,29 @@ int CL_MissionPackCDTrack (int tracknum)
 	{
 		if (tracknum >= 2 && tracknum <= 11)
 			return tracknum + 10;
-		else
-			return tracknum;
+		return tracknum;
 	}
+
 	// an out-of-order mix from Q2 and Rogue CDs
-	else if (modType("xatrix") || cl_xatrix_music->value)
+	if (modType("xatrix") || cl_xatrix_music->value)
 	{
 		switch(tracknum)
 		{
-			case 2: return 9;	break;
-			case 3: return 13;	break;
-			case 4: return 14;	break;
-			case 5: return 7;	break;
-			case 6: return 16;	break;
-			case 7: return 2;	break;
-			case 8: return 15;	break;
-			case 9: return 3;	break;
-			case 10: return 4;	break;
-			case 11: return 18; break;
-			default: return tracknum; break;
+			case 2: return 9;
+			case 3: return 13;
+			case 4: return 14;
+			case 5: return 7;
+			case 6: return 16;
+			case 7: return 2;
+			case 8: return 15;
+			case 9: return 3;
+			case 10: return 4;
+			case 11: return 18;
+			default: return tracknum;
 		}
 	}
-	else
-		return tracknum;
+
+	return tracknum;
 }
 
 
@@ -426,7 +404,6 @@ CL_PlayBackgroundTrack
 void CL_PlayBackgroundTrack (void)
 {
 	char	name[MAX_QPATH];
-	int		track;
 
 	if (!cl.refresh_prepped)
 		return;
@@ -439,22 +416,25 @@ void CL_PlayBackgroundTrack (void)
 		{
 			CDAudio_Stop();
 			S_StartBackgroundTrack(name, name);
+
 			return;
 		}
 	}
 
-	track = atoi(cl.configstrings[CS_CDTRACK]);
+	const int track = atoi(cl.configstrings[CS_CDTRACK]);
 
 	if (track == 0)
-	{	// Stop any playing track
+	{
+		// Stop any playing track
 		CDAudio_Stop();
 		S_StopBackgroundTrack();
+
 		return;
 	}
 
 	// If an OGG file exists play it, otherwise fall back to CD audio
-	Com_sprintf (name, sizeof(name), "music/track%02i.ogg", CL_MissionPackCDTrack(track));
-	if ( (FS_LoadFile(name, NULL) != -1) && cl_ogg_music->value )
+	Com_sprintf(name, sizeof(name), "music/track%02i.ogg", CL_MissionPackCDTrack(track));
+	if (FS_LoadFile(name, NULL) != -1 && cl_ogg_music->value)
 		S_StartBackgroundTrack(name, name);
 	else
 		CDAudio_Play(track, true);
@@ -464,7 +444,7 @@ void CL_PlayBackgroundTrack (void)
 
 void CL_PlayBackgroundTrack (void)
 {
-	CDAudio_Play (atoi(cl.configstrings[CS_CDTRACK]), true);
+	CDAudio_Play(atoi(cl.configstrings[CS_CDTRACK]), true);
 }
 
 #endif // OGG_SUPPORT
@@ -476,14 +456,12 @@ CL_ParseConfigString
 */
 void CL_ParseConfigString (void)
 {
-	int		i;
 	int		max_models, max_sounds, max_images, cs_lights, cs_sounds, cs_images, cs_playerskins;
-	char	*s;
 	char	olds[MAX_QPATH];
 
 	// Knightmare- hack for connected to server using old protocol
 	// Changed config strings require different parsing
-	if ( LegacyProtocol() )
+	if (LegacyProtocol())
 	{
 		max_models = OLD_MAX_MODELS;
 		max_sounds = OLD_MAX_SOUNDS;
@@ -504,61 +482,64 @@ void CL_ParseConfigString (void)
 		cs_playerskins = CS_PLAYERSKINS;
 	}
 
-	i = MSG_ReadShort (&net_message);
+	int i = MSG_ReadShort(&net_message);
 	if (i < 0 || i >= MAX_CONFIGSTRINGS)
-		Com_Error (ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
-	s = MSG_ReadString(&net_message);
+		Com_Error(ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
+	char *s = MSG_ReadString(&net_message);
 
 	strncpy (olds, cl.configstrings[i], sizeof(olds));
 	olds[sizeof(olds) - 1] = 0;
 
 	// Don't use a null-terminated strncpy here!!
-//	strcpy (cl.configstrings[i], s);
-	strncpy (cl.configstrings[i], s, sizeof(cl.configstrings[i]));
+	strncpy(cl.configstrings[i], s, sizeof(cl.configstrings[i]));
 
 	// do something apropriate 
-	if (i >= cs_lights && i < cs_lights+MAX_LIGHTSTYLES)
-		CL_SetLightstyle (i - cs_lights);
+	if (i >= cs_lights && i < cs_lights + MAX_LIGHTSTYLES)
+	{
+		CL_SetLightstyle(i - cs_lights);
+	}
 	else if (i == CS_CDTRACK)
 	{
 		if (cl.refresh_prepped)
-			CL_PlayBackgroundTrack ();
+			CL_PlayBackgroundTrack();
 	}
 	else if (i == CS_MAXCLIENTS)	// from R1Q2
 	{
 		if (!cl.attractloop)
 			cl.maxclients = atoi(cl.configstrings[CS_MAXCLIENTS]);
 	}
-	else if (i >= CS_MODELS && i < CS_MODELS+max_models)
+	else if (i >= CS_MODELS && i < CS_MODELS + max_models)
 	{
 		if (cl.refresh_prepped)
 		{
-			cl.model_draw[i-CS_MODELS] = R_RegisterModel (cl.configstrings[i]);
+			cl.model_draw[i - CS_MODELS] = R_RegisterModel(cl.configstrings[i]);
 			if (cl.configstrings[i][0] == '*')
-				cl.model_clip[i-CS_MODELS] = CM_InlineModel (cl.configstrings[i]);
+				cl.model_clip[i - CS_MODELS] = CM_InlineModel(cl.configstrings[i]);
 			else
-				cl.model_clip[i-CS_MODELS] = NULL;
+				cl.model_clip[i - CS_MODELS] = NULL;
 		}
 	}
-	else if (i >= cs_sounds && i < cs_sounds+max_sounds) //Knightmare- was MAX_MODELS
+	else if (i >= cs_sounds && i < cs_sounds + max_sounds) //Knightmare- was MAX_MODELS
 	{
 		if (cl.refresh_prepped)
-			cl.sound_precache[i-cs_sounds] = S_RegisterSound (cl.configstrings[i]);
+			cl.sound_precache[i - cs_sounds] = S_RegisterSound(cl.configstrings[i]);
 	}
-	else if (i >= cs_images && i < cs_images+max_images) //Knightmare- was MAX_MODELS
+	else if (i >= cs_images && i < cs_images + max_images) //Knightmare- was MAX_MODELS
 	{
 		if (cl.refresh_prepped)
-			cl.image_precache[i-cs_images] = R_DrawFindPic (cl.configstrings[i]);
+			cl.image_precache[i - cs_images] = R_DrawFindPic(cl.configstrings[i]);
 	}
-	else if (i >= cs_playerskins && i < cs_playerskins+MAX_CLIENTS)
+	else if (i >= cs_playerskins && i < cs_playerskins + MAX_CLIENTS)
 	{
 		// from R1Q2- a hack to avoid parsing non-skins from mods that overload CS_PLAYERSKINS
-		if ( (i-cs_playerskins) < cl.maxclients ) {
+		if (i - cs_playerskins < cl.maxclients)
+		{
 			if (cl.refresh_prepped && strcmp(olds, s))
-				CL_ParseClientinfo (i-cs_playerskins);
+				CL_ParseClientinfo(i - cs_playerskins);
 		}
-		else {
-			Com_DPrintf ("CL_ParseConfigString: Ignoring out-of-range playerskin %d (%s)\n", i, MakePrintable(s, 0));
+		else
+		{
+			Com_DPrintf("CL_ParseConfigString: Ignoring out-of-range playerskin %d (%s)\n", i, MakePrintable(s, 0));
 		}
 	}
 }
@@ -584,42 +565,41 @@ void CL_ParseStartSoundPacket(void)
     int 	channel, ent;
     int 	sound_num;
     float 	volume;
-    float 	attenuation;  
-	int		flags;
+    float 	attenuation;
 	float	ofs;
 
-	flags = MSG_ReadByte (&net_message);
+	const int flags = MSG_ReadByte(&net_message);
 
 	// Knightmare- 12/23/2001
-	// read sound indices as bytes only if playing old demos or
-	// connected to server using old protocol; otherwise, read as shorts
-	if ( LegacyProtocol() )
-		sound_num = MSG_ReadByte (&net_message);
+	// read sound indices as bytes only if playing old demos or connected to server using old protocol; otherwise, read as shorts
+	if (LegacyProtocol())
+		sound_num = MSG_ReadByte(&net_message);
 	else
-		sound_num = MSG_ReadShort (&net_message);
+		sound_num = MSG_ReadShort(&net_message);
 	//end Knightmare
 
-    if (flags & SND_VOLUME)
-		volume = MSG_ReadByte (&net_message) / 255.0;
+	if (flags & SND_VOLUME)
+		volume = MSG_ReadByte(&net_message) / 255.0;
 	else
 		volume = DEFAULT_SOUND_PACKET_VOLUME;
 	
-    if (flags & SND_ATTENUATION)
-		attenuation = MSG_ReadByte (&net_message) / 64.0;
+	if (flags & SND_ATTENUATION)
+		attenuation = MSG_ReadByte(&net_message) / 64.0;
 	else
 		attenuation = DEFAULT_SOUND_PACKET_ATTENUATION;	
 
-    if (flags & SND_OFFSET)
-		ofs = MSG_ReadByte (&net_message) / 1000.0;
+	if (flags & SND_OFFSET)
+		ofs = MSG_ReadByte(&net_message) / 1000.0;
 	else
 		ofs = 0;
 
 	if (flags & SND_ENT)
-	{	// entity reletive
+	{
+		// entity-relative
 		channel = MSG_ReadShort(&net_message); 
-		ent = channel>>3;
+		ent = channel >> 3;
 		if (ent > MAX_EDICTS)
-			Com_Error (ERR_DROP,"CL_ParseStartSoundPacket: ent = %i", ent);
+			Com_Error(ERR_DROP, "CL_ParseStartSoundPacket: ent = %i", ent);
 
 		channel &= 7;
 	}
@@ -630,25 +610,28 @@ void CL_ParseStartSoundPacket(void)
 	}
 
 	if (flags & SND_POS)
-	{	// positioned in space
-		MSG_ReadPos (&net_message, pos_v);
- 
+	{
+		// positioned in space
+		MSG_ReadPos(&net_message, pos_v);
 		pos = pos_v;
 	}
-	else	// use entity number
+	else
+	{
+		// use entity number
 		pos = NULL;
+	}
 
 	if (!cl.sound_precache[sound_num])
 		return;
 
-	S_StartSound (pos, ent, channel, cl.sound_precache[sound_num], volume, attenuation, ofs);
-}       
+	S_StartSound(pos, ent, channel, cl.sound_precache[sound_num], volume, attenuation, ofs);
+}
 
 
 void SHOWNET(char *s)
 {
-	if (cl_shownet->value>=2)
-		Com_Printf ("%3i:%s\n", net_message.readcount-1, s);
+	if (cl_shownet->value >= 2)
+		Com_Printf ("%3i:%s\n", net_message.readcount - 1, s);
 }
 
 /*
@@ -701,21 +684,16 @@ CL_ParseFog
 
 void CL_ParseFog (void)
 {
-	qboolean fogenable;
-	int model, density, start, end,
-			red, green, blue, temp;
+	const qboolean fogenable = (MSG_ReadByte(&net_message) > 0);
+	const int model = MSG_ReadByte(&net_message);
+	const int density = MSG_ReadByte(&net_message);
+	const int start = MSG_ReadShort(&net_message);
+	const int end = MSG_ReadShort(&net_message);
+	const int red = MSG_ReadByte (&net_message);
+	const int green = MSG_ReadByte (&net_message);
+	const int blue = MSG_ReadByte (&net_message);
 
-	temp = MSG_ReadByte (&net_message);
-	fogenable = (temp > 0) ? true:false;
-	model = MSG_ReadByte (&net_message);
-	density = MSG_ReadByte (&net_message);
-	start = MSG_ReadShort (&net_message);
-	end = MSG_ReadShort (&net_message);
-	red = MSG_ReadByte (&net_message);
-	green = MSG_ReadByte (&net_message);
-	blue = MSG_ReadByte (&net_message);
-
-	R_SetFogVars (fogenable, model, density, start, end, red, green, blue);
+	R_SetFogVars(fogenable, model, density, start, end, red, green, blue);
 }
 
 /*
@@ -725,31 +703,22 @@ CL_ParseServerMessage
 */
 void CL_ParseServerMessage (void)
 {
-	int			cmd;
-	char		*s;
-	int			i;
-
-//
-// if recording demos, copy the message out
-//
+	// if recording demos, copy the message out
 	if (cl_shownet->value == 1)
-		Com_Printf ("%i ",net_message.cursize);
+		Com_Printf ("%i ", net_message.cursize);
 	else if (cl_shownet->value >= 2)
 		Com_Printf ("------------------\n");
 
-
-//
-// parse the message
-//
+	// parse the message
 	while (true)
 	{
 		if (net_message.readcount > net_message.cursize)
 		{
-			Com_Error (ERR_DROP,"CL_ParseServerMessage: Bad server message");
+			Com_Error(ERR_DROP, "CL_ParseServerMessage: Bad server message");
 			break;
 		}
 
-		cmd = MSG_ReadByte (&net_message);
+		const int cmd = MSG_ReadByte(&net_message);
 
 		if (cmd == -1)
 		{
@@ -757,10 +726,10 @@ void CL_ParseServerMessage (void)
 			break;
 		}
 
-		if (cl_shownet->value>=2)
+		if (cl_shownet->value >= 2)
 		{
 			if (!svc_strings[cmd])
-				Com_Printf ("%3i:BAD CMD %i\n", net_message.readcount-1,cmd);
+				Com_Printf("%3i:BAD CMD %i\n", net_message.readcount - 1, cmd);
 			else
 				SHOWNET(svc_strings[cmd]);
 		}
@@ -769,7 +738,7 @@ void CL_ParseServerMessage (void)
 		switch (cmd)
 		{
 		default:
-			Com_Error (ERR_DROP,"CL_ParseServerMessage: Illegible server message\n");
+			Com_Error(ERR_DROP, "CL_ParseServerMessage: Illegible server message\n");
 			break;
 			
 		case svc_nop:
@@ -777,12 +746,13 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_disconnect:
-			Com_Error (ERR_DISCONNECT,"Server disconnected\n");
+			Com_Error(ERR_DISCONNECT, "Server disconnected\n");
 			break;
 
 		case svc_reconnect:
-			Com_Printf ("Server disconnected, reconnecting\n");
-			if (cls.download) {
+			Com_Printf("Server disconnected, reconnecting\n");
+			if (cls.download)
+			{
 				//ZOID, close download
 				fclose (cls.download);
 				cls.download = NULL;
@@ -792,35 +762,39 @@ void CL_ParseServerMessage (void)
 			break;
 
 		case svc_print:
-			i = MSG_ReadByte (&net_message);
+		{
+			const int i = MSG_ReadByte(&net_message);
 			if (i == PRINT_CHAT)
 			{
-				S_StartLocalSound ("misc/talk.wav");
+				S_StartLocalSound("misc/talk.wav");
 				con.ormask = 128;
-				Com_Printf (S_COLOR_ALT"%s", MSG_ReadString (&net_message)); // Knightmare- add green flag
+				Com_Printf(S_COLOR_ALT"%s", MSG_ReadString(&net_message)); // Knightmare- add green flag
 			}
 			else
-				Com_Printf ("%s", MSG_ReadString (&net_message));
+				Com_Printf("%s", MSG_ReadString(&net_message));
 			con.ormask = 0;
+		}
 			break;
 			
 		case svc_centerprint:
-			SCR_CenterPrint (MSG_ReadString (&net_message));
+			SCR_CenterPrint(MSG_ReadString(&net_message));
 			break;
 			
 		case svc_stufftext:
-			s = MSG_ReadString (&net_message);
-			Com_DPrintf ("stufftext: %s\n", s);
-			Cbuf_AddText (s);
+		{
+			char *s = MSG_ReadString(&net_message);
+			Com_DPrintf("stufftext: %s\n", s);
+			Cbuf_AddText(s);
+		}
 			break;
 			
 		case svc_serverdata:
-			Cbuf_Execute ();		// make sure any stuffed commands are done
-			CL_ParseServerData ();
+			Cbuf_Execute(); // make sure any stuffed commands are done
+			CL_ParseServerData();
 			break;
 			
 		case svc_configstring:
-			CL_ParseConfigString ();
+			CL_ParseConfigString();
 			break;
 			
 		case svc_sound:
@@ -828,59 +802,55 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_spawnbaseline:
-			CL_ParseBaseline ();
+			CL_ParseBaseline();
 			break;
 
 		case svc_temp_entity:
-			CL_ParseTEnt ();
+			CL_ParseTEnt();
 			break;
 
 		case svc_muzzleflash:
-			CL_ParseMuzzleFlash ();
+			CL_ParseMuzzleFlash();
 			break;
 
 		case svc_muzzleflash2:
-			CL_ParseMuzzleFlash2 ();
+			CL_ParseMuzzleFlash2();
 			break;
 
 		case svc_download:
-			CL_ParseDownload ();
+			CL_ParseDownload();
 			break;
 
 		case svc_frame:
-			CL_ParseFrame ();
+			CL_ParseFrame();
 			break;
 
 		case svc_inventory:
-			CL_ParseInventory ();
+			CL_ParseInventory();
 			break;
 
-		case svc_fog:	// Knightmare added
-			CL_ParseFog ();
+		case svc_fog: // Knightmare added
+			CL_ParseFog();
 			break;
 
 		case svc_layout:
-			s = MSG_ReadString (&net_message);
-			strncpy (cl.layout, s, sizeof(cl.layout)-1);
+		{
+			char *s = MSG_ReadString(&net_message);
+			strncpy(cl.layout, s, sizeof(cl.layout) - 1);
+		}
 			break;
 
 		case svc_playerinfo:
 		case svc_packetentities:
 		case svc_deltapacketentities:
-			Com_Error (ERR_DROP, "Out of place frame data");
+			Com_Error(ERR_DROP, "Out of place frame data");
 			break;
 		}
 	}
 
-	CL_AddNetgraph ();
+	CL_AddNetgraph();
 
-	//
-	// we don't know if it is ok to save a demo message until
-	// after we have parsed the frame
-	//
+	// we don't know if it is ok to save a demo message until after we have parsed the frame
 	if (cls.demorecording && !cls.demowaiting)
-		CL_WriteDemoMessage ();
-
+		CL_WriteDemoMessage();
 }
-
-

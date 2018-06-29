@@ -1169,7 +1169,7 @@ UI_Think_MouseCursor
 */
 void UI_Think_MouseCursor (void)
 {
-	char * sound = NULL;
+	char *sound = NULL;
 	menuframework_s *m = (menuframework_s *)cursor.menu;
 
 	if (m_drawfunc == M_Main_Draw) // have to hack for main menu :p
