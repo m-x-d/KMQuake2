@@ -34,8 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define MINIMUM_WIN_MEMORY	0x0a00000
 #define MAXIMUM_WIN_MEMORY	0x1000000
 
-qboolean s_win95;
-
 int			starttime;
 qboolean	ActiveApp; //mxd. int -> qboolean
 qboolean	Minimized;
@@ -437,7 +435,6 @@ static qboolean Sys_DetectCPU (char *cpuString, int maxSize)
 
 	char				vendor[16];
 	int					stdBits, features, moreFeatures, extFeatures;
-	int					family, extFamily, model, extModel;
 	unsigned __int64	start, end, counter, stop, frequency;
 	unsigned			speed;
 	qboolean			hasMMX, hasMMXExt, has3DNow, has3DNowExt, hasSSE, hasSSE2, hasSSE3;
@@ -486,401 +483,16 @@ NoExtFunction:
 	}
 
 	// Get CPU name
-	family = (stdBits >> 8) & 15;
-	extFamily = (stdBits >> 20) & 255;
-	model = (stdBits >> 4) & 15;
-	extModel = (stdBits >> 16) & 15;
-
 	if (!Q_stricmp(vendor, "AuthenticAMD"))
-	{
 		strncpy(cpuString, "AMD", maxSize);
-
-		switch (family)
-		{
-		case 4:
-			Q_strncatz(cpuString, " 5x86", maxSize);
-			break;
-		case 5:
-			switch (model)
-			{
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-				Q_strncatz(cpuString, " K5", maxSize);
-				break;
-			case 6:
-			case 7:
-				Q_strncatz(cpuString, " K6", maxSize);
-				break;
-			case 8:
-				Q_strncatz(cpuString, " K6-2", maxSize);
-				break;
-			case 9:
-			case 10:
-			case 11:
-			case 12:
-			case 13:
-			case 14:
-			case 15:
-				Q_strncatz(cpuString, " K6-III", maxSize);
-				break;
-			}
-			break;
-		case 6: // K7 family
-			switch (model)
-			{
-			case 1:		// 250nm core
-			case 2:		// 180nm core
-			case 4:		// Thunderbird core
-			case 6:		// Palomino core
-			case 8:		// Thoroughbred core
-			case 10:	// Barton core
-				Q_strncatz(cpuString, " Athlon", maxSize);
-				break;
-			case 3:		// Spitfire core
-			case 7:		// Morgan core
-				Q_strncatz(cpuString, " Duron", maxSize);
-				break;
-			default:
-				Q_strncatz(cpuString, " K7", maxSize);
-				break;
-			}
-			break;
-		case 15: // refer to extended family
-			if (extFamily == 0) // K8 family
-			{
-				switch (model)
-				{
-			//	case 0:
-			//	case 2:
-			//	case 6:
-				case 4:		// Clawhammer/Newark
-				case 7:		// San Diego/Newcastle
-				case 12:	// Newcastle/Albany
-					Q_strncatz(cpuString, " Athlon 64", maxSize);
-					break;
-				case 3:		// Toledo
-				case 11:	// Manchester/Brisbane
-				case 15:	// Winchester/Venice
-					Q_strncatz(cpuString, " Athlon 64 X2", maxSize);
-					break;
-				case 1:
-				case 5:
-					Q_strncatz(cpuString, " Athlon 64 FX / Opteron", maxSize);
-					break;
-				default:
-					Q_strncatz(cpuString, " K8", maxSize);
-					break;
-				}
-			}
-			else if (extFamily == 1) // K10 family
-			{
-				switch (model)
-				{
-				case 0: // Barcelona A0-A2
-				case 2: // Barcelona B0-B3
-					Q_strncatz(cpuString, " Phenom / Opteron", maxSize);
-					break;
-				case 4: // Deneb / Shanghai
-				case 10: // Thuban
-					Q_strncatz(cpuString, " Phenom II / Opteron", maxSize);
-					break;
-				case 5: // Propus
-				case 6: // Regor
-					Q_strncatz(cpuString, " Athlon II", maxSize);
-					break;
-				default:
-					Q_strncatz(cpuString, " K10", maxSize);
-					break;
-				}
-			}
-			else if (extFamily == 12) // Stars Fusion family
-			{
-				switch (model)
-				{
-				case 1:	// Llano
-					Q_strncatz(cpuString, " A8 APU", maxSize);
-					break;
-				default:
-					Q_strncatz(cpuString, " A series APU", maxSize);
-					break;
-				}
-			}
-			else if (extFamily == 14) // Bobcat family
-			{
-				switch (model)
-				{
-				case 1:	// Zacate
-					Q_strncatz(cpuString, " E-350 APU", maxSize);
-					break;
-				default:
-					Q_strncatz(cpuString, " E series APU", maxSize);
-					break;
-				}
-			}
-			else if (extFamily == 15) // Bulldozer family
-			{
-				switch (model)
-				{
-				case 0:	// Zambezi
-					if (extModel == 10)
-						Q_strncatz(cpuString, " A series APU", maxSize);
-					else
-						Q_strncatz(cpuString, " FX series", maxSize);
-					break;
-				case 2:
-					if (extModel == 2) // Vishera
-						Q_strncatz(cpuString, " FX series", maxSize);
-					break;
-				case 3:
-					if (extModel == 13)	// Richland
-						Q_strncatz(cpuString, " A series APU", maxSize);
-					break;
-				default:
-					Q_strncatz(cpuString, " FX series", maxSize);
-					break;
-				}
-			}
-			break;
-		default: // unknown family
-			break;
-		}
-	}
-	else if (!Q_stricmp(vendor, "CyrixInstead"))
-	{
-		strncpy(cpuString, "Cyrix", maxSize);
-
-		switch (family)
-		{
-		case 4:
-			Q_strncatz(cpuString, " 5x86", maxSize);
-			break;
-		case 5:
-			switch (model)
-			{
-			case 2:
-				Q_strncatz(cpuString, " 6x86", maxSize);
-				break;
-			case 4:
-				Q_strncatz(cpuString, " MediaGX", maxSize);
-				break;
-			default:
-				Q_strncatz(cpuString, " 6x86 / MediaGX", maxSize);
-				break;
-			}
-			break;
-		case 6:
-			Q_strncatz(cpuString, " 6x86MX", maxSize);
-			break;
-		default: // unknown family
-			break;
-		}
-	}
-	else if (!Q_stricmp(vendor, "CentaurHauls"))
-	{
-		strncpy(cpuString, "Centaur", maxSize);
-
-		switch (family)
-		{
-		case 5:
-			switch (model)
-			{
-			case 4:
-				Q_strncatz(cpuString, " C6", maxSize);
-				break;
-			case 8:
-				Q_strncatz(cpuString, " C2", maxSize);
-				break;
-			case 9:
-				Q_strncatz(cpuString, " C3", maxSize);
-				break;
-			default: // unknown model
-				break;
-			}
-			break;
-		default: // unknown family
-			break;
-		}
-	}
-	else if (!Q_stricmp(vendor, "NexGenDriven"))
-	{
-		strncpy(cpuString, "NexGen", maxSize);
-
-		switch (family)
-		{
-		case 5:
-			switch (model)
-			{
-			case 0:
-				Q_strncatz(cpuString, " Nx586 / Nx586FPU", maxSize);
-				break;
-			default: // unknown model
-				break;
-			}
-			break;
-		default: // unknown family
-			break;
-		}
-	}
 	else if (!Q_stricmp(vendor, "GenuineIntel"))
-	{
 		strncpy(cpuString, "Intel", maxSize);
-
-		switch (family)
-		{
-		case 5: // Pentium family
-			switch (model)
-			{
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 7:
-			case 8:
-			default:
-				Q_strncatz(cpuString, " Pentium", maxSize);
-				break;
-			}
-			break;
-		case 6:
-			if (extFamily == 6)	// newer CPUs
-			{
-				switch (model)
-				{
-				case 5:		// Clarkdale
-					Q_strncatz(cpuString, " Core i5 6xx / Core i3 5xx", maxSize);
-					break;
-				case 7:		
-					if (extModel == 0x17)	// Wolfdale / Yorkfield
-						Q_strncatz(cpuString, " Core 2", maxSize);
-					break;
-				case 10:	
-					if (extModel == 0x2A)	// Sandy Bridge
-						Q_strncatz(cpuString, "  Core i7 /i5 2xxx", maxSize);
-					else if (extModel == 0x3A)	// Ivy Bridge
-						Q_strncatz(cpuString, "  Core i7 /i5 3xxx", maxSize);
-					else if (extModel == 0x1A)	// Bloomfield
-						Q_strncatz(cpuString, " Core i7 9xx", maxSize);
-					break;
-				case 12:
-					if (extModel == 0x2C)	// Gulftown
-						Q_strncatz(cpuString, " Core i7 9xx", maxSize);
-					else if (extModel == 0x3C)	// Haswell
-						Q_strncatz(cpuString, "  Core i7 /i5 4xxx", maxSize);
-					else	// Silverthorne
-						Q_strncatz(cpuString, " Atom", maxSize);
-					break;
-				case 13:	
-					if (extModel == 0x2D)	// Sandy Bridge-E
-						Q_strncatz(cpuString, " Core i7 39xx / 38xx", maxSize);
-					break;
-				case 14:
-					if (extModel == 0x1E)	// Lynnfield
-						Q_strncatz(cpuString, " Core i7 8xx / Core i5 7xx", maxSize);
-					else if (extModel == 0x3E)	// Ivy Bridge-E
-						Q_strncatz(cpuString, " Core i7 49xx / 48xx", maxSize);
-					break;
-				case 15:	
-					if (extModel == 15)	// Conroe / Kentsfield
-						Q_strncatz(cpuString, " Core 2", maxSize);
-					break;
-				default:
-					break;
-				}
-			}
-			else // P6 family
-			{
-				switch (model)
-				{
-				case 0:
-				case 1:
-					Q_strncatz(cpuString, " Pentium Pro", maxSize);
-					break;
-				// Actual differentiation depends on cache settings
-				case 3:		// Klamath
-				case 5:		// Deschutes
-					Q_strncatz(cpuString, " Pentium II", maxSize);
-					break;
-				case 6:
-					Q_strncatz(cpuString, " Celeron", maxSize);
-					break;
-				// Actual differentiation depends on cache settings
-				case 7:		// Katmai
-				case 8:		// Coppermine
-				case 10:	// Coppermine
-				case 11:	// Tualatin
-					Q_strncatz(cpuString, " Pentium III", maxSize);
-					break;
-				case 12:	// Silverthorne
-					Q_strncatz(cpuString, " Atom", maxSize);
-					break;
-				case 9:		// Banias
-				case 13:	// Dothan
-					Q_strncatz(cpuString, " Pentium M", maxSize);
-					break;
-				case 14:	// Yonah
-					Q_strncatz(cpuString, " Core", maxSize);
-					break;
-				case 15:	// Conroe / Kentsfield / Wolfdale / Yorkfield
-					Q_strncatz(cpuString, " Core 2", maxSize);
-					break;
-				default:
-					Q_strncatz(cpuString, " P6", maxSize);
-					break;
-				}
-			}
-			break;
-		case 7: // Itanium family
-			switch (model)
-			{
-			default:
-				Q_strncatz(cpuString, " Itanium", maxSize);
-				break;
-			}
-			break;
-		case 15: // refer to extended family
-			if (extFamily == 0) // NetBurst family
-			{
-				switch (model)
-				{
-				case 0:		// Williamette
-				case 1:		// Williamette
-				case 2:		// Northwood
-				case 3:		// Prescott
-				case 4:		// Smithfield
-				case 6:		// Cedar Mill / Presler
-					Q_strncatz(cpuString, " Pentium 4", maxSize);
-					break;
-			//	case 4:		// Smithfield
-			//	case 6:		// Cedar Mill / Presler
-			//		Q_strncatz(cpuString, " Pentium D", maxSize);
-			//		break;
-				default:
-					Q_strncatz(cpuString, " NetBurst", maxSize);
-					break;
-				}
-			}
-			else if (extFamily == 1 || extFamily == 2) // Itanium 2 family
-			{
-				switch (model)
-				{
-				default:
-					Q_strncatz(cpuString, " Itanium 2", maxSize);
-					break;
-				}
-			}
-			break;
-		default: // unknown family
-			break;
-		}
-	}
 	else
-		return false;
+		strncpy(cpuString, vendor, maxSize);
 
 	// Check if RDTSC instruction is supported
-	if ((features >> 4) & 1){
+	if ((features >> 4) & 1)
+	{
 		// Measure CPU speed
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency);
 
@@ -893,7 +505,8 @@ NoExtFunction:
 		QueryPerformanceCounter((LARGE_INTEGER *)&stop);
 		stop += frequency;
 
-		do {
+		do
+		{
 			QueryPerformanceCounter((LARGE_INTEGER *)&counter);
 		} while (counter < stop);
 
@@ -905,8 +518,13 @@ NoExtFunction:
 
 		speed = (unsigned)((end - start) / 1000000);
 
-		Q_strncatz(cpuString, va(" %u MHz", speed), maxSize);
+		Q_strncatz(cpuString, va(" @ %u MHz", speed), maxSize);
 	}
+
+	//mxd. Get number of cores
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	Q_strncatz(cpuString, va(" (%i cores)", sysInfo.dwNumberOfProcessors), maxSize);
 
 	// Get extended instruction sets supported
 	hasMMX = (features >> 23) & 1;
@@ -919,20 +537,34 @@ NoExtFunction:
 
 	if (hasMMX || has3DNow || hasSSE)
 	{
-		Q_strncatz(cpuString, " w/", maxSize);
+		Q_strncatz(cpuString, " with", maxSize);
 
-		if (hasMMX){
+		if (hasMMX)
+		{
 			Q_strncatz(cpuString, " MMX", maxSize);
+
 			if (hasMMXExt)
 				Q_strncatz(cpuString, "+", maxSize);
 		}
-		if (has3DNow){
+
+		if (has3DNow)
+		{
+			if(hasMMX) 
+				Q_strncatz(cpuString, ",", maxSize); //mxd
+
 			Q_strncatz(cpuString, " 3DNow!", maxSize);
+
 			if (has3DNowExt)
 				Q_strncatz(cpuString, "+", maxSize);
 		}
-		if (hasSSE){
+
+		if (hasSSE)
+		{
+			if (hasMMX || has3DNow)
+				Q_strncatz(cpuString, ",", maxSize); //mxd
+
 			Q_strncatz(cpuString, " SSE", maxSize);
+
 			if (hasSSE3)
 				Q_strncatz(cpuString, "3", maxSize);
 			else if (hasSSE2)
@@ -948,6 +580,77 @@ NoExtFunction:
 #endif
 }
 
+/*
+================
+GetOsName (mxd. Adapted from Quake2xp)
+================
+*/
+
+qboolean Is64BitWindows()
+{
+	BOOL f64 = FALSE;
+	return IsWow64Process(GetCurrentProcess(), &f64) && f64;
+}
+
+qboolean GetOsVersion(RTL_OSVERSIONINFOEXW* pk_OsVer)
+{
+	typedef LONG(WINAPI* tRtlGetVersion)(RTL_OSVERSIONINFOEXW*);
+
+	memset(pk_OsVer, 0, sizeof(RTL_OSVERSIONINFOEXW));
+	pk_OsVer->dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+
+	const HMODULE h_NtDll = GetModuleHandleW(L"ntdll.dll");
+	tRtlGetVersion f_RtlGetVersion = (tRtlGetVersion)GetProcAddress(h_NtDll, "RtlGetVersion");
+
+	if (!f_RtlGetVersion)
+		return FALSE; // This will never happen (all processes load ntdll.dll)
+
+	const LONG status = f_RtlGetVersion(pk_OsVer);
+	return status == 0; // STATUS_SUCCESS;
+}
+
+qboolean GetOsName(char* result)
+{
+	RTL_OSVERSIONINFOEXW rtl_OsVer;
+	
+	if (GetOsVersion(&rtl_OsVer))
+	{
+		char *osname = "Windows"; //mxd
+		char *numbits = Is64BitWindows() ? "x64" : "x32"; //mxd
+		const qboolean workstation = (rtl_OsVer.wProductType == VER_NT_WORKSTATION); //mxd
+
+		if (rtl_OsVer.dwMajorVersion == 5) // Windows 2000, Windows XP
+		{
+			switch (rtl_OsVer.dwMinorVersion)
+			{
+				case 0: osname = "Windows 2000"; break;
+				case 1: osname = "Windows XP"; break;
+				case 2: osname = (workstation ? "Windows XP x64" : "Windows Server 2003"); break;
+			}
+		}
+		else if (rtl_OsVer.dwMajorVersion == 6) // Windows 7, Windows 8
+		{
+			switch (rtl_OsVer.dwMinorVersion)
+			{
+				case 1: osname = (workstation ? "Windows 7" : "Windows Server 2008 R2"); break;
+				case 2: osname = (workstation ? "Windows 8" : "Windows Server 2012"); break;
+				case 3: osname = (workstation ? "Windows 8.1" : "Windows Server 2012"); break;
+			}
+		}
+		else if (rtl_OsVer.dwMajorVersion == 10) // Windows 10
+		{
+			switch (rtl_OsVer.dwMinorVersion)
+			{
+				case 0: osname = (workstation ? "Windows 10" : "Windows Server 2016"); break;
+			}
+		}
+
+		sprintf(result, "%s %s %ls, build %d", osname, numbits, rtl_OsVer.szCSDVersion, rtl_OsVer.dwBuildNumber);
+		return true;
+	}
+	
+	return false;
+}
 
 /*
 ================
@@ -956,113 +659,35 @@ Sys_Init
 */
 void Sys_Init (void)
 {
-	OSVERSIONINFO	osInfo;
-	MEMORYSTATUS	memStatus;	// Knightmare added
-	char			string[64];	// Knightmare added
-
-#if 0
-	// allocate a named semaphore on the client so the
-	// front end can tell if it is alive
-
-	// mutex will fail if semephore already exists
-    qwclsemaphore = CreateMutex(
-        NULL,         /* Security attributes */
-        0,            /* owner       */
-        "qwcl"); /* Semaphore name      */
-	if (!qwclsemaphore)
-		Sys_Error ("QWCL is already running on this system");
-	CloseHandle (qwclsemaphore);
-
-    qwclsemaphore = CreateSemaphore(
-        NULL,         /* Security attributes */
-        0,            /* Initial count       */
-        1,            /* Maximum count       */
-        "qwcl"); /* Semaphore name      */
-#endif
-
 	timeBeginPeriod(1);
 
-	osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+	// Detect OS
+	char string[64]; // Knightmare added
+	if(!GetOsName(string)) //mxd
+		Sys_Error("Unsupported operating system");
 
-	if (!GetVersionEx (&osInfo))
-		Sys_Error ("Couldn't get OS info");
-
-	if (osInfo.dwMajorVersion < 4)
-		Sys_Error ("KMQuake2 requires Windows 95 or newer");
-
-	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32s)
-		Sys_Error ("KMQuake2 doesn't run on Win32s");
-	else if ( osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS )
-		s_win95 = true;
-
-// from Q2E - OS & CPU detection
-	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
-	{
-		if (osInfo.dwMajorVersion == 4)
-			strncpy(string, "Windows NT", sizeof(string));
-		else if (osInfo.dwMajorVersion == 5 && osInfo.dwMinorVersion == 0)
-			strncpy(string, "Windows 2000", sizeof(string));
-		else if (osInfo.dwMajorVersion == 5 && osInfo.dwMinorVersion == 1)
-			strncpy(string, "Windows XP", sizeof(string));
-		else if (osInfo.dwMajorVersion == 5 && osInfo.dwMinorVersion == 2)
-			strncpy(string, "Windows XP x64 / Server 2003", sizeof(string));
-		else if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 0)
-			strncpy(string, "Windows Vista", sizeof(string));
-		else if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 1)
-			strncpy(string, "Windows 7", sizeof(string));
-		else if (osInfo.dwMajorVersion == 6 && osInfo.dwMinorVersion == 2)
-			strncpy(string, "Windows 8", sizeof(string));
-		else
-			strncpy(string, va("Windows %i.%i", osInfo.dwMajorVersion, osInfo.dwMinorVersion), sizeof(string));
-	}
-	else if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
-	{
-		if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 0)
-		{
-			if (osInfo.szCSDVersion[1] == 'C' || osInfo.szCSDVersion[1] == 'B')
-				strncpy(string, "Windows 95 OSR2", sizeof(string));
-			else
-				strncpy(string, "Windows 95", sizeof(string));
-		}
-		else if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 10)
-		{
-			if (osInfo.szCSDVersion[1] == 'A')
-				strncpy(string, "Windows 98 SE", sizeof(string));
-			else
-				strncpy(string, "Windows 98", sizeof(string));
-		}
-		else if (osInfo.dwMajorVersion == 4 && osInfo.dwMinorVersion == 90)
-			strncpy(string, "Windows ME", sizeof(string));
-		else
-			strncpy(string, va("Windows %i.%i", osInfo.dwMajorVersion, osInfo.dwMinorVersion), sizeof(string));
-	}
-	else
-	{
-		strncpy(string, va("Windows %i.%i", osInfo.dwMajorVersion, osInfo.dwMinorVersion), sizeof(string));
-	}
-
-	Com_Printf("OS: %s\n", string);
+	Com_Printf("OS:  %s\n", string);
 	Cvar_Get("sys_osVersion", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 
 	// Detect CPU
-	Com_Printf("Detecting CPU... ");
 	if (Sys_DetectCPU(string, sizeof(string)))
 	{
-		Com_Printf("Found %s\n", string);
+		Com_Printf("CPU: %s\n", string);
 		Cvar_Get("sys_cpuString", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 	}
 	else
 	{
-		Com_Printf("Unknown CPU found\n");
+		Com_Printf("CPU: Unknown\n");
 		Cvar_Get("sys_cpuString", "Unknown", CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 	}
 
 	// Get physical memory
-	GlobalMemoryStatus(&memStatus); //TODO: use GlobalMemoryStatusEx 
-	strncpy(string, va("%u", memStatus.dwTotalPhys >> 20), sizeof(string));
-	Com_Printf("Memory: %s MB\n", string);
-	Cvar_Get("sys_ramMegs", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
-// end Q2E detection
+	MEMORYSTATUSEX memStatus; // Knightmare added //mxd. GlobalMemoryStatus -> GlobalMemoryStatusEx
+	memStatus.dwLength = sizeof(memStatus);
+	GlobalMemoryStatusEx(&memStatus);
+	sprintf(string, "%i", (int)(memStatus.ullTotalPhys >> 20)); //mxd. Uh oh! We'll be in trouble once average ram size exceeds 2 147 483 647 MB!
+	Com_Printf("RAM: %s MB\n", string);
+	Cvar_Get("sys_ramMegs", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE); //mxd. Never used for anything other than printing to the console
 
 #ifndef NEW_DED_CONSOLE
 	Sys_InitConsole (); // show dedicated console, moved to function
