@@ -294,7 +294,7 @@ void Key_Console (int key)
 			key_linepos--; //mxd
 		}
 	}
-	else if (key == K_DEL) //TODO: this doesn't work!
+	else if (key == K_DEL)
 	{
 		if (key_linepos > 1 && con.backedit)
 		{
@@ -731,6 +731,7 @@ void Key_Init (void)
 	consolekeys[K_SHIFT] = true;
 	consolekeys[K_INS] = true;
 	consolekeys[K_KP_INS] = true;
+	consolekeys[K_DEL] = true; //mxd
 	consolekeys[K_KP_DEL] = true;
 	consolekeys[K_KP_SLASH] = true;
 	consolekeys[K_KP_PLUS] = true;
