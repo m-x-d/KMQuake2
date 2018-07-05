@@ -407,10 +407,6 @@ BOOL ( WINAPI * qwglSwapIntervalEXT)( int interval );
 BOOL ( WINAPI * qwglGetDeviceGammaRampEXT)( unsigned char *, unsigned char *, unsigned char * );
 BOOL ( WINAPI * qwglSetDeviceGammaRampEXT)( const unsigned char *, const unsigned char *, const unsigned char * );
 
-//Knightmare added
-BOOL ( WINAPI * qwglGetDeviceGammaRamp3DFX)( HDC hDC, WORD *ramp ); 
-BOOL ( WINAPI * qwglSetDeviceGammaRamp3DFX)( HDC hDC, WORD *ramp );
-
 //void ( APIENTRY * qglPointParameterfEXT)( GLenum param, GLfloat value );
 //void ( APIENTRY * qglPointParameterfvEXT)( GLenum param, const GLfloat *value );
 void ( APIENTRY * qglColorTableEXT)( int, int, int, int, int, const void * );
@@ -424,13 +420,13 @@ void ( APIENTRY * qglStencilOpSeparateATI)(GLenum face, GLenum sfail, GLenum dpf
 void ( APIENTRY * qglStencilFuncSeparateATI)(GLenum frontfunc, GLenum backfunc, GLint red, GLuint mask);
 
 // Vertex Buffer Object stuff
-void ( APIENTRY * qglBindBufferARB)(GLenum target, GLuint buffer);
+/*void ( APIENTRY * qglBindBufferARB)(GLenum target, GLuint buffer);
 void ( APIENTRY * qglDeleteBuffersARB)(GLsizei n, const GLuint *buffers);
 void ( APIENTRY * qglGenBuffersARB)(GLsizei n, GLuint *buffers);
 void ( APIENTRY * qglBufferDataARB)(GLenum target, GLsizeiptrARB size, const GLvoid *data, GLenum usage);
 void ( APIENTRY * qglBufferSubDataARB)(GLenum target, GLintptrARB offset, GLsizeiptrARB size, const GLvoid *data);
 void *( APIENTRY * qglMapBufferARB)(GLenum target, GLenum access);
-GLboolean ( APIENTRY * qglUnmapBufferARB)(GLenum target);
+GLboolean ( APIENTRY * qglUnmapBufferARB)(GLenum target);*/
 
 // ARB fragment/vertex program stuff
 void ( APIENTRY * qglProgramStringARB)(GLenum, GLenum, GLsizei, const GLvoid *);
@@ -3044,13 +3040,13 @@ void QGL_Shutdown( void )
 	qglStencilFuncSeparateATI	 = NULL;
 
 	// Vertex Buffer Object stuff
-	qglBindBufferARB			 = NULL;
+	/*qglBindBufferARB			 = NULL;
 	qglDeleteBuffersARB			 = NULL;
 	qglGenBuffersARB			 = NULL;
 	qglBufferDataARB			 = NULL;
 	qglBufferSubDataARB			 = NULL;
 	qglMapBufferARB				 = NULL;
-	qglUnmapBufferARB			 = NULL;
+	qglUnmapBufferARB			 = NULL;*/
 
 	// ARB fragment/vertex program stuff
 	qglProgramStringARB				 = NULL;
@@ -3521,13 +3517,13 @@ qboolean QGL_Init( const char *dllname )
 	qglStencilFuncSeparateATI	= 0;
 
 	// Vertex Buffer Object stuff
-	qglBindBufferARB			= 0;
+	/*qglBindBufferARB			= 0;
 	qglDeleteBuffersARB			= 0;
 	qglGenBuffersARB			= 0;
 	qglBufferDataARB			= 0;
 	qglBufferSubDataARB			= 0;
 	qglMapBufferARB				= 0;
-	qglUnmapBufferARB			= 0;
+	qglUnmapBufferARB			= 0;*/
 
 	// ARB fragment/vertex program stuff
 	qglProgramStringARB				 = 0;

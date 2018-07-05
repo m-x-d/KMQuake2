@@ -124,7 +124,7 @@ typedef struct
 	int			version_minor;
 	int			version_release;
 
-	qboolean	allowCDS;
+	qboolean	allowCDS; //TODO: remove this
 	// max texture size
 	int			max_texsize;
 	int			max_texunits;
@@ -132,7 +132,6 @@ typedef struct
 	// non-power of two texture support
 	qboolean	arbTextureNonPowerOfTwo;
 
-	qboolean	vertexBufferObject;
 	qboolean	multitexture;
 	qboolean	mtexcombine;	// added Vic's RGB brightening
 

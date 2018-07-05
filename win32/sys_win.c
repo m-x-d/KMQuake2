@@ -690,7 +690,7 @@ void Sys_Init (void)
 	Cvar_Get("sys_ramMegs", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE); //mxd. Never used for anything other than printing to the console
 
 #ifndef NEW_DED_CONSOLE
-	Sys_InitConsole (); // show dedicated console, moved to function
+	Sys_InitConsole(); // show dedicated console, moved to function
 #endif
 }
 
@@ -910,7 +910,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
 
 #ifdef NEW_DED_CONSOLE // init debug console
-	Sys_InitDedConsole ();
+	Sys_InitDedConsole();
 	Com_Printf("KMQuake 2 SBE %4.2f %s %s %s\n", VERSION, CPUSTRING, BUILDSTRING, __DATE__); //mxd. Version
 #endif
 

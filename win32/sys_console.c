@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define CONSOLE_WINDOW_STYLE		(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|WS_CLIPCHILDREN|WS_GROUP)
-#define CONSOLE_WINDOW_CLASS_NAME	"KMQ2 Console"
+#define CONSOLE_WINDOW_CLASS_NAME	"KMQuake 2 SBE Console"
 
 #ifdef ERASER_COMPAT_BUILD
 #ifdef NET_SERVER_BUILD
@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef NET_SERVER_BUILD
 #define CONSOLE_WINDOW_NAME			"KMQuake2 Console (net server)"
 #else
-#define CONSOLE_WINDOW_NAME			"KMQuake2 Console"
+#define CONSOLE_WINDOW_NAME			"KMQuake 2 SBE Console"
 #endif // NET_SERVER_BUILD
 #endif // ERASER_COMPAT_BUILD
 
@@ -399,29 +399,27 @@ Sys_InitDedConsole
 void Sys_InitDedConsole (void)
 {
 	WNDCLASSEX	wc;
-	HDC			hDC;
 	RECT		r;
-	int			x, y, w, h;
 
 	//mxd. Ensure that the common control DLL is loaded... 
 	INITCOMMONCONTROLSEX icex = { sizeof(INITCOMMONCONTROLSEX), ICC_STANDARD_CLASSES };
 	InitCommonControlsEx(&icex);
 
 	// Center the window in the desktop
-	hDC = GetDC(0);
-	w = GetDeviceCaps(hDC, HORZRES);
-	h = GetDeviceCaps(hDC, VERTRES);
+	HDC hDC = GetDC(0);
+	int w = GetDeviceCaps(hDC, HORZRES);
+	int h = GetDeviceCaps(hDC, VERTRES);
 	ReleaseDC(0, hDC);
 	
 	r.left = (w - 540) / 2;
 	r.top = (h - 455) / 2; 
 	r.right = r.left + 540;
-	r.bottom = r.top + 455+LOGO_OFFSET;
+	r.bottom = r.top + 455 + LOGO_OFFSET;
 
 	AdjustWindowRect(&r, CONSOLE_WINDOW_STYLE, FALSE);
-	
-	x = r.left;
-	y = r.top;
+
+	const int x = r.left;
+	const int y = r.top;
 	w = r.right - r.left;
 	h = r.bottom - r.top;
 

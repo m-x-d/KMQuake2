@@ -399,13 +399,13 @@ extern	void ( APIENTRY * qglStencilOpSeparateATI)(GLenum face, GLenum sfail, GLe
 extern	void ( APIENTRY * qglStencilFuncSeparateATI)(GLenum frontfunc, GLenum backfunc, GLint red, GLuint mask);
 
 // Knightmare- added Vertex Buffer Object stuff
-extern void ( APIENTRY * qglBindBufferARB)(GLenum target, GLuint buffer);
+/*extern void ( APIENTRY * qglBindBufferARB)(GLenum target, GLuint buffer);
 extern void ( APIENTRY * qglDeleteBuffersARB)(GLsizei n, const GLuint *buffers);
 extern void ( APIENTRY * qglGenBuffersARB)(GLsizei n, GLuint *buffers);
 extern void	( APIENTRY * qglBufferDataARB)(GLenum target, GLsizeiptrARB size, const GLvoid *data, GLenum usage);
 extern void	( APIENTRY * qglBufferSubDataARB)(GLenum target, GLintptrARB offset, GLsizeiptrARB size, const GLvoid *data);
 extern void *( APIENTRY * qglMapBufferARB)(GLenum target, GLenum access);
-extern GLboolean ( APIENTRY * qglUnmapBufferARB)(GLenum target);
+extern GLboolean ( APIENTRY * qglUnmapBufferARB)(GLenum target);*/
 
 // ARB fragment/vertex program stuff
 extern void ( APIENTRY * qglProgramStringARB)(GLenum, GLenum, GLsizei, const GLvoid *);
@@ -468,10 +468,6 @@ extern BOOL ( WINAPI * qwglSwapIntervalEXT)( int interval );
 
 extern BOOL ( WINAPI * qwglGetDeviceGammaRampEXT ) ( unsigned char *pRed, unsigned char *pGreen, unsigned char *pBlue );
 extern BOOL ( WINAPI * qwglSetDeviceGammaRampEXT ) ( const unsigned char *pRed, const unsigned char *pGreen, const unsigned char *pBlue );
-
-//Knightmare added
-extern BOOL ( WINAPI * qwglGetDeviceGammaRamp3DFX ) ( HDC, WORD * );
-extern BOOL ( WINAPI * qwglSetDeviceGammaRamp3DFX ) ( HDC, WORD * );
 
 #endif
 

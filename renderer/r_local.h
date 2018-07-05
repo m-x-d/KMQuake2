@@ -243,8 +243,6 @@ extern	cvar_t	*con_font_size;
 
 extern	cvar_t	*r_vertex_arrays;
 
-//extern	cvar_t	*gl_ext_palettedtexture;
-//extern	cvar_t	*gl_ext_pointparameters;
 extern	cvar_t	*r_ext_swapinterval;
 extern	cvar_t	*r_ext_multitexture;
 extern	cvar_t	*r_ext_draw_range_elements;
@@ -779,7 +777,7 @@ typedef struct
 	int			version_minor;
 	int			version_release;
 
-	qboolean	allowCDS;
+	qboolean	allowCDS; //TODO: remove this
 	// max texture size
 	int			max_texsize;
 	int			max_texunits;
@@ -787,7 +785,6 @@ typedef struct
 	// non-power of two texture support
 	qboolean	arbTextureNonPowerOfTwo;
 
-	qboolean	vertexBufferObject;
 	qboolean	multitexture;
 	qboolean	mtexcombine;	// added Vic's RGB brightening
 
