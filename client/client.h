@@ -48,14 +48,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define CURL_CALLING_CONVENTION __cdecl
 #endif
 
-//#if defined (_MSC_VER) && (_MSC_VER <= 1200)	// use older version of libcurl for MSVC6
-//#include "../include/curl_old/curl.h"
-//#define CURL_ERROR(x)	va("%i",(x))
-//#else
 #define CURL_STATICLIB
 #include "../include/curl/curl.h"
 #define CURL_ERROR(x)	curl_easy_strerror(x)
-//#endif
 
 #endif	// USE_CURL
 // end HTTP downloading from R1Q2

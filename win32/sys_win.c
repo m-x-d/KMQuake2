@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <direct.h>
 #include <io.h>
 #include <conio.h>
+#include <intrin.h> //mxd. For __cpuid
 #include "../win32/conproc.h"
 
 #define MINIMUM_WIN_MEMORY	0x0a00000
@@ -425,73 +426,132 @@ char *Sys_ScanForCD (void)
 /*
 =================
 Sys_DetectCPU
-l33t CPU detection
-Borrowed from Q2E
+Adapted from GZDoom (https://github.com/coelckers/gzdoom/blob/2ae8d394418519b6c40bc117e08342039c77577a/src/x86.cpp#L74)
 =================
 */
-static qboolean Sys_DetectCPU (char *cpuString, int maxSize)
+
+#define MAKE_ID(a, b, c, d)	((uint32_t)((a)|((b)<<8)|((c)<<16)|((d)<<24)))
+
+CPUInfo CheckCPUID()
+{
+	int foo[4];
+
+	CPUInfo cpu;
+	memset(&cpu, 0, sizeof(cpu));
+	cpu.DataL1LineSize = 32;	// Assume a 32-byte cache line
+
+	// Get vendor ID
+	__cpuid(foo, 0);
+	cpu.dwVendorID[0] = foo[1];
+	cpu.dwVendorID[1] = foo[3];
+	cpu.dwVendorID[2] = foo[2];
+
+	if (foo[1] == MAKE_ID('A', 'u', 't', 'h') &&
+		foo[3] == MAKE_ID('e', 'n', 't', 'i') &&
+		foo[2] == MAKE_ID('c', 'A', 'M', 'D'))
+	{
+		cpu.bIsAMD = true;
+	}
+
+	// Get features flags and other info
+	__cpuid(foo, 1);
+	cpu.FeatureFlags[0] = foo[1];	// Store brand index and other stuff
+	cpu.FeatureFlags[1] = foo[2];	// Store extended feature flags
+	cpu.FeatureFlags[2] = foo[3];	// Store feature flags
+
+	cpu.HyperThreading = (foo[3] & (1 << 28)) > 0;
+
+	// If CLFLUSH instruction is supported, get the real cache line size.
+	if (foo[3] & (1 << 19))
+		cpu.DataL1LineSize = (foo[1] & 0xFF00) >> (8 - 3);
+
+	cpu.Stepping = foo[0] & 0x0F;
+	cpu.Type = (foo[0] & 0x3000) >> 12;	// valid on Intel only
+	cpu.Model = (foo[0] & 0xF0) >> 4;
+	cpu.Family = (foo[0] & 0xF00) >> 8;
+
+	if (cpu.Family == 15)
+		cpu.Family += (foo[0] >> 20) & 0xFF; // Add extended family.
+
+	if (cpu.Family == 6 || cpu.Family == 15)
+		cpu.Model |= (foo[0] >> 12) & 0xF0; // Add extended model ID.
+
+	// Check for extended functions.
+	__cpuid(foo, 0x80000000);
+	const unsigned int maxext = (unsigned int)foo[0];
+
+	if (maxext >= 0x80000004)
+	{ 
+		// Get processor brand string.
+		__cpuid((int *)&cpu.dwCPUString[0], 0x80000002);
+		__cpuid((int *)&cpu.dwCPUString[4], 0x80000003);
+		__cpuid((int *)&cpu.dwCPUString[8], 0x80000004);
+	}
+
+	if (cpu.bIsAMD)
+	{
+		if (maxext >= 0x80000005)
+		{ 
+			// Get data L1 cache info.
+			__cpuid(foo, 0x80000005);
+			cpu.AMD_DataL1Info = foo[2];
+		}
+
+		if (maxext >= 0x80000001)
+		{ 
+			// Get AMD-specific feature flags.
+			__cpuid(foo, 0x80000001);
+			cpu.AMDStepping = foo[0] & 0x0F;
+			cpu.AMDModel = (foo[0] & 0xF0) >> 4;
+			cpu.AMDFamily = (foo[0] & 0xF00) >> 8;
+
+			if (cpu.AMDFamily == 15)
+			{ 
+				// Add extended model and family.
+				cpu.AMDFamily += (foo[0] >> 20) & 0xFF;
+				cpu.AMDModel |= (foo[0] >> 12) & 0xF0;
+			}
+			cpu.FeatureFlags[3] = foo[3];	// AMD feature flags
+		}
+	}
+
+	return cpu;
+}
+
+static void Sys_DetectCPU (char *cpuString, int maxSize)
 {
 #if defined _M_IX86
 
-	char				vendor[16];
-	int					stdBits, features, moreFeatures, extFeatures;
 	unsigned __int64	start, end, counter, stop, frequency;
 	unsigned			speed;
-	qboolean			hasMMX, hasMMXExt, has3DNow, has3DNowExt, hasSSE, hasSSE2, hasSSE3;
 
-	// Check if CPUID instruction is supported
-	__try {
-		__asm {
-			mov eax, 0
-			cpuid
-		}
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER){
-		return false;
-	}
-
-	// Get CPU info
-	__asm {
-		; // Get vendor identifier
-		mov eax, 0
-		cpuid
-		mov dword ptr[vendor+0], ebx
-		mov dword ptr[vendor+4], edx
-		mov dword ptr[vendor+8], ecx
-		mov dword ptr[vendor+12], 0
-
-		; // Get standard bits and features
-		mov eax, 1
-		cpuid
-		mov stdBits, eax
-		mov moreFeatures, ecx ; // Knightmare added
-		mov features, edx
-
-		; // Check if extended functions are present
-		mov extFeatures, 0
-		mov eax, 80000000h
-		cpuid
-		cmp eax, 80000000h
-		jbe NoExtFunction
-
-		; // Get extended features
-		mov eax, 80000001h
-		cpuid
-		mov extFeatures, edx
-
-NoExtFunction:
-	}
+	CPUInfo cpu = CheckCPUID();
 
 	// Get CPU name
-	if (!Q_stricmp(vendor, "AuthenticAMD"))
-		strncpy(cpuString, "AMD", maxSize);
-	else if (!Q_stricmp(vendor, "GenuineIntel"))
-		strncpy(cpuString, "Intel", maxSize);
-	else
-		strncpy(cpuString, vendor, maxSize);
+	char cpustring[4 * 4 * 3 + 1];
+
+	// Why does Intel right-justify this string (on P4s) or add extra spaces (on Cores)?
+	const char *f = cpu.CPUString;
+	char *t;
+
+	// Skip extra whitespace at the beginning.
+	while (*f == ' ')
+		++f;
+
+	// Copy string to temp buffer, but condense consecutive spaces to a single space character.
+	for (t = cpustring; *f != '\0'; ++f)
+	{
+		if (*f == ' ' && *(f - 1) == ' ')
+			continue;
+		*t++ = *f;
+	}
+	*t = '\0';
+
+	// Store CPU name
+	strncpy(cpuString, (cpustring[0] ? cpustring : "Unknown"), maxSize);
 
 	// Check if RDTSC instruction is supported
-	if ((features >> 4) & 1)
+	if ((cpu.FeatureFlags[0] >> 4) & 1)
 	{
 		// Measure CPU speed
 		QueryPerformanceFrequency((LARGE_INTEGER *)&frequency);
@@ -527,56 +587,99 @@ NoExtFunction:
 	Q_strncatz(cpuString, va(" (%i cores)", sysInfo.dwNumberOfProcessors), maxSize);
 
 	// Get extended instruction sets supported
-	hasMMX = (features >> 23) & 1;
-	hasMMXExt = (extFeatures >> 22) & 1;
-	has3DNow = (extFeatures >> 31) & 1;
-	has3DNowExt = (extFeatures >> 30) & 1;
-	hasSSE = (features >> 25) & 1;
-	hasSSE2 = (features >> 26) & 1;
-	hasSSE3 = (moreFeatures >> 0) & 1;
-
-	if (hasMMX || has3DNow || hasSSE)
+	if (cpu.b3DNow || cpu.bSSE || cpu.bMMX || cpu.HyperThreading)
 	{
 		Q_strncatz(cpuString, " with", maxSize);
+		qboolean first = true;
 
-		if (hasMMX)
+		if (cpu.bMMX)
 		{
 			Q_strncatz(cpuString, " MMX", maxSize);
-
-			if (hasMMXExt)
+			
+			if (cpu.bMMXPlus)
 				Q_strncatz(cpuString, "+", maxSize);
+
+			first = false;
 		}
 
-		if (has3DNow)
+		if (cpu.bSSE)
 		{
-			if(hasMMX) 
-				Q_strncatz(cpuString, ",", maxSize); //mxd
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
+			
+			Q_strncatz(cpuString, " SSE", maxSize);
+			first = false;
+		}
+
+		if (cpu.bSSE2)
+		{
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
+			
+			Q_strncatz(cpuString, " SSE2", maxSize);
+			first = false;
+		}
+
+		if (cpu.bSSE3)
+		{
+			if (!first) 
+				Q_strncatz(cpuString, ",", maxSize);
+
+			Q_strncatz(cpuString, " SSE3", maxSize);
+			first = false;
+		}
+
+		if (cpu.bSSSE3)
+		{
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
+
+			Q_strncatz(cpuString, " SSSE3", maxSize);
+			first = false;
+		}
+
+		if (cpu.bSSE41)
+		{
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
+
+			Q_strncatz(cpuString, " SSE4.1", maxSize);
+			first = false;
+		}
+
+		if (cpu.bSSE42)
+		{
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
+
+			Q_strncatz(cpuString, " SSE4.2", maxSize);
+			first = false;
+		}
+
+		if (cpu.b3DNow)
+		{
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
 
 			Q_strncatz(cpuString, " 3DNow!", maxSize);
-
-			if (has3DNowExt)
+			
+			if (cpu.b3DNowPlus)
 				Q_strncatz(cpuString, "+", maxSize);
+
+			first = false;
 		}
 
-		if (hasSSE)
+		if (cpu.HyperThreading)
 		{
-			if (hasMMX || has3DNow)
-				Q_strncatz(cpuString, ",", maxSize); //mxd
+			if (!first)
+				Q_strncatz(cpuString, ",", maxSize);
 
-			Q_strncatz(cpuString, " SSE", maxSize);
-
-			if (hasSSE3)
-				Q_strncatz(cpuString, "3", maxSize);
-			else if (hasSSE2)
-				Q_strncatz(cpuString, "2", maxSize);
+			Q_strncatz(cpuString, " HyperThreading", maxSize);
 		}
 	}
 
-	return true;
-
 #else
-	Q_strncpyz(cpuString, "Alpha AXP", maxSize);
-	return true;
+	Q_strncpyz(cpuString, "Unknown", maxSize);
 #endif
 }
 
@@ -615,7 +718,7 @@ qboolean GetOsName(char* result)
 	
 	if (GetOsVersion(&rtl_OsVer))
 	{
-		char *osname = "Windows"; //mxd
+		char *osname = "(unknown version)"; //mxd
 		char *numbits = Is64BitWindows() ? "x64" : "x32"; //mxd
 		const qboolean workstation = (rtl_OsVer.wProductType == VER_NT_WORKSTATION); //mxd
 
@@ -623,29 +726,30 @@ qboolean GetOsName(char* result)
 		{
 			switch (rtl_OsVer.dwMinorVersion)
 			{
-				case 0: osname = "Windows 2000"; break;
-				case 1: osname = "Windows XP"; break;
-				case 2: osname = (workstation ? "Windows XP x64" : "Windows Server 2003"); break;
+				case 0: osname = "2000"; break;
+				case 1: osname = "XP"; break;
+				case 2: osname = (workstation ? "XP" : "Server 2003"); break;
 			}
 		}
 		else if (rtl_OsVer.dwMajorVersion == 6) // Windows 7, Windows 8
 		{
 			switch (rtl_OsVer.dwMinorVersion)
 			{
-				case 1: osname = (workstation ? "Windows 7" : "Windows Server 2008 R2"); break;
-				case 2: osname = (workstation ? "Windows 8" : "Windows Server 2012"); break;
-				case 3: osname = (workstation ? "Windows 8.1" : "Windows Server 2012"); break;
+				case 1: osname = (workstation ? "7" : "Server 2008 R2"); break;
+				case 2: osname = (workstation ? "8" : "Server 2012"); break;
+				case 3: osname = (workstation ? "8.1" : "Server 2012 R2"); break;
+				case 4: osname = (workstation ? "10 (beta)" : "Server 2016 (beta)"); break;
 			}
 		}
 		else if (rtl_OsVer.dwMajorVersion == 10) // Windows 10
 		{
 			switch (rtl_OsVer.dwMinorVersion)
 			{
-				case 0: osname = (workstation ? "Windows 10" : "Windows Server 2016"); break;
+				case 0: osname = (workstation ? "10" : "Server 2016"); break;
 			}
 		}
 
-		sprintf(result, "%s %s %ls, build %d", osname, numbits, rtl_OsVer.szCSDVersion, rtl_OsVer.dwBuildNumber);
+		sprintf(result, "Windows %s %s %ls, build %d", osname, numbits, rtl_OsVer.szCSDVersion, rtl_OsVer.dwBuildNumber);
 		return true;
 	}
 	
@@ -662,7 +766,7 @@ void Sys_Init (void)
 	timeBeginPeriod(1);
 
 	// Detect OS
-	char string[64]; // Knightmare added
+	char string[256]; // Knightmare added
 	if(!GetOsName(string)) //mxd
 		Sys_Error("Unsupported operating system");
 
@@ -670,16 +774,9 @@ void Sys_Init (void)
 	Cvar_Get("sys_osVersion", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
 
 	// Detect CPU
-	if (Sys_DetectCPU(string, sizeof(string)))
-	{
-		Com_Printf("CPU: %s\n", string);
-		Cvar_Get("sys_cpuString", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
-	}
-	else
-	{
-		Com_Printf("CPU: Unknown\n");
-		Cvar_Get("sys_cpuString", "Unknown", CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE);
-	}
+	Sys_DetectCPU(string, sizeof(string));
+	Com_Printf("CPU: %s\n", string);
+	Cvar_Get("sys_cpuString", string, CVAR_NOSET | CVAR_LATCH | CVAR_SAVE_IGNORE);
 
 	// Get physical memory
 	MEMORYSTATUSEX memStatus; // Knightmare added //mxd. GlobalMemoryStatus -> GlobalMemoryStatusEx
