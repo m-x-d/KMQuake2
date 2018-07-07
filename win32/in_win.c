@@ -244,6 +244,10 @@ void IN_StartupMouse (void)
 	UI_RefreshCursorMenu();
 	UI_RefreshCursorLink();
 
+	//mxd. Center cursor in screen
+	cursor.x = viddef.width / 2;
+	cursor.y = viddef.height / 2;
+
 	cursor.mouseaction = false;
 
 	mouseinitialized = true;
@@ -257,29 +261,12 @@ void IN_StartupMouse (void)
 IN_MouseEvent
 ===========
 */
-void UI_Think_MouseCursor (void);
 void IN_MouseEvent (int mstate)
 {
 	int		i;
 
 	if (!mouseinitialized)
 		return;
-
-// perform button actions
-	for (i=0 ; i<mouse_buttons ; i++)
-	{
-		if ( (mstate & (1<<i)) &&
-			!(mouse_oldbuttonstate & (1<<i)) )
-		{
-			Key_Event (K_MOUSE1 + i, true, sys_msg_time);
-		}
-
-		if ( !(mstate & (1<<i)) &&
-			(mouse_oldbuttonstate & (1<<i)) )
-		{
-			Key_Event (K_MOUSE1 + i, false, sys_msg_time);
-		}
-	}	
 
 	//set menu cursor buttons
 	if (cls.key_dest == key_menu)
@@ -314,6 +301,17 @@ void IN_MouseEvent (int mstate)
 			}
 		}			
 	}	
+
+	// perform button actions
+	//mxd. Moved below "set menu cursor buttons" block, because if Key_Event changes cls.key_dest to key_menu, the above block will immediately trigger mouse click action,
+	// which will select "Options" menu after clicking during ID logo cinematic, because it happens to be at the center of the screen
+	for (i = 0; i < mouse_buttons; i++)
+	{
+		if ((mstate & (1 << i)) && !(mouse_oldbuttonstate & (1 << i)))
+			Key_Event(K_MOUSE1 + i, true, sys_msg_time);
+		else if (!(mstate & (1 << i)) && (mouse_oldbuttonstate & (1 << i)))
+			Key_Event(K_MOUSE1 + i, false, sys_msg_time);
+	}
 
 	mouse_oldbuttonstate = mstate;
 }
@@ -542,6 +540,7 @@ void IN_Frame (void)
 IN_Move
 ===========
 */
+void UI_Think_MouseCursor(void);
 void IN_Move (usercmd_t *cmd)
 {
 	if (!ActiveApp)

@@ -447,19 +447,10 @@ void SpinControl_DoSlide (menulist_s *s, int dir)
 
 	s->curvalue += dir;
 
-	if (s->generic.flags & QMF_SKINLIST) // don't allow looping around for skin lists
-	{
-		if (s->curvalue < 0)
-			s->curvalue = 0;
-		else if (s->itemnames[s->curvalue] == 0)
-			s->curvalue--;
-	}
-	else {
-		if (s->curvalue < 0)
-			s->curvalue = s->numitemnames-1; // was 0
-		else if (s->itemnames[s->curvalue] == 0)
-			s->curvalue = 0; // was --
-	}
+	if (s->curvalue < 0)
+		s->curvalue = s->numitemnames - 1; // was 0
+	else if (s->itemnames[s->curvalue] == 0)
+		s->curvalue = 0; // was --
 
 	if (s->generic.callback)
 		s->generic.callback(s);
@@ -788,6 +779,18 @@ void Menu_Draw (menuframework_s *menu)
 				menu->cursor = i;
 
 				break;
+			}
+		}
+
+		//mxd. Reset menu mouse clicks when mouse moved away from an item (some interactive menu elements aren't added as items, 
+		// so buttonclicks from a prevoiusly clicked menu item are applied to them on hover...)
+		//TODO: redo those items as menuitems, remove explicit calls to PlayerConfig_MouseClick and MenuCrosshair_MouseClick in UI_ThinkMouseCursor (Knightmare laready did this in his current build?)
+		if(lastitem != NULL && cursor.menuitem == NULL)
+		{
+			for (i = 0; i < MENU_CURSOR_BUTTON_MAX; i++)
+			{
+				cursor.buttonclicks[i] = 0;
+				cursor.buttontime[i] = 0;
 			}
 		}
 	}

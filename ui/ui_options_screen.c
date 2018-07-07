@@ -506,6 +506,9 @@ void MenuCrosshair_MouseClick ( void )
 			if ( sound )
 				S_StartLocalSound( sound );
 		}
+
+		//mxd. Mark "crosshair" spin control as selected item
+		s_options_screen_menu.cursor = 1;
 	}
 }
 

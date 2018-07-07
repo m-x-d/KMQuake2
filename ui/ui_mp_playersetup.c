@@ -454,7 +454,6 @@ qboolean PlayerConfig_MenuInit (void)
 	s_player_skin_box.generic.cursor_offset = -6 * MENU_FONT_SIZE;
 	s_player_skin_box.curvalue = currentskinindex;
 	s_player_skin_box.itemnames = s_pmi[currentdirectoryindex].skindisplaynames;
-	s_player_skin_box.generic.flags |= QMF_SKINLIST;
 
 	s_player_hand_title.generic.type = MTYPE_SEPARATOR;
 	s_player_hand_title.generic.flags = QMF_LEFT_JUSTIFY;
@@ -565,13 +564,13 @@ qboolean PlayerConfig_CheckIncerement (int dir, float x, float y, float w, float
 	{
 		if (dir) // dir==1 is left
 		{
-			if (s_player_skin_box.curvalue > 0)
-				s_player_skin_box.curvalue--;
+			if (--s_player_skin_box.curvalue < 0)
+				s_player_skin_box.curvalue = s_pmi[s_player_model_box.curvalue].nskins - 1; //mxd. Wrap around
 		}
 		else
 		{
-			if (s_player_skin_box.curvalue < s_pmi[s_player_model_box.curvalue].nskins)
-				s_player_skin_box.curvalue++;
+			if (++s_player_skin_box.curvalue > s_pmi[s_player_model_box.curvalue].nskins - 1) //mxd. Wrap around
+				s_player_skin_box.curvalue = 0;
 		}
 
 		char *sound = menu_move_sound;
@@ -607,7 +606,8 @@ void PlayerConfig_MouseClick (void)
 	else
 		skinindex = s_player_skin_box.curvalue - 3;
 
-	if (skinindex > 0 && PlayerConfig_CheckIncerement(1, icon_x - 39, icon_y, 32, 32))
+	// Skins list left arrow click
+	if (PlayerConfig_CheckIncerement(1, icon_x - 39, icon_y, 32, 32))
 		return;
 
 	for (int count = 0; count < NUM_SKINBOX_ITEMS; skinindex++, count++)
@@ -620,7 +620,8 @@ void PlayerConfig_MouseClick (void)
 	}
 
 	icon_offset = NUM_SKINBOX_ITEMS * 34;
-	if (s_pmi[s_player_model_box.curvalue].nskins - skinindex > 0 && PlayerConfig_CheckIncerement(0, icon_x + icon_offset + 5, icon_y, 32, 32))
+	// Skins list right arrow click
+	if (PlayerConfig_CheckIncerement(0, icon_x + icon_offset + 5, icon_y, 32, 32))
 		return;
 
 	for (int i = 0; i < NUM_SKINBOX_ITEMS; i++)
@@ -670,10 +671,7 @@ void PlayerConfig_DrawSkinSelection (void)
 		skinindex = s_player_skin_box.curvalue - 3;
 
 	// left arrow
-	if (skinindex > 0)
-		Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_left.pcx");
-	else
-		Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_left_d.pcx");
+	Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_left.pcx");
 	SCR_DrawPic(icon_x - 39, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0);
 
 	// background
@@ -710,10 +708,7 @@ void PlayerConfig_DrawSkinSelection (void)
 
 	// right arrow
 	icon_offset = NUM_SKINBOX_ITEMS * 34;
-	if (s_pmi[s_player_model_box.curvalue].nskins - skinindex > 0)
-		Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_right.pcx");
-	else
-		Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_right_d.pcx");
+	Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_right.pcx");
 	SCR_DrawPic(icon_x + icon_offset + 5, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0);
 }
 
@@ -748,7 +743,7 @@ void PlayerConfig_MenuDraw (void)
 
 		const int yaw = anglemod(cl.time / 10);
 
-		VectorSet(modelOrg, 150, (hand->value == 1 ? 25 : -25), 0); // was 80, 0, 0
+		VectorSet(modelOrg, 150, -25, 0);
 
 		// Setup player model
 		entity_t *ent = &entity[0];
@@ -771,7 +766,7 @@ void PlayerConfig_MenuDraw (void)
 		ent->angles[1] = yaw;
 		
 		if (hand->value == 1)
-			ent->angles[1] = 360 - ent->angles[1];
+			ent->angles[1] -= 90; //mxd
 
 		refdef.num_entities++;
 
@@ -799,7 +794,7 @@ void PlayerConfig_MenuDraw (void)
 			ent->angles[1] = yaw;
 			
 			if (hand->value == 1)
-				ent->angles[1] = 360 - ent->angles[1];
+				ent->angles[1] -= 90; //mxd
 
 			refdef.num_entities++;
 		}
