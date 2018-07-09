@@ -247,7 +247,7 @@ void Key_Console (int key)
 
 		con.backedit = 0;
 	}
-	else if (key == 'l' && keydown[K_CTRL])
+	else if ((key == 'l' || key == 'c') && keydown[K_CTRL]) //mxd. +Clear via Ctrl-C 
 	{
 		Cbuf_AddText ("clear\n");
 		con.backedit = 0;
@@ -356,18 +356,43 @@ void Key_Console (int key)
 			key_linepos = strlen(key_lines[edit_line]);
 		}
 	}
-	else if (key == K_PGUP || key == K_KP_PGUP || key == K_MWHEELUP)
+	else if (key == K_PGUP || key == K_KP_PGUP)
 	{
-		con.display -= 2;
+		const int linesonscreen = Con_LinesOnScreen(); //mxd
+		if (con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
+		{
+			con.display -= linesonscreen - 2; // Was 2
+			con.display = max(con.display, con.totallines + linesonscreen - 1);
+		}
 	}
-	else if (key == K_PGDN || key == K_KP_PGDN|| key == K_MWHEELDOWN) // Quake2max change
+	else if (key == K_PGDN || key == K_KP_PGDN) // Quake2max change
+	{
+		const int linesonscreen = Con_LinesOnScreen(); //mxd
+		if (con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
+		{
+			con.display += linesonscreen - 2; // Was 2
+			con.display = min(con.display, con.current);
+		}
+	}
+	else if (key == K_MWHEELUP) //mxd
+	{
+		const int linesonscreen = Con_LinesOnScreen();
+		if(con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
+		{
+			con.display -= 2;
+			con.display = max(con.display, con.totallines + linesonscreen - 1);
+		}
+	}
+	else if (key == K_MWHEELDOWN) //mxd
 	{
 		con.display += 2;
-		con.display = min(con.display, con.current); //mxd
+		con.display = min(con.display, con.current);
 	}
 	else if (key == K_HOME || key == K_KP_HOME)
 	{
-		con.display = con.current - con.totallines + 10;
+		const int linesonscreen = Con_LinesOnScreen(); //mxd
+		if (con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
+			con.display = con.totallines + linesonscreen - 1;
 	}
 	else if (key == K_END || key == K_KP_END)
 	{

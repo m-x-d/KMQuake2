@@ -61,6 +61,7 @@ void Con_Init (void);
 void Con_DrawConsole (float frac, qboolean ingame);
 //void Con_Print (char *txt); //mxd. Redundant declaration
 void Con_CenteredPrint (char *text);
+int Con_LinesOnScreen(); //mxd
 void Con_Clear_f (void);
 void Con_DrawNotify (void);
 void Con_ClearNotify (void);

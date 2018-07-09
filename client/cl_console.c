@@ -129,9 +129,11 @@ Con_Clear_f
 void Con_Clear_f (void)
 {
 	memset(con.text, ' ', CON_TEXTSIZE);
+
+	//mxd. Also reset display line and curent line...
+	con.display = con.current = con.totallines;
 }
 
-						
 /*
 ================
 Con_Dump_f
@@ -445,6 +447,17 @@ void Con_CenteredPrint (char *text)
 	Q_strncpyz(buffer + len, text, sizeof(buffer) - 1);
 	Q_strncatz(buffer, "\n", sizeof(buffer));
 	Con_Print(buffer);
+}
+
+/*
+================
+Con_LinesOnScreen (mxd)
+================
+*/
+
+int Con_LinesOnScreen()
+{
+	return (con.vislines - (int)(2.75 * FONT_SIZE)) / FONT_SIZE; // rows of text to draw
 }
 
 /*
