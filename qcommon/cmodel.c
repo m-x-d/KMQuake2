@@ -391,7 +391,7 @@ void CMod_LoadBrushSides (lump_t *l)
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
-		const int num = LittleShort(in->planenum);
+		const int num = (unsigned short)LittleShort(in->planenum);
 		out->plane = &map_planes[num];
 		const int texinfo = LittleShort(in->texinfo);
 		if (texinfo >= numtexinfo)
