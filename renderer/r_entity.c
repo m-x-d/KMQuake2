@@ -30,13 +30,13 @@ R_RotateForEntity
 */
 void R_RotateForEntity (entity_t *e, qboolean full)
 {
-    qglTranslatef (e->origin[0],  e->origin[1],  e->origin[2]);
+	qglTranslatef(e->origin[0], e->origin[1], e->origin[2]);
+	qglRotatef(e->angles[1], 0, 0, 1);
 
-    qglRotatef (e->angles[1],  0, 0, 1);
 	if (full)
 	{
-		qglRotatef (e->angles[0],  0, 1, 0);
-		qglRotatef (e->angles[2],  1, 0, 0);
+		qglRotatef(e->angles[0], 0, 1, 0);
+		qglRotatef(e->angles[2], 1, 0, 0);
 	}
 }
 
@@ -48,10 +48,7 @@ R_RollMult
 */
 int R_RollMult (void)
 {
-	if (r_entity_fliproll->value)
-		return -1;
-	else
-		return 1;
+	return (r_entity_fliproll->value ? -1 : 1);
 }
 
 
@@ -60,55 +57,31 @@ int R_RollMult (void)
 R_DrawNullModel
 =================
 */
-/*void R_DrawNullModel (void)
-{
-    qglPushMatrix ();
-	R_RotateForEntity (currententity, true);
-	GL_DisableTexture (0);
-
-	qglBegin(GL_LINES);
-
-	qglColor4ub(255, 0, 0, 255);
-	qglVertex3f(0, 0, 0);
-	qglVertex3f(16, 0, 0);
-
-	qglColor4ub(0, 255, 0, 255);
-	qglVertex3f(0, 0, 0);
-	qglVertex3f(0, 16, 0);
-
-	qglColor4ub(0, 0, 255, 255);
-	qglVertex3f(0, 0, 0);
-	qglVertex3f(0, 0, 16);
-
-	qglEnd();
-
-	GL_EnableTexture (0);
-	qglPopMatrix ();
-	qglColor4f (1,1,1,1);
-}*/
 void R_DrawNullModel (void)
 {
-	vec3_t	shadelight;
-
-	qglPushMatrix ();
-	R_RotateForEntity (currententity, true);
-	GL_DisableTexture (0);
+	qglPushMatrix();
+	R_RotateForEntity(currententity, true);
+	GL_DisableTexture(0);
 
 	if (r_old_nullmodel->value)
 	{
+		vec3_t shadelight;
 		if (currententity->flags & RF_FULLBRIGHT)
-			VectorSet (shadelight, 1.0f, 1.0f, 1.0f);
+			VectorSet(shadelight, 1.0f, 1.0f, 1.0f);
 		else
-			R_LightPoint (currententity->origin, shadelight, false);
-		qglColor3fv (shadelight);
-		qglCallList (glMedia.displayLists[DL_NULLMODEL1]);
+			R_LightPoint(currententity->origin, shadelight, false);
+
+		qglColor3fv(shadelight);
+		qglCallList(glMedia.displayLists[DL_NULLMODEL1]);
 	}
 	else
-		qglCallList (glMedia.displayLists[DL_NULLMODEL2]);
+	{
+		qglCallList(glMedia.displayLists[DL_NULLMODEL2]);
+	}
 
-	GL_EnableTexture (0);
-	qglPopMatrix ();
-	qglColor4f (1,1,1,1);
+	GL_EnableTexture(0);
+	qglPopMatrix();
+	qglColor4f(1, 1, 1, 1);
 }
 
 
@@ -137,14 +110,9 @@ void resetEntSortList (void)
 
 sortedelement_t *NewSortEnt (entity_t *ent)
 {
-	//qboolean is_weapmodel = false;
-	//qboolean entinwater;
+	sortedelement_t *element = &theents[entstosort];
+
 	vec3_t distance;
-	sortedelement_t *element;
-	//mleaf_t *point_in;
-
-	element = &theents[entstosort];
-
 	VectorSubtract(ent->origin, r_origin, distance);
 	VectorCopy(ent->origin, element->org);
 
@@ -162,46 +130,36 @@ sortedelement_t *NewSortEnt (entity_t *ent)
 ElementAddNode
 =================
 */
-// This is dirty, but it's gotta be fast...
 void ElementAddNode (sortedelement_t *base, sortedelement_t *thisElement)
 {
-again:
-	if (thisElement->len > base->len)
+	while(true)
 	{
-		if (base->left) {
-			base = base->left;
-			goto again;
+		if (thisElement->len > base->len)
+		{
+			if (base->left)
+			{
+				base = base->left;
+			}
+			else
+			{
+				base->left = thisElement;
+				return;
+			}
 		}
 		else
-			base->left = thisElement;
-	}
-	else
-	{
-		if (base->right) {
-			base = base->right;
-			goto again;
+		{
+			if (base->right)
+			{
+				base = base->right;
+			}
+			else
+			{
+				base->right = thisElement;
+				return;
+			}
 		}
-		else
-			base->right = thisElement;
 	}
 }
-/*void ElementAddNode (sortedelement_t *base, sortedelement_t *thisElement)
-{
-	if (thisElement->len > base->len)
-	{
-		if (base->left)
-			ElementAddNode(base->left, thisElement);
-		else
-			base->left = thisElement;
-	}
-	else
-	{
-		if (base->right)
-			ElementAddNode(base->right, thisElement);
-		else
-			base->right = thisElement;
-	}
-}*/
 
 
 /*
@@ -224,7 +182,7 @@ void AddEntViewWeapTree (entity_t *ent, qboolean trans)
 			ents_viewweaps = thisEnt;
 	}
 	else
-	{		
+	{
 		if (ents_viewweaps_trans)
 			ElementAddNode(ents_viewweaps_trans, thisEnt);
 		else
@@ -268,37 +226,27 @@ void ParseRenderEntity (entity_t *ent)
 
 	if (currententity->flags & RF_BEAM)
 	{
-		R_DrawBeam (currententity);
+		R_DrawBeam(currententity);
 	}
 	else
 	{
 		currentmodel = currententity->model;
 		if (!currentmodel)
 		{
-			R_DrawNullModel ();
+			R_DrawNullModel();
 			return;
 		}
+
 		switch (currentmodel->type)
 		{
 #ifndef MD2_AS_MD3
-		case mod_md2:
-			R_DrawAliasMD2Model (currententity);
-			break;
-#endif // MD2_AS_MD3
-		//Harven MD3 ++
-		case mod_alias:
-			R_DrawAliasModel (currententity);
-			break;
-		//Harven MD3 --
-		case mod_brush:
-			R_DrawBrushModel (currententity);
-			break;
-		case mod_sprite:
-			R_DrawSpriteModel (currententity);
-			break;
+		case mod_md2: R_DrawAliasMD2Model(currententity); break;
+#endif
+		case mod_alias:  R_DrawAliasModel(currententity); break; //Harven MD3
+		case mod_brush:  R_DrawBrushModel(currententity); break;
+		case mod_sprite: R_DrawSpriteModel(currententity); break;
 		default:
 			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Warning: ParseRenderEntity: %s: Bad modeltype (%i)\n", currentmodel->name, currentmodel->type);
-			//VID_Error (ERR_DROP, "Bad modeltype");
 			break;
 		}
 	}
@@ -331,32 +279,30 @@ R_DrawAllEntities
 */
 void R_DrawAllEntities (qboolean addViewWeaps)
 {
-	qboolean alpha;
-	int i;
-	
 	if (!r_drawentities->value)
 		return;
 
 	resetEntSortList();
 
-	for (i=0;i<r_newrefdef.num_entities; i++)
+	// Opaque models
+	for (int i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
 
-		alpha = false;
+		qboolean alpha = false;
 		if (currententity->flags & RF_TRANSLUCENT)
 			alpha = true;
 
 		// check for md3 mesh transparency
-		if (!(currententity->flags & RF_BEAM) && currententity->model) {
-			if ( (currententity->model->type == mod_alias) && currententity->model->hasAlpha)
+		if (!(currententity->flags & RF_BEAM) && currententity->model)
+			if (currententity->model->type == mod_alias && currententity->model->hasAlpha)
 				alpha = true;
-		}
 
 		if (currententity->flags & RF_WEAPONMODEL)
 		{
 			if (addViewWeaps)
 				AddEntViewWeapTree(currententity, alpha);
+
 			continue;
 		}
 
@@ -366,30 +312,31 @@ void R_DrawAllEntities (qboolean addViewWeaps)
 		ParseRenderEntity(currententity);
 	}
 
-	GL_DepthMask (0);
-	for (i=0;i<r_newrefdef.num_entities; i++)
+	GL_DepthMask(0);
+
+	// Translucent models
+	for (int i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
 
-		alpha = false;
+		qboolean alpha = false;
 		if (currententity->flags & RF_TRANSLUCENT)
+		{
 			alpha = true;
-
-		// check for md3 mesh transparency
-		if (!(currententity->flags & RF_BEAM) && currententity->model) {
-			if ( (currententity->model->type == mod_alias) && currententity->model->hasAlpha)
-				alpha = true;
+		}
+		else if (!(currententity->flags & RF_BEAM) && currententity->model 
+			&& currententity->model->type == mod_alias && currententity->model->hasAlpha) // check for md3 mesh transparency
+		{
+			alpha = true;
 		}
 
-		if (currententity->flags & RF_WEAPONMODEL)
-			continue;
-		if (!alpha)
+		if (!alpha || currententity->flags & RF_WEAPONMODEL)
 			continue;
 
 		ParseRenderEntity(currententity);
 	}
-	GL_DepthMask (1);
-	
+
+	GL_DepthMask(1);
 }
 
 
@@ -400,34 +347,34 @@ R_DrawSolidEntities
 */
 void R_DrawSolidEntities ()
 {
-	qboolean alpha;
-	int		i;
-
 	if (!r_drawentities->value)
 		return;
 
 	resetEntSortList();
 
-	for (i=0;i<r_newrefdef.num_entities; i++)
+	for (int i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
-		alpha = false;
-
+		
+		qboolean alpha = false;
 		if (currententity->flags & RF_TRANSLUCENT)
+		{
 			alpha = true;
-
-		// check for md3 mesh transparency
-		if (!(currententity->flags & RF_BEAM) && currententity->model) {
-			if ( (currententity->model->type == mod_alias) && currententity->model->hasAlpha)
-				alpha = true;
+		}
+		else if (!(currententity->flags & RF_BEAM) && currententity->model
+			&& currententity->model->type == mod_alias && currententity->model->hasAlpha) // check for md3 mesh transparency
+		{
+			alpha = true;
 		}
 
-		if (currententity->flags & RF_WEAPONMODEL) {
+		if (currententity->flags & RF_WEAPONMODEL)
+		{
 			AddEntViewWeapTree(currententity, alpha);
 			continue;
 		}
 
-		if (alpha) {
+		if (alpha)
+		{
 			AddEntTransTree(currententity);
 			continue;
 		}
@@ -444,10 +391,8 @@ R_DrawEntitiesOnList
 */
 void R_DrawEntitiesOnList (sortedelement_t *list)
 {
-	if (!r_drawentities->value)
-		return;
-
-	RenderEntTree(list);
+	if (r_drawentities->value)
+		RenderEntTree(list);
 }
 
 
