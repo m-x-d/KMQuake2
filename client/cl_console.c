@@ -454,11 +454,32 @@ void Con_CenteredPrint (char *text)
 Con_LinesOnScreen (mxd)
 ================
 */
-
 int Con_LinesOnScreen()
 {
 	return (con.vislines - (int)(2.75 * FONT_SIZE)) / FONT_SIZE; // rows of text to draw
 }
+
+
+/*
+================
+Con_FirstLine (mxd)
+================
+*/
+int Con_FirstLine()
+{
+	// Find the first line with text...
+	for (int l = con.current - con.totallines + 1; l <= con.current; l++)
+	{
+		char *line = con.text + (l % con.totallines) * con.linewidth;
+
+		for (int x = 0; x < con.linewidth; x++)
+			if (line[x] != ' ')
+				return l;
+	}
+
+	return con.current; // We wrapped around / buffer is empty
+}
+
 
 /*
 ==============================================================================
@@ -688,7 +709,7 @@ void Con_DrawConsole (float frac, qboolean trans)
 
 	// draw the text
 	con.vislines = lines;
-	rows = (lines - (int)(2.75 * FONT_SIZE)) / FONT_SIZE; // rows of text to draw
+	rows = Con_LinesOnScreen(); //mxd // rows of text to draw
 	y = lines - (int)(3.75 * FONT_SIZE);
 
 	// draw from the bottom up

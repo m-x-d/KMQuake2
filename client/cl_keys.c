@@ -359,28 +359,28 @@ void Key_Console (int key)
 	else if (key == K_PGUP || key == K_KP_PGUP)
 	{
 		const int linesonscreen = Con_LinesOnScreen(); //mxd
-		if (con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
+		const int firstline = Con_FirstLine();
+
+		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
 		{
 			con.display -= linesonscreen - 2; // Was 2
-			con.display = max(con.display, con.totallines + linesonscreen - 1);
+			con.display = max(con.display, firstline + linesonscreen - 2);
 		}
 	}
 	else if (key == K_PGDN || key == K_KP_PGDN) // Quake2max change
 	{
-		const int linesonscreen = Con_LinesOnScreen(); //mxd
-		if (con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
-		{
-			con.display += linesonscreen - 2; // Was 2
-			con.display = min(con.display, con.current);
-		}
+		con.display += Con_LinesOnScreen() - 2; //mxd. Was 2
+		con.display = min(con.display, con.current);
 	}
 	else if (key == K_MWHEELUP) //mxd
 	{
 		const int linesonscreen = Con_LinesOnScreen();
-		if(con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
+		const int firstline = Con_FirstLine();
+
+		if(con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
 		{
 			con.display -= 2;
-			con.display = max(con.display, con.totallines + linesonscreen - 1);
+			con.display = max(con.display, firstline + linesonscreen - 2);
 		}
 	}
 	else if (key == K_MWHEELDOWN) //mxd
@@ -391,8 +391,10 @@ void Key_Console (int key)
 	else if (key == K_HOME || key == K_KP_HOME)
 	{
 		const int linesonscreen = Con_LinesOnScreen(); //mxd
-		if (con.current - con.totallines > linesonscreen) // Don't scroll if there are less lines than console space
-			con.display = con.totallines + linesonscreen - 1;
+		const int firstline = Con_FirstLine();
+
+		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
+			con.display = firstline + linesonscreen - 2;
 	}
 	else if (key == K_END || key == K_KP_END)
 	{
