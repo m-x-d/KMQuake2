@@ -641,7 +641,7 @@ void SCR_DrawCenterString (void)
 	int	l, y;
 
 	// added Psychospaz's fading centerstrings
-	const int alpha = 255 * (1 - (((cl.time + (scr_centertime->value - 1) - scr_centertime_start) / 1000.0) / scr_centertime_end));		
+	const int alpha = 255 * (1 - (cl.time + (scr_centertime->value - 1) - scr_centertime_start) / 1000.0 / scr_centertime_end);
 
 	// the finale prints the characters one at a time
 	int remaining = 9999;
@@ -662,14 +662,20 @@ void SCR_DrawCenterString (void)
 				break;
 
 		Com_sprintf (line, sizeof(line), "");
+		unsigned skipchars = 0; //mxd
 		for (int j = 0; j < l; j++)
 		{
+			//mxd. Formatting sequences (like '^b' or '^1') should not affect horizontal position
+			if(start[j] == '^' && j + 1 < l && StringCheckParams(start[j + 1]))
+				skipchars += 2;
+			
 			Com_sprintf (line, sizeof(line), "%s%c", line, start[j]);
 			
 			if (!remaining--)
 				return;
 		}
-		DrawStringGeneric ( (int)((viddef.width - strlen(line) * FONT_SIZE) * 0.5), y, line, alpha, SCALETYPE_CONSOLE, false);
+
+		DrawStringGeneric ( (int)((viddef.width - (strlen(line) - skipchars) * FONT_SIZE) * 0.5), y, line, alpha, SCALETYPE_CONSOLE, false);
 		y += FONT_SIZE;
 
 		while (*start && *start != '\n')

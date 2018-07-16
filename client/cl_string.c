@@ -98,38 +98,18 @@ void TextColor (int colornum, int *red, int *green, int *blue)
 StringSetParams
 ================
 */
-qboolean StringSetParams (char modifier, int *red, int *green, int *blue, int *bold, int *shadow, int *italic, int *reset)
+qboolean StringSetParams (char modifier, int *red, int *green, int *blue, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *reset)
 {
 	if (!alt_text_color)
-		alt_text_color = Cvar_Get ("alt_text_color", "2", CVAR_ARCHIVE);
+		alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
 
 	switch (modifier)
 	{
-		case 'R':
-		case 'r':
-			*reset = true;
-			return true;
-		case 'B':
-		case 'b':
-			if (*bold) 
-				*bold = false;
-			else 
-				*bold=true;
-			return true;
-		case 'S':
-		case 's':
-			if (*shadow) 
-				*shadow=false; 
-			else 
-				*shadow=true;
-			return true;
-		case 'I':
-		case 'i':
-			if (*italic) 
-				*italic=false; 
-			else 
-				*italic=true;
-			return true;
+		case 'R': case 'r': *reset = true;  return true;
+		case 'B': case 'b':	*bold = !*bold;	return true;
+		case 'S': case 's':	*shadow = !*shadow; return true;
+		case 'I': case 'i': *italic = !*italic; return true;
+		
 		case COLOR_RED:
 		case COLOR_GREEN:
 		case COLOR_YELLOW:
@@ -142,8 +122,8 @@ qboolean StringSetParams (char modifier, int *red, int *green, int *blue, int *b
 		case COLOR_GRAY:
 			TextColor(atoi(&modifier), red, green, blue);
 			return true;
-		case 'A':	//alt text color
-		case 'a':
+
+		case 'A': case 'a': //alt text color
 			TextColor((int)alt_text_color->value, red, green, blue);
 			return true;
 	}
@@ -154,37 +134,47 @@ qboolean StringSetParams (char modifier, int *red, int *green, int *blue, int *b
 
 /*
 ================
+StringCheckParams (mxd)
+================
+*/
+qboolean StringCheckParams(char modifier)
+{
+	int i; qboolean b;
+	return StringSetParams(modifier, &i, &i, &i, &b, &b, &b, &b);
+}
+
+
+/*
+================
 DrawStringGeneric
 ================
 */
 void DrawStringGeneric (int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit)
 {
-	unsigned i, j, len;
-	char modifier, character;
-	int red, green, blue, italic, shadow, bold, reset;
-	float textSize, textScale;
-
 	// defaults
-	red = 255;
-	green = 255;
-	blue = 255;
-	italic = false;
-	shadow = false;
-	bold = false;
+	int red = 255;
+	int green = 255;
+	int blue = 255;
+	qboolean italic = false;
+	qboolean shadow = false;
+	qboolean bold = false;
 
-	len = strlen( string );
-	for ( i = 0, j = 0; i < len; i++ )
+	unsigned charnum = 0;
+	const unsigned len = strlen(string);
+	for (unsigned i = 0; i < len; i++)
 	{
-		modifier = string[i];
-		if (modifier&128) modifier &= ~128;
+		char modifier = string[i];
+		if (modifier & 128)
+			modifier &= ~128;
 
-		if (modifier == '^' /*&& i < len*/)
+		if (modifier == '^')
 		{
 			i++;
 
-			reset = 0;
+			qboolean reset = false;
 			modifier = string[i];
-			if (modifier&128) modifier &= ~128;
+			if (modifier & 128)
+				modifier &= ~128;
 
 			if (modifier != '^')
 			{
@@ -206,22 +196,19 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 				i--;
 			}
 		}
-		j++;
 
-		character = string[i];
+		char character = string[i];
 		if (bold) //mxd
 			character += 128;
-		/*if (bold && character < 128) //mxd. V560 A part of conditional expression is always true: character < 128. The value range of char type: [-128, 127].
-			character += 128;
-		else if (bold && character > 128)
-			character -= 128;*/
 
+		float textSize, textScale;
 		switch (scaleType)
 		{
 		case SCALETYPE_MENU:
 			textSize = SCR_ScaledVideo(MENU_FONT_SIZE);
 			textScale = SCR_VideoScale();
 			break;
+
 		case SCALETYPE_HUD:
 			textSize = scaledHud(HUD_FONT_SIZE);
 			textScale = HudScale();
@@ -231,6 +218,7 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 			if (character & 128)
 				TextColor((int)alt_text_color->value, &red, &green, &blue);
 			break;
+
 		case SCALETYPE_CONSOLE:
 		default:
 			textSize = FONT_SIZE;
@@ -242,10 +230,14 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 		}
 
 		if (shadow)
-			R_DrawChar( ( x + (j-1)*textSize+textSize/4 ), y+(textSize/8), 
-				character, textScale, 0, 0, 0, alpha, italic, false );
+		{
+			R_DrawChar((x + charnum * textSize + textSize / 4), y + (textSize / 8),
+				character, textScale, 0, 0, 0, alpha, italic, false);
+		}
 
-		R_DrawChar( ( x + (j-1)*textSize ), y,
-			character, textScale, red, green, blue, alpha, italic, (i==(len-1)) );
+		R_DrawChar((x + charnum * textSize), y,
+			character, textScale, red, green, blue, alpha, italic, (i == (len - 1)));
+
+		charnum++;
 	}
 }

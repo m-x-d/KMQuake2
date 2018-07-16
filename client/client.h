@@ -529,7 +529,8 @@ float ClampCvar( float min, float max, float value );
 
 // for use with the alt_text_color cvar
 void TextColor (int colornum, int *red, int *green, int *blue);
-qboolean StringSetParams (char modifier, int *red, int *green, int *blue, int *bold, int *shadow, int *italic, int *reset);
+qboolean StringSetParams (char modifier, int *red, int *green, int *blue, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *reset);
+qboolean StringCheckParams(char modifier); //mxd
 void Con_DrawString (int x, int y, char *string, int alpha);
 void DrawStringGeneric (int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit);
 
