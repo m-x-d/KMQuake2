@@ -1591,13 +1591,24 @@ void _DrawHUDString (char *string, int x, int y, int centerwidth, int xor, qbool
 	{
 		// scan out one line of text from the string
 		int width = 0;
+		int skipchars = 0; //mxd
 		while (*string && *string != '\n')
+		{
+			//mxd. Formatting sequences (like '^b' or '^1') should not affect horizontal position
+			if (*string == '^')
+			{
+				char* next = string + 1;
+				if(next && StringCheckParams(*next))
+					skipchars += 2;
+			}
+			
 			line[width++] = *string++;
+		}
 
 		line[width] = 0;
 
 		if (centerwidth)
-			x = margin + (centerwidth - width * scaleForScreen(8)) / 2;
+			x = margin + (centerwidth - (width - skipchars) * scaleForScreen(8)) / 2;
 		else
 			x = margin;
 
