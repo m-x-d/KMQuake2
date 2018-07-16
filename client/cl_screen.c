@@ -978,7 +978,7 @@ void SCR_DrawLoadingTagProgress (char *picName, int yOffset, int percent)
 	const int h = 40;
 	const int x = (SCREEN_WIDTH - w) * 0.5;
 	const int y = (SCREEN_HEIGHT - h) * 0.5;
-	const int barPos = min(max(percent, 0), 100) / 4;
+	const int barPos = clamp(percent, 0, 100) / 4;
 
 	SCR_DrawPic (x, y + yOffset, w, h, ALIGN_CENTER, picName, 1.0);
 

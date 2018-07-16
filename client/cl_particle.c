@@ -523,15 +523,12 @@ CL_CalcPartVelocity
 void CL_CalcPartVelocity (cparticle_t *p, float scale, float *time, vec3_t velocity)
 {
 	const float time1 = *time;
-	const float time2 = time1*time1;
+	const float time2 = time1 * time1;
+	const int gravity = (p->flags & PART_GRAVITY ? PARTICLE_GRAVITY : 0); //mxd
 
-	velocity[0] = scale * (p->vel[0]*time1 + p->accel[0]*time2);
-	velocity[1] = scale * (p->vel[1]*time1 + p->accel[1]*time2);
-
-	if (p->flags & PART_GRAVITY)
-		velocity[2] = scale * (p->vel[2]*time1 + (p->accel[2]-(PARTICLE_GRAVITY))*time2);
-	else
-		velocity[2] = scale * (p->vel[2]*time1 + (p->accel[2])*time2);
+	for (int i = 0; i < 2; i++)
+		velocity[i] = scale * (p->vel[i] * time1 + p->accel[i] * time2);
+	velocity[2] = scale * (p->vel[2] * time1 + (p->accel[2] - gravity) * time2);
 }
 
 /*
@@ -559,8 +556,7 @@ CL_ParticleBounceThink
 */
 void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	float clipsize = *size * 0.5;
-	if (clipsize < 0.25) clipsize = 0.25;
+	const float clipsize = max(*size * 0.5, 0.25);
 	trace_t tr = CL_BrushTrace (p->oldorg, org, clipsize, MASK_SOLID); // was 1
 	
 	if (tr.fraction < 1)
@@ -579,7 +575,7 @@ void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *al
 
 		p->start = p->time = CL_NewParticleTime();
 
-		if (p->flags&PART_GRAVITY && VectorLength(p->vel)<2)
+		if (p->flags & PART_GRAVITY && VectorLength(p->vel) < 2)
 			p->flags &= ~PART_GRAVITY;
 	}
 
@@ -618,8 +614,8 @@ CL_AddParticles
 */
 void CL_AddParticles (void)
 {
-	float			alpha;
-	vec3_t			org, color, angle;
+	float alpha;
+	vec3_t org, color, angle;
 
 	cparticle_t *active = NULL;
 	cparticle_t *tail = NULL;
@@ -636,7 +632,7 @@ void CL_AddParticles (void)
 		if (p->alphavel != INSTANT_PARTICLE)
 		{
 			time = (cl.time - p->time) * 0.001;
-			alpha = p->alpha + time*p->alphavel;
+			alpha = p->alpha + time * p->alphavel;
 			if (flags & PART_DECAL)
 			{
 				if (decals >= r_decals->value || alpha <= 0)
@@ -680,30 +676,30 @@ void CL_AddParticles (void)
 
 		alpha = clamp(alpha, 0.0, 1.0); //mxd
 
-		const float time2 = time*time;
+		const float time2 = time * time;
 		int image = p->image;
 
 		for (int i = 0; i < 3; i++)
 		{
-			color[i] = p->color[i] + p->colorvel[i]*time;
+			color[i] = p->color[i] + p->colorvel[i] * time;
 			color[i] = clamp(color[i], 0, 255); //mxd
 			
 			angle[i] = p->angle[i];
-			org[i] = p->org[i] + p->vel[i]*time + p->accel[i]*time2;
+			org[i] = p->org[i] + p->vel[i] * time + p->accel[i] * time2;
 		}
 
 		if (p->flags & PART_GRAVITY)
 			org[2] += time2 * -PARTICLE_GRAVITY;
 
-		float size = p->size + p->sizevel*time;
+		float size = p->size + p->sizevel * time;
 
 		for (int i = 0; i < P_LIGHTS_MAX; i++)
 		{
 			const cplight_t *plight = &p->lights[i];
 			if (plight->isactive)
 			{
-				const float light = plight->light*alpha + plight->lightvel*time;
-				V_AddLight (org, light, plight->lightcol[0], plight->lightcol[1], plight->lightcol[2]);
+				const float light = plight->light * alpha + plight->lightvel * time;
+				V_AddLight(org, light, plight->lightcol[0], plight->lightcol[1], plight->lightcol[2]);
 			}
 		}
 
@@ -716,15 +712,21 @@ void CL_AddParticles (void)
 		if (flags & PART_DECAL)
 		{
 			if (p->decalnum > 0 && p->decal)
+			{
 				for (decalpolys_t *d = p->decal; d; d = d->nextpoly)
-					V_AddDecal (org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, d);
+					V_AddDecal(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, d);
+			}
 			else
-				V_AddDecal (org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, NULL);
+			{
+				V_AddDecal(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, NULL);
+			}
 
 			decals++;
 		}
 		else
-			V_AddParticle (org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags);
+		{
+			V_AddParticle(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags);
+		}
 		
 		if (p->alphavel == INSTANT_PARTICLE)
 		{

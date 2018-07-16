@@ -875,7 +875,7 @@ void		Com_SetServerState (int state);
 unsigned	Com_BlockChecksum (void *buffer, int length);
 byte		COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 
-float	frand(void);	// 0 ti 1
+float	frand(void);	// 0 to 1
 float	crand(void);	// -1 to 1
 
 extern	cvar_t	*developer;

@@ -828,11 +828,11 @@ void CL_ParticleSplashThink (cparticle_t *p, vec3_t org, vec3_t angle, float *al
 
 	//setting up angle for sparks
 	const float time1 = *time;
-	const float time2 = time1*time1;
+	const float time2 = time1 * time1;
 
-	for (int i = 0; i<2; i++)
-		angle[i] = 0.5 * (p->vel[i]*time1 + p->accel[i]*time2);
-	angle[2] = 0.5 * (p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
+	for (int i = 0; i < 2; i++)
+		angle[i] = 0.5 * (p->vel[i] * time1 + p->accel[i] * time2);
+	angle[2] = 0.5 * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
 
 	p->thinknext = true;
 }
@@ -876,11 +876,11 @@ void CL_ParticleSparksThink (cparticle_t *p, vec3_t org, vec3_t angle, float *al
 {
 	//setting up angle for sparks
 	const float time1 = *time;
-	const float time2 = time1*time1;
+	const float time2 = time1 * time1;
 
 	for (int i = 0; i < 2; i++)
-		angle[i] = 0.25 * (p->vel[i]*time1 + p->accel[i]*time2);
-	angle[2] = 0.25 * (p->vel[2]*time1 + (p->accel[2]-PARTICLE_GRAVITY)*time2);
+		angle[i] = 0.25 * (p->vel[i] * time1 + p->accel[i] * time2);
+	angle[2] = 0.25 * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
 
 	p->thinknext = true;
 }
@@ -1277,7 +1277,7 @@ void CL_ParticleBlasterThink (cparticle_t *p, vec3_t org, vec3_t angle, float *a
 	CL_ParticleBounceThink (p, org, angle, alpha, &clipsize, image, time); // was size
 
 	const vec_t length = min(pBlasterMaxVelocity, VectorNormalize(p->vel)); //mxd
-	VectorScale(p->vel,	length, p->vel);
+	VectorScale(p->vel, length, p->vel);
 
 /*	vec3_t len;
 	VectorSubtract(p->angle, org, len);
@@ -1302,9 +1302,9 @@ void CL_ClassicBlasterParticles(vec3_t org, vec3_t dir)
 		cparticle_t	*p = CL_InitParticle();
 		if (!p) return;
 
-		color8_to_vec3(0xe0 + (rand()&7), p->color);
+		color8_to_vec3(0xe0 + (rand() & 7), p->color);
 
-		const float d = rand()&15;
+		const float d = rand() & 15;
 		for (int j = 0; j < 3; j++)
 		{
 			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
@@ -1312,7 +1312,7 @@ void CL_ClassicBlasterParticles(vec3_t org, vec3_t dir)
 		}
 
 		p->accel[2] = -PARTICLE_GRAVITY;
-		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->alphavel = -1.0 / (0.5 + frand() * 0.3);
 		p->image = particle_classic;
 		p->flags = PART_GRAVITY;
 	}
@@ -1326,8 +1326,7 @@ CL_BlasterParticles
 Wall impact puffs
 ===============
 */
-void CL_BlasterParticles (vec3_t org, vec3_t dir, int count, float size,
-		int red, int green, int blue, int reddelta, int greendelta, int bluedelta)
+void CL_BlasterParticles (vec3_t org, vec3_t dir, int count, float size, int red, int green, int blue, int reddelta, int greendelta, int bluedelta)
 {
 	//mxd. Classic particles
 	if (r_particle_mode->integer == 0)
@@ -1708,7 +1707,7 @@ void CL_ClassicDiminishingTrail(vec3_t start, vec3_t end, centity_t *old, int fl
 			return;
 
 		// Drop less particles as it flies
-		if ((rand()&1023) < old->trailcount)
+		if ((rand() & 1023) < old->trailcount)
 		{
 			cparticle_t *p = CL_InitParticle2(flags);
 			if (!p) return;
@@ -1721,20 +1720,20 @@ void CL_ClassicDiminishingTrail(vec3_t start, vec3_t end, centity_t *old, int fl
 
 			if (flags & EF_GIB)
 			{
-				p->alphavel = -1.0 / (1 + frand()*0.4);
-				color8_to_vec3(0xe8 + (rand()&7), p->color);
+				p->alphavel = -1.0 / (1 + frand() * 0.4);
+				color8_to_vec3(0xe8 + (rand() & 7), p->color);
 				p->vel[2] -= PARTICLE_GRAVITY;
 			}
 			else if (flags & EF_GREENGIB)
 			{
-				p->alphavel = -1.0 / (1 + frand()*0.4);
-				color8_to_vec3(0xdb + (rand()&7), p->color);
+				p->alphavel = -1.0 / (1 + frand() * 0.4);
+				color8_to_vec3(0xdb + (rand() & 7), p->color);
 				p->vel[2] -= PARTICLE_GRAVITY;
 			}
 			else
 			{
-				p->alphavel = -1.0 / (1 + frand()*0.2);
-				color8_to_vec3(4 + (rand()&7), p->color);
+				p->alphavel = -1.0 / (1 + frand() * 0.2);
+				color8_to_vec3(4 + (rand() & 7), p->color);
 				p->accel[2] = 20;
 			}
 		}
@@ -2172,17 +2171,16 @@ void CL_ParticleDevRailThink (cparticle_t *p, vec3_t org, vec3_t angle, float *a
 	vec3_t len;
 	VectorSubtract(p->angle, org, len);
 	
-	*size *= (float)(SplashSize/VectorLength(len)) * 0.5 / (4 - *size);
-	if (*size > SplashSize)
-		*size = SplashSize;
+	*size *= (float)(SplashSize / VectorLength(len)) * 0.5 / (4 - *size);
+	*size = min(*size, SplashSize); //mxd
 
 	//setting up angle for sparks
 	const float time1 = *time;
 	const float time2 = time1 * time1;
 
 	for (int i = 0; i < 2; i++)
-		angle[i] = 3 * (p->vel[i]*time1 + p->accel[i]*time2);
-	angle[2] = 3 * (p->vel[2]*time1 + (p->accel[2] - PARTICLE_GRAVITY)*time2);
+		angle[i] = 3 * (p->vel[i] * time1 + p->accel[i] * time2);
+	angle[2] = 3 * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
 
 	p->thinknext = true;
 }
@@ -2194,24 +2192,23 @@ CL_DevRailTrail
 */
 void CL_DevRailTrail (vec3_t start, vec3_t end, qboolean isRed)
 {
-	vec3_t		move;
-	vec3_t		vec, point;
+	vec3_t move, vec, point;
 	int i = 0;
 
 	// Draw from closest point
 	if (FartherPoint(start, end))
 	{
-		VectorCopy (end, move);
-		VectorSubtract (start, end, vec);
+		VectorCopy(end, move);
+		VectorSubtract(start, end, vec);
 	}
 	else
 	{
-		VectorCopy (start, move);
-		VectorSubtract (end, start, vec);
+		VectorCopy(start, move);
+		VectorSubtract(end, start, vec);
 	}
 
-	float len = VectorNormalize (vec);
-	len = min (len, cl_rail_length->value);  // cap length
+	float len = VectorNormalize(vec);
+	len = min(len, cl_rail_length->value); // cap length
 	VectorCopy(vec, point);
 
 	const int dec = 4;
@@ -2311,8 +2308,8 @@ void CL_ClassicRailTrail(vec3_t start, vec3_t end, qboolean isRed)
 		VectorScale(right, c, dir);
 		VectorMA(dir, s, up, dir);
 
-		p->alphavel = -1.0 / (1 + frand()*0.2);
-		color8_to_vec3(color8 + (rand()&7), p->color);
+		p->alphavel = -1.0 / (1 + frand() * 0.2);
+		color8_to_vec3(color8 + (rand() & 7), p->color);
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -2335,8 +2332,8 @@ void CL_ClassicRailTrail(vec3_t start, vec3_t end, qboolean isRed)
 		cparticle_t	*p = CL_InitParticle();
 		if (!p) return;
 
-		p->alphavel = -1.0 / (0.6 + frand()*0.2);
-		color8_to_vec3((rand()&7), p->color);
+		p->alphavel = -1.0 / (0.6 + frand() * 0.2);
+		color8_to_vec3(rand() & 7, p->color);
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -2465,7 +2462,7 @@ void CL_ClassicIonripperTrail(vec3_t start, vec3_t ent)
 
 		p->alpha = 0.5f;
 		p->alphavel = -1.0 / (0.3 + frand() * 0.2);
-		color8_to_vec3(0xe4 + (rand()&3), p->color);
+		color8_to_vec3(0xe4 + (rand() & 3), p->color);
 
 		VectorCopy(move, p->org);
 		p->vel[0] = 10 * (left ? 1 : -1);
@@ -2548,8 +2545,8 @@ void CL_ClassicBubbleTrail(vec3_t start, vec3_t end)
 		cparticle_t *p = CL_InitParticle();
 		if (!p) return;
 
-		p->alphavel = -1.0 / (1 + frand()*0.2);
-		color8_to_vec3(4 + (rand()&7), p->color);
+		p->alphavel = -1.0 / (1 + frand() * 0.2);
+		color8_to_vec3(4 + (rand() & 7), p->color);
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -3075,8 +3072,8 @@ void CL_ClassicBubbleTrail2(vec3_t start, vec3_t end, int dist)
 		cparticle_t *p = CL_InitParticle();
 		if (!p) return;
 
-		p->alphavel = -1.0 / (1 + frand()*0.1);
-		color8_to_vec3(4 + (rand()&7), p->color);
+		p->alphavel = -1.0 / (1 + frand() * 0.1);
+		color8_to_vec3(4 + (rand() & 7), p->color);
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -3248,11 +3245,10 @@ CL_ParticleSteamEffect
 Puffs with velocity along direction, with some randomness thrown in
 ===============
 */
-void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int red, int green, int blue,
-							 int reddelta, int greendelta, int bluedelta, int count, int magnitude)
+void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int red, int green, int blue, int reddelta, int greendelta, int bluedelta, int count, int magnitude)
 {
 	vec3_t r, u;
-	MakeNormalVectors (dir, r, u);
+	MakeNormalVectors(dir, r, u);
 
 	const int particletype = (r_particle_mode->integer == 1 ? particle_smoke : particle_classic); //mxd
 
@@ -3275,11 +3271,11 @@ void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int red, int green, int blu
 		if (!p)
 			return;
 
-		VectorScale (dir, magnitude, p->vel);
+		VectorScale(dir, magnitude, p->vel);
 		float d = crand() * magnitude / 3;
-		VectorMA (p->vel, d, r, p->vel);
+		VectorMA(p->vel, d, r, p->vel);
 		d = crand() * magnitude / 3;
-		VectorMA (p->vel, d, u, p->vel);
+		VectorMA(p->vel, d, u, p->vel);
 	}
 }
 
@@ -3292,14 +3288,13 @@ Puffs with velocity along direction, with some randomness thrown in
 ===============
 */
 void CL_ParticleSteamEffect2 (cl_sustain_t *self)
-//vec3_t org, vec3_t dir, int color, int count, int magnitude)
 {
-	const int color8 = self->color + (rand()&7);
-	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8)};
+	const int color8 = self->color + (rand() & 7);
+	vec3_t color = { color8red(color8), color8green(color8), color8blue(color8) };
 
 	vec3_t dir, r, u;
-	VectorCopy (self->dir, dir);
-	MakeNormalVectors (dir, r, u);
+	VectorCopy(self->dir, dir);
+	MakeNormalVectors(dir, r, u);
 
 	const int particletype = (r_particle_mode->integer == 1 ? particle_smoke : particle_classic); //mxd
 
@@ -3322,11 +3317,11 @@ void CL_ParticleSteamEffect2 (cl_sustain_t *self)
 		if (!p)
 			return;
 
-		VectorScale (dir, self->magnitude, p->vel);
+		VectorScale(dir, self->magnitude, p->vel);
 		float d = crand() * self->magnitude / 3;
-		VectorMA (p->vel, d, r, p->vel);
+		VectorMA(p->vel, d, r, p->vel);
 		d = crand() * self->magnitude / 3;
-		VectorMA (p->vel, d, u, p->vel);
+		VectorMA(p->vel, d, u, p->vel);
 	}
 
 	self->nextthink += self->thinkinterval;
@@ -3727,7 +3722,7 @@ void CL_Tracker_Explode (vec3_t	origin)
 
 		VectorCopy (origin, p->org); //Knightmare- start at center, not edge
 	//	VectorMA(origin, 64, dir, p->org); 
-		VectorScale(dir, (crand()*128), p->vel); //was backdir, 64
+		VectorScale(dir, crand() * 128, p->vel); //was backdir, 64
 	}
 	
 }
@@ -3788,16 +3783,16 @@ void CL_ColorExplosionParticles (vec3_t org, int color8, int run)
 		cparticle_t	*p = CL_InitParticle();
 		if (!p) return;
 
-		color8_to_vec3(color8 + (rand()%run), p->color);
+		color8_to_vec3(color8 + (rand() % run), p->color);
 
 		for (int j = 0; j < 3; j++)
 		{
-			p->org[j] = org[j] + ((rand()%32) - 16);
-			p->vel[j] = (rand()%256) - 128;
+			p->org[j] = org[j] + ((rand() % 32) - 16);
+			p->vel[j] = (rand() % 256) - 128;
 		}
 
 		p->accel[2] = -PARTICLE_GRAVITY;
-		p->alphavel = -0.4 / (0.6 + frand()*0.2);
+		p->alphavel = -0.4 / (0.6 + frand() * 0.2);
 		p->blendfunc_dst = GL_ONE_MINUS_SRC_ALPHA;
 		p->size = 2;
 	}
@@ -3812,7 +3807,7 @@ CL_ParticleSmokeEffect - like the steam effect, but unaffected by gravity
 */
 void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, float size)
 {
-	const float alpha = fabsf(crand())*0.25 + 0.75;
+	const float alpha = frand() * 0.25 + 0.75;
 
 	CL_SetupParticle (
 		crand()*180, crand()*100, 0,
@@ -3840,7 +3835,7 @@ void CL_ClassicParticleSmokeEffect(vec3_t org, vec3_t dir, int color8, int count
 		cparticle_t	*p = CL_InitParticle();
 		if (!p) return;
 
-		color8_to_vec3(color8 + (rand()&7), p->color);
+		color8_to_vec3(color8 + (rand() & 7), p->color);
 
 		for (int j = 0; j < 3; j++)
 			p->org[j] = org[j] + magnitude * 0.1 * crand();
@@ -3851,7 +3846,7 @@ void CL_ClassicParticleSmokeEffect(vec3_t org, vec3_t dir, int color8, int count
 		d = crand() * magnitude / 3;
 		VectorMA(p->vel, d, u, p->vel);
 
-		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->alphavel = -1.0 / (0.5 + frand() * 0.3);
 		p->image = particle_classic;
 	}
 }
