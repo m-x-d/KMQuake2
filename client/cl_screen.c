@@ -116,8 +116,8 @@ void SCR_InitScreenScale (void)
 	// also, don't scale if < 640x480, then it would be smaller
 	//if (viddef.width > SCREEN_WIDTH || viddef.height > SCREEN_HEIGHT)
 	//{
-		screenScale.x = viddef.width/SCREEN_WIDTH;
-		screenScale.y = viddef.height/SCREEN_HEIGHT;
+		screenScale.x = viddef.width / SCREEN_WIDTH;
+		screenScale.y = viddef.height / SCREEN_HEIGHT;
 		//screenScale.avg = (screenScale.x + screenScale.y)*0.5f;
 		screenScale.avg = min(screenScale.x, screenScale.y); // use smaller value instead of average
 	/*}
@@ -132,7 +132,7 @@ void SCR_InitScreenScale (void)
 
 float SCR_ScaledVideo (float param)
 {
-	return param*screenScale.avg;
+	return param * screenScale.avg;
 }
 
 
@@ -150,12 +150,12 @@ Adjusted for resolution and screen aspect ratio
 */
 void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align)
 {
-	float	tmp_x, tmp_y, xscale, yscale;
+	float	tmp_x, tmp_y;
 
-	SCR_InitScreenScale ();
+	SCR_InitScreenScale();
 
-	xscale = viddef.width / SCREEN_WIDTH;
-	yscale = viddef.height / SCREEN_HEIGHT;
+	const float xscale = viddef.width / SCREEN_WIDTH;
+	const float yscale = viddef.height / SCREEN_HEIGHT;
 
 	// aspect-ratio independent scaling
 	switch (align)
@@ -165,11 +165,13 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*w *= screenScale.avg;
 		if (h)
 			*h *= screenScale.avg;
-		if (x) {
+		if (x)
+		{
 			tmp_x = *x;
 			*x = (tmp_x - (0.5 * SCREEN_WIDTH)) * screenScale.avg + (0.5 * viddef.width);
 		}
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - (0.5 * SCREEN_HEIGHT)) * screenScale.avg + (0.5 * viddef.height);
 		}
@@ -179,7 +181,8 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*w *= screenScale.avg;
 		if (h)
 			*h *= screenScale.avg;
-		if (x) {
+		if (x)
+		{
 			tmp_x = *x;
 			*x = (tmp_x - (0.5 * SCREEN_WIDTH)) * screenScale.avg + (0.5 * viddef.width);
 		}
@@ -191,11 +194,13 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*w *= screenScale.avg;
 		if (h)
 			*h *= screenScale.avg;
-		if (x) {
+		if (x)
+		{
 			tmp_x = *x;
 			*x = (tmp_x - (0.5 * SCREEN_WIDTH)) * screenScale.avg + (0.5 * viddef.width);
 		}
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - SCREEN_HEIGHT) * screenScale.avg + viddef.height;
 		}
@@ -205,11 +210,13 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*w *= screenScale.avg;
 		if (h)
 			*h *= screenScale.avg;
-		if (x) {
+		if (x)
+		{
 			tmp_x = *x;
 			*x = (tmp_x - SCREEN_WIDTH) * screenScale.avg + viddef.width;
 		}
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - (0.5 * SCREEN_HEIGHT)) * screenScale.avg + (0.5 * viddef.height);
 		}
@@ -221,7 +228,8 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*h *= screenScale.avg;
 		if (x)
 			*x *= screenScale.avg;
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - (0.5 * SCREEN_HEIGHT)) * screenScale.avg + (0.5 * viddef.height);
 		}
@@ -231,7 +239,8 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*w *= screenScale.avg;
 		if (h)
 			*h *= screenScale.avg;
-		if (x) {
+		if (x)
+		{
 			tmp_x = *x;
 			*x = (tmp_x - SCREEN_WIDTH) * screenScale.avg + viddef.width;
 		}
@@ -253,11 +262,13 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*w *= screenScale.avg;
 		if (h)
 			*h *= screenScale.avg;
-		if (x) {
+		if (x)
+		{
 			tmp_x = *x;
 			*x = (tmp_x - SCREEN_WIDTH) * screenScale.avg + viddef.width;
 		}
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - SCREEN_HEIGHT) * screenScale.avg + viddef.height;
 		}
@@ -269,7 +280,8 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*h *= screenScale.avg;
 		if (x)
 			*x *= screenScale.avg;
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - SCREEN_HEIGHT) * screenScale.avg + viddef.height;
 		}
@@ -281,7 +293,8 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 			*h *= screenScale.avg;
 		if (x)
 			*x *= xscale;
-		if (y) {
+		if (y)
+		{
 			tmp_y = *y;
 			*y = (tmp_y - SCREEN_HEIGHT) * screenScale.avg + viddef.height;
 		}
@@ -308,8 +321,8 @@ Coordinates are 640*480 virtual values
 */
 void SCR_DrawFill (float x, float y, float width, float height, scralign_t align, int red, int green, int blue, int alpha)
 {
-	SCR_AdjustFrom640 (&x, &y, &width, &height, align);
-	R_DrawFill (x, y, width, height, red, green, blue, alpha);
+	SCR_AdjustFrom640(&x, &y, &width, &height, align);
+	R_DrawFill(x, y, width, height, red, green, blue, alpha);
 }
 
 /*
@@ -320,8 +333,8 @@ Coordinates are 640*480 virtual values
 */
 void SCR_DrawPic (float x, float y, float width, float height, scralign_t align, char *pic, float alpha)
 {
-	SCR_AdjustFrom640 (&x, &y, &width, &height, align);
-	R_DrawStretchPic (x, y, width, height, pic, alpha);
+	SCR_AdjustFrom640(&x, &y, &width, &height, align);
+	R_DrawStretchPic(x, y, width, height, pic, alpha);
 }
 
 /*
@@ -332,7 +345,7 @@ Coordinates are 640*480 virtual values
 */
 void SCR_DrawChar (float x, float y, scralign_t align, int num, int red, int green, int blue, int alpha, qboolean italic, qboolean last)
 {
-	SCR_AdjustFrom640 (&x, &y, NULL, NULL, align);
+	SCR_AdjustFrom640(&x, &y, NULL, NULL, align);
 	R_DrawChar(x, y, num, screenScale.avg, red, green, blue, alpha, italic, last);
 }
 
@@ -344,8 +357,8 @@ Coordinates are 640*480 virtual values
 */
 void SCR_DrawString (float x, float y, scralign_t align, const char *string, int alpha)
 {
-	SCR_AdjustFrom640 (&x, &y, NULL, NULL, align);
-	DrawStringGeneric (x, y, string, alpha, SCALETYPE_MENU, false);
+	SCR_AdjustFrom640(&x, &y, NULL, NULL, align);
+	DrawStringGeneric(x, y, string, alpha, SCALETYPE_MENU, false);
 }
 
 //===============================================================================
@@ -358,7 +371,7 @@ Hud_DrawString
 */
 void Hud_DrawString (int x, int y, const char *string, int alpha, qboolean isStatusBar)
 {
-	DrawStringGeneric (x, y, string, alpha, (isStatusBar) ? SCALETYPE_HUD : SCALETYPE_MENU, false);
+	DrawStringGeneric(x, y, string, alpha, (isStatusBar) ? SCALETYPE_HUD : SCALETYPE_MENU, false);
 }
 
 
@@ -369,7 +382,7 @@ Hud_DrawStringAlt
 */
 void Hud_DrawStringAlt (int x, int y, const char *string, int alpha, qboolean isStatusBar)
 {
-	DrawStringGeneric (x, y, string, alpha, (isStatusBar) ? SCALETYPE_HUD : SCALETYPE_MENU, true);
+	DrawStringGeneric(x, y, string, alpha, (isStatusBar) ? SCALETYPE_HUD : SCALETYPE_MENU, true);
 }
 
 
@@ -382,20 +395,19 @@ FPS counter, code combined from BramBo and Q2E
 #define FPS_FRAMES		4
 static void SCR_ShowFPS (void)
 {
-	static int	previousTimes[FPS_FRAMES];
-	static int	previousTime, fpscounter;
+	static int previousTimes[FPS_FRAMES];
+	static int previousTime, fpscounter;
 	static unsigned int	index;
 	static char	fpsText[32];
-	int			i, time, total, fps, x, y, fragsSize;
 
-	if ((cls.state != ca_active) || !(cl_drawfps->value))
+	if (cls.state != ca_active || !cl_drawfps->value)
 		return;
 
-	InitHudScale ();
+	InitHudScale();
 	if ((cl.time + 1000) < fpscounter)
 		fpscounter = cl.time + 100;
 
-	time = Sys_Milliseconds();
+	const int time = Sys_Milliseconds();
 	previousTimes[index % FPS_FRAMES] = time - previousTime;
 	previousTime = time;
 	index++;
@@ -404,25 +416,22 @@ static void SCR_ShowFPS (void)
 		return;
 
 	// Average multiple frames together to smooth changes out a bit
-	total = 0;
-	for (i = 0; i < FPS_FRAMES; i++)
+	int total = 0;
+	for (int i = 0; i < FPS_FRAMES; i++)
 		total += previousTimes[i];
-	total = max (total, 1);
-	fps = 1000 * FPS_FRAMES / total;
+	const int fps = 1000 * FPS_FRAMES / max(total, 1);
 
-	if (cl.time > fpscounter) {
-	//	Com_sprintf(fpsText, sizeof(fpsText), S_COLOR_BOLD S_COLOR_SHADOW"%3.0ffps", 1/cls.renderFrameTime);
+	if (cl.time > fpscounter)
+	{
 		Com_sprintf(fpsText, sizeof(fpsText), S_COLOR_BOLD S_COLOR_SHADOW"%3ifps", fps);
 		fpscounter = cl.time + 100;
 	}
+
 	// leave space for 3-digit frag counter
-	//x = (viddef.width - strlen(fpsText)*FONT_SIZE - 3*HudScale()*(CHAR_WIDTH+2));
-//	x = (viddef.width - strlen(fpsText)*HUD_FONT_SIZE*HudScale() - 3*HudScale()*(CHAR_WIDTH+2));
-	fragsSize = HudScale() * 3 * (CHAR_WIDTH+2);
-	x = ( viddef.width - strlen(fpsText)*HUD_FONT_SIZE*SCR_VideoScale() - max(fragsSize, SCR_ScaledVideo(68)) );
-	y = 0;
-//	DrawStringGeneric (x, y, fpsText, 255, SCALETYPE_HUD, false); // SCALETYPE_CONSOLE
-	DrawStringGeneric (x, y, fpsText, 255, SCALETYPE_MENU, false); // SCALETYPE_HUD
+	const int fragsSize = HudScale() * 3 * (CHAR_WIDTH + 2);
+	const int x = viddef.width - strlen(fpsText) * HUD_FONT_SIZE * SCR_VideoScale() - max(fragsSize, SCR_ScaledVideo(68));
+	const int y = 0;
+	DrawStringGeneric (x, y, fpsText, 255, SCALETYPE_MENU, false);
 }
 
 /*
@@ -444,31 +453,22 @@ A new packet was just parsed
 int currentping;
 void CL_AddNetgraph (void)
 {
-	int		i;
-	int		in;
-	int		ping;
-
-	in = cls.netchan.incoming_acknowledged & (CMD_BACKUP-1);
+	const int in = cls.netchan.incoming_acknowledged & (CMD_BACKUP - 1);
 	currentping = cls.realtime - cl.cmd_time[in];
 
-	// if using the debuggraph for something else, don't
-	// add the net lines
+	// if using the debuggraph for something else, don't add the net lines
 	if (scr_debuggraph->value || scr_timegraph->value)
 		return;
 
-	for (i=0 ; i<cls.netchan.dropped ; i++)
-		SCR_DebugGraph (30, 0x40);
+	for (int i = 0; i < cls.netchan.dropped; i++)
+		SCR_DebugGraph(30, 0x40);
 
-	for (i=0 ; i<cl.surpressCount ; i++)
-		SCR_DebugGraph (30, 0xdf);
+	for (int i = 0; i < cl.surpressCount; i++)
+		SCR_DebugGraph(30, 0xdf);
 
 	// see what the latency was on this packet
-	ping = currentping/30;
-	//ping = cls.realtime - cl.cmd_time[in];
-	//ping /= 30;
-	if (ping > 30)
-		ping = 30;
-	SCR_DebugGraph (ping, 0xd0);
+	const int ping = min(currentping / 30, 30);
+	SCR_DebugGraph(ping, 0xd0);
 }
 
 
@@ -488,8 +488,8 @@ SCR_DebugGraph
 */
 void SCR_DebugGraph (float value, int color)
 {
-	values[current&1023].value = value;
-	values[current&1023].color = color;
+	values[current & 1023].value = value;
+	values[current & 1023].color = color;
 	current++;
 }
 
@@ -500,60 +500,56 @@ SCR_DrawDebugGraph
 */
 void SCR_DrawDebugGraph (void)
 {
-	int		a, x, y, w, i, h, min, max;
-	float	v;
-	int		color;
-	static	float lasttime = 0;
-	static	int fps, ping;
+	int x, y;
+	static float lasttime = 0;
+	static int fps, ping;
 
-	h = (2*FONT_SIZE > 40)?60+2*FONT_SIZE:100;
-	w = (9*FONT_SIZE>100)?9*FONT_SIZE:100;
+	const int h = (2 * FONT_SIZE > 40) ? 60 + 2 * FONT_SIZE : 100;
+	const int w = (9 * FONT_SIZE > 100) ? 9 * FONT_SIZE : 100;
 
 	if (scr_netgraph_pos->value == 0) // bottom right
 	{
-		x = scr_vrect.width - (w+2) - 1;
-		y = scr_vrect.height - (h+2) - 1;
+		x = scr_vrect.width - (w + 2) - 1;
+		y = scr_vrect.height - (h + 2) - 1;
 	}	
 	else // bottom left
 	{
 		x = 0;
-		y = scr_vrect.height - (h+2) - 1;
+		y = scr_vrect.height - (h + 2) - 1;
 	}	
 
 	// trans background
-	R_DrawFill (x, y, w+2, h+2, 255, 255, 255, 90);
+	R_DrawFill(x, y, w + 2, h + 2, 255, 255, 255, 90);
 
-	for (a=0 ; a<w ; a++)
+	for (int a = 0; a < w; a++)
 	{
-		i = (current-1-a+1024) & 1023;
-		v = values[i].value;
-		color = values[i].color;
-		v = v*scr_graphscale->value;
+		const int i = (current - 1 - a + 1024) & 1023;
+		float v = values[i].value * scr_graphscale->value;
+		const int color = values[i].color;
 		
 		if (v < 1)
-			v += h * (1+(int)(-v/h));
+			v += h * (1 + (int)(-v / h));
 
-		max = (int)v % h + 1;
-		min = y + h - max - scr_graphshift->value;
+		int max = (int)v % h + 1;
+		int min = y + h - max - scr_graphshift->value;
 
 		// bind to box!
-		if (min<y+1) min = y+1;
-		if (min>y+h) min = y+h;
-		if (min+max > y+h) max = y+h-max;
+		if (min < y + 1) min = y + 1;
+		if (min > y + h) min = y + h;
+		if (min + max > y + h) max = y + h - max;
 
-	//	R_DrawFill (x+w-a, min, 1, max, color);
-		R_DrawFill (x+w-a, min, 1, max, color8red(color), color8green(color), color8blue(color), 255);
+		R_DrawFill(x + w - a, min, 1, max, color8red(color), color8green(color), color8blue(color), 255);
 	}
 
 	if (cls.realtime - lasttime > 50)
 	{
 		lasttime = cls.realtime;
-		fps = (cls.renderFrameTime)? 1/cls.renderFrameTime: 0;
+		fps = (cls.renderFrameTime ? 1 / cls.renderFrameTime: 0);
 		ping = currentping;
 	}
 
-	DrawStringGeneric (x, y + 5, va(S_COLOR_SHADOW"fps: %3i", fps), 255, SCALETYPE_CONSOLE, false);
-	DrawStringGeneric (x, y + 5 + FONT_SIZE , va(S_COLOR_SHADOW"ping:%3i", ping), 255, SCALETYPE_CONSOLE, false);
+	DrawStringGeneric(x, y + 5, va(S_COLOR_SHADOW"fps: %3i", fps), 255, SCALETYPE_CONSOLE, false);
+	DrawStringGeneric(x, y + 5 + FONT_SIZE , va(S_COLOR_SHADOW"ping:%3i", ping), 255, SCALETYPE_CONSOLE, false);
 
 	// draw border
 	R_DrawFill (x,			y,			(w+2),	1,		0, 0, 0, 255);
@@ -570,19 +566,18 @@ CENTER PRINTING
 ===============================================================================
 */
 
-char		scr_centerstring[1024];
-float		scr_centertime_start;	// for slow victory printing
-float		scr_centertime_off;
-float		scr_centertime_end;
-int			scr_center_lines;
-int			scr_erase_center;
+char	scr_centerstring[1024];
+float	scr_centertime_start;	// for slow victory printing
+float	scr_centertime_off;
+float	scr_centertime_end;
+int		scr_center_lines;
+int		scr_erase_center;
 
 /*
 ==============
 SCR_CenterPrint
 
-Called for important messages that should stay in the center of the screen
-for a few moments
+Called for important messages that should stay in the center of the screen for a few moments
 ==============
 */
 void SCR_CenterPrint (char *str)
@@ -590,7 +585,7 @@ void SCR_CenterPrint (char *str)
 	char	line[64];
 	int		i, l;
 
-	strncpy (scr_centerstring, str, sizeof(scr_centerstring) - 1);
+	strncpy(scr_centerstring, str, sizeof(scr_centerstring) - 1);
 	scr_centertime_off = scr_centertime->value;
 	scr_centertime_end = scr_centertime_off;
 	scr_centertime_start = cl.time;
@@ -643,8 +638,7 @@ void SCR_CenterPrint (char *str)
 void SCR_DrawCenterString (void)
 {
 	char line[512];
-	int		l;
-	int		y;
+	int	l, y;
 
 	// added Psychospaz's fading centerstrings
 	const int alpha = 255 * (1 - (((cl.time + (scr_centertime->value - 1) - scr_centertime_start) / 1000.0) / scr_centertime_end));		
@@ -675,7 +669,7 @@ void SCR_DrawCenterString (void)
 			if (!remaining--)
 				return;
 		}
-		DrawStringGeneric ( (int)((viddef.width-strlen(line) * FONT_SIZE) * 0.5), y, line, alpha, SCALETYPE_CONSOLE, false);
+		DrawStringGeneric ( (int)((viddef.width - strlen(line) * FONT_SIZE) * 0.5), y, line, alpha, SCALETYPE_CONSOLE, false);
 		y += FONT_SIZE;
 
 		while (*start && *start != '\n')
@@ -693,7 +687,7 @@ void SCR_CheckDrawCenterString (void)
 	scr_centertime_off -= cls.renderFrameTime;
 	
 	if (scr_centertime_off > 0)
-		SCR_DrawCenterString ();
+		SCR_DrawCenterString();
 }
 
 //=============================================================================
@@ -709,9 +703,9 @@ static void SCR_CalcVrect (void)
 {
 	// bound viewsize
 	if (scr_viewsize->value < 40)
-		Cvar_Set ("viewsize", "40");
+		Cvar_Set("viewsize", "40");
 	if (scr_viewsize->value > 100)
-		Cvar_Set ("viewsize", "100");
+		Cvar_Set("viewsize", "100");
 
 	const int size = scr_viewsize->value;
 
@@ -735,16 +729,9 @@ Keybinding command
 */
 void SCR_SizeUp_f (void)
 {	
-	//Cvar_SetValue ("viewsize",scr_viewsize->value+10);
-/*
-	// now handle HUD alpha
-	float hudalpha = Cvar_VariableValue("hud_alpha")+0.1;
-	if (hudalpha > 1) hudalpha = 0.1;
-	Cvar_SetValue ("hud_alpha", hudalpha);
-*/
-	// now handle HUD scale
+	// handle HUD scale
 	const int hudscale = min(Cvar_VariableValue("hud_scale") + 1, 6); //mxd. +min
-	Cvar_SetValue ("hud_scale", hudscale);
+	Cvar_SetValue("hud_scale", hudscale);
 }
 
 
@@ -757,9 +744,7 @@ Keybinding command
 */
 void SCR_SizeDown_f (void)
 {
-	//Cvar_SetValue ("viewsize",scr_viewsize->value-10);
-
-	// now handle HUD scale
+	// handle HUD scale
 	const int hudscale = max(Cvar_VariableValue("hud_scale") - 1, 1); //mxd. +max
 	Cvar_SetValue ("hud_scale", hudscale);
 }
@@ -778,7 +763,7 @@ void SCR_Sky_f (void)
 
 	if (Cmd_Argc() < 2)
 	{
-		Com_Printf ("Usage: sky <basename> <rotate> <axis x y z>\n");
+		Com_Printf("Usage: sky <basename> <rotate> <axis x y z>\n");
 		return;
 	}
 
@@ -800,7 +785,7 @@ void SCR_Sky_f (void)
 		axis[2] = 1;
 	}
 
-	R_SetSky (Cmd_Argv(1), rotate, axis);
+	R_SetSky(Cmd_Argv(1), rotate, axis);
 }
 
 //============================================================================
@@ -813,51 +798,51 @@ SCR_Init
 void SCR_Init (void)
 {
 	//Knightmare 12/28/2001- FPS counter
-	cl_drawfps = Cvar_Get ("cl_drawfps", "0", CVAR_ARCHIVE);
-	cl_demomessage = Cvar_Get ("cl_demomessage", "1", CVAR_ARCHIVE);
-	cl_loadpercent = Cvar_Get ("cl_loadpercent", "0", CVAR_ARCHIVE);
+	cl_drawfps = Cvar_Get("cl_drawfps", "0", CVAR_ARCHIVE);
+	cl_demomessage = Cvar_Get("cl_demomessage", "1", CVAR_ARCHIVE);
+	cl_loadpercent = Cvar_Get("cl_loadpercent", "0", CVAR_ARCHIVE);
 
-	scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
-	scr_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
-	scr_letterbox = Cvar_Get ("scr_letterbox", "1", CVAR_ARCHIVE);
-	scr_showturtle = Cvar_Get ("scr_showturtle", "0", 0);
-	scr_showpause = Cvar_Get ("scr_showpause", "1", 0);
+	scr_viewsize = Cvar_Get("viewsize", "100", CVAR_ARCHIVE);
+	scr_conspeed = Cvar_Get("scr_conspeed", "3", 0);
+	scr_letterbox = Cvar_Get("scr_letterbox", "1", CVAR_ARCHIVE);
+	scr_showturtle = Cvar_Get("scr_showturtle", "0", 0);
+	scr_showpause = Cvar_Get("scr_showpause", "1", 0);
 	// Knightmare- increased for fade
-	scr_centertime = Cvar_Get ("scr_centertime", "3.5", 0);
-	scr_printspeed = Cvar_Get ("scr_printspeed", "8", 0);
-	scr_netgraph = Cvar_Get ("netgraph", "0", 0);
-	scr_netgraph_pos = Cvar_Get ("netgraph_pos", "0", CVAR_ARCHIVE);
-	scr_timegraph = Cvar_Get ("timegraph", "0", 0);
-	scr_debuggraph = Cvar_Get ("debuggraph", "0", 0);
-	scr_graphheight = Cvar_Get ("graphheight", "32", 0);
-	scr_graphscale = Cvar_Get ("graphscale", "1", 0);
-	scr_graphshift = Cvar_Get ("graphshift", "0", 0);
-	scr_drawall = Cvar_Get ("scr_drawall", "0", 0);
+	scr_centertime = Cvar_Get("scr_centertime", "3.5", 0);
+	scr_printspeed = Cvar_Get("scr_printspeed", "8", 0);
+	scr_netgraph = Cvar_Get("netgraph", "0", 0);
+	scr_netgraph_pos = Cvar_Get("netgraph_pos", "0", CVAR_ARCHIVE);
+	scr_timegraph = Cvar_Get("timegraph", "0", 0);
+	scr_debuggraph = Cvar_Get("debuggraph", "0", 0);
+	scr_graphheight = Cvar_Get("graphheight", "32", 0);
+	scr_graphscale = Cvar_Get("graphscale", "1", 0);
+	scr_graphshift = Cvar_Get("graphshift", "0", 0);
+	scr_drawall = Cvar_Get("scr_drawall", "0", 0);
 
-	crosshair = Cvar_Get ("crosshair", "1", CVAR_ARCHIVE);
-	crosshair_scale = Cvar_Get ("crosshair_scale", "1", CVAR_ARCHIVE);
-	crosshair_alpha = Cvar_Get ("crosshair_alpha", "1", CVAR_ARCHIVE);
-	crosshair_pulse = Cvar_Get ("crosshair_pulse", "0.25", CVAR_ARCHIVE);
+	crosshair = Cvar_Get("crosshair", "1", CVAR_ARCHIVE);
+	crosshair_scale = Cvar_Get("crosshair_scale", "1", CVAR_ARCHIVE);
+	crosshair_alpha = Cvar_Get("crosshair_alpha", "1", CVAR_ARCHIVE);
+	crosshair_pulse = Cvar_Get("crosshair_pulse", "0.25", CVAR_ARCHIVE);
 
-	scr_simple_loadscreen = Cvar_Get ("scr_simple_loadscreen", "1", CVAR_ARCHIVE);
+	scr_simple_loadscreen = Cvar_Get("scr_simple_loadscreen", "1", CVAR_ARCHIVE);
 
-	hud_scale = Cvar_Get ("hud_scale", "3", CVAR_ARCHIVE);
-	hud_width = Cvar_Get ("hud_width", "640", CVAR_ARCHIVE);
-	hud_height = Cvar_Get ("hud_height", "480", CVAR_ARCHIVE);
-	hud_alpha = Cvar_Get ("hud_alpha", "1", CVAR_ARCHIVE);
-	hud_squeezedigits = Cvar_Get ("hud_squeezedigits", "1", CVAR_ARCHIVE);
+	hud_scale = Cvar_Get("hud_scale", "3", CVAR_ARCHIVE);
+	hud_width = Cvar_Get("hud_width", "640", CVAR_ARCHIVE);
+	hud_height = Cvar_Get("hud_height", "480", CVAR_ARCHIVE);
+	hud_alpha = Cvar_Get("hud_alpha", "1", CVAR_ARCHIVE);
+	hud_squeezedigits = Cvar_Get("hud_squeezedigits", "1", CVAR_ARCHIVE);
 
 //
 // register our commands
 //
-	Cmd_AddCommand ("timerefresh",SCR_TimeRefresh_f);
-	Cmd_AddCommand ("loading",SCR_Loading_f);
-	Cmd_AddCommand ("sizeup",SCR_SizeUp_f);
-	Cmd_AddCommand ("sizedown",SCR_SizeDown_f);
-	Cmd_AddCommand ("sky",SCR_Sky_f);
+	Cmd_AddCommand("timerefresh", SCR_TimeRefresh_f);
+	Cmd_AddCommand("loading", SCR_Loading_f);
+	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
+	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
+	Cmd_AddCommand("sky", SCR_Sky_f);
 
-	SCR_InitScreenScale ();
-	InitHudScale ();
+	SCR_InitScreenScale();
+	InitHudScale();
 
 	scr_initialized = true;
 }
@@ -881,34 +866,30 @@ void SCR_DrawCrosshair (void)
 	if (crosshair->modified)
 	{
 		crosshair->modified = false;
-		SCR_TouchPics ();
+		SCR_TouchPics();
 
-		if ( modType("dday") ) //dday has no crosshair (FORCED)
+		if (modType("dday")) //dday has no crosshair (FORCED)
 			Cvar_SetValue("crosshair", 0);
 	}
 
 	if (crosshair_scale->modified)
 	{
 		crosshair_scale->modified=false;
-		if (crosshair_scale->value>5)
+		if (crosshair_scale->value > 5)
 			Cvar_SetValue("crosshair_scale", 5);
-		else if (crosshair_scale->value<0.25)
+		else if (crosshair_scale->value < 0.25)
 			Cvar_SetValue("crosshair_scale", 0.25);
 	}
 
 	if (!crosshair_pic[0])
 		return;
 
-	//scale = crosshair_scale->value * (viddef.width*DIV640);
-	//alpha = 0.75 + 0.25*sin(anglemod(cl.time*0.005));
 	const float scaledSize = crosshair_scale->value * CROSSHAIR_SIZE;
 	const float pulsealpha = crosshair_alpha->value * crosshair_pulse->value;
-	const float alpha = clamp(crosshair_alpha->value - pulsealpha + pulsealpha * sinf(anglemod(cl.time * 0.005)), 0.0, 1.0);
+	float alpha = crosshair_alpha->value - pulsealpha + pulsealpha * sinf(anglemod(cl.time * 0.005));
+	alpha = clamp(alpha, 0.0, 1.0);
 
-//	R_DrawScaledPic (scr_vrect.x + (int)(((float)scr_vrect.width - scale*(float)crosshair_width)*0.5), // x
-//					scr_vrect.y + (int)(((float)scr_vrect.height - scale*(float)crosshair_height)*0.5),	// y
-//					scale, alpha, crosshair_pic);
-	SCR_DrawPic ( ((float)SCREEN_WIDTH - scaledSize) * 0.5, ((float)SCREEN_HEIGHT - scaledSize) * 0.5,
+	SCR_DrawPic( ((float)SCREEN_WIDTH - scaledSize) * 0.5, ((float)SCREEN_HEIGHT - scaledSize) * 0.5,
 					scaledSize, scaledSize, ALIGN_CENTER, crosshair_pic, alpha);
 }
 
@@ -921,7 +902,7 @@ SCR_DrawNet
 void SCR_DrawNet (void)
 {
 	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged > CMD_BACKUP - 2)
-		R_DrawPic (scr_vrect.x + scaledHud(64), scr_vrect.y, "net");
+		R_DrawPic(scr_vrect.x + scaledHud(64), scr_vrect.y, "net");
 }
 
 
@@ -933,7 +914,7 @@ SCR_DrawAlertMessagePicture
 void SCR_DrawAlertMessagePicture (char *name, qboolean center, int yOffset)
 {
 	int w, h;
-	R_DrawGetPicSize (&w, &h, name);
+	R_DrawGetPicSize(&w, &h, name);
 	if (w)
 	{
 		const float ratio = 35.0 / (float)h;
@@ -960,8 +941,8 @@ void SCR_DrawPause (void)
 		return;
 
 	int w, h;
-	R_DrawGetPicSize (&w, &h, "pause");
-	SCR_DrawPic ((SCREEN_WIDTH - w) * 0.5, (SCREEN_HEIGHT - h) * 0.5, w, h, ALIGN_CENTER, "pause", 1.0);
+	R_DrawGetPicSize(&w, &h, "pause");
+	SCR_DrawPic((SCREEN_WIDTH - w) * 0.5, (SCREEN_HEIGHT - h) * 0.5, w, h, ALIGN_CENTER, "pause", 1.0);
 }
 
 
@@ -980,11 +961,10 @@ void SCR_DrawLoadingTagProgress (char *picName, int yOffset, int percent)
 	const int y = (SCREEN_HEIGHT - h) * 0.5;
 	const int barPos = clamp(percent, 0, 100) / 4;
 
-	SCR_DrawPic (x, y + yOffset, w, h, ALIGN_CENTER, picName, 1.0);
+	SCR_DrawPic(x, y + yOffset, w, h, ALIGN_CENTER, picName, 1.0);
 
 	for (int i = 0; i < barPos; i++)
-		SCR_DrawPic (x + 33 + (i * LOADBAR_TIC_SIZE_X), y + 28 + yOffset, LOADBAR_TIC_SIZE_X, LOADBAR_TIC_SIZE_Y,
-					ALIGN_CENTER, "loading_led1", 1.0);
+		SCR_DrawPic(x + 33 + (i * LOADBAR_TIC_SIZE_X), y + 28 + yOffset, LOADBAR_TIC_SIZE_X, LOADBAR_TIC_SIZE_Y, ALIGN_CENTER, "loading_led1", 1.0);
 }
 
 
@@ -995,26 +975,24 @@ SCR_DrawLoadingBar
 */
 void SCR_DrawLoadingBar (float x, float y, float w, float h, int percent, float sizeRatio)
 {	
-	int		red, green, blue;
+	int red, green, blue;
 
 	// changeable download/map load bar color
 	TextColor((int)alt_text_color->value, &red, &green, &blue);
 	const float iRatio = 1 - fabsf(sizeRatio);
 	const float hiRatio = iRatio * 0.5;
 
-	SCR_DrawFill (x, y, w, h, ALIGN_STRETCH, 255, 255, 255, 90);
+	SCR_DrawFill(x, y, w, h, ALIGN_STRETCH, 255, 255, 255, 90);
 
 	if (percent != 0)
-		SCR_DrawFill (x + (h * hiRatio), y + (h * hiRatio), (w - (h * iRatio)) * percent * 0.01, h * sizeRatio,
-						ALIGN_STRETCH, red, green, blue, 255);
+		SCR_DrawFill(x + (h * hiRatio), y + (h * hiRatio), (w - (h * iRatio)) * percent * 0.01, h * sizeRatio, ALIGN_STRETCH, red, green, blue, 255);
 }
 
 
 /*
 ==============
 SCR_GetPicPosWidth
-Gets virtual 640x480 x-pos and width
-for a fullscreen pic of any aspect ratio.
+Gets virtual 640x480 x-pos and width for a fullscreen pic of any aspect ratio.
 ==============
 */
 void SCR_GetPicPosWidth (char *pic, int *x, int *w)
@@ -1023,7 +1001,7 @@ void SCR_GetPicPosWidth (char *pic, int *x, int *w)
 		return;
 
 	int picWidth, picHeight;
-	R_DrawGetPicSize (&picWidth, &picHeight, pic);
+	R_DrawGetPicSize(&picWidth, &picHeight, pic);
 	const float picAspect = (float)picWidth / (float)picHeight;
 	const int virtualWidth = SCREEN_HEIGHT * picAspect;
 	const int virtual_x = (SCREEN_WIDTH - virtualWidth) / 2;
@@ -1047,7 +1025,7 @@ void SCR_DrawLoading (void)
 	int			plaqueOffset, picX, picW;
 	char		mapfile[64], picName[MAX_QPATH];
 	char		*loadMsg;
-	qboolean	isMap = false, haveMapPic = false /*, widescreen*/;
+	qboolean	isMap = false, haveMapPic = false;
 	const qboolean	simplePlaque = (scr_simple_loadscreen->value != 0);
 
 	if (!scr_draw_loading)
@@ -1057,14 +1035,12 @@ void SCR_DrawLoading (void)
 	}
 
 	scr_draw_loading = 0;
-	//widescreen = (((float)viddef.width / (float)viddef.height) > STANDARD_ASPECT_RATIO); //mxd. Never unused
 
 	// loading a map...
 	if (loadingMessage && cl.configstrings[CS_MODELS + 1][0])
 	{
-	//	strncpy (mapfile, cl.configstrings[CS_MODELS+1] + 5);	// skip "maps/"
-		Q_strncpyz (mapfile, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapfile));	// skip "maps/"
-		mapfile[strlen(mapfile)-4] = 0;		// cut off ".bsp"
+		Q_strncpyz(mapfile, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapfile));	// skip "maps/"
+		mapfile[strlen(mapfile) - 4] = 0;		// cut off ".bsp"
 
 		// show saveshot here
 		if (load_saveshot && strlen(load_saveshot) && R_DrawFindPic(load_saveshot))
@@ -1073,47 +1049,48 @@ void SCR_DrawLoading (void)
 			haveMapPic = true;
 		}
 		// else try levelshot
-		else if (/*widescreen &&*/ R_DrawFindPic(va("/levelshots/%s_widescreen.pcx", mapfile)))
+		else if (R_DrawFindPic(va("/levelshots/%s_widescreen.pcx", mapfile)))
 		{
 			// Draw at 16:10 aspect, don't stretch to 16:9 or wider
 			SCR_DrawFill (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
-		//	SCR_DrawPic (-64, 0, SCREEN_WIDTH+128, SCREEN_HEIGHT, ALIGN_CENTER, va("/levelshots/%s_widescreen.pcx", mapfile), 1.0);
 			// Draw at native aspect
 			Com_sprintf(picName, sizeof(picName), "/levelshots/%s_widescreen.pcx", mapfile);
-			SCR_GetPicPosWidth (picName, &picX, &picW);
-			SCR_DrawPic (picX, 0, picW, SCREEN_HEIGHT, ALIGN_CENTER, picName, 1.0);
+			SCR_GetPicPosWidth(picName, &picX, &picW);
+			SCR_DrawPic(picX, 0, picW, SCREEN_HEIGHT, ALIGN_CENTER, picName, 1.0);
 			haveMapPic = true;
 		}
 		else if (R_DrawFindPic(va("/levelshots/%s.pcx", mapfile)))
 		{
 			// Draw at 4:3 aspect, don't stretch to 16:9 or wider
-			SCR_DrawFill (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
-			SCR_DrawPic (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_CENTER, va("/levelshots/%s.pcx", mapfile), 1.0); // was ALIGN_STRETCH
+			SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+			SCR_DrawPic(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_CENTER, va("/levelshots/%s.pcx", mapfile), 1.0); // was ALIGN_STRETCH
 			haveMapPic = true;
 		}
 		// else fall back on loadscreen
 		else if (R_DrawFindPic(LOADSCREEN_NAME))
 		{
-			SCR_DrawFill (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
-		//	SCR_DrawPic (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, LOADSCREEN_NAME, 1.0);
-			SCR_GetPicPosWidth (LOADSCREEN_NAME, &picX, &picW);
-			SCR_DrawPic (picX, 0, picW, SCREEN_HEIGHT, ALIGN_CENTER, LOADSCREEN_NAME, 1.0);
+			SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+			SCR_GetPicPosWidth(LOADSCREEN_NAME, &picX, &picW);
+			SCR_DrawPic(picX, 0, picW, SCREEN_HEIGHT, ALIGN_CENTER, LOADSCREEN_NAME, 1.0);
 		}
 		// else draw black screen
 		else
-			SCR_DrawFill (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+		{
+			SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+		}
 
 		isMap = true;
 	}
 	else if (R_DrawFindPic(LOADSCREEN_NAME))
 	{
-		SCR_DrawFill (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
-	//	SCR_DrawPic (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, LOADSCREEN_NAME, 1.0);
-		SCR_GetPicPosWidth (LOADSCREEN_NAME, &picX, &picW);
-		SCR_DrawPic (picX, 0, picW, SCREEN_HEIGHT, ALIGN_CENTER, LOADSCREEN_NAME, 1.0);
+		SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+		SCR_GetPicPosWidth(LOADSCREEN_NAME, &picX, &picW);
+		SCR_DrawPic(picX, 0, picW, SCREEN_HEIGHT, ALIGN_CENTER, LOADSCREEN_NAME, 1.0);
 	}
 	else
-		SCR_DrawFill (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+	{
+		SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+	}
 
 	// Add Download info stuff...
 #ifdef USE_CURL	// HTTP downloading from R1Q2
@@ -1130,17 +1107,17 @@ void SCR_DrawLoading (void)
 			else
 				loadMsg = va("Downloading ["S_COLOR_ALT"%s"S_COLOR_WHITE"]: %3d%%", cls.downloadname, cls.downloadpercent);
 
-			SCR_DrawString ((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + (plaqueOffset + 48), ALIGN_CENTER, loadMsg, 255);
 
-			SCR_DrawLoadingTagProgress ("downloading_bar", plaqueOffset, cls.downloadpercent);
+			SCR_DrawLoadingTagProgress("downloading_bar", plaqueOffset, cls.downloadpercent);
 		}
 		else
 		{
 			plaqueOffset = -130;
 			loadMsg = va("Downloading ["S_COLOR_ALT"%s"S_COLOR_WHITE"]", cls.downloadname);
 
-			SCR_DrawString ((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + MENU_FONT_SIZE * 4.5, ALIGN_CENTER, loadMsg, 255);
 
 			if (cls.downloadrate > 0.0f)
@@ -1148,17 +1125,17 @@ void SCR_DrawLoading (void)
 			else
 				loadMsg = va("%3d%%", cls.downloadpercent);
 
-			SCR_DrawString ((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + MENU_FONT_SIZE * 6, ALIGN_CENTER, loadMsg, 255);
 
-			SCR_DrawLoadingBar (SCREEN_WIDTH*0.5 - 180, SCREEN_HEIGHT*0.5 + 60, 360, 24, cls.downloadpercent, 0.75);
+			SCR_DrawLoadingBar(SCREEN_WIDTH * 0.5 - 180, SCREEN_HEIGHT*0.5 + 60, 360, 24, cls.downloadpercent, 0.75);
 			SCR_DrawAlertMessagePicture("downloading", false, -plaqueOffset);
 		}
 	}
 	// Loading message stuff && loading bar...
 	else if (isMap)
 	{
-		qboolean	drawMapName = false, drawLoadingMsg = false;
+		qboolean drawMapName = false, drawLoadingMsg = false;
 
 		if (!simplePlaque)
 		{
@@ -1176,8 +1153,8 @@ void SCR_DrawLoading (void)
 		if (drawMapName)
 		{
 			loadMsg = va(S_COLOR_SHADOW S_COLOR_WHITE"Loading Map ["S_COLOR_ALT"%s"S_COLOR_WHITE"]", cl.configstrings[CS_NAME]);
-			SCR_DrawString ((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
-							SCREEN_HEIGHT*0.5 + (plaqueOffset + 48), ALIGN_CENTER, loadMsg, 255);	// was - MENU_FONT_SIZE*7.5
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+							SCREEN_HEIGHT * 0.5 + (plaqueOffset + 48), ALIGN_CENTER, loadMsg, 255);	// was - MENU_FONT_SIZE*7.5
 		}
 
 		if (drawLoadingMsg)
@@ -1188,10 +1165,12 @@ void SCR_DrawLoading (void)
 		}
 
 		if (simplePlaque)
-			SCR_DrawLoadingTagProgress ("loading_bar", plaqueOffset, (int)loadingPercent);
+		{
+			SCR_DrawLoadingTagProgress("loading_bar", plaqueOffset, (int)loadingPercent);
+		}
 		else
 		{
-			SCR_DrawLoadingBar (SCREEN_WIDTH * 0.5 - 180, SCREEN_HEIGHT - 20, 360, 15, (int)loadingPercent, 0.6);
+			SCR_DrawLoadingBar(SCREEN_WIDTH * 0.5 - 180, SCREEN_HEIGHT - 20, 360, 15, (int)loadingPercent, 0.6);
 			SCR_DrawAlertMessagePicture("loading", false, plaqueOffset);
 		}
 	}
@@ -1199,7 +1178,7 @@ void SCR_DrawLoading (void)
 	{
 		// just a plain old loading plaque
 		if (simplePlaque)
-			SCR_DrawLoadingTagProgress ("loading_bar", 0, (int)loadingPercent);
+			SCR_DrawLoadingTagProgress("loading_bar", 0, (int)loadingPercent);
 		else
 			SCR_DrawAlertMessagePicture("loading", true, 0);
 	}
@@ -1239,15 +1218,12 @@ void SCR_RunLetterbox (void)
 	if (scr_letterbox_current > scr_letterbox_lines)
 	{
 		scr_letterbox_current -= cls.renderFrameTime;
-		if (scr_letterbox_current < scr_letterbox_lines)
-			scr_letterbox_current = scr_letterbox_lines;
-
+		scr_letterbox_current = max(scr_letterbox_lines, scr_letterbox_current);
 	}
 	else if (scr_letterbox_current < scr_letterbox_lines)
 	{
 		scr_letterbox_current += cls.renderFrameTime;
-		if (scr_letterbox_current > scr_letterbox_lines)
-			scr_letterbox_current = scr_letterbox_lines;
+		scr_letterbox_current = min(scr_letterbox_lines, scr_letterbox_current);
 	}
 }
 
@@ -1259,11 +1235,8 @@ SCR_DrawCameraEffect
 */
 void SCR_DrawCameraEffect (void)
 {
-	if (!(cl.refdef.rdflags & RDF_CAMERAEFFECT))
-		return;
-
-//	R_DrawStretchPic (0, 0, viddef.width, viddef.height, "gfx/2d/cameraeffect.tga", 1.0);
-	R_DrawCameraEffect ();
+	if (cl.refdef.rdflags & RDF_CAMERAEFFECT)
+		R_DrawCameraEffect();
 }
 
 
@@ -1279,8 +1252,8 @@ void SCR_DrawLetterbox (void)
 
 	const int boxheight = scr_letterbox_current * viddef.height;
 	const int boxalpha = scr_letterbox_current / scr_letterbox_lines * 255;
-	R_DrawFill (0, 0, viddef.width, boxheight, 0, 0, 0, boxalpha);
-	R_DrawFill (0, viddef.height-boxheight, viddef.width, boxheight, 0, 0, 0, boxalpha);
+	R_DrawFill(0, 0, viddef.width, boxheight, 0, 0, 0, boxalpha);
+	R_DrawFill(0, viddef.height - boxheight, viddef.width, boxheight, 0, 0, 0, boxalpha);
 }
 
 //=============================================================================
@@ -1293,31 +1266,19 @@ Scroll it up or down
 */
 void SCR_RunConsole (void)
 {
-	// Knightmare- clamp console height
-	//if (con_height->value < 0.1f || con_height->value > 1.0f)
-	//	Cvar_SetValue( "con_height", ClampCvar( 0.1, 1, con_height->value ) );
-
 	// decide on the height of the console
-	if (cls.consoleActive) // (cls.key_dest == key_console)
-		//scr_conlines = halfconback?0.5:con_height->value; // variable height console
-		scr_conlines = 0.5;
-	else
-		scr_conlines = 0;				// none visible
+	scr_conlines = (cls.consoleActive ? 0.5 : 0); //mxd
 	
 	if (scr_conlines < scr_con_current)
 	{
 		scr_con_current -= scr_conspeed->value * cls.renderFrameTime;
-		if (scr_conlines > scr_con_current)
-			scr_con_current = scr_conlines;
-
+		scr_con_current = max(scr_conlines, scr_con_current); //mxd
 	}
 	else if (scr_conlines > scr_con_current)
 	{
 		scr_con_current += scr_conspeed->value * cls.renderFrameTime;
-		if (scr_conlines < scr_con_current)
-			scr_con_current = scr_conlines;
+		scr_con_current = min(scr_conlines, scr_con_current);
 	}
-
 }
 
 /*
@@ -1327,34 +1288,7 @@ SCR_DrawConsole
 */
 void SCR_DrawConsole (void)
 {
-	Con_CheckResize ();
-	
-	// clamp console height
-	//if (con_height->value < 0.1f || con_height->value > 1.0f)
-	//	Cvar_SetValue ( "con_height", ClampCvar(0.1, 1, con_height->value) );
-
-	/*if ( (cls.key_dest != key_menu)
-		&& (cls.state == ca_disconnected || cls.state == ca_connecting) )
-	{
-		R_DrawFill (0, 0, viddef.width, viddef.height, 0);
-		Con_DrawConsole (con_height->value, false);
-		return;
-	}
-
-	// connected, but can't render
-	if ( (cls.key_dest != key_menu) && (cl.cinematicframe <= 0)
-		&& (cls.state != ca_active || !cl.refresh_prepped) 
-		&& (Com_ServerState() != 5) ) // fix stuck console over menu		 
-	{
-		if ((scr_draw_loading))
-			Con_DrawConsole (con_height->value, true);
-		else
-		{
-			R_DrawFill (0, 0, viddef.width, viddef.height, 0);
-			Con_DrawConsole (con_height->value, false);
-		}
-		return;
-	}*/
+	Con_CheckResize();
 
 	// can't render menu or game
 	if ( (cls.key_dest != key_menu) &&
@@ -1366,26 +1300,23 @@ void SCR_DrawConsole (void)
 		) )
 	{
 		if (!scr_draw_loading) // no background
-			R_DrawFill (0, 0, viddef.width, viddef.height, 0, 0, 0, 255);
-		//Con_DrawConsole (halfconback?0.5:con_height->value, false);
-		Con_DrawConsole (0.5, false);
+			R_DrawFill(0, 0, viddef.width, viddef.height, 0, 0, 0, 255);
+
+		Con_DrawConsole(0.5, false);
 		return;
 	}
 
 	if (scr_con_current)
-		Con_DrawConsole (scr_con_current, true);
-	else if (!cls.consoleActive && !cl.cinematictime
-		&& (cls.key_dest == key_game || cls.key_dest == key_message))
-		Con_DrawNotify (); // only draw notify in game
+		Con_DrawConsole(scr_con_current, true);
+	else if (!cls.consoleActive && !cl.cinematictime && (cls.key_dest == key_game || cls.key_dest == key_message))
+		Con_DrawNotify(); // only draw notify in game
 }
 
 //=============================================================================
 
 qboolean needLoadingPlaque (void)
 {
-	if (!cls.disable_screen || !scr_draw_loading)
-		return true;
-	return false;
+	return (!cls.disable_screen || !scr_draw_loading);
 }
 
 /*
@@ -1396,26 +1327,21 @@ SCR_BeginLoadingPlaque
 void SCR_BeginLoadingPlaque (void)
 {
 	S_StopAllSounds ();
-	cl.sound_prepped = false;		// don't play ambients
-	CDAudio_Stop ();
-	//if (cls.disable_screen)
-	//	return;
+	cl.sound_prepped = false; // don't play ambients
+	CDAudio_Stop();
+
 	if (developer->value)
 		return;
 
 	cls.consoleActive = false; // Knightmare added
 
-	/*if (cls.state == ca_disconnected)
-		return;	// if at console, don't bring up the plaque
-	if (cls.key_dest == key_console)
-		return;*/
 	if (cl.cinematictime > 0)
 		scr_draw_loading = 2;	// clear to black first
 	else
 		scr_draw_loading = 1;
 
-	SCR_UpdateScreen ();
-	cls.disable_screen = Sys_Milliseconds ();
+	SCR_UpdateScreen();
+	cls.disable_screen = Sys_Milliseconds();
 	cls.disable_servercount = cl.servercount;
 }
 
@@ -1430,7 +1356,7 @@ void SCR_EndLoadingPlaque (void)
 	load_saveshot = NULL;
 	cls.disable_screen = 0;
 	scr_draw_loading = 0; // Knightmare added
-	Con_ClearNotify ();
+	Con_ClearNotify();
 }
 
 /*
@@ -1462,7 +1388,7 @@ void SCR_TimeRefresh_f (void)
 	if (cls.state != ca_active)
 		return;
 
-	const int start = Sys_Milliseconds ();
+	const int start = Sys_Milliseconds();
 
 	if (Cmd_Argc() == 2)
 	{
@@ -1471,7 +1397,7 @@ void SCR_TimeRefresh_f (void)
 		for (int i = 0; i < 128; i++)
 		{
 			cl.refdef.viewangles[1] = i / 128.0 * 360.0;
-			R_RenderFrame (&cl.refdef);
+			R_RenderFrame(&cl.refdef);
 		}
 		GLimp_EndFrame();
 	}
@@ -1487,9 +1413,9 @@ void SCR_TimeRefresh_f (void)
 		}
 	}
 
-	const int stop = Sys_Milliseconds ();
+	const int stop = Sys_Milliseconds();
 	const float time = (stop - start) / 1000.0;
-	Com_Printf ("%f seconds (%f fps)\n", time, 128 / time);
+	Com_Printf("%f seconds (%f fps)\n", time, 128 / time);
 }
 
 
@@ -1515,16 +1441,16 @@ void SCR_TileClear (void)
 	const int right = left + cl.refdef.width - 1;
 
 	// clear above view screen
-	R_DrawTileClear (0, 0, w, top, "backtile");
+	R_DrawTileClear(0, 0, w, top, "backtile");
 
 	// clear below view screen
-	R_DrawTileClear (0, bottom, w, h - bottom, "backtile");
+	R_DrawTileClear(0, bottom, w, h - bottom, "backtile");
 
 	// clear left of view screen
-	R_DrawTileClear (0, top, left, bottom - top + 1, "backtile");
+	R_DrawTileClear(0, top, left, bottom - top + 1, "backtile");
 
 	// clear right of view screen
-	R_DrawTileClear (right, top, w - right, bottom - top + 1, "backtile");
+	R_DrawTileClear(right, top, w - right, bottom - top + 1, "backtile");
 }
 
 
@@ -1539,16 +1465,14 @@ HUD CODE
 #define STAT_MINUS		10	// num frame for '-' stats digit
 char *sb_nums[2][11] = 
 {
-	{"num_0", "num_1", "num_2", "num_3", "num_4", "num_5",
-	"num_6", "num_7", "num_8", "num_9", "num_minus"},
-	{"anum_0", "anum_1", "anum_2", "anum_3", "anum_4", "anum_5",
-	"anum_6", "anum_7", "anum_8", "anum_9", "anum_minus"}
+	{ "num_0", "num_1", "num_2", "num_3", "num_4", "num_5", "num_6", "num_7", "num_8", "num_9", "num_minus" },
+	{ "anum_0", "anum_1", "anum_2", "anum_3", "anum_4", "anum_5", "anum_6", "anum_7", "anum_8", "anum_9", "anum_minus" }
 };
 
 // Knghtmare- scaled HUD support functions
 float scaledHud (float param)
 {
-	return param*hudScale.avg;
+	return param * hudScale.avg;
 }
 
 float HudScale (void)
@@ -1561,36 +1485,36 @@ void InitHudScale (void)
 	switch ((int)hud_scale->value)
 	{
 	case 0:
-		Cvar_SetValue( "hud_width", 0);
-		Cvar_SetValue( "hud_height", 0);
+		Cvar_SetValue("hud_width", 0);
+		Cvar_SetValue("hud_height", 0);
 		break;
 	case 1:
-		Cvar_SetValue( "hud_width", 1024);
-		Cvar_SetValue( "hud_height", 768);
+		Cvar_SetValue("hud_width", 1024);
+		Cvar_SetValue("hud_height", 768);
 		break;
 	case 2:
-		Cvar_SetValue( "hud_width", 800);
-		Cvar_SetValue( "hud_height", 600);
+		Cvar_SetValue("hud_width", 800);
+		Cvar_SetValue("hud_height", 600);
 		break;
 	case 3:
-		Cvar_SetValue( "hud_width", 640);
-		Cvar_SetValue( "hud_height", 480);
+		Cvar_SetValue("hud_width", 640);
+		Cvar_SetValue("hud_height", 480);
 		break;
 	case 4:
-		Cvar_SetValue( "hud_width", 512);
-		Cvar_SetValue( "hud_height", 384);
+		Cvar_SetValue("hud_width", 512);
+		Cvar_SetValue("hud_height", 384);
 		break;
 	case 5:
-		Cvar_SetValue( "hud_width", 400);
-		Cvar_SetValue( "hud_height", 300);
+		Cvar_SetValue("hud_width", 400);
+		Cvar_SetValue("hud_height", 300);
 		break;
 	case 6:
-		Cvar_SetValue( "hud_width", 320);
-		Cvar_SetValue( "hud_height", 240);
+		Cvar_SetValue("hud_width", 320);
+		Cvar_SetValue("hud_height", 240);
 		break;
 	default:
-		Cvar_SetValue( "hud_width", 640);
-		Cvar_SetValue( "hud_height", 480);
+		Cvar_SetValue("hud_width", 640);
+		Cvar_SetValue("hud_height", 480);
 		break;
 	}
 
@@ -1600,7 +1524,6 @@ void InitHudScale (void)
 	{
 		hudScale.x = viddef.width/hud_width->value;
 		hudScale.y = viddef.height/hud_height->value;
-		//hudScale.avg = (hudScale.x + hudScale.y)*0.5f;
 		hudScale.avg = min(hudScale.x, hudScale.y); // use smaller value instead of average
 	}
 	else
@@ -1621,13 +1544,8 @@ Allow embedded \n in the string
 */
 void SizeHUDString (char *string, int *w, int *h, qboolean isStatusBar)
 {
-	float	(*scaleForScreen)(float in);
-
 	// Get our scaling function
-	if (isStatusBar)
-		scaleForScreen = scaledHud;
-	else
-		scaleForScreen = SCR_ScaledVideo;
+	float (*scaleForScreen)(float in) = (isStatusBar ? scaledHud : SCR_ScaledVideo);
 
 	int lines = 1;
 	int width = 0;
@@ -1650,26 +1568,18 @@ void SizeHUDString (char *string, int *w, int *h, qboolean isStatusBar)
 		string++;
 	}
 
-//	*w = width * scaledHud(8);
-//	*h = lines * scaledHud(8);
 	*w = width * scaleForScreen(8);
 	*h = lines * scaleForScreen(8);
 }
 
 void _DrawHUDString (char *string, int x, int y, int centerwidth, int xor, qboolean isStatusBar)
 {
-	char	line[1024];
-	float	(*scaleForScreen)(float in);
+	char line[1024];
 
 	// Get our scaling function
-	if (isStatusBar)
-		scaleForScreen = scaledHud;
-	else
-		scaleForScreen = SCR_ScaledVideo;
+	float (*scaleForScreen)(float in) = (isStatusBar ? scaledHud : SCR_ScaledVideo);
 
 	const int margin = x;
-
-	//len = strlen(string);
 
 	while (*string)
 	{
@@ -1681,26 +1591,24 @@ void _DrawHUDString (char *string, int x, int y, int centerwidth, int xor, qbool
 		line[width] = 0;
 
 		if (centerwidth)
-//			x = margin + (centerwidth - width*scaledHud(8))/2;
 			x = margin + (centerwidth - width * scaleForScreen(8)) / 2;
 		else
 			x = margin;
 
-
 		if (xor)
 		{
 			// Knightmare- text color hack
-			Com_sprintf (line, sizeof(line), S_COLOR_ALT"%s", line);
+			Com_sprintf(line, sizeof(line), S_COLOR_ALT"%s", line);
 			Hud_DrawStringAlt(x, y, line, 255, isStatusBar);
 		}
 		else
+		{
 			Hud_DrawString(x, y, line, 255, isStatusBar);
+		}
 
 		if (*string)
 		{
 			string++;	// skip the \n
-			//x = margin; //mxd. Assigned value never unused
-//			y += scaledHud(8);
 			y += scaleForScreen(8);
 		}
 	}
@@ -1714,10 +1622,10 @@ SCR_DrawField
 */
 void SCR_DrawField (int x, int y, int color, int width, int value, qboolean flash, qboolean isStatusBar)
 {
-	char		num[16];
-	int			frame;
-	float		(*scaleForScreen)(float in);
-	float		(*getScreenScale)(void);
+	char	num[16];
+	int		frame;
+	float	(*scaleForScreen)(float in);
+	float	(*getScreenScale)(void);
 
 	if (width < 1)
 		return;
@@ -1739,7 +1647,7 @@ void SCR_DrawField (int x, int y, int color, int width, int value, qboolean flas
 	if (width > 5)
 		width = 5;
 
-	Com_sprintf (num, sizeof(num), "%i", value);
+	Com_sprintf(num, sizeof(num), "%i", value);
 	int l = strlen(num);
 	if (l > width)
 	{
@@ -1749,18 +1657,18 @@ void SCR_DrawField (int x, int y, int color, int width, int value, qboolean flas
 			fieldScale =  (1.0 - ((1.0 - (float)width/(float)l) * 0.5)) * getScreenScale();
 		}
 		else
+		{
 			l = width;
+		}
 	}
 
 	const float digitWidth = fieldScale * (float)CHAR_WIDTH;
 	const float flashWidth = l * digitWidth;
 	const float digitOffset = width * scaleForScreen(CHAR_WIDTH) - flashWidth;
-//	x += 2 + scaledHud(CHAR_WIDTH)*(width - l);
-//	x += 2 + scaleForScreen(CHAR_WIDTH)*(width - l);
 	x += 2 + digitOffset;
 
 	if (flash)
-		R_DrawStretchPic (x, y, flashWidth, scaleForScreen(ICON_HEIGHT), "field_3", hud_alpha->value);
+		R_DrawStretchPic(x, y, flashWidth, scaleForScreen(ICON_HEIGHT), "field_3", hud_alpha->value);
 
 	char *ptr = num;
 	while (*ptr && l)
@@ -1770,11 +1678,7 @@ void SCR_DrawField (int x, int y, int color, int width, int value, qboolean flas
 		else
 			frame = *ptr -'0';
 
-//		R_DrawScaledPic (x, y, HudScale(), hud_alpha->value,sb_nums[color][frame]);
-//		x += scaledHud(CHAR_WIDTH);
-//		R_DrawScaledPic (x, y, getScreenScale(), hud_alpha->value, sb_nums[color][frame]);
-//		x += scaleForScreen(CHAR_WIDTH);
-		R_DrawStretchPic (x, y, digitWidth, scaleForScreen(ICON_HEIGHT), sb_nums[color][frame], hud_alpha->value);
+		R_DrawStretchPic(x, y, digitWidth, scaleForScreen(ICON_HEIGHT), sb_nums[color][frame], hud_alpha->value);
 		x += digitWidth;
 		ptr++;
 		l--;
@@ -1793,15 +1697,15 @@ void SCR_TouchPics (void)
 {
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 11; j++)
-			R_DrawFindPic (sb_nums[i][j]);
+			R_DrawFindPic(sb_nums[i][j]);
 
 	if (crosshair->value)
 	{
 		if (crosshair->value > 100 || crosshair->value < 0) //Knightmare increased
 			crosshair->value = 1;
 
-		Com_sprintf (crosshair_pic, sizeof(crosshair_pic), "ch%i", (int)(crosshair->value));
-		R_DrawGetPicSize (&crosshair_width, &crosshair_height, crosshair_pic);
+		Com_sprintf(crosshair_pic, sizeof(crosshair_pic), "ch%i", (int)(crosshair->value));
+		R_DrawGetPicSize(&crosshair_width, &crosshair_height, crosshair_pic);
 		if (!crosshair_width)
 			crosshair_pic[0] = 0;
 	}
@@ -1818,14 +1722,11 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 	int		value;
 	char	string[1024];
 	int		width;
-	clientinfo_t	*ci;
-	float			(*scaleForScreen)(float in);
-	float			(*getScreenScale)(void);
+	clientinfo_t *ci;
+	float	(*scaleForScreen)(float in);
+	float	(*getScreenScale)(void);
 
-	if (cls.state != ca_active || !cl.refresh_prepped)
-		return;
-
-	if (!s[0])
+	if (cls.state != ca_active || !cl.refresh_prepped || !s[0])
 		return;
 
 	// Get our scaling functions
@@ -1840,48 +1741,47 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 		getScreenScale = SCR_VideoScale;
 	}
 
-	InitHudScale ();
+	InitHudScale();
 	int x = 0;
 	int y = 0;
-	//width = 3; //mxd. Assigned value never unused
 
 	while (s)
 	{
-		char *token = COM_Parse (&s);
+		char *token = COM_Parse(&s);
 		if (!strcmp(token, "xl"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			x = scaleForScreen(atoi(token));
 		}
 		else if (!strcmp(token, "xr"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			x = viddef.width + scaleForScreen(atoi(token));
 		}
 		else if (!strcmp(token, "xv"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			x = viddef.width/2 - scaleForScreen(160) + scaleForScreen(atoi(token));
 		}
 		else if (!strcmp(token, "yt"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			y = scaleForScreen(atoi(token));
 		}
 		else if (!strcmp(token, "yb"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			y = viddef.height + scaleForScreen(atoi(token));
 		}
 		else if (!strcmp(token, "yv"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			y = viddef.height/2 - scaleForScreen(120) + scaleForScreen(atoi(token));
 		}
 		else if (!strcmp(token, "pic"))
 		{	
 			// draw a pic from a stat number
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			value = cl.frame.playerstate.stats[atoi(token)];
 
 			// Knightmare- 1/2/2002- BIG UGLY HACK for old demos or connected to server using old protocol;
@@ -1901,24 +1801,24 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 		else if (!strcmp(token, "client"))
 		{
 			// draw a deathmatch client block
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			x = viddef.width/2 - scaleForScreen(160) + scaleForScreen(atoi(token));
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			y = viddef.height/2 - scaleForScreen(120) + scaleForScreen(atoi(token));
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			value = atoi(token);
 			if (value >= MAX_CLIENTS || value < 0)
-				Com_Error (ERR_DROP, "client >= MAX_CLIENTS");
+				Com_Error(ERR_DROP, "client >= MAX_CLIENTS");
 			ci = &cl.clientinfo[value];
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			const int score = atoi(token);
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			const int ping = atoi(token);
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			const int time = atoi(token);
 
 			Hud_DrawStringAlt(x + scaleForScreen(32), y, va(S_COLOR_ALT"%s", ci->name), 255, isStatusBar);
@@ -1935,21 +1835,21 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 		else if (!strcmp(token, "ctf") || !strcmp(token, "3tctf")) // Knightmare- 3Team CTF block //mxd. Identical logic
 		{
 			// draw a ctf client block
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			x = viddef.width / 2  - scaleForScreen(160) + scaleForScreen(atoi(token));
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			y = viddef.height / 2 - scaleForScreen(120) + scaleForScreen(atoi(token));
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			value = atoi(token);
 			if (value >= MAX_CLIENTS || value < 0)
-				Com_Error (ERR_DROP, "client >= MAX_CLIENTS");
+				Com_Error(ERR_DROP, "client >= MAX_CLIENTS");
 			ci = &cl.clientinfo[value];
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			const int score = atoi(token);
 
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			const int ping = min(atoi(token), 999); //mxd. +min
 
 			char block[80];
@@ -1957,24 +1857,24 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 			sprintf(block, "%3d %3d  %-12.12s", score, ping, ci->name);
 
 			if (value == cl.playernum)
-				Hud_DrawStringAlt (x, y, block, 255, isStatusBar);
+				Hud_DrawStringAlt(x, y, block, 255, isStatusBar);
 			else
-				Hud_DrawString (x, y, block, 255, isStatusBar);
+				Hud_DrawString(x, y, block, 255, isStatusBar);
 		}
 		else if (!strcmp(token, "picn"))
 		{
 			// draw a pic from a name
-			token = COM_Parse (&s);
-			R_DrawScaledPic (x, y, getScreenScale(), hud_alpha->value, token);
+			token = COM_Parse(&s);
+			R_DrawScaledPic(x, y, getScreenScale(), hud_alpha->value, token);
 		}
 		else if (!strcmp(token, "num"))
 		{
 			// draw a number
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			width = atoi(token);
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			value = cl.frame.playerstate.stats[atoi(token)];
-			SCR_DrawField (x, y, 0, width, value, false, isStatusBar);
+			SCR_DrawField(x, y, 0, width, value, false, isStatusBar);
 		}
 		else if (!strcmp(token, "hnum"))
 		{
@@ -1985,16 +1885,13 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 			value = cl.frame.playerstate.stats[STAT_HEALTH];
 			
 			if (value > 25)
-				color = 0;	// green
+				color = 0; // green
 			else if (value > 0)
-				color = (cl.frame.serverframe>>2) & 1;		// flash
+				color = (cl.frame.serverframe >> 2) & 1; // flash
 			else
 				color = 1;
 
-		//	if (cl.frame.playerstate.stats[STAT_FLASHES] & 1)
-		//		R_DrawScaledPic (x, y, getScreenScale(), hud_alpha->value, "field_3");
-
-			SCR_DrawField (x, y, color, width, value, (cl.frame.playerstate.stats[STAT_FLASHES] & 1), isStatusBar);
+			SCR_DrawField(x, y, color, width, value, (cl.frame.playerstate.stats[STAT_FLASHES] & 1), isStatusBar);
 		}
 		else if (!strcmp(token, "anum"))
 		{
@@ -2005,13 +1902,13 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 			value = cl.frame.playerstate.stats[STAT_AMMO];
 
 			if (value > 5)
-				color = 0;	// green
+				color = 0; // green
 			else if (value >= 0)
-				color = (cl.frame.serverframe>>2) & 1;		// flash
+				color = (cl.frame.serverframe >> 2) & 1; // flash
 			else
 				continue; // negative number = don't show
 
-			SCR_DrawField (x, y, color, width, value, (cl.frame.playerstate.stats[STAT_FLASHES] & 4), isStatusBar);
+			SCR_DrawField(x, y, color, width, value, (cl.frame.playerstate.stats[STAT_FLASHES] & 4), isStatusBar);
 		}
 		else if (!strcmp(token, "rnum"))
 		{
@@ -2022,57 +1919,54 @@ void SCR_ExecuteLayoutString (char *s, qboolean isStatusBar)
 
 			const int color = 0;	// green
 
-		//	if (cl.frame.playerstate.stats[STAT_FLASHES] & 2)
-		//		R_DrawScaledPic (x, y, getScreenScale(), hud_alpha->value, "field_3");
-
-			SCR_DrawField (x, y, color, width, value, (cl.frame.playerstate.stats[STAT_FLASHES] & 2), isStatusBar);
+			SCR_DrawField(x, y, color, width, value, (cl.frame.playerstate.stats[STAT_FLASHES] & 2), isStatusBar);
 		}
 		else if (!strcmp(token, "stat_string"))
 		{
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			int index = atoi(token);
 
 			if (index < 0 || index >= MAX_CONFIGSTRINGS)
-				Com_Error (ERR_DROP, "Bad stat_string index");
+				Com_Error(ERR_DROP, "Bad stat_string index");
 
 			index = cl.frame.playerstate.stats[index];
 
 			if (index < 0 || index >= MAX_CONFIGSTRINGS)
-				Com_Error (ERR_DROP, "Bad stat_string index");
+				Com_Error(ERR_DROP, "Bad stat_string index");
 
-			Hud_DrawString (x, y, cl.configstrings[index], 255, isStatusBar);
+			Hud_DrawString(x, y, cl.configstrings[index], 255, isStatusBar);
 		}
 		else if (!strcmp(token, "cstring"))
 		{
-			token = COM_Parse (&s);
-			_DrawHUDString (token, x, y, scaleForScreen(320), 0, isStatusBar);
+			token = COM_Parse(&s);
+			_DrawHUDString(token, x, y, scaleForScreen(320), 0, isStatusBar);
 		}
 		else if (!strcmp(token, "string"))
 		{
-			token = COM_Parse (&s);
-			Hud_DrawString (x, y, token, 255, isStatusBar);
+			token = COM_Parse(&s);
+			Hud_DrawString(x, y, token, 255, isStatusBar);
 		}
 		else if (!strcmp(token, "cstring2"))
 		{
-			token = COM_Parse (&s);
-			_DrawHUDString (token, x, y, scaleForScreen(320), 0x80, isStatusBar);
+			token = COM_Parse(&s);
+			_DrawHUDString(token, x, y, scaleForScreen(320), 0x80, isStatusBar);
 		}
 		else if (!strcmp(token, "string2"))
 		{
-			token = COM_Parse (&s);
-			Com_sprintf (string, sizeof(string), S_COLOR_ALT"%s", token);
-			Hud_DrawStringAlt (x, y, string, 255, isStatusBar);
+			token = COM_Parse(&s);
+			Com_sprintf(string, sizeof(string), S_COLOR_ALT"%s", token);
+			Hud_DrawStringAlt(x, y, string, 255, isStatusBar);
 		}
 		else if (!strcmp(token, "if"))
 		{
 			// draw a number
-			token = COM_Parse (&s);
+			token = COM_Parse(&s);
 			value = cl.frame.playerstate.stats[atoi(token)];
 			if (!value)
 			{	
 				// skip to endif
 				while (s && strcmp(token, "endif") )
-					token = COM_Parse (&s);
+					token = COM_Parse(&s);
 			}
 		}
 	}
@@ -2089,7 +1983,7 @@ is based on the stats array
 */
 void SCR_DrawStats (void)
 {
-	SCR_ExecuteLayoutString (cl.configstrings[CS_STATUSBAR], true);
+	SCR_ExecuteLayoutString(cl.configstrings[CS_STATUSBAR], true);
 }
 
 
@@ -2108,7 +2002,7 @@ void SCR_DrawLayout (void)
 
 	// Special hack for visor HUD addition in Zaero
 	const qboolean isStatusBar = (strstr(cl.layout, "\"Tracking ") != NULL); //mxd
-	SCR_ExecuteLayoutString (cl.layout, isStatusBar);
+	SCR_ExecuteLayoutString(cl.layout, isStatusBar);
 }
 
 //=======================================================
@@ -2144,13 +2038,13 @@ void SCR_UpdateScreen (void)
 	if (cls.disable_screen)
 	{
 		if (cls.download) // Knightmare- don't time out on downloads
-			cls.disable_screen = Sys_Milliseconds ();
+			cls.disable_screen = Sys_Milliseconds();
 
 		if (Sys_Milliseconds() - cls.disable_screen > 120000
 			&& cl.refresh_prepped && cl.cinematictime == 0) // Knightmare- dont time out on vid restart
 		{
 			cls.disable_screen = 0;
-			Com_Printf ("Loading plaque timed out.\n");
+			Com_Printf("Loading plaque timed out.\n");
 
 			return; // Knightmare- moved here for loading screen
 		}
@@ -2162,15 +2056,14 @@ void SCR_UpdateScreen (void)
 		return; // not initialized yet
 
 	//
-	// range check cl_camera_separation so we don't inadvertently fry someone's
-	// brain
+	// range check cl_camera_separation so we don't inadvertently fry someone's brain
 	//
-	if ( cl_stereo_separation->value > 1.0 )
-		Cvar_SetValue( "cl_stereo_separation", 1.0 );
-	else if ( cl_stereo_separation->value < 0 )
-		Cvar_SetValue( "cl_stereo_separation", 0.0 );
+	if (cl_stereo_separation->value > 1.0)
+		Cvar_SetValue("cl_stereo_separation", 1.0);
+	else if (cl_stereo_separation->value < 0)
+		Cvar_SetValue("cl_stereo_separation", 0.0);
 
-	if ( cl_stereo->value )
+	if (cl_stereo->value)
 	{
 		numframes = 2;
 		separation[0] = -cl_stereo_separation->value / 2;
@@ -2183,16 +2076,14 @@ void SCR_UpdateScreen (void)
 		numframes = 1;
 	}
 
-	for ( int i = 0; i < numframes; i++ )
+	for (int i = 0; i < numframes; i++)
 	{
-		R_BeginFrame( separation[i] );
+		R_BeginFrame(separation[i]);
 
 		if (scr_draw_loading == 2)
 		{
-			// loading plaque over black screen
-			//R_SetPalette(NULL);
 			// Knightmare- refresh loading screen
-			SCR_DrawLoading ();
+			SCR_DrawLoading();
 
 			// Knightmare- set back for loading screen
 			if (cls.disable_screen)
@@ -2209,7 +2100,7 @@ void SCR_UpdateScreen (void)
 		if (cl.cinematictime > 0)
 		{
 			if (cls.key_dest == key_menu)
-				UI_Draw ();
+				UI_Draw();
 			else
 				SCR_DrawCinematic();
 		}
@@ -2218,58 +2109,55 @@ void SCR_UpdateScreen (void)
 			// Knightmare added- disconnected menu
 			if (cls.state == ca_disconnected && cls.key_dest != key_menu && !scr_draw_loading) 
 			{
-				SCR_EndLoadingPlaque ();  // get rid of loading plaque
+				SCR_EndLoadingPlaque(); // get rid of loading plaque
 				cls.consoleActive = true; // show error in console
 				M_Menu_Main_f();
 			}
 
 			// do 3D refresh drawing, and then update the screen
-			SCR_CalcVrect ();
+			SCR_CalcVrect();
 
 			// clear background around sized down view
-			SCR_TileClear ();
+			SCR_TileClear();
 
-			V_RenderView ( separation[i] );
+			V_RenderView(separation[i]);
 
 			// don't draw crosshair while in menu
 			if (cls.key_dest != key_menu) 
-				SCR_DrawCrosshair ();
+				SCR_DrawCrosshair();
 
 			if (!scr_hidehud)
 			{
-				SCR_DrawStats ();
+				SCR_DrawStats();
 				if (cl.frame.playerstate.stats[STAT_LAYOUTS] & 1)
-					SCR_DrawLayout ();
+					SCR_DrawLayout();
 				if (cl.frame.playerstate.stats[STAT_LAYOUTS] & 2)
-					CL_DrawInventory ();
+					CL_DrawInventory();
 			}
 
-			SCR_DrawCameraEffect ();
-			SCR_DrawLetterbox ();
+			SCR_DrawCameraEffect();
+			SCR_DrawLetterbox();
 
-			SCR_DrawNet ();
-			SCR_CheckDrawCenterString ();
+			SCR_DrawNet();
+			SCR_CheckDrawCenterString();
 
 			if (scr_timegraph->value)
-				SCR_DebugGraph (cls.netFrameTime*300, 0);
+				SCR_DebugGraph(cls.netFrameTime * 300, 0);
 
 			if (scr_debuggraph->value || scr_timegraph->value || scr_netgraph->value)
-				SCR_DrawDebugGraph ();
+				SCR_DrawDebugGraph();
 
-			SCR_DrawPause ();
+			SCR_DrawPause();
 
 			if (cl_demomessage->value)
 				DrawDemoMessage();
 
-			//if ((cl_drawfps->value) && (cls.state == ca_active))
-			SCR_ShowFPS ();
-
-			UI_Draw ();
-
-			SCR_DrawLoading ();
+			SCR_ShowFPS();
+			UI_Draw();
+			SCR_DrawLoading();
 		}
 
-		SCR_DrawConsole ();
+		SCR_DrawConsole();
 	}
 
 	GLimp_EndFrame();

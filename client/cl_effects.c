@@ -3338,29 +3338,25 @@ void CL_TrackerTrail (vec3_t start, vec3_t end)
 {
 	vec3_t		move;
 	vec3_t		vec;
-	vec3_t		forward,right,up,angle_dir;
-	float		len;
-	cparticle_t	*p;
-	int			dec;
-	float		dist;
+	vec3_t		forward, right, up, angle_dir;
 
-	VectorCopy (start, move);
-	VectorSubtract (end, start, vec);
-	len = VectorNormalize (vec);
+	VectorCopy(start, move);
+	VectorSubtract(end, start, vec);
+	float len = VectorNormalize(vec);
 
 	VectorCopy(vec, forward);
-	vectoangles2 (forward, angle_dir);
-	AngleVectors (angle_dir, forward, right, up);
+	vectoangles2(forward, angle_dir);
+	AngleVectors(angle_dir, forward, right, up);
 
-	dec = 3*max(cl_particle_scale->value/2, 1);
-	VectorScale (vec, 3*max(cl_particle_scale->value/2, 1), vec);
+	const float dec = 3 * max(cl_particle_scale->value / 2, 1);
+	VectorScale(vec, dec, vec);
 
 	// FIXME: this is a really silly way to have a loop
 	while (len > 0)
 	{
 		len -= dec;
 
-		p = CL_SetupParticle (
+		cparticle_t *p = CL_SetupParticle (
 			0,	0,	0,
 			0,	0,	0,
 			0,	0,	5,
@@ -3377,10 +3373,10 @@ void CL_TrackerTrail (vec3_t start, vec3_t end)
 		if (!p)
 			return;
 
-		dist = DotProduct(move, forward);
+		const float dist = DotProduct(move, forward);
 		VectorMA(move, 8 * cosf(dist), up, p->org);
 
-		VectorAdd (move, vec, move);
+		VectorAdd(move, vec, move);
 	}
 }
 
@@ -3392,13 +3388,9 @@ CL_TrackerShell
 */
 void CL_Tracker_Shell(vec3_t origin)
 {
-	vec3_t			dir;
-	int				i;
-	cparticle_t		*p;
-
-	for(i=0; i < (300/cl_particle_scale->value); i++)
+	for(int i = 0; i < 300 / cl_particle_scale->value; i++)
 	{
-		p = CL_SetupParticle (
+		cparticle_t *p = CL_SetupParticle (
 			0,	0,	0,
 			0,	0,	0,
 			0,	0,	0,
@@ -3415,9 +3407,8 @@ void CL_Tracker_Shell(vec3_t origin)
 		if (!p)
 			return;
 
-		dir[0] = crand();
-		dir[1] = crand();
-		dir[2] = crand();
+		vec3_t dir;
+		VectorSet(dir, crand(), crand(), crand());
 		VectorNormalize(dir);
 		VectorMA(origin, 40, dir, p->org);
 	}
