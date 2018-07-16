@@ -1274,9 +1274,10 @@ void CL_ParticleBlasterThink (cparticle_t *p, vec3_t org, vec3_t angle, float *a
 	*size += *time * p->sizevel;
 	*size = clamp(*size, pBlasterMinSize, pBlasterMaxSize); //mxd
 
-	CL_ParticleBounceThink (p, org, angle, alpha, &clipsize, image, time); // was size
+	CL_ParticleBounceThink(p, org, angle, alpha, &clipsize, image, time); // was size
 
-	const vec_t length = min(pBlasterMaxVelocity, VectorNormalize(p->vel)); //mxd
+	vec_t length = VectorNormalize(p->vel);
+	length = min(pBlasterMaxVelocity, length); //mxd. Passing VectorNormalize to min() was not such a great idea (because it's evaluated twice)...
 	VectorScale(p->vel, length, p->vel);
 
 /*	vec3_t len;
