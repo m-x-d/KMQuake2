@@ -215,7 +215,7 @@ typedef struct mleaf_s
 //
 
 //Harven++ MD3 added mod_md3
-typedef enum {mod_bad, mod_brush, mod_sprite, mod_alias, mod_md2 } modtype_t;
+typedef enum { mod_bad, mod_brush, mod_sprite, mod_alias, mod_md2 } modtype_t;
 //Harven-- MD3
 
 typedef struct model_s
@@ -303,7 +303,7 @@ typedef struct model_s
 void	Mod_Init (void);
 //void	Mod_ClearAll (void); //mxd. Missing definition
 model_t *Mod_ForName (char *name, qboolean crash);
-mleaf_t *Mod_PointInLeaf (float *p, model_t *model);
+mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model);
 byte	*Mod_ClusterPVS (int cluster, model_t *model);
 
 void	Mod_Modellist_f (void);

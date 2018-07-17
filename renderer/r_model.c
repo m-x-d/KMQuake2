@@ -2111,7 +2111,7 @@ void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer)
 			memcpy(name, ((char *)pinmodel + LittleLong(pinmodel->ofs_skins) + i * MAX_SKINNAME), MD3_MAX_PATH);
 			memcpy(poutskin->name, name, MD3_MAX_PATH);
 			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
-			mod->skins[0][i] = R_FindImage (name, it_skin);
+			mod->skins[0][i] = R_FindImage(name, it_skin);
 		}
 	}
 

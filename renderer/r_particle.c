@@ -26,112 +26,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define random()	((rand () & 0x7fff) / ((float)0x7fff))
 #define crandom()	(2.0 * (random() - 0.5))
 
-//#define BINARY_PART_SORT
-
-#ifdef BINARY_PART_SORT
-/*
-===================================================
-BINARY PARTICLE SORT
-===================================================
-*/
-int partstosort;
-sortedelement_t theparts[MAX_PARTICLES];
-sortedelement_t *parts_prerender;
-// Is this really needed?
-//sortedelement_t *parts_last;
-
-void RenderParticle (particle_t *p);
-void RenderDecal (particle_t *p);
-
-void resetPartSortList (void)
-{
-	partstosort = 0;
-	parts_prerender = NULL;
-	//parts_last = NULL;
-}
-
-qboolean particleClip( float len )
-{
-	if (r_particle_min->value > 0)
-	{
-		if (len < r_particle_min->value)
-			return true;
-	}
-	if (r_particle_max->value > 0)
-	{
-		if (len > r_particle_max->value)
-			return true;
-	}
-
-	return false;
-}
-
-sortedelement_t *NewSortPart ( particle_t *p)
-{
-	vec3_t distance;
-	sortedelement_t *element;
-
-	element = &theparts[partstosort];
-
-	VectorSubtract(p->origin, r_origin, distance);
-	VectorCopy(p->origin, element->org);
-
-	element->data	= p;
-	element->len	= VectorLength(distance);
-	element->left	= NULL;
-	element->right	= NULL;
-
-	return element;
-}
-
-void AddPartTransTree( particle_t *p )
-{
-	sortedelement_t *thisPart;
-
-	thisPart = NewSortPart(p);
-
-	if (particleClip(thisPart->len))
-		return;
-	
-	if (parts_prerender)
-		ElementAddNode(parts_prerender, thisPart);	
-	else
-		parts_prerender = thisPart;
-	
-	//parts_last = thisPart;
-	partstosort++;
-}
-
-void R_BuildParticleList (void)
-{
-	int		i;
-	resetPartSortList();
-
-	for ( i=0; i < r_newrefdef.num_particles; i++)
-		AddPartTransTree(&r_newrefdef.particles[i]);
-}
-
-void RenderParticleTree (sortedelement_t *element)
-{
-	if (!element)
-		return;
-
-	RenderParticleTree(element->left);
-
-	if (element->data)
-		R_RenderParticle ((particle_t *)element->data);
-
-	RenderParticleTree(element->right);
-}
-#endif // BINARY_PART_SORT
-//===================================================
-
 
 /*
 ===================================================
-
-STANDARD PARTICLE SORT
-
+PARTICLE SORTING
 ===================================================
 */
 
@@ -143,23 +41,15 @@ typedef struct sortedpart_s
 
 sortedpart_t sorted_parts[MAX_PARTICLES];
 
-int transCompare (const void *arg1, const void *arg2 ) 
+int transCompare (const void *arg1, const void *arg2) 
 {
-	const sortedpart_t *a1, *a2;
-	a1 = (sortedpart_t *) arg1;
-	a2 = (sortedpart_t *) arg2;
-	if ((r_transrendersort->value == 1) && a1->p && a2->p)
-	{
-		int image1, image2;
-		// FIXME: use hash of imagenum, blendfuncs, & critical flags
-	//	image1 = (a1->p->flags & PART_SPARK) ? 0 : a1->p->image;
-	//	image2 = (a2->p->flags & PART_SPARK) ? 0 : a2->p->image;
-		image1 = a1->p->image;
-		image2 = a2->p->image;
-		return (image2 - image1)*10000 + (a2->len - a1->len);
-	}
-	else
-		return (a2->len - a1->len);
+	const sortedpart_t *a1 = (sortedpart_t *)arg1;
+	const sortedpart_t *a2 = (sortedpart_t *)arg2;
+
+	if (r_transrendersort->value == 1 && a1->p && a2->p)
+		return (a2->p->image - a1->p->image) * 10000 + (a2->len - a1->len); // FIXME: use hash of imagenum, blendfuncs, & critical flags
+
+	return (a2->len - a1->len);
 }
 
 sortedpart_t NewSortedPart (particle_t *p)
@@ -177,7 +67,7 @@ sortedpart_t NewSortedPart (particle_t *p)
 
 void R_SortParticlesOnList (void)
 {
-	for (int i=0; i<r_newrefdef.num_particles; i++)
+	for (int i = 0; i < r_newrefdef.num_particles; i++)
 		sorted_parts[i] = NewSortedPart(&r_newrefdef.particles[i]);
 
 	qsort((void *)sorted_parts, r_newrefdef.num_particles, sizeof(sortedpart_t), transCompare);
@@ -186,9 +76,7 @@ void R_SortParticlesOnList (void)
 
 /*
 ===================================================
-
 PARTICLE RENDERING
-
 ===================================================
 */
 
@@ -214,8 +102,7 @@ vec3_t		shadelight;
 //===================================================
 
 // Particle batching struct
-// used for grouping particles by identical rendering state
-// and rendering in vertex arrays
+// used for grouping particles by identical rendering state and rendering in vertex arrays
 typedef struct particleRenderState_s particleRenderState_t;
 struct particleRenderState_s //mxd. Removed typedef. Fixes C4091: 'typedef ': ignored on left of 'particleRenderState_s' when no variable is declared
 {
@@ -232,7 +119,6 @@ struct particleRenderState_s //mxd. Removed typedef. Fixes C4091: 'typedef ': ig
 };
 particleRenderState_t	currentParticleState;
 
-//int		particle_va, particle_index;
 
 /*
 ===============
@@ -268,10 +154,8 @@ R_DrawParticleArrays
 */
 void R_DrawParticleArrays (void)
 {
-	//VID_Printf(PRINT_DEVELOPER, "R_DrawParticleArrays: rendering %i indices with %i verts\n", rb_index, rb_vertex);
 	c_part_polys += rb_index / 3;
-
-	RB_RenderMeshGeneric (true);
+	RB_RenderMeshGeneric(true);
 }
 
 
@@ -291,8 +175,6 @@ void R_CheckParticleRenderState (particleRenderState_t *check, int numVerts, int
 
 	if (!CompareParticleRenderState(check))
 	{
-		float depthmax;
-
 		if (currentParticleState.polymode) // render particle array
 			R_DrawParticleArrays();
 
@@ -300,46 +182,40 @@ void R_CheckParticleRenderState (particleRenderState_t *check, int numVerts, int
 		memcpy(&currentParticleState, check, sizeof(particleRenderState_t));
 
 		// set new render state
-		GL_BlendFunc (currentParticleState.blendfunc_src, currentParticleState.blendfunc_dst);
-
+		GL_BlendFunc(currentParticleState.blendfunc_src, currentParticleState.blendfunc_dst);
 		GL_Bind(currentParticleState.imagenum);
-	/*	if (currentParticleState.texture2D) {
-			GL_EnableTexture(0);
-			GL_Bind(currentParticleState.imagenum);
-		}
-		else
-			GL_DisableTexture(0);
-	*/
 
+		float depthmax;
 		switch (currentParticleState.depth_hack)
 		{
 		case DEPTHHACK_LONG:
-			depthmax = gldepthmin + DEPTHHACK_RANGE_LONG*(gldepthmax-gldepthmin);
+			depthmax = gldepthmin + DEPTHHACK_RANGE_LONG * (gldepthmax - gldepthmin);
 			break;
 		case DEPTHHACK_MID:
-			depthmax = gldepthmin + DEPTHHACK_RANGE_MID*(gldepthmax-gldepthmin);
+			depthmax = gldepthmin + DEPTHHACK_RANGE_MID * (gldepthmax - gldepthmin);
 			break;
 		case DEPTHHACK_SHORT:
-			depthmax = gldepthmin + DEPTHHACK_RANGE_SHORT*(gldepthmax-gldepthmin);
+			depthmax = gldepthmin + DEPTHHACK_RANGE_SHORT * (gldepthmax - gldepthmin);
 			break;
 		case DEPTHHACK_NONE:
 		default:
 			depthmax = gldepthmax;
 			break;
 		}
-		GL_DepthRange (gldepthmin, depthmax);
 
-		if (currentParticleState.overbright)
-			SetParticleOverbright(true);
-		else
-			SetParticleOverbright(false);
+		GL_DepthRange(gldepthmin, depthmax);
 
-		if (currentParticleState.polygon_offset_fill) {
+		SetParticleOverbright(currentParticleState.overbright);
+
+		if (currentParticleState.polygon_offset_fill)
+		{
 			GL_Enable(GL_POLYGON_OFFSET_FILL);
 			GL_PolygonOffset(-2, -1); 
 		}
 		else
+		{
 			GL_Disable(GL_POLYGON_OFFSET_FILL);
+		}
 
 		if (currentParticleState.alphatest)
 			GL_Enable(GL_ALPHA_TEST);
@@ -382,10 +258,10 @@ void R_BeginParticles (qboolean decals)
 	rb_vertex = rb_index = 0;
 	ParticleOverbright = false;
 
-	GL_TexEnv (GL_MODULATE);
-	GL_DepthMask (false);
-	GL_Enable (GL_BLEND);
-	GL_ShadeModel (GL_SMOOTH);
+	GL_TexEnv(GL_MODULATE);
+	GL_DepthMask(false);
+	GL_Enable(GL_BLEND);
+	GL_ShadeModel(GL_SMOOTH);
 }
 
 
@@ -397,17 +273,17 @@ Renders any particles left in the vertex array and resets OpenGL state
 */
 void R_FinishParticles (qboolean decals)
 {
-	if (currentParticleState.polymode && (rb_vertex > 0) && (rb_index > 0))
+	if (currentParticleState.polymode && rb_vertex > 0 && rb_index > 0)
 		R_DrawParticleArrays();
 
 	GL_EnableTexture(0);
 	SetParticleOverbright(false);
-	GL_DepthRange (gldepthmin, gldepthmax);
-	GL_BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GL_DepthMask (true);
-	GL_Disable (GL_POLYGON_OFFSET_FILL);
-	GL_Disable (GL_BLEND);
-	qglColor4f (1,1,1,1);
+	GL_DepthRange(gldepthmin, gldepthmax);
+	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GL_DepthMask(true);
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+	GL_Disable(GL_BLEND);
+	qglColor4f(1, 1, 1, 1);
 
 	// re-enable fog if it was on
 	if (!decals && fog_on)
@@ -460,8 +336,7 @@ void SetBeamAngles (vec3_t start, vec3_t end, vec3_t up, vec3_t right)
 	VectorCopy(move, up);
 	VectorSubtract(r_newrefdef.vieworg, start, delta);
 	CrossProduct(up, delta, right);
-	//if(!VectorCompare(right, vec3_origin))
-		VectorNormalize(right);
+	VectorNormalize(right);
 }
 
 
@@ -472,9 +347,9 @@ SetParticleOverbright
 */
 void SetParticleOverbright (qboolean toggle)
 {
-	if ( toggle != ParticleOverbright )
+	if (toggle != ParticleOverbright)
 	{
-		R_SetVertexRGBScale (toggle);
+		R_SetVertexRGBScale(toggle);
 		ParticleOverbright = toggle;
 	}
 }
@@ -487,37 +362,35 @@ GetParticleLight
 */
 void GetParticleLight (particle_t *p, vec3_t pos, float lighting, vec3_t shadelight)
 {
-	int j;
-	float lightest = 0;
+	float brightest = 0;
 
-	if ( (r_fullbright->value != 0) || !lighting )
+	if (r_fullbright->value != 0 || !lighting)
 	{
 		VectorSet(shadelight, p->red, p->green, p->blue);
 		return;
 	}
 
-	R_LightPoint (pos, shadelight, false);
+	R_LightPoint(pos, shadelight, false);
 
-	shadelight[0]= (lighting*shadelight[0]+(1-lighting)) * p->red;
-	shadelight[1]= (lighting*shadelight[1]+(1-lighting)) * p->green;
-	shadelight[2]= (lighting*shadelight[2]+(1-lighting)) * p->blue;
+	shadelight[0] = (lighting * shadelight[0] + (1 - lighting)) * p->red;
+	shadelight[1] = (lighting * shadelight[1] + (1 - lighting)) * p->green;
+	shadelight[2] = (lighting * shadelight[2] + (1 - lighting)) * p->blue;
 
 	//this cleans up the lighting
-	for (j=0; j<3; j++)
-		if (shadelight[j] > lightest)
-			lightest= shadelight[j];
-	if (lightest > 255)
-		for (j=0; j<3; j++)
-		{
-			shadelight[j]*= 255/lightest;
-			if (shadelight[j] > 255)
-				shadelight[j] = 255;
-		}
-	for (j=0; j<3; j++)
+	for (int i = 0; i < 3; i++)
+		brightest = max(shadelight[i], brightest);
+
+	if (brightest > 255)
 	{
-		if (shadelight[j] < 0)
-			shadelight[j] = 0;
-	}	
+		for (int i = 0; i < 3; i++)
+		{
+			shadelight[i] *= 255 / brightest;
+			shadelight[i] = min(255, shadelight[i]);
+		}
+	}
+
+	for (int i = 0; i < 3; i++)
+		shadelight[i] = max(0, shadelight[i]);
 }
 
 
@@ -528,12 +401,12 @@ R_RenderParticle
 */
 void R_RenderParticle (particle_t *p)
 {
-	float		size, len, lighting = r_particle_lighting->value;
+	float		len = 0;
+	const float	lighting = r_particle_lighting->value;
 	int			numVerts, numIndex;
 	
 	vec3_t		shadelight, move;
 	vec4_t		partColor;
-	qboolean	shaded;
 	vec2_t		tex_coord[4];
 	vec3_t		coord[4];
 	vec3_t		angl_coord[4];
@@ -549,25 +422,18 @@ void R_RenderParticle (particle_t *p)
 	VectorCopy(particle_coord[2], coord[2]);
 	VectorCopy(particle_coord[3], coord[3]);
 
-	size = (p->size>0.1) ? p->size : 0.1;
-	shaded = (p->flags & PART_SHADED);
+	const float size = max(p->size, 0.1);
+	const qboolean shaded = (p->flags & PART_SHADED);
 
 	if (shaded)
 	{
-		GetParticleLight (p, p->origin, lighting, shadelight);
-		Vector4Set(partColor, shadelight[0]*DIV255, shadelight[1]*DIV255, shadelight[2]*DIV255, p->alpha);
+		GetParticleLight(p, p->origin, lighting, shadelight);
+		Vector4Set(partColor, shadelight[0] * DIV255, shadelight[1] * DIV255, shadelight[2] * DIV255, p->alpha);
 	}
 	else
-		Vector4Set(partColor, p->red*DIV255, p->green*DIV255, p->blue*DIV255, p->alpha);
-
-/*	if (p->flags & PART_SPARK) {
-		thisPart.texture2D = false;
-		thisPart.imagenum = 0;
+	{
+		Vector4Set(partColor, p->red * DIV255, p->green * DIV255, p->blue * DIV255, p->alpha);
 	}
-	else {
-		thisPart.texture2D = true;
-		thisPart.imagenum = TexParticle(p->image);
-	}*/
 
 	thisPart.imagenum = TexParticle(p->image);
 	thisPart.polymode = GL_TRIANGLES;
@@ -596,27 +462,28 @@ void R_RenderParticle (particle_t *p)
 		VectorSubtract(p->origin, p->angle, move);
 		len = VectorNormalize(move);
 		numVerts = numIndex = len / size + 1;
-		numVerts *= 4;	numIndex *= 6;
+		numVerts *= 4;
+		numIndex *= 6;
 	}
 	else // PART_BEAM, PART_DIRECTION, PART_ANGLED, default
 	{
-		numVerts = 4;	numIndex = 6;
+		numVerts = 4;
+		numIndex = 6;
 	}
 
 	// check if render state changed from last particle
-	R_CheckParticleRenderState (&thisPart, numVerts, numIndex);
+	R_CheckParticleRenderState(&thisPart, numVerts, numIndex);
 
 	if (p->flags & PART_SPARK) // single triangles
 	{
 #if 1
-		vec3_t	base, ang_up, ang_right;
-		int		i;
+		vec3_t base, ang_up, ang_right;
 
-		VectorMA (p->origin, -size, p->angle, base);
-		SetBeamAngles (base, p->origin, ang_up, ang_right);
+		VectorMA(p->origin, -size, p->angle, base);
+		SetBeamAngles(base, p->origin, ang_up, ang_right);
 
-		VectorScale (ang_up, size*2.0f, ang_up);
-		VectorScale (ang_right, size*0.25f, ang_right);
+		VectorScale (ang_up, size * 2.0f, ang_up);
+		VectorScale (ang_right, size * 0.25f, ang_right);
 
 		VectorSubtract (ang_right, ang_up, angl_coord[0]);
 		VectorAdd (ang_up, ang_right, angl_coord[1]);
@@ -629,12 +496,14 @@ void R_RenderParticle (particle_t *p)
 		indexArray[rb_index++] = rb_vertex;
 		rb_vertex++;
 
-		for (i=0; i<2; i++) {
+		for (int i = 0; i < 2; i++)
+		{
 			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[i][0], ParticleVec[i][1], ParticleVec[i][2]);
 			VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, 0);
 			indexArray[rb_index++] = rb_vertex;
 			rb_vertex++;
 		}
+
 #else // QMB style particles (8-sided cone)
 		float	angle;
 		vec3_t	v;
@@ -666,9 +535,8 @@ void R_RenderParticle (particle_t *p)
 	}
 	else if (p->flags & PART_BEAM) // given start and end positions, will have fun here :)
 	{
-		vec3_t	ang_up, ang_right;
-		int		i;
-		
+		vec3_t ang_up, ang_right;
+
 		SetBeamAngles(p->angle, p->origin, ang_up, ang_right);
 		VectorScale(ang_right, size, ang_right);
 		
@@ -677,13 +545,14 @@ void R_RenderParticle (particle_t *p)
 		VectorSubtract(p->angle, ang_right, angl_coord[2]);
 		VectorSubtract(p->origin, ang_right, angl_coord[3]);
 
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+1;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+3;
-		for (i=0; i<4; i++)
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 1;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 3;
+		
+		for (int i = 0; i < 4; i++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[i][0], tex_coord[i][1]);
 			VA_SetElem3(vertexArray[rb_vertex], angl_coord[i][0], angl_coord[i][1], angl_coord[i][2]);
@@ -693,14 +562,14 @@ void R_RenderParticle (particle_t *p)
 	}
 	else if (p->flags & PART_LIGHTNING) // given start and end positions, will have fun here :)
 	{
-		float	tlen, halflen, dec = size, warpfactor, warpadd, oldwarpadd=0, warpsize, time, i=0, factor;
+		float oldwarpadd = 0;
+		float i = 0;
 		vec3_t	lastvec, thisvec, tempvec;
 		vec3_t	ang_up, ang_right, vdelta;
-		int		j;
 		
-		warpsize = dec * 0.4; // Knightmare changed
-		warpfactor = M_PI*1.0;
-		time = -r_newrefdef.time*20.0;
+		const float warpsize = size * 0.4; // Knightmare changed
+		const float warpfactor = M_PI * 1.0;
+		const float time = -r_newrefdef.time * 20.0;
 				
 		VectorCopy(move, ang_up);
 		VectorSubtract(r_newrefdef.vieworg, p->angle, vdelta);
@@ -708,26 +577,24 @@ void R_RenderParticle (particle_t *p)
 		if (!VectorCompare(ang_right, vec3_origin))
 			VectorNormalize(ang_right);
 		
-		VectorScale (ang_right, dec, ang_right);
-		VectorScale (ang_up, dec, ang_up);
+		VectorScale(ang_right, size, ang_right);
+		VectorScale(ang_up, size, ang_up);
 		
-		VectorScale(move, dec, move);
+		VectorScale(move, size, move);
 		VectorCopy(p->angle, lastvec);
 		VectorAdd(lastvec, move, thisvec);
 		VectorCopy(thisvec, tempvec);
 		
 		//lightning starts at point and then flares out
-		#define LIGHTNINGWARPFUNCTION 0.25f*sinf(time+i+warpfactor)*(dec/len)
+		#define LIGHTNINGWARPFUNCTION (0.25f * sinf(time + i + warpfactor) * (size / len))
 		
-		warpadd = LIGHTNINGWARPFUNCTION;
-		//factor = 1; //mxd. Assigned value never used
-		halflen = len/2.0;
+		float warpadd = LIGHTNINGWARPFUNCTION;
+		const float halflen = len / 2.0;
 		
-		thisvec[0]= (thisvec[0]*2 + crandom()*5)/2;
-		thisvec[1]= (thisvec[1]*2 + crandom()*5)/2;
-		thisvec[2]= (thisvec[2]*2 + crandom()*5)/2;
+		for(int j = 0; j < 3; j++)
+			thisvec[j] = (thisvec[j] * 2 + crandom() * 5) / 2;
 
-		while (len > dec)
+		while (len > size)
 		{
 			i += warpsize;
 			VectorAdd(thisvec, ang_right, angl_coord[0]);
@@ -735,18 +602,19 @@ void R_RenderParticle (particle_t *p)
 			VectorSubtract(lastvec, ang_right, angl_coord[2]);
 			VectorSubtract(thisvec, ang_right, angl_coord[3]);
 
-			Vector2Set(tex_coord[0], 0+warpadd, 1);
-			Vector2Set(tex_coord[1], 0+oldwarpadd, 0);
-			Vector2Set(tex_coord[2], 1+oldwarpadd, 0);
-			Vector2Set(tex_coord[3], 1+warpadd, 1);
+			Vector2Set(tex_coord[0], 0 + warpadd, 1);
+			Vector2Set(tex_coord[1], 0 + oldwarpadd, 0);
+			Vector2Set(tex_coord[2], 1 + oldwarpadd, 0);
+			Vector2Set(tex_coord[3], 1 + warpadd, 1);
 
-			indexArray[rb_index++] = rb_vertex+0;
-			indexArray[rb_index++] = rb_vertex+1;
-			indexArray[rb_index++] = rb_vertex+2;
-			indexArray[rb_index++] = rb_vertex+0;
-			indexArray[rb_index++] = rb_vertex+2;
-			indexArray[rb_index++] = rb_vertex+3;
-			for (j=0; j<4; j++)
+			indexArray[rb_index++] = rb_vertex + 0;
+			indexArray[rb_index++] = rb_vertex + 1;
+			indexArray[rb_index++] = rb_vertex + 2;
+			indexArray[rb_index++] = rb_vertex + 0;
+			indexArray[rb_index++] = rb_vertex + 2;
+			indexArray[rb_index++] = rb_vertex + 3;
+
+			for (int j = 0; j < 4; j++)
 			{
 				VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[j][0], tex_coord[j][1]);
 				VA_SetElem3(vertexArray[rb_vertex], angl_coord[j][0], angl_coord[j][1], angl_coord[j][2]);
@@ -754,48 +622,43 @@ void R_RenderParticle (particle_t *p)
 				rb_vertex++;
 			}
 
-			tlen = fabsf(len - halflen); //mxd. Was (len<halflen) ? fabsf(len-halflen) : fabsf(len-halflen);
-			factor = tlen/(size*size);
-			
-			if (factor > 4)
-				factor = 4;
-			else if (factor < 1)
-				factor = 1;
+			const float tlen = fabsf(len - halflen); //mxd. Was (len<halflen) ? fabsf(len-halflen) : fabsf(len-halflen);
+			float factor = tlen / (size * size);
+			factor = clamp(factor, 1, 4); //mxd
 			
 			oldwarpadd = warpadd;
 			warpadd = LIGHTNINGWARPFUNCTION; // was 0.30*sin(time+i+warpfactor)
 			
-			len-=dec;
+			len -= size;
 			VectorCopy(thisvec, lastvec);
 			VectorAdd(tempvec, move, tempvec);
 			VectorAdd(thisvec, move, thisvec);
-			thisvec[0]= ((thisvec[0] + crandom()*size) + tempvec[0]*factor)/(factor+1);
-			thisvec[1]= ((thisvec[1] + crandom()*size) + tempvec[1]*factor)/(factor+1);
-			thisvec[2]= ((thisvec[2] + crandom()*size) + tempvec[2]*factor)/(factor+1);
-		}
 
-		//i+=warpsize; //mxd. Assigned value never used
+			for (int j = 0; j < 3; j++)
+				thisvec[j] = ((thisvec[j] + crandom() * size) + tempvec[j] * factor) / (factor + 1);
+		}
 		
 		// one more time
-		if (len>0)
+		if (len > 0)
 		{
 			VectorAdd(p->origin, ang_right, angl_coord[0]);
 			VectorAdd(lastvec, ang_right, angl_coord[1]);
 			VectorSubtract(lastvec, ang_right, angl_coord[2]);
 			VectorSubtract(p->origin, ang_right, angl_coord[3]);
 
-			Vector2Set(tex_coord[0], 0+warpadd, 1);
-			Vector2Set(tex_coord[1], 0+oldwarpadd, 0);
-			Vector2Set(tex_coord[2], 1+oldwarpadd, 0);
-			Vector2Set(tex_coord[3], 1+warpadd, 1);
-		
-			indexArray[rb_index++] = rb_vertex+0;
-			indexArray[rb_index++] = rb_vertex+1;
-			indexArray[rb_index++] = rb_vertex+2;
-			indexArray[rb_index++] = rb_vertex+0;
-			indexArray[rb_index++] = rb_vertex+2;
-			indexArray[rb_index++] = rb_vertex+3;
-			for (j=0; j<4; j++)
+			Vector2Set(tex_coord[0], 0 + warpadd, 1);
+			Vector2Set(tex_coord[1], 0 + oldwarpadd, 0);
+			Vector2Set(tex_coord[2], 1 + oldwarpadd, 0);
+			Vector2Set(tex_coord[3], 1 + warpadd, 1);
+
+			indexArray[rb_index++] = rb_vertex + 0;
+			indexArray[rb_index++] = rb_vertex + 1;
+			indexArray[rb_index++] = rb_vertex + 2;
+			indexArray[rb_index++] = rb_vertex + 0;
+			indexArray[rb_index++] = rb_vertex + 2;
+			indexArray[rb_index++] = rb_vertex + 3;
+
+			for (int j = 0; j < 4; j++)
 			{
 				VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[j][0], tex_coord[j][1]);
 				VA_SetElem3(vertexArray[rb_vertex], angl_coord[j][0], angl_coord[j][1], angl_coord[j][2]);
@@ -806,14 +669,13 @@ void R_RenderParticle (particle_t *p)
 	}
 	else if (p->flags & PART_DIRECTION) // streched out in direction- beams etc...
 	{
-		vec3_t	ang_up, ang_right, vdelta;
-		int		i;
+		vec3_t ang_up, ang_right, vdelta;
 
 		VectorAdd(p->angle, p->origin, vdelta); 
 		SetBeamAngles(vdelta, p->origin, ang_up, ang_right);
 				
-		VectorScale (ang_right, 0.75f, ang_right);
-		VectorScale (ang_up, 0.75f * VectorLength(p->angle), ang_up);
+		VectorScale(ang_right, 0.75f, ang_right);
+		VectorScale(ang_up, 0.75f * VectorLength(p->angle), ang_up);
 		
 		VectorAdd      (ang_up, ang_right, angl_coord[0]);
 		VectorSubtract (ang_right, ang_up, angl_coord[1]);
@@ -825,13 +687,14 @@ void R_RenderParticle (particle_t *p)
 		VectorMA(p->origin, size, angl_coord[2], ParticleVec[2]);
 		VectorMA(p->origin, size, angl_coord[3], ParticleVec[3]);
 
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+1;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+3;
-		for (i=0; i<4; i++)
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 1;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 3;
+
+		for (int i = 0; i < 4; i++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[i][0], tex_coord[i][1]);
 			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[i][0], ParticleVec[i][1], ParticleVec[i][2]);
@@ -841,13 +704,12 @@ void R_RenderParticle (particle_t *p)
 	}
 	else if (p->flags & PART_ANGLED) // facing direction...
 	{
-		vec3_t	ang_up, ang_right, ang_forward;
-		int		j;
+		vec3_t ang_up, ang_right, ang_forward;
 
 		AngleVectors(p->angle, ang_forward, ang_right, ang_up); 
 		
-		VectorScale (ang_right, 0.75f, ang_right);
-		VectorScale (ang_up, 0.75f, ang_up);
+		VectorScale(ang_right, 0.75f, ang_right);
+		VectorScale(ang_up, 0.75f, ang_up);
 		
 		VectorAdd      (ang_up, ang_right, angl_coord[0]);
 		VectorSubtract (ang_right, ang_up, angl_coord[1]);
@@ -859,13 +721,14 @@ void R_RenderParticle (particle_t *p)
 		VectorMA(p->origin, size, angl_coord[2], ParticleVec[2]);
 		VectorMA(p->origin, size, angl_coord[3], ParticleVec[3]);
 		
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+1;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+3;
-		for (j=0; j<4; j++)
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 1;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 3;
+
+		for (int j = 0; j < 4; j++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[j][0], tex_coord[j][1]);
 			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[j][0],ParticleVec[j][1], ParticleVec[j][2]);
@@ -875,8 +738,7 @@ void R_RenderParticle (particle_t *p)
 	}
 	else // normal sprites
 	{
-		vec3_t	ang_up, ang_right, ang_forward;
-		int		j;
+		vec3_t ang_up, ang_right, ang_forward;
 
 		if (p->angle[2]) // if we have roll, we do calcs
 		{
@@ -885,9 +747,9 @@ void R_RenderParticle (particle_t *p)
 			VecToAngleRolled(angl_coord[0], p->angle[2], angl_coord[1]);
 			AngleVectors(angl_coord[1], ang_forward, ang_right, ang_up); 
 			
-			VectorScale (ang_forward, 0.75f, ang_forward);
-			VectorScale (ang_right, 0.75f, ang_right);
-			VectorScale (ang_up, 0.75f, ang_up);
+			VectorScale(ang_forward, 0.75f, ang_forward);
+			VectorScale(ang_right, 0.75f, ang_right);
+			VectorScale(ang_up, 0.75f, ang_up);
 			
 			VectorAdd	   (ang_up, ang_right, angl_coord[0]);
 			VectorSubtract (ang_right, ang_up, angl_coord[1]);
@@ -907,13 +769,14 @@ void R_RenderParticle (particle_t *p)
 			VectorMA(p->origin, size, coord[3], ParticleVec[3]);
 		}
 
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+1;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+3;
-		for (j=0; j<4; j++)
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 1;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 3;
+
+		for (int j = 0; j < 4; j++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[j][0], tex_coord[j][1]);
 			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[j][0],ParticleVec[j][1], ParticleVec[j][2]);
@@ -931,27 +794,24 @@ R_DrawAllParticles
 */
 void R_DrawAllParticles (void)
 {
-	particle_t	*p;
-
-	R_BeginParticles (false);
+	R_BeginParticles(false);
 
 	for (int i = 0; i < r_newrefdef.num_particles; i++)
 	{
 		if (r_transrendersort->value && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL))
 		{
-			p = sorted_parts[i].p;
-			if ( r_particledistance->value > 0 && sorted_parts[i].len > (100.0 * r_particledistance->value))
+			if (r_particledistance->value > 0 && sorted_parts[i].len > 100.0 * r_particledistance->value)
 				continue;
+
+			R_RenderParticle(sorted_parts[i].p);
 		}
 		else
 		{
-			p = &r_newrefdef.particles[i];
+			R_RenderParticle(&r_newrefdef.particles[i]);
 		}
-
-		R_RenderParticle(p);
 	}
 
-	R_FinishParticles (false);
+	R_FinishParticles(false);
 }
 
 
@@ -963,11 +823,9 @@ R_DrawParticles
 */
 void R_DrawParticles (sortedelement_t *list)
 {
-	R_BeginParticles (false);
-
+	R_BeginParticles(false);
 	RenderParticleTree(list);
-
-	R_FinishParticles (false);
+	R_FinishParticles(false);
 }
 #endif // BINARY_PART_SORT
 
@@ -987,40 +845,38 @@ R_RenderDecal
 */
 void R_RenderDecal (particle_t *p)
 {
-	float	size, alpha;
 	vec2_t	tex_coord[4];
 	vec3_t	angl_coord[4];
 	vec3_t	ang_up, ang_right, ang_forward, color;
 	vec4_t	partColor;
-	int		i, j, numVerts, numIndex;
-	int		mask, aggregatemask = ~0;			
+	int aggregatemask = ~0;
 
-	particleRenderState_t	thisPart;
+	particleRenderState_t thisPart;
 
 	// frustum cull
 	if (p->decal)
 	{
-		for (i=0; i<p->decal->numpolys; i++)
+		for (int i = 0; i < p->decal->numpolys; i++)
 		{
-			mask = 0;
-			for (j=0; j<4; j++) {
-				float dp = DotProduct(frustum[j].normal, p->decal->polys[i]);
-				if ( ( dp - frustum[j].dist ) < 0 )
-					mask |= (1<<j);
+			int mask = 0;
+			for (int j = 0; j<4; j++)
+			{
+				const float dp = DotProduct(frustum[j].normal, p->decal->polys[i]);
+				if (dp - frustum[j].dist < 0)
+					mask |= 1 << j;
 			}
+
 			aggregatemask &= mask;
 		}
+
 		if (aggregatemask)
 			return;
 	}
 
-	size = (p->size>0.1) ? p->size : 0.1;
-	alpha = p->alpha;
+	const float size = max(p->size, 0.1);
+	const float alpha = p->alpha;
 
-	if (p->decal)
-		thisPart.polygon_offset_fill = true;
-	else
-		thisPart.polygon_offset_fill = false;
+	thisPart.polygon_offset_fill = (p->decal != NULL);
 
 	thisPart.polymode = GL_TRIANGLES;
 //	thisPart.texture2D = true;
@@ -1031,34 +887,38 @@ void R_RenderDecal (particle_t *p)
 	thisPart.imagenum = TexParticle(p->image);
 	thisPart.depth_hack = DEPTHHACK_NONE;
 
-	numVerts = (p->decal) ? p->decal->numpolys : 4;
-	numIndex = (p->decal) ? (p->decal->numpolys-2)*3 : 4;
+	const int numVerts = (p->decal ? p->decal->numpolys : 4);
+	const int numIndex = (p->decal ? (p->decal->numpolys - 2) * 3 : 4);
 
 	// check if render state changed from last particle
-	R_CheckParticleRenderState (&thisPart, numVerts, numIndex);
+	R_CheckParticleRenderState(&thisPart, numVerts, numIndex);
 
-	if (p->flags & PART_SHADED) {
-		GetParticleLight (p, p->origin, r_particle_lighting->value, shadelight);
-		VectorSet(color, shadelight[0]*DIV255, shadelight[1]*DIV255, shadelight[2]*DIV255);
+	if (p->flags & PART_SHADED)
+	{
+		GetParticleLight(p, p->origin, r_particle_lighting->value, shadelight);
+		VectorSet(color, shadelight[0] * DIV255, shadelight[1] * DIV255, shadelight[2] * DIV255);
 	}
-	else {
+	else
+	{
 		VectorSet(shadelight, p->red, p->green, p->blue);
-		VectorSet(color, p->red*DIV255, p->green*DIV255, p->blue*DIV255);
+		VectorSet(color, p->red * DIV255, p->green * DIV255, p->blue * DIV255);
 	}
 
 	if (p->flags & PART_ALPHACOLOR)
-		Vector4Set(partColor, color[0]*alpha, color[1]*alpha, color[2]*alpha, alpha);
+		Vector4Set(partColor, color[0] * alpha, color[1] * alpha, color[2] * alpha, alpha);
 	else
 		Vector4Set(partColor, color[0], color[1], color[2], alpha);
 
 	if (p->decal)
 	{	
-		for (i = 0; i < p->decal->numpolys-2; i++) {
+		for (int i = 0; i < p->decal->numpolys - 2; i++)
+		{
 			indexArray[rb_index++] = rb_vertex;
-			indexArray[rb_index++] = rb_vertex+i+1;
-			indexArray[rb_index++] = rb_vertex+i+2;
+			indexArray[rb_index++] = rb_vertex + i + 1;
+			indexArray[rb_index++] = rb_vertex + i + 2;
 		}
-		for (i = 0; i < p->decal->numpolys; i++)
+
+		for (int i = 0; i < p->decal->numpolys; i++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], p->decal->coords[i][0], p->decal->coords[i][1]);
 			VA_SetElem3(vertexArray[rb_vertex], p->decal->polys[i][0], p->decal->polys[i][1], p->decal->polys[i][2]);
@@ -1070,8 +930,8 @@ void R_RenderDecal (particle_t *p)
 	{
 		AngleVectors(p->angle, ang_forward, ang_right, ang_up); 
 
-		VectorScale (ang_right, 0.75f, ang_right);
-		VectorScale (ang_up, 0.75f, ang_up);
+		VectorScale(ang_right, 0.75f, ang_right);
+		VectorScale(ang_up, 0.75f, ang_up);
 
 		VectorAdd      (ang_up, ang_right, angl_coord[0]);
 		VectorSubtract (ang_right, ang_up, angl_coord[1]);
@@ -1083,18 +943,19 @@ void R_RenderDecal (particle_t *p)
 		VectorMA(p->origin, size, angl_coord[2], ParticleVec[2]);
 		VectorMA(p->origin, size, angl_coord[3], ParticleVec[3]);
 
-		Vector2Set (tex_coord[0], 0, 1);
-		Vector2Set (tex_coord[1], 0, 0);
-		Vector2Set (tex_coord[2], 1, 0);
-		Vector2Set (tex_coord[3], 1, 1);
+		Vector2Set(tex_coord[0], 0, 1);
+		Vector2Set(tex_coord[1], 0, 0);
+		Vector2Set(tex_coord[2], 1, 0);
+		Vector2Set(tex_coord[3], 1, 1);
 
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+1;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+0;
-		indexArray[rb_index++] = rb_vertex+2;
-		indexArray[rb_index++] = rb_vertex+3;
-		for (i=0; i<4; i++)
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 1;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 0;
+		indexArray[rb_index++] = rb_vertex + 2;
+		indexArray[rb_index++] = rb_vertex + 3;
+
+		for (int i = 0; i < 4; i++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[i][0], tex_coord[i][1]);
 			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[i][0], ParticleVec[i][1], ParticleVec[i][2]);
@@ -1112,19 +973,17 @@ R_DrawAllDecals
 */
 void R_DrawAllDecals (void)
 {
-	int		i;
-	particle_t *d;
+	R_BeginParticles(true);
 
-	R_BeginParticles (true);
-
-	for ( i=0; i < r_newrefdef.num_decals; i++)
+	for (int i = 0; i < r_newrefdef.num_decals; i++)
 	{
-		d = &r_newrefdef.decals[i];
-		if (d->decal) // skip if not going to be visible
-			if ((d->decal->node == NULL) || (d->decal->node->visframe != r_visframecount))
-				continue;
+		particle_t *d = &r_newrefdef.decals[i];
+
+		if (d->decal && (d->decal->node == NULL || d->decal->node->visframe != r_visframecount))  // skip if not going to be visible
+			continue;
+
 		R_RenderDecal(d);
 	}
 
-	R_FinishParticles (true);
+	R_FinishParticles(true);
 }
