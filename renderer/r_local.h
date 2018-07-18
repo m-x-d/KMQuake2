@@ -36,8 +36,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #include "../client/ref.h"
-
-
 #include "qgl.h"
 
 // up / down
@@ -51,7 +49,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __VIDDEF_T
 typedef struct
 {
-	unsigned		width, height;			// coordinates from main game
+	unsigned width, height; // coordinates from main game
 } viddef_t;
 #endif
 
@@ -132,7 +130,7 @@ typedef enum
 //void GL_BeginRendering (int *x, int *y, int *width, int *height); //mxd. Redundant declaration
 //void GL_EndRendering (void); //mxd. Redundant declaration
 
-void GL_UpdateSwapInterval( void );
+void GL_UpdateSwapInterval();
 
 extern	float	gldepthmin, gldepthmax;
 
@@ -157,13 +155,15 @@ extern	int			numgltextures;
 
 #define PARTICLE_TYPES 256
 
-typedef enum {
-	DL_NULLMODEL1=0,
+typedef enum
+{
+	DL_NULLMODEL1 = 0,
 	DL_NULLMODEL2,
 	NUM_DISPLAY_LISTS
 } displaylist_t;
 
-typedef struct glmedia_s {
+typedef struct glmedia_s
+{
 	image_t		*notexture;			// used for bad textures
 	image_t		*whitetexture;		// used for solid colors
 	image_t		*rawtexture;		// used for cinematics
@@ -351,33 +351,33 @@ struct sortedelement_s //mxd. Removed typedef. Fixes C4091: 'typedef ': ignored 
 //void R_TranslatePlayerSkin (int playernum); //mxd. Undefined and unused
 
 // Knightmare- added some of Psychospaz's shortcuts
-void ElementAddNode (sortedelement_t *base, sortedelement_t *thisElement);
-int transCompare (const void *arg1, const void *arg2);
+void ElementAddNode(sortedelement_t *base, sortedelement_t *thisElement);
+int transCompare(const void *arg1, const void *arg2);
 
-void R_MaxColorVec (vec3_t color);
+void R_MaxColorVec(vec3_t color);
 
 //
 // r_entity.c
 //
-extern	sortedelement_t *ents_trans;
-extern	sortedelement_t *ents_viewweaps;
-extern	sortedelement_t *ents_viewweaps_trans;
+extern sortedelement_t *ents_trans;
+extern sortedelement_t *ents_viewweaps;
+extern sortedelement_t *ents_viewweaps_trans;
 
-void R_DrawEntitiesOnList (sortedelement_t *list);
-void R_DrawAllEntities (qboolean addViewWeaps);
-void R_DrawAllEntityShadows (void);
-void R_DrawSolidEntities ();
+void R_DrawEntitiesOnList(sortedelement_t *list);
+void R_DrawAllEntities(qboolean addViewWeaps);
+void R_DrawAllEntityShadows(void);
+void R_DrawSolidEntities();
 
 //
 // r_particle.c
 //
 extern	sortedelement_t *parts_prerender;
-void R_BuildParticleList (void);
-void R_SortParticlesOnList (void);
-void R_DrawParticles (sortedelement_t *list);
-void R_DrawAllParticles (void);
-void R_DrawDecals (void);
-void R_DrawAllDecals (void);
+//void R_BuildParticleList (void);
+void R_SortParticlesOnList();
+void R_DrawParticles(sortedelement_t *list);
+void R_DrawAllParticles();
+//void R_DrawDecals (void);
+void R_DrawAllDecals(void);
 
 //
 // r_light.c
@@ -399,10 +399,10 @@ void R_DrawAllDecals (void);
 
 typedef struct
 {
-	unsigned int	left;
-	unsigned int	right;
-	unsigned int	top;
-	unsigned int	bottom;
+	unsigned int left;
+	unsigned int right;
+	unsigned int top;
+	unsigned int bottom;
 } rect_t;
 
 typedef struct
@@ -430,70 +430,70 @@ extern gllightmapstate_t gl_lms;
 
 
 //void R_LightPoint (vec3_t p, vec3_t color);
-void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt);
-void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount, int max);
-void R_PushDlights (void);
-void R_ShadowLight (vec3_t pos, vec3_t lightAdd);
-void R_MarkLights (dlight_t *light, int bit, mnode_t *node);
+void R_LightPoint(vec3_t p, vec3_t color, qboolean isEnt);
+void R_LightPointDynamics(vec3_t p, vec3_t color, m_dlight_t *list, int *amount, int max);
+void R_PushDlights();
+void R_ShadowLight(vec3_t pos, vec3_t lightAdd);
+void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
 
 //====================================================================
 
-extern	model_t	*r_worldmodel;
+extern	model_t		*r_worldmodel;
 
 extern	unsigned	d_8to24table[256];
 extern	float		d_8to24tablef[256][3]; //Knightmare added
 
-extern	int		registration_sequence;
+extern	int			registration_sequence;
 
 
-void V_AddBlend (float r, float g, float b, float a, float *v_blend);
+//void V_AddBlend (float r, float g, float b, float a, float *v_blend);
 
 //
 // r_main.c
 //
-qboolean R_Init ( void *hinstance, void *hWnd, char *reason );
-void R_ClearState (void);
-void R_Shutdown (void);
-void R_RenderView (refdef_t *fd);
-void R_BeginFrame( float camera_separation );
-void R_SwapBuffers( int );
-void R_SetPalette ( const unsigned char *palette);
+qboolean R_Init(void *hinstance, void *hWnd, char *reason);
+void R_ClearState();
+void R_Shutdown();
+void R_RenderView(refdef_t *fd);
+void R_BeginFrame(float camera_separation);
+//void R_SwapBuffers( int );
+void R_SetPalette(const unsigned char *palette);
 
 //
 // r_misc.c
 //
-void R_CreateDisplayLists (void);
-void R_ClearDisplayLists (void);
-void R_InitMedia (void);
-void R_ScreenShot_f (void);
-void R_ScreenShot_Silent_f (void);
-void R_ScreenShot_TGA_f (void);
-void R_ScreenShot_JPG_f (void);
-void R_ScreenShot_PNG_f (void);
+void R_CreateDisplayLists();
+void R_ClearDisplayLists();
+void R_InitMedia();
+void R_ScreenShot_f(void);
+void R_ScreenShot_Silent_f(void);
+void R_ScreenShot_TGA_f(void);
+void R_ScreenShot_JPG_f(void);
+void R_ScreenShot_PNG_f(void);
 
 //
 // r_model.c
 //
-void R_DrawAliasMD2Model (entity_t *e);
-void R_DrawAliasMD2ModelShadow (entity_t *e);
+void R_DrawAliasMD2Model(entity_t *e);
+void R_DrawAliasMD2ModelShadow(entity_t *e);
 //Harven++ MD3
-void R_DrawAliasModel (entity_t *e);
-void R_DrawAliasModelShadow (entity_t *e);
+void R_DrawAliasModel(entity_t *e);
+//void R_DrawAliasModelShadow (entity_t *e);
 //Harven-- MD3
-void R_DrawBrushModel (entity_t *e);
-void R_DrawSpriteModel (entity_t *e);
-void R_DrawBeam( entity_t *e );
-void R_DrawWorld (void);
-void R_RenderDlights (void);
-void R_DrawAlphaSurfaces (void);
-void R_RenderBrushPoly (msurface_t *fa);
+void R_DrawBrushModel(entity_t *e);
+void R_DrawSpriteModel(entity_t *e);
+void R_DrawBeam(entity_t *e);
+void R_DrawWorld();
+void R_RenderDlights();
+void R_DrawAlphaSurfaces();
+void R_RenderBrushPoly(msurface_t *fa);
 //void R_InitMedia (void); //mxd. Redundant declaration
-void R_DrawInitLocal (void);
-void R_SubdivideSurface (msurface_t *fa);
-qboolean R_CullBox (vec3_t mins, vec3_t maxs);
-void R_RotateForEntity (entity_t *e, qboolean full);
-int R_RollMult (void);
-void R_MarkLeaves (void);
+void R_DrawInitLocal();
+void R_SubdivideSurface(msurface_t *fa);
+qboolean R_CullBox(vec3_t mins, vec3_t maxs);
+void R_RotateForEntity(entity_t *e, qboolean full);
+int R_RollMult();
+void R_MarkLeaves();
 
 //
 // r_alias_misc.c
@@ -515,26 +515,25 @@ extern	vec3_t	shadelight;
 extern	vec3_t	lightspot;
 extern	float	shellFlowH, shellFlowV;
 
-//void	R_ShadowLight (vec3_t pos, vec3_t lightAdd); //mxd. Redundant declaration
-void	R_SetShellBlend (qboolean toggle);
-void	R_SetVertexRGBScale (qboolean toggle);
-qboolean FlowingShell (void);
-float	R_CalcEntAlpha (float alpha, vec3_t point);
-float	R_CalcShadowAlpha (entity_t *e);
-void	R_ShadowBlend (float alpha);
-void	R_FlipModel (qboolean on, qboolean cullOnly);
-void	R_SetBlendModeOn (image_t *skin);
-void	R_SetBlendModeOff (void);
-void	R_SetShadeLight (void);
-void R_DrawAliasModelBBox (vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha);
+void R_SetShellBlend(qboolean toggle);
+void R_SetVertexRGBScale(qboolean toggle);
+qboolean FlowingShell();
+//float	R_CalcEntAlpha (float alpha, vec3_t point);
+float R_CalcShadowAlpha(entity_t *e);
+void R_ShadowBlend(float alpha);
+void R_FlipModel(qboolean on, qboolean cullOnly);
+void R_SetBlendModeOn(image_t *skin);
+void R_SetBlendModeOff(void);
+void R_SetShadeLight(void);
+void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha);
 
 //
 // r_backend.c
 //
 // MrG's Vertex array stuff
 #define MAX_TEXTURE_UNITS	4 // was 2
-#define MAX_VERTICES	16384
-#define MAX_INDICES		MAX_VERTICES * 4
+#define MAX_VERTICES		16384
+#define MAX_INDICES			(MAX_VERTICES * 4)
 
 
 #define VA_SetElem2(v,a,b)		((v)[0]=(a),(v)[1]=(b))
@@ -554,19 +553,19 @@ extern float	colorArray[MAX_VERTICES][4];
 extern unsigned rb_vertex, rb_index;
 // end vertex array stuff
 
-void RB_InitBackend (void);
+void RB_InitBackend();
 float RB_CalcGlowColor (renderparms_t parms);
 void RB_ModifyTextureCoords (float *inArray, float *vertexArray, int numVerts, renderparms_t parms);
 qboolean RB_CheckArrayOverflow (int numVerts, int numIndex);
 void RB_RenderMeshGeneric (qboolean drawTris);
-void RB_DrawArrays (void);
-void RB_DrawMeshTris (void);
+void RB_DrawArrays();
+void RB_DrawMeshTris();
 
 
 //
 // r_arb_program.c
 //
-void R_Compile_ARB_Programs ();
+void R_Compile_ARB_Programs();
 
 typedef enum
 {
@@ -578,7 +577,7 @@ typedef enum
 
 typedef enum
 {
-    V_PROG_DISTORT = 0,
+	V_PROG_DISTORT = 0,
 	NUM_VERTEX_PROGRAM
 } vrt_progs;
 
@@ -586,67 +585,46 @@ typedef enum
 extern GLuint fragment_programs[NUM_FRAGMENT_PROGRAM];
 extern GLuint vertex_programs[NUM_VERTEX_PROGRAM];
 
-
 //
 // r_warp.c
 //
-//glpoly_t *WaterWarpPolyVerts (glpoly_t *p);
-void R_InitDSTTex (void);
+void R_InitDSTTex();
 void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render);
 
 
 //
 // r_sky.c
 //
-void R_AddSkySurface (msurface_t *fa);
-void R_ClearSkyBox (void);
-void R_DrawSkyBox (void);
-
-
-//
-// r_surf.c
-//
+void R_AddSkySurface(msurface_t *fa);
+void R_ClearSkyBox();
+void R_DrawSkyBox();
 
 
 // 
 // r_bloom.c 
 // 
-void R_BloomBlend( refdef_t *fd ); 
-void R_InitBloomTextures( void ); 
+void R_BloomBlend(refdef_t *fd); 
+void R_InitBloomTextures(); 
 
-
-#if 0
-short LittleShort (short l);
-short BigShort (short l);
-int	LittleLong (int l);
-float LittleFloat (float f);
-
-char	*va(char *format, ...);
-// does a varargs printf into a temp buffer
-#endif
-
-
-//void COM_StripExtension (char *in, char *out); //mxd. Redundant declaration
 
 //
 // r_draw.c
 //
-void	R_DrawGetPicSize (int *w, int *h, char *name);
-void	R_DrawPic (int x, int y, char *name);
+void	R_DrawGetPicSize(int *w, int *h, char *name);
+void	R_DrawPic(int x, int y, char *name);
 // added alpha for Psychospaz's transparent console
-void	R_DrawStretchPic (int x, int y, int w, int h, char *name, float alpha);
+void	R_DrawStretchPic(int x, int y, int w, int h, char *name, float alpha);
 // Psychospaz's scaled crosshair support
-void	R_DrawScaledPic (int x, int y, float scale, float alpha, char *pic);
-void	R_InitChars (void);
-void	R_FlushChars (void);
-void	R_DrawChar (float x, float y, int num, float scale, 
-			int red, int green, int blue, int alpha, qboolean italic, qboolean last);
-void	R_DrawTileClear (int x, int y, int w, int h, char *name);
-void	R_DrawFill (int x, int y, int w, int h, int red, int green, int blue, int alpha);
-float	R_CharMapScale (void);
+void	R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic);
+void	R_InitChars();
+void	R_FlushChars();
+void	R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
+void	R_DrawTileClear(int x, int y, int w, int h, char *name);
+void	R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
+float	R_CharMapScale();
 
 #ifdef ROQ_SUPPORT
-void	R_DrawStretchRaw (int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
+void	R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
 #else // old 8-bit, 256x256 version
 void	r_DrawStretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
 #endif // ROQ_SUPPORT
@@ -655,88 +633,45 @@ void	r_DrawStretchRaw (int x, int y, int w, int h, int cols, int rows, byte *dat
 //
 // r_image.c
 //
-int		Draw_GetPalette (void);
-//void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out,  int outwidth, int outheight);
-void GL_ResampleTexture (void *indata, int inwidth, int inheight, void *outdata,  int outwidth, int outheight);
-struct image_s *R_RegisterSkin (char *name);
+void Draw_GetPalette();
+void GL_ResampleTexture(void *indata, int inwidth, int inheight, void *outdata,  int outwidth, int outheight);
+struct image_s *R_RegisterSkin(char *name);
 
-void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *height);
+void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height);
 //Knightmare added
-void LoadTGA (char *name, byte **pic, int *width, int *height);
-void LoadJPG (char *filename, byte **pic, int *width, int *height);
+//void LoadTGA (char *name, byte **pic, int *width, int *height);
+//void LoadJPG (char *filename, byte **pic, int *width, int *height);
 
 image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits);
 image_t	*R_FindImage (char *name, imagetype_t type);
 void	GL_TextureMode( char *string );
-void	R_ImageList_f (void);
+void	R_ImageList_f(void);
 //void	GL_SetTexturePalette( unsigned palette[256] );
-void R_InitFailedImgList (void);
-void R_InitImages (void);
-void R_ShutdownImages (void);
-void R_FreeUnusedImages (void);
-void GL_TextureAlphaMode( char *string );
-void GL_TextureSolidMode( char *string );
+void R_InitFailedImgList();
+void R_InitImages();
+void R_ShutdownImages();
+void R_FreeUnusedImages();
+void GL_TextureAlphaMode(char *string);
+void GL_TextureSolidMode(char *string);
 
 /*
 ** GL extension emulation functions
 */
-void GL_DrawParticles( int num_particles );
+//void GL_DrawParticles(int num_particles);
 
 //
 // r_fog.c
 //
-void R_SetFog (void);
-void R_InitFogVars (void);
-void R_SetFogVars (qboolean enable, int model, int density,
-				   int start, int end, int red, int green, int blue);
+void R_SetFog();
+void R_InitFogVars();
+void R_SetFogVars(qboolean enable, int model, int density, int start, int end, int red, int green, int blue);
 
 /*
 ** GL config stuff
 */
 
-/*
-#define GL_RENDERER_VOODOO		0x00000001
-#define GL_RENDERER_VOODOO2   	0x00000002
-#define GL_RENDERER_VOODOO_RUSH	0x00000004
-#define GL_RENDERER_BANSHEE		0x00000008
-#define	GL_RENDERER_3DFX		0x0000000F
-
-#define GL_RENDERER_PCX1		0x00000010
-#define GL_RENDERER_PCX2		0x00000020
-#define GL_RENDERER_PMX			0x00000040
-#define	GL_RENDERER_POWERVR		0x00000070
-
-#define GL_RENDERER_PERMEDIA2	0x00000100
-#define GL_RENDERER_GLINT_MX	0x00000200
-#define GL_RENDERER_GLINT_TX	0x00000400
-#define GL_RENDERER_3DLABS_MISC	0x00000800
-#define	GL_RENDERER_3DLABS		0x00000F00
-
-#define GL_RENDERER_REALIZM		0x00001000
-#define GL_RENDERER_REALIZM2	0x00002000
-#define	GL_RENDERER_INTERGRAPH	0x00003000
-
-#define GL_RENDERER_3DPRO		0x00004000
-#define GL_RENDERER_REAL3D		0x00008000
-#define GL_RENDERER_RIVA128		0x00010000
-#define GL_RENDERER_DYPIC		0x00020000
-
-#define GL_RENDERER_V1000		0x00040000
-#define GL_RENDERER_V2100		0x00080000
-#define GL_RENDERER_V2200		0x00100000
-#define	GL_RENDERER_RENDITION	0x001C0000
-
-#define GL_RENDERER_O2          0x00100000
-#define GL_RENDERER_IMPACT      0x00200000
-#define GL_RENDERER_RE			0x00400000
-#define GL_RENDERER_IR			0x00800000
-#define	GL_RENDERER_SGI			0x00F00000
-
-#define GL_RENDERER_MCD			0x01000000
-#define GL_RENDERER_OTHER		0x80000000
-*/
-
-enum {
+enum
+{
 	GLREND_DEFAULT		= 1 << 0,
 
 	GLREND_MCD			= 1 << 1,
@@ -882,30 +817,30 @@ extern glstate_t   glState;
 //
 // r_glstate.c
 //
-void	GL_Stencil (qboolean enable, qboolean shell);
-void	R_ParticleStencil (int passnum);
-qboolean GL_HasStencil (void);
+void	GL_Stencil(qboolean enable, qboolean shell);
+void	R_ParticleStencil(int passnum);
+qboolean GL_HasStencil();
 
-void	GL_Enable (GLenum cap);
-void	GL_Disable (GLenum cap);
-void	GL_ShadeModel (GLenum mode);
-void	GL_TexEnv (GLenum value);
-void	GL_CullFace (GLenum mode);
-void	GL_PolygonOffset (GLfloat factor, GLfloat units);
-void	GL_AlphaFunc (GLenum func, GLclampf ref);
-void	GL_BlendFunc (GLenum src, GLenum dst);
-void	GL_DepthFunc (GLenum func);
-void	GL_DepthMask (GLboolean mask);
-void	GL_DepthRange (GLfloat rMin, GLfloat rMax);
-void	GL_LockArrays (int numVerts);
-void	GL_UnlockArrays (void);
-void	GL_EnableTexture (unsigned tmu);
-void	GL_DisableTexture (unsigned tmu);
+void	GL_Enable(GLenum cap);
+void	GL_Disable(GLenum cap);
+void	GL_ShadeModel(GLenum mode);
+void	GL_TexEnv(GLenum value);
+void	GL_CullFace(GLenum mode);
+void	GL_PolygonOffset(GLfloat factor, GLfloat units);
+void	GL_AlphaFunc(GLenum func, GLclampf ref);
+void	GL_BlendFunc(GLenum src, GLenum dst);
+void	GL_DepthFunc(GLenum func);
+void	GL_DepthMask(GLboolean mask);
+void	GL_DepthRange(GLfloat rMin, GLfloat rMax);
+void	GL_LockArrays(int numVerts);
+void	GL_UnlockArrays();
+void	GL_EnableTexture(unsigned tmu);
+void	GL_DisableTexture(unsigned tmu);
 void	GL_EnableMultitexture(qboolean enable);
-void	GL_SelectTexture (unsigned tmu);
-void	GL_Bind (int texnum);
-void	GL_MBind (unsigned tmu, int texnum);
-void	GL_SetDefaultState (void);
+void	GL_SelectTexture(unsigned tmu);
+void	GL_Bind(int texnum);
+void	GL_MBind(unsigned tmu, int texnum);
+void	GL_SetDefaultState();
 
 /*
 ====================================================================
@@ -915,40 +850,12 @@ IMPORTED FUNCTIONS
 ====================================================================
 */
 
-void	VID_Error (int err_level, char *str, ...);
+void VID_Error(int err_level, char *str, ...);
+void CL_SetParticleImages();
+void VID_Printf(int print_level, char *str, ...);
 
-void	CL_SetParticleImages (void);
-
-//mxd. Redundant declarations
-/*void	Cmd_AddCommand (char *name, void(*cmd)(void));
-void	Cmd_RemoveCommand (char *name);
-int		Cmd_Argc (void);
-char	*Cmd_Argv (int i);
-void	Cbuf_ExecuteText (int exec_when, char *text);*/
-
-void	VID_Printf (int print_level, char *str, ...);
-
-// files will be memory mapped read only
-// the returned buffer may be part of a larger pak file,
-// or a discrete file from anywhere in the quake search path
-// a -1 return means the file does not exist
-// NULL can be passed for buf to just determine existance
-//mxd. Redundant declarations
-/*char	**FS_ListPak (char *find, int *num);
-int		FS_LoadFile (char *name, void **buf);
-void	FS_FreeFile (void *buf);*/
-
-// gamedir will be the current directory that generated
-// files should be stored to, ie: "f:\quake\id1"
-//char	*FS_Gamedir (void); //mxd. Redundant declaration
-
-//mxd. Redundant declarations
-/*cvar_t	*Cvar_Get (char *name, char *value, int flags);
-cvar_t	*Cvar_Set (char *name, char *value );
-void	 Cvar_SetValue (char *name, float value);*/
-
-qboolean	VID_GetModeInfo (int *width, int *height, int mode);
-void		VID_NewWindow (int width, int height);
+qboolean	VID_GetModeInfo(int *width, int *height, int mode);
+void		VID_NewWindow(int width, int height);
 // Knightmare- added import of text color for renderer
 void		TextColor (int colornum, int *red, int *green, int *blue);
 
@@ -960,12 +867,12 @@ IMPLEMENTATION SPECIFIC FUNCTIONS
 ====================================================================
 */
 
-void		GLimp_BeginFrame( float camera_separation );
-void		GLimp_EndFrame( void );
-qboolean 	GLimp_Init( void *hinstance, void *wndproc); //mxd. int -> qboolean
-void		GLimp_Shutdown( void );
-rserr_t     GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen ); //mxd. int -> rserr_t
-void		GLimp_AppActivate( qboolean active );
-void		GLimp_EnableLogging( qboolean enable );
-void		GLimp_LogNewFrame( void );
+void		GLimp_BeginFrame(float camera_separation);
+void		GLimp_EndFrame();
+qboolean 	GLimp_Init(void *hinstance, void *wndproc); //mxd. int -> qboolean
+void		GLimp_Shutdown();
+rserr_t     GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen); //mxd. int -> rserr_t
+void		GLimp_AppActivate(qboolean active);
+void		GLimp_EnableLogging(qboolean enable);
+void		GLimp_LogNewFrame();
 

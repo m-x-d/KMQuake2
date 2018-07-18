@@ -267,7 +267,11 @@ typedef	int	fixed16_t;
 #endif
 
 #ifndef M_PI2
-#define M_PI2					6.28318530717958647692	// Matches value in GCC v2 math.h
+#define M_PI2		6.28318530717958647692	// Matches value in GCC v2 math.h
+#endif
+
+#ifndef M_PIHALF //mxd
+#define M_PIHALF	1.57079632679489661923	// doesn't match anything in particular...
 #endif
 
 #define SqrtFast(x)				((x) * Q_rsqrt(x))
