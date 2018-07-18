@@ -671,12 +671,8 @@ void Mod_LoadTexinfo (lump_t *l)
 
 		Com_sprintf(name, sizeof(name), "textures/%s.wal", in->texture);
 		out->image = Mod_FindTexture(name, it_wall); // was R_FindImage
-
 		if (!out->image)
-		{
-			VID_Printf(PRINT_ALL, "Couldn't load %s\n", name);
-			out->image = glMedia.notexture;
-		}
+			out->image = glMedia.notexture; //mxd. Mod_FindTexture will print a warning message if the texture wasn't found
 
 		// Added glow
 		Com_sprintf(name, sizeof(name), "textures/%s_glow.wal", in->texture);
