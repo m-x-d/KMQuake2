@@ -53,24 +53,26 @@ static int				cm_markCheckCount;
 
 int PlaneTypeForNormal (const vec3_t normal)
 { 
-	if (normal[0] == 1.0)  
-		return 0;//PLANE_X;  
-	if (normal[1] == 1.0)  
-		return 1;//PLANE_Y;  
-	if (normal[2] == 1.0)  
-		return 2;//PLANE_Z; 
- 	return 3;//PLANE_NON_AXIAL; 
+	if (normal[0] == 1.0)
+		return 0; //PLANE_X;
+
+	if (normal[1] == 1.0)
+		return 1; //PLANE_Y;
+
+	if (normal[2] == 1.0)
+		return 2; //PLANE_Z; 
+
+	return 3; //PLANE_NON_AXIAL; 
 } 
 
 
 float *worldVert (int i, msurface_t *surf)
 {
-	int e = r_worldmodel->surfedges[surf->firstedge + i];
+	const int e = r_worldmodel->surfedges[surf->firstedge + i];
 	if (e >= 0)
 		return &r_worldmodel->vertexes[r_worldmodel->edges[e].v[0]].position[0];
 	else
 		return &r_worldmodel->vertexes[r_worldmodel->edges[-e].v[1]].position[0];
-
 }
 
 
@@ -83,15 +85,11 @@ static void R_ClipFragment (int numPoints, vec3_t points, int stage, markFragmen
 {
 	int			i;
 	float		*p;
-	qboolean	frontSide;
 	vec3_t		front[MAX_FRAGMENT_POINTS];
-	int			f;
-	float		dist;
 	float		dists[MAX_FRAGMENT_POINTS];
 	int			sides[MAX_FRAGMENT_POINTS];
-	cplane_t	*plane;
 
-	if (numPoints > MAX_FRAGMENT_POINTS-2)
+	if (numPoints > MAX_FRAGMENT_POINTS - 2)
 		VID_Error(ERR_DROP, "Mod_ClipFragment: MAX_FRAGMENT_POINTS hit");
 
 	if (stage == MAX_FRAGMENT_PLANES)
@@ -106,7 +104,7 @@ static void R_ClipFragment (int numPoints, vec3_t points, int stage, markFragmen
 				numPoints = cm_maxMarkPoints - cm_numMarkPoints;
 
 			for (i = 0, p = points; i < numPoints; i++, p += 3)
-				VectorCopy(p, cm_markPoints[cm_numMarkPoints+i]);
+				VectorCopy(p, cm_markPoints[cm_numMarkPoints + i]);
 
 			cm_numMarkPoints += numPoints;
 		}
@@ -114,64 +112,72 @@ static void R_ClipFragment (int numPoints, vec3_t points, int stage, markFragmen
 		return;
 	}
 
-	frontSide = false;
+	qboolean frontSide = false;
 
-	plane = &cm_markPlanes[stage];
+	cplane_t *plane = &cm_markPlanes[stage];
 	for (i = 0, p = points; i < numPoints; i++, p += 3)
 	{
 		if (plane->type < 3)
-			dists[i] = dist = p[plane->type] - plane->dist;
+			dists[i] = p[plane->type] - plane->dist;
 		else
-			dists[i] = dist = DotProduct(p, plane->normal) - plane->dist;
+			dists[i] = DotProduct(p, plane->normal) - plane->dist;
 
-		if (dist > ON_EPSILON){
+		if (dists[i] > ON_EPSILON)
+		{
 			frontSide = true;
 			sides[i] = SIDE_FRONT;
 		}
-		else if (dist < -ON_EPSILON)
+		else if (dists[i] < -ON_EPSILON)
+		{
 			sides[i] = SIDE_BACK;
+		}
 		else
+		{
 			sides[i] = SIDE_ON;
+		}
 	}
 
-	if (!frontSide)
-		return;		// Not clipped
+	if (!frontSide) // Not clipped
+		return;
 
 	// Clip it
 	dists[i] = dists[0];
 	sides[i] = sides[0];
-	VectorCopy(points, (points + (i*3)));
+	VectorCopy(points, (points + (i * 3)));
 
-	f = 0;
-
-	for (i = 0, p = points; i < numPoints; i++, p += 3){
-		switch (sides[i]){
+	int pointindex = 0;
+	for (i = 0, p = points; i < numPoints; i++, p += 3)
+	{
+		switch (sides[i])
+		{
 		case SIDE_FRONT:
-			VectorCopy(p, front[f]);
-			f++;
+			VectorCopy(p, front[pointindex]);
+			pointindex++;
 			break;
+
 		case SIDE_BACK:
 			break;
+
 		case SIDE_ON:
-			VectorCopy(p, front[f]);
-			f++;
+			VectorCopy(p, front[pointindex]);
+			pointindex++;
 			break;
 		}
 
-		if (sides[i] == SIDE_ON || sides[i+1] == SIDE_ON || sides[i+1] == sides[i])
+		if (sides[i] == SIDE_ON || sides[i + 1] == SIDE_ON || sides[i + 1] == sides[i])
 			continue;
 
-		dist = dists[i] / (dists[i] - dists[i+1]);
+		const float dist = dists[i] / (dists[i] - dists[i + 1]);
 
-		front[f][0] = p[0] + (p[3] - p[0]) * dist;
-		front[f][1] = p[1] + (p[4] - p[1]) * dist;
-		front[f][2] = p[2] + (p[5] - p[2]) * dist;
+		front[pointindex][0] = p[0] + (p[3] - p[0]) * dist;
+		front[pointindex][1] = p[1] + (p[4] - p[1]) * dist;
+		front[pointindex][2] = p[2] + (p[5] - p[2]) * dist;
 
-		f++;
+		pointindex++;
 	}
 
 	// Continue
-	R_ClipFragment(f, front[0], stage+1, mf);
+	R_ClipFragment(pointindex, front[0], stage + 1, mf);
 }
 
 
@@ -182,31 +188,26 @@ R_ClipFragmentToSurface
 */
 static void R_ClipFragmentToSurface (msurface_t *surf, const vec3_t normal, mnode_t *node)
 {
-	qboolean planeback = surf->flags & SURF_PLANEBACK;
-	int				i;
-	float			d;
-	vec3_t			points[MAX_FRAGMENT_POINTS];
-	markFragment_t	*mf;
-	//glpoly_t *bp, *p;
-
-	if (cm_numMarkPoints >= cm_maxMarkPoints || cm_numMarkFragments >= cm_maxMarkFragments)
-		return;		// Already reached the limit somewhere else
-
-	d = DotProduct(normal, surf->plane->normal);
-	if ((planeback && d > -0.75) || (!planeback && d < 0.75))
-		return;		// Greater than X degrees
-
-	if (surf->texinfo->flags & SURF_ALPHATEST) // Alpha test surface- no decals
+	if (cm_numMarkPoints >= cm_maxMarkPoints || cm_numMarkFragments >= cm_maxMarkFragments) // Already reached the limit somewhere else
 		return;
 
-	for (i = 2; i < surf->numedges; i++)
+	if (surf->texinfo->flags & SURF_ALPHATEST) // Alpha test surface - no decals
+		return;
+
+	const qboolean planeback = surf->flags & SURF_PLANEBACK;
+	const float d = DotProduct(normal, surf->plane->normal);
+	if ((planeback && d > -0.75) || (!planeback && d < 0.75))
+		return; // Greater than X degrees
+
+	vec3_t points[MAX_FRAGMENT_POINTS];
+	for (int i = 2; i < surf->numedges; i++)
 	{
-		mf = &cm_markFragments[cm_numMarkFragments];
+		markFragment_t *mf = &cm_markFragments[cm_numMarkFragments];
 		mf->firstPoint = mf->numPoints = 0;
 		mf->node = node; // vis node
 		
 		VectorCopy(worldVert(0, surf), points[0]);
-		VectorCopy(worldVert(i-1, surf), points[1]);
+		VectorCopy(worldVert(i - 1, surf), points[1]);
 		VectorCopy(worldVert(i, surf), points[2]);
 
 		R_ClipFragment(3, points[0], 0, mf);
@@ -229,20 +230,15 @@ R_RecursiveMarkFragments
 */
 static void R_RecursiveMarkFragments (const vec3_t origin, const vec3_t normal, float radius, mnode_t *node)
 {
-
-	int			i;
-	float		dist;
-	cplane_t	*plane;
-	msurface_t	*surf;
-
-	if (cm_numMarkPoints >= cm_maxMarkPoints || cm_numMarkFragments >= cm_maxMarkFragments)
-		return;		// Already reached the limit somewhere else
+	if (cm_numMarkPoints >= cm_maxMarkPoints || cm_numMarkFragments >= cm_maxMarkFragments) // Already reached the limit somewhere else
+		return;
 
 	if (node->contents != -1)
 		return;
 
 	// Find which side of the node we are on
-	plane = node->plane;
+	float dist;
+	cplane_t *plane = node->plane;
 	if (plane->type < 3)
 		dist = origin[plane->type] - plane->dist;
 	else
@@ -254,19 +250,19 @@ static void R_RecursiveMarkFragments (const vec3_t origin, const vec3_t normal, 
 		R_RecursiveMarkFragments(origin, normal, radius, node->children[0]);
 		return;
 	}
+
 	if (dist < -radius)
 	{
 		R_RecursiveMarkFragments(origin, normal, radius, node->children[1]);
 		return;
 	}
+
 	// Clip against each surface
-
-
-	surf = r_worldmodel->surfaces + node->firstsurface;
-	for (i=0 ; i<node->numsurfaces ; i++, surf++)
+	msurface_t *surf = r_worldmodel->surfaces + node->firstsurface;
+	for (int i = 0; i < node->numsurfaces; i++, surf++)
 	{
 		if (surf->checkCount == cm_markCheckCount)
-			continue;	// Already checked this surface in another node
+			continue; // Already checked this surface in another node
 
 		if (surf->texinfo->flags & (SURF_SKY|SURF_WARP))
 			continue;
@@ -275,6 +271,7 @@ static void R_RecursiveMarkFragments (const vec3_t origin, const vec3_t normal, 
 
 		R_ClipFragmentToSurface(surf, normal, node);
 	}
+
 	// Recurse down the children
 	R_RecursiveMarkFragments(origin, normal, radius, node->children[0]);
 	R_RecursiveMarkFragments(origin, normal, radius, node->children[1]);
@@ -288,14 +285,10 @@ R_MarkFragments
 */
 int R_MarkFragments (const vec3_t origin, const vec3_t axis[3], float radius, int maxPoints, vec3_t *points, int maxFragments, markFragment_t *fragments)
 {
-
-	int		i;
-	float	dot;
-
 	if (!r_worldmodel || !r_worldmodel->nodes)
-		return 0;			// Map not loaded
+		return 0; // Map not loaded
 
-	cm_markCheckCount++;	// For multi-check avoidance
+	cm_markCheckCount++; // For multi-check avoidance
 
 	// Initialize fragments
 	cm_numMarkPoints = 0;
@@ -307,17 +300,17 @@ int R_MarkFragments (const vec3_t origin, const vec3_t axis[3], float radius, in
 	cm_markFragments = fragments;
 
 	// Calculate clipping planes
-	for (i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		dot = DotProduct(origin, axis[i]);
+		const float dot = DotProduct(origin, axis[i]);
 
-		VectorCopy(axis[i], cm_markPlanes[i*2+0].normal);
-		cm_markPlanes[i*2+0].dist = dot - radius;
-		cm_markPlanes[i*2+0].type = PlaneTypeForNormal(cm_markPlanes[i*2+0].normal);
+		VectorCopy(axis[i], cm_markPlanes[i * 2 + 0].normal);
+		cm_markPlanes[i * 2 + 0].dist = dot - radius;
+		cm_markPlanes[i * 2 + 0].type = PlaneTypeForNormal(cm_markPlanes[i * 2 + 0].normal);
 
-		VectorNegate(axis[i], cm_markPlanes[i*2+1].normal);
-		cm_markPlanes[i*2+1].dist = -dot - radius;
-		cm_markPlanes[i*2+1].type = PlaneTypeForNormal(cm_markPlanes[i*2+1].normal);
+		VectorNegate(axis[i], cm_markPlanes[i * 2 + 1].normal);
+		cm_markPlanes[i * 2 + 1].dist = -dot - radius;
+		cm_markPlanes[i * 2 + 1].type = PlaneTypeForNormal(cm_markPlanes[i * 2 + 1].normal);
 	}
 
 	// Clip against world geometry
