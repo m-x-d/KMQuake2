@@ -205,7 +205,6 @@ LIGHT SAMPLING
 =============================================================================
 */
 
-vec3_t		pointcolor;
 cplane_t	*lightplane; // used as shadow plane
 vec3_t		lightspot;
 
@@ -214,7 +213,7 @@ vec3_t		lightspot;
 RecursiveLightPoint
 ===============
 */
-int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
+int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 {
 	if (node->contents != -1)
 		return -1;		// didn't hit anything
@@ -228,15 +227,15 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 	const int side = (front < 0);
 	
 	if ((back < 0) == side)
-		return RecursiveLightPoint(node->children[side], start, end);
+		return RecursiveLightPoint(color, node->children[side], start, end);
 	
-	const float frac = front / (front-back);
+	const float frac = front / (front - back);
 	vec3_t mid;
 	for(int i = 0; i < 3; i++) //mxd
 		mid[i] = start[i] + (end[i] - start[i]) * frac;
 	
 	// go down front side	
-	const int r = RecursiveLightPoint(node->children[side], start, mid);
+	const int r = RecursiveLightPoint(color, node->children[side], start, mid);
 	if (r > -1)
 		return r;		// hit something
 		
@@ -270,33 +269,52 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 		if (ds > surf->extents[0] || dt > surf->extents[1])
 			continue;
 
-		ds >>= surf->lmshift; //mxd. Was 4
-		dt >>= surf->lmshift; //mxd. Was 4
-
 		byte *lightmap = surf->samples;
-		lightmap += 3 * (dt * ((surf->extents[0] >> surf->lmshift) + 1) + ds); //mxd. 4 -> lmshift
+		lightmap += 3 * ((dt >> surf->lmshift) * ((surf->extents[0] >> surf->lmshift) + 1) + (ds >> surf->lmshift)); //mxd. 4 -> lmshift
 
-		VectorCopy(vec3_origin, pointcolor);
 		if (r_newrefdef.lightstyles)
 		{
+			// LordHavoc: enhanced to interpolate lighting
+			int r00 = 0, g00 = 0, b00 = 0, r01 = 0, g01 = 0, b01 = 0, r10 = 0, g10 = 0, b10 = 0, r11 = 0, g11 = 0, b11 = 0;
+			const int dsfrac = ds & 15;
+			const int dtfrac = dt & 15;
+			const int line3 = ((surf->extents[0] >> surf->lmshift) + 1) * 3;
+			
 			for (int maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
 			{
 				vec3_t scale;
 				for (int c = 0; c < 3; c++) //mxd. V535 The variable 'i' is being used for this loop and for the outer loop.
 					scale[c] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[c];
 
-				for (int c = 0; c < 3; c++) //mxd
-					pointcolor[c] += lightmap[c] * scale[c] * DIV255;
+				r00 += (float)lightmap[0] * scale[0];
+				g00 += (float)lightmap[1] * scale[1];
+				b00 += (float)lightmap[2] * scale[2];
+
+				r01 += (float)lightmap[3] * scale[0];
+				g01 += (float)lightmap[4] * scale[1];
+				b01 += (float)lightmap[5] * scale[2];
+
+				r10 += (float)lightmap[line3 + 0] * scale[0];
+				g10 += (float)lightmap[line3 + 1] * scale[1];
+				b10 += (float)lightmap[line3 + 2] * scale[2];
+
+				r11 += (float)lightmap[line3 + 3] * scale[0];
+				g11 += (float)lightmap[line3 + 4] * scale[1];
+				b11 += (float)lightmap[line3 + 5] * scale[2];
 
 				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) * ((surf->extents[1] >> surf->lmshift) + 1); //mxd. 4 -> lmshift
 			}
+
+			color[0] = DIV256 * (float)(int)(((((((r11 - r10) * dsfrac >> 4) + r10) - (((r01 - r00) * dsfrac >> 4) + r00)) * dtfrac) >> 4) + (((r01 - r00) * dsfrac >> 4) + r00));
+			color[1] = DIV256 * (float)(int)(((((((g11 - g10) * dsfrac >> 4) + g10) - (((g01 - g00) * dsfrac >> 4) + g00)) * dtfrac) >> 4) + (((g01 - g00) * dsfrac >> 4) + g00));
+			color[2] = DIV256 * (float)(int)(((((((b11 - b10) * dsfrac >> 4) + b10) - (((b01 - b00) * dsfrac >> 4) + b00)) * dtfrac) >> 4) + (((b01 - b00) * dsfrac >> 4) + b00));
 		}
 		
 		return 1;
 	}
 
 	// go down back side
-	return RecursiveLightPoint(node->children[!side], mid, end);
+	return RecursiveLightPoint(color, node->children[!side], mid, end);
 }
 
 
@@ -331,21 +349,18 @@ void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt)
 {
 	if (!r_worldmodel->lightdata)
 	{
-		color[0] = color[1] = color[2] = 1.0;
+		VectorSetAll(color, 1.0f);
 		return;
 	}
 
-	vec3_t end = { p[0], p[1], p[2] - 2048 };
-	const float r = RecursiveLightPoint(r_worldmodel->nodes, p, end);
-	
+	vec3_t end = { p[0], p[1], p[2] - 8192 }; //mxd. Was p[2] - 2048
+	const float r = RecursiveLightPoint(color, r_worldmodel->nodes, p, end);
 	if (r == -1)
-		VectorCopy(vec3_origin, color);
-	else
-		VectorCopy(pointcolor, color);
+		VectorClear(color);
 
 	// this catches too bright modulated color
 	for (int i = 0; i < 3; i++)
-		if (color[i] > 1) color[i] = 1;
+		color[i] = min(color[i], 1);
 
 	// add dynamic lights
 	dlight_t *dl = r_newrefdef.dlights;
@@ -360,8 +375,7 @@ void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt)
 		else
 			VectorSubtract(p, dl->origin, dist);
 
-		float add = dl->intensity - VectorLength(dist);
-		add *= DIV256;
+		const float add = (dl->intensity - VectorLength(dist)) * DIV256;
 		if (add > 0)
 			VectorMA(color, add, dl->color, color);
 	}
@@ -377,21 +391,18 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 {
 	if (!r_worldmodel->lightdata)
 	{
-		color[0] = color[1] = color[2] = 1.0;
+		VectorSetAll(color, 1.0f);
 		return;
 	}
 	
-	vec3_t end = { p[0], p[1], p[2] - 2048 };
-	const float r = RecursiveLightPoint (r_worldmodel->nodes, p, end);
-	
+	vec3_t end = { p[0], p[1], p[2] - 8192 }; //mxd. Was p[2] - 2048
+	const float r = RecursiveLightPoint(color, r_worldmodel->nodes, p, end);
 	if (r == -1)
-		VectorCopy(vec3_origin, color);
-	else
-		VectorCopy(pointcolor, color);
+		VectorClear(color);
 
-	//this catches too bright modulated color
+	// this catches too bright modulated color
 	for (int i = 0; i < 3; i++)
-		if (color[i] > 1) color[i] = 1;
+		color[i] = min(color[i], 1);
 
 	// add dynamic lights
 	int m_dl = 0;
@@ -404,8 +415,7 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 		vec3_t dist;
 		VectorSubtract(dl->origin, p, dist);
 
-		float add = dl->intensity - VectorNormalize(dist);
-		add *= DIV256;
+		const float add = (dl->intensity - VectorNormalize(dist)) * DIV256;
 		if (add > 0)
 		{
 			float highest = -1;
@@ -413,7 +423,7 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 			vec3_t dlColor;
 			VectorScale(dl->color, add, dlColor);
 			for (int i = 0; i < 3; i++)
-				if (highest < dlColor[i]) highest = dlColor[i];
+				highest = max(dlColor[i], highest);
 
 			if (m_dl < max)
 			{
@@ -455,41 +465,22 @@ R_SurfLightPoint
 */
 void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baselight)
 {
-	static const vec3_t startOffset[4] = { {0, 0, 0}, {-1, 0, 0}, {0, -1, 0}, {-1, -1, 0} };
-	
 	if (!r_worldmodel->lightdata)
 	{
-		color[0] = color[1] = color[2] = 1.0;
+		VectorSetAll(color, 1.0f);
 		return;
 	}
 
 	if (baselight)
 	{
-		vec3_t start, end;
-		float r = 0;
-
-		for (int i = 0; i < 4; i++) // test multiple points to avoid dark corners
-		{
-			VectorCopy(p, start);
-			VectorAdd(start, startOffset[i], start);
-			end[0] = start[0];
-			end[1] = start[1];
-			end[2] = start[2] - 2048;
-
-			r = RecursiveLightPoint(r_worldmodel->nodes, start, end);
-
-			if (r != -1)
-				break;
-		}
-
+		vec3_t end = { p[0], p[1], p[2] - 8192 }; //mxd. Was p[2] - 2048
+		const float r = RecursiveLightPoint(color, r_worldmodel->nodes, p, end);
 		if (r == -1)
-			VectorCopy(vec3_origin, color);
-		else
-			VectorCopy(pointcolor, color);
+			VectorClear(color);
 
 		// this catches too bright modulated color
 		for (int i = 0; i < 3; i++)
-			if (color[i] > 1) color[i] = 1;
+			color[i] = min(color[i], 1);
 	}
 	else
 	{
@@ -532,8 +523,7 @@ void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baseli
 			VectorSubtract(p, dlorigin, dist);
 			// end Knightmare
 
-			float add = dl->intensity - VectorLength(dist);
-			add *= DIV256;
+			const float add = (dl->intensity - VectorLength(dist)) * DIV256;
 			if (add > 0)
 				VectorMA(color, add, dl->color, color);
 		}
