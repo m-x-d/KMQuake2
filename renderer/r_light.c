@@ -248,6 +248,9 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 	lightplane = plane;
 
 	msurface_t *surf = r_worldmodel->surfaces + node->firstsurface;
+	if (!surf->samples)
+		return 0;
+
 	for (int i = 0; i < node->numsurfaces; i++, surf++)
 	{
 		if (surf->flags & (SURF_DRAWTURB | SURF_DRAWSKY)) 
@@ -255,26 +258,23 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 
 		mtexinfo_t *tex = surf->texinfo;
 		
-		const int s = DotProduct(mid, tex->vecs[0]) + tex->vecs[0][3];
-		const int t = DotProduct(mid, tex->vecs[1]) + tex->vecs[1][3];;
+		int ds = DotProduct(mid, tex->vecs[0]) + tex->vecs[0][3];
+		int dt = DotProduct(mid, tex->vecs[1]) + tex->vecs[1][3];
 
-		if (s < surf->texturemins[0] ||	t < surf->texturemins[1])
+		if (ds < surf->texturemins[0] || dt < surf->texturemins[1])
 			continue;
 		
-		int ds = s - surf->texturemins[0];
-		int dt = t - surf->texturemins[1];
+		ds -= surf->texturemins[0];
+		dt -= surf->texturemins[1];
 		
 		if (ds > surf->extents[0] || dt > surf->extents[1])
 			continue;
 
-		if (!surf->samples)
-			return 0;
-
-		ds >>= 4;
-		dt >>= 4;
+		ds >>= surf->lmshift; //mxd. Was 4
+		dt >>= surf->lmshift; //mxd. Was 4
 
 		byte *lightmap = surf->samples;
-		lightmap += 3 * (dt * ((surf->extents[0] >> 4) + 1) + ds);
+		lightmap += 3 * (dt * ((surf->extents[0] >> surf->lmshift) + 1) + ds); //mxd. 4 -> lmshift
 
 		VectorCopy(vec3_origin, pointcolor);
 		if (r_newrefdef.lightstyles)
@@ -288,7 +288,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 				for (int c = 0; c < 3; c++) //mxd
 					pointcolor[c] += lightmap[c] * scale[c] * DIV255;
 
-				lightmap += 3 * ((surf->extents[0] >> 4) + 1) * ((surf->extents[1] >> 4) + 1);
+				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) * ((surf->extents[1] >> surf->lmshift) + 1); //mxd. 4 -> lmshift
 			}
 		}
 		
@@ -613,13 +613,12 @@ R_AddDynamicLights
 void R_AddDynamicLights (msurface_t *surf)
 {
 	vec3_t		impact, local, dlorigin, entOrigin, entAngles;
-	int			s, t;
-	float		fsacc, ftacc;
-	qboolean rotated = false;
-	vec3_t	forward, right, up;
+	qboolean	rotated = false;
+	vec3_t		forward, right, up;
+	const int	lmscale = 1 << surf->lmshift; //mxd
 
-	const int smax = (surf->extents[0] >> 4) + 1;
-	const int tmax = (surf->extents[1] >> 4) + 1;
+	const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+	const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
 	mtexinfo_t *tex = surf->texinfo;
 
 	// currententity is not valid for trans surfaces
@@ -650,7 +649,7 @@ void R_AddDynamicLights (msurface_t *surf)
 
 	for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++)
 	{
-		if ( !(surf->dlightbits[lnum >> 5] & (1 << (lnum & 31)) ) )
+		if ( !(surf->dlightbits[lnum >> 5] & (1U << (lnum & 31)) ) )
 			continue; // not lit by this light
 
 		dlight_t *dl = &r_newrefdef.dlights[lnum];
@@ -689,15 +688,15 @@ void R_AddDynamicLights (msurface_t *surf)
 		local[1] = DotProduct(impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
 
 		float *pfBL = s_blocklights;
-		for (t = 0, ftacc = 0; t < tmax; t++, ftacc += 16)
+		for (int t = 0; t < tmax; t++)
 		{
-			int td = local[1] - ftacc;
+			int td = local[1] - t * lmscale;
 			if (td < 0)
 				td = -td;
 
-			for (s = 0, fsacc = 0; s < smax; s++, fsacc += 16, pfBL += 3)
+			for (int s = 0; s < smax; s++, pfBL += 3)
 			{
-				int sd = Q_ftol(local[0] - fsacc);
+				int sd = local[0] - s * lmscale; //mxd. Was Q_ftol(local[0] - fsacc); Why Q_ftol?
 
 				if (sd < 0)
 					sd = -sd;
@@ -752,8 +751,8 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		VID_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
 
-	const int smax = (surf->extents[0] >> 4) + 1;
-	const int tmax = (surf->extents[1] >> 4) + 1;
+	const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+	const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
 	const int size = smax * tmax;
 
 	// FIXME- can this limit be directly increased?		Yep - Knightmare

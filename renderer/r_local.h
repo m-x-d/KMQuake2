@@ -382,15 +382,15 @@ void R_DrawAllDecals(void);
 //
 // r_light.c
 //
-#define DYNAMIC_LIGHT_WIDTH  128
-#define DYNAMIC_LIGHT_HEIGHT 128
+//#define DYNAMIC_LIGHT_WIDTH  128
+//#define DYNAMIC_LIGHT_HEIGHT 128
 
 #define LIGHTMAP_BYTES 4
 
-#define	LM_BLOCK_WIDTH	128
-#define	LM_BLOCK_HEIGHT	128
+#define	LM_BLOCK_WIDTH	256 //mxd. Was 128
+#define	LM_BLOCK_HEIGHT	256 //mxd. Was 128
 
-//#define	MAX_LIGHTMAPS	128	// moved this up above to keeep TEXNUM_* values aligned
+//#define	MAX_LIGHTMAPS	128	// moved this up above to keep TEXNUM_* values aligned
 
 #define GL_LIGHTMAP_FORMAT	GL_BGRA // was GL_RGBA
 #define GL_LIGHTMAP_TYPE	GL_UNSIGNED_INT_8_8_8_8_REV	// was GL_UNSIGNED_BYTE
@@ -416,9 +416,8 @@ typedef struct
 
 	int			allocated[LM_BLOCK_WIDTH];
 
-	// the lightmap texture data needs to be kept in
-	// main memory so texsubimage can update properly
-	unsigned	lightmap_buffer[LM_BLOCK_WIDTH*LM_BLOCK_HEIGHT];
+	// the lightmap texture data needs to be kept in main memory, so texsubimage can update properly
+	unsigned	lightmap_buffer[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
 #ifdef BATCH_LM_UPDATES	// Knightmare added
 	unsigned	*lightmap_update[MAX_LIGHTMAPS];
 	rect_t		lightrect[MAX_LIGHTMAPS];

@@ -136,6 +136,8 @@ typedef struct msurface_s
 	int			light_smax, light_tmax;
 	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
+	byte		lmshift; //mxd
+
 	glpoly_t	*polys;				// multiple if warped
 	struct	msurface_s	*texturechain;
 	struct  msurface_s	*lightmapchain;

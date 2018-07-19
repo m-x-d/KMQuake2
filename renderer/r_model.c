@@ -730,23 +730,33 @@ void CalcSurfaceExtents (msurface_t *s)
 		
 		for (int j = 0; j < 2; j++)
 		{
-			const float val = v->position[0] * tex->vecs[j][0] +
-							  v->position[1] * tex->vecs[j][1] +
-							  v->position[2] * tex->vecs[j][2] +
-											   tex->vecs[j][3];
+			/* The following calculation is sensitive to floating-point precision.  It needs to produce the same result that the
+			* light compiler does, because R_BuildLightMap uses surf->extents to know the width/height of a surface's lightmap,
+			* and incorrect rounding here manifests itself as patches of "corrupted" looking lightmaps.
+			* Most light compilers are win32 executables, so they use x87 floating point.  This means the multiplies and adds
+			* are done at 80-bit precision, and the result is rounded down to 32-bits and stored in val.
+			* Adding the casts to double seems to be good enough to fix lighting glitches when Quakespasm is compiled as x86_64
+			* and using SSE2 floating-point.  A potential trouble spot is the hallway at the beginning of mfxsp17.  -- ericw
+			*/
+			const float val = (double)v->position[0] * (double)tex->vecs[j][0] +
+							  (double)v->position[1] * (double)tex->vecs[j][1] +
+							  (double)v->position[2] * (double)tex->vecs[j][2] +
+													   (double)tex->vecs[j][3];
 
 			mins[j] = min(val, mins[j]); //mxd
 			maxs[j] = max(val, maxs[j]); //mxd
 		}
 	}
 
+	const int lmscale = 1 << s->lmshift; //mxd
+
 	for (int i = 0; i < 2; i++)
 	{	
-		const int bmins = floorf(mins[i] / 16);
-		const int bmaxs =  ceilf(maxs[i] / 16);
+		const int bmins = floorf(mins[i] / lmscale); //mxd. 16 -> lmscale
+		const int bmaxs =  ceilf(maxs[i] / lmscale);
 
-		s->texturemins[i] = bmins * 16;
-		s->extents[i] = (bmaxs - bmins) * 16;
+		s->texturemins[i] = bmins * lmscale;
+		s->extents[i] = (bmaxs - bmins) * lmscale;
 	}
 }
 
@@ -760,7 +770,7 @@ void R_BeginBuildingLightmaps (model_t *m);
 Mod_LoadFaces
 =================
 */
-void Mod_LoadFaces (lump_t *l)
+void Mod_LoadFaces (lump_t *l, byte lmshift)
 {
 	dface_t *in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -782,6 +792,7 @@ void Mod_LoadFaces (lump_t *l)
 		out->numedges = LittleShort(in->numedges);
 		out->flags = 0;
 		out->polys = NULL;
+		out->lmshift = lmshift; //mxd
 
 		const int planenum = (unsigned short)LittleShort(in->planenum);
 		const int side = LittleShort(in->side);
@@ -792,7 +803,7 @@ void Mod_LoadFaces (lump_t *l)
 
 		const int ti = LittleShort(in->texinfo);
 		if (ti < 0 || ti >= loadmodel->numtexinfo)
-			VID_Error(ERR_DROP, "MOD_LoadBmodel: bad texinfo number");
+			VID_Error(ERR_DROP, "Mod_LoadFaces: bad texinfo number");
 
 		out->texinfo = loadmodel->texinfo + ti;
 
@@ -1037,6 +1048,61 @@ void Mod_LoadPlanes (lump_t *l)
 	}
 }
 
+
+/*
+=================
+Mod_ParseWorldspawnKey (https://github.com/Shpoike/Quakespasm/blob/843ba06637951fee6b81958b8c36c718900b752c/quakespasm/Quake/gl_model.c#L1017)
+This just quickly scans the worldspawn entity for a single key. Returning both _prefixed and non prefixed keys.
+(wantkey argument should not have a _prefix.)
+Also, blame Spike!
+=================
+*/
+const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer, size_t sizeofbuffer)
+{
+	// Get entstring...
+	char map_entitystring[MAX_MAP_ENTSTRING];
+	if (l->filelen + 1 > sizeof(map_entitystring))
+		return NULL;
+
+	memcpy(map_entitystring, mod_base + l->fileofs, l->filelen);
+	map_entitystring[l->filelen] = '\0';
+
+	// Try to find wantkey among the first entity props...
+	char foundkey[128];
+	char *data = map_entitystring;
+	char *com_token = COM_Parse(&data);
+
+	if (data && com_token[0] == '{')
+	{
+		while (true)
+		{
+			com_token = COM_Parse(&data);
+
+			if (!data || com_token[0] == '}') // error or end of worldspawn
+				break;
+
+			if (com_token[0] == '_')
+				strcpy(foundkey, com_token + 1);
+			else
+				strcpy(foundkey, com_token);
+
+			com_token = COM_Parse(&data);
+
+			if (!data) // error
+				break; 
+
+			if (!strcmp(wantkey, foundkey))
+			{
+				Q_strncpyz(buffer, com_token, sizeofbuffer);
+				return buffer;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+
 /*
 =================
 Mod_LoadBrushModel
@@ -1060,6 +1126,18 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	for (int i = 0; i < sizeof(dheader_t) / 4; i++)
 		((int *)header)[i] = LittleLong(((int *)header)[i]);
 
+	//mxd. Get _lightmap_scale form worldspawn...
+	char scalebuf[16];
+	byte lmshift = 4;
+	if (Mod_ParseWorldspawnKey(&header->lumps[LUMP_ENTITIES], "lightmap_scale", scalebuf, sizeof(scalebuf)))
+	{
+		const int value = atoi(scalebuf);
+		for (lmshift = 0; (1 << lmshift) < value && lmshift < 254; lmshift++) { }
+
+		if (value != 16)
+			VID_Printf(PRINT_DEVELOPER, "Using custom lightmap scale (%i) and shift (%i)\n", value, lmshift);
+	}
+
 	// load into heap
 	Mod_LoadVertexes(&header->lumps[LUMP_VERTEXES]);
 	Mod_LoadEdges(&header->lumps[LUMP_EDGES]);
@@ -1067,7 +1145,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	Mod_LoadLighting(&header->lumps[LUMP_LIGHTING]);
 	Mod_LoadPlanes(&header->lumps[LUMP_PLANES]);
 	Mod_LoadTexinfo(&header->lumps[LUMP_TEXINFO]);
-	Mod_LoadFaces(&header->lumps[LUMP_FACES]);
+	Mod_LoadFaces(&header->lumps[LUMP_FACES], lmshift); //mxd. +lmshift
 	Mod_LoadMarksurfaces(&header->lumps[LUMP_LEAFFACES]);
 	Mod_LoadVisibility(&header->lumps[LUMP_VISIBILITY]);
 	Mod_LoadLeafs(&header->lumps[LUMP_LEAFS]);

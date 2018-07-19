@@ -593,8 +593,8 @@ void R_BlendLightmaps (void)
 
 		for (msurface_t *surf = gl_lms.lightmap_surfaces[0]; surf != 0; surf = surf->lightmapchain)
 		{
-			const int smax = (surf->extents[0] >> 4) + 1;
-			const int tmax = (surf->extents[1] >> 4) + 1;
+			const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+			const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
 
 			if ( LM_AllocBlock(smax, tmax, &surf->dlight_s, &surf->dlight_t) )
 			{
@@ -682,10 +682,12 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		if ( (fa->styles[maps] >= 32 || fa->styles[maps] == 0) && fa->dlightframe != r_framecount )
 		{
-			unsigned temp[34 * 34];
+			//unsigned temp[34 * 34];
 			
-			const int smax = (fa->extents[0] >> 4) + 1;
-			const int tmax = (fa->extents[1] >> 4) + 1;
+			const int smax = (fa->extents[0] >> fa->lmshift) + 1; //mxd. 4 -> lmshift
+			const int tmax = (fa->extents[1] >> fa->lmshift) + 1; //mxd. 4 -> lmshift
+
+			unsigned *temp = malloc(smax * tmax); //mxd. Was 34 *34
 
 			R_BuildLightMap(fa, (void *)temp, smax * 4);
 			R_SetCacheState(fa);
@@ -2273,6 +2275,7 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 	// reconstruct the polygon
 	medge_t *pedges = currentmodel->edges;
 	const int lnumverts = fa->numedges;
+	const int lmscale = (1 << fa->lmshift); //mxd
 
 	//
 	// draw texture
@@ -2333,15 +2336,15 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 		//
 		s = DotProduct(vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
 		s -= fa->texturemins[0];
-		s += fa->light_s * 16;
-		s += 8;
-		s /= LM_BLOCK_WIDTH * 16; //fa->texinfo->texture->width;
+		s += fa->light_s * lmscale; //mxd. 16 -> lmscale
+		s += lmscale * 0.5f; //mxd. Was 8
+		s /= LM_BLOCK_WIDTH * lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->width;
 
 		t = DotProduct(vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
 		t -= fa->texturemins[1];
-		t += fa->light_t * 16;
-		t += 8;
-		t /= LM_BLOCK_HEIGHT * 16; //fa->texinfo->texture->height;
+		t += fa->light_t * lmscale; //mxd. 16 -> lmscale
+		t += lmscale * 0.5f; //mxd. Was 8
+		t /= LM_BLOCK_HEIGHT * lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->height;
 
 		poly->verts[i][5] = s;
 		poly->verts[i][6] = t;
@@ -2366,8 +2369,8 @@ void R_CreateSurfaceLightmap (msurface_t *surf)
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		return;
 
-	const int smax = (surf->extents[0] >> 4) + 1;
-	const int tmax = (surf->extents[1] >> 4) + 1;
+	const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+	const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
 
 	if (!LM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
 	{
