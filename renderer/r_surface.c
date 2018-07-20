@@ -2028,38 +2028,21 @@ R_BuildVertexLightBase
 */
 void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baselight);
 
-qboolean R_BuildVertexLightBase (msurface_t *surf, glpoly_t *poly)
+void R_BuildVertexLightBase (msurface_t *surf, glpoly_t *poly)
 {
-	int			i;
-	float		*v;
-	qboolean	lit = false;
-
-	for (i = 0, v = poly->verts[0]; i < poly->numverts; i++, v += VERTEXSIZE)
+	float *v = poly->verts[0];
+	for (int i = 0; i < poly->numverts; i++, v += VERTEXSIZE)
 	{
 		vec3_t color, point;
 		VectorCopy(v, point); // lerp outward away from plane to avoid dark spots?
-		// lerp between each vertex and origin - use check for too dark?
-		// this messes up curved glass surfaces
-		//VectorSubtract (poly->center, v, point);
-		//VectorMA(v, 0.01, point, point);
+		VectorClear(color); //mxd
 
 		R_SurfLightPoint(surf, point, color, true);
 		R_MaxColorVec(color);
 
-		for (int c = 0; c < 3; c++)
-		{
-			if (color[c] > 0.0f)
-			{
-				lit = true;
-				break;
-			}
-		}
-
 		for (int c = 0; c < 3; c++) //mxd
 			poly->vertexlightbase[i * 3 + c] = (byte)(color[c] * 255.0);
 	}
-
-	return lit;
 }
 
 
@@ -2085,10 +2068,6 @@ R_BuildVertexLight
 */
 void R_BuildVertexLight (msurface_t *surf)
 {
-	vec3_t		color, point;
-	int			i;
-	float		*v;
-
 	if (surf->flags & SURF_DRAWTURB)
 	{
 		if (!r_warp_lighting->value) return;
@@ -2110,24 +2089,19 @@ void R_BuildVertexLight (msurface_t *surf)
 		{	
 			R_BuildVertexLightBase(surf, poly);
 			poly->vertexlightset = true;
-		//	if (R_BuildVertexLightBase(surf, poly))
-		//		poly->vertexlightset = true;
-		//	else
-		//		return; // don't bother if lightbase is all black
 		}
 
-		for (i = 0, v = poly->verts[0]; i < poly->numverts; i++, v += VERTEXSIZE)
+		float *v = poly->verts[0];
+		for (int i = 0; i < poly->numverts; i++, v += VERTEXSIZE)
 		{
+			vec3_t color, point;
 			VectorCopy(v, point); // lerp outward away from plane to avoid dark spots?
-			// lerp between each vertex and origin - use check for too dark?
-			// this messes up curved glass surfaces
-			//VectorSubtract (poly->center, v, point);
-			//VectorMA(v, 0.01, point, point);
+			VectorClear(color); //mxd
 
 			R_SurfLightPoint(surf, point, color, false);
 
 			for (int c = 0; c < 3; c++) //mxd
-				color[c] = (float)poly->vertexlightbase[i * 3 + c] / 255.0 + color[c];
+				color[c] += (float)poly->vertexlightbase[i * 3 + c] / 255.0;
 				
 			R_MaxColorVec(color);
 

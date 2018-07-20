@@ -247,11 +247,12 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 	lightplane = plane;
 
 	msurface_t *surf = r_worldmodel->surfaces + node->firstsurface;
-	if (!surf->samples)
-		return 0;
 
 	for (int i = 0; i < node->numsurfaces; i++, surf++)
 	{
+		if (!surf->samples)
+			continue; //mxd. No lightmap data. Was return 0;
+		
 		if (surf->flags & (SURF_DRAWTURB | SURF_DRAWSKY)) 
 			continue;	// no lightmaps
 
@@ -356,11 +357,15 @@ void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt)
 	vec3_t end = { p[0], p[1], p[2] - 8192 }; //mxd. Was p[2] - 2048
 	const float r = RecursiveLightPoint(color, r_worldmodel->nodes, p, end);
 	if (r == -1)
+	{
 		VectorClear(color);
-
-	// this catches too bright modulated color
-	for (int i = 0; i < 3; i++)
-		color[i] = min(color[i], 1);
+	}
+	else
+	{
+		// this catches too bright modulated color
+		for (int i = 0; i < 3; i++)
+			color[i] = min(color[i], 1);
+	}
 
 	// add dynamic lights
 	dlight_t *dl = r_newrefdef.dlights;
@@ -398,11 +403,15 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 	vec3_t end = { p[0], p[1], p[2] - 8192 }; //mxd. Was p[2] - 2048
 	const float r = RecursiveLightPoint(color, r_worldmodel->nodes, p, end);
 	if (r == -1)
+	{
 		VectorClear(color);
-
-	// this catches too bright modulated color
-	for (int i = 0; i < 3; i++)
-		color[i] = min(color[i], 1);
+	}
+	else
+	{
+		// this catches too bright modulated color
+		for (int i = 0; i < 3; i++)
+			color[i] = min(color[i], 1);
+	}
 
 	// add dynamic lights
 	int m_dl = 0;
@@ -476,11 +485,15 @@ void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baseli
 		vec3_t end = { p[0], p[1], p[2] - 8192 }; //mxd. Was p[2] - 2048
 		const float r = RecursiveLightPoint(color, r_worldmodel->nodes, p, end);
 		if (r == -1)
+		{
 			VectorClear(color);
-
-		// this catches too bright modulated color
-		for (int i = 0; i < 3; i++)
-			color[i] = min(color[i], 1);
+		}
+		else
+		{
+			// this catches too bright modulated color
+			for (int i = 0; i < 3; i++)
+				color[i] = min(color[i], 1);
+		}
 	}
 	else
 	{
@@ -594,7 +607,7 @@ void R_ShadowLight (vec3_t pos, vec3_t lightAdd)
 
 //===================================================================
 
-static float s_blocklights[128 * 128 * 4]; //Knightmare-  was [34*34*3], supports max chop size of 2048?
+static float s_blocklights[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * 4]; //mxd. Was [128*128*4] //Knightmare-  was [34*34*3], supports max chop size of 2048?
 /*
 ===============
 R_AddDynamicLights

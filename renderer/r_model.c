@@ -279,7 +279,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		break;
 	
 	case IDBSPHEADER:
-		loadmodel->extradata = Hunk_Begin(0x2000000); //mxd. Was 0x1000000
+		loadmodel->extradata = Hunk_Begin(0x4000000); //mxd. Was 0x1000000
 		Mod_LoadBrushModel(mod, buf);
 		break;
 
