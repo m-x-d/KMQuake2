@@ -1114,7 +1114,6 @@ void CL_ParseTEnt (void)
 		MSG_ReadDir(&net_message, dir);
 		const int color = MSG_ReadByte(&net_message);
 
-
 		// Psychospaz's enhanced particle code
 		if (r_particle_mode->integer == 1)
 		{
