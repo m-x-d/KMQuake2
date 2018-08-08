@@ -254,8 +254,8 @@ void S_StreamBackgroundTrack (void)
 				}
 				else
 				{
-					// check if it's time to switch to the ambient track
-					if (++ogg_loopcounter >= ogg_loopcount->integer && (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1")))
+					// check if it's time to switch to the ambient track //mxd. Also check that ambientName contains data
+					if (s_bgTrack.ambientName[0] && ++ogg_loopcounter >= ogg_loopcount->integer && (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1")))
 					{
 						// Close the loop track
 						S_CloseBackgroundTrack(&s_bgTrack);
@@ -318,7 +318,12 @@ void S_StartBackgroundTrack (const char *introTrack, const char *loopTrack)
 	// Start it up
 	Q_strncpyz(s_bgTrack.introName, introTrack, sizeof(s_bgTrack.introName));
 	Q_strncpyz(s_bgTrack.loopName, loopTrack, sizeof(s_bgTrack.loopName));
-	Q_strncpyz(s_bgTrack.ambientName, va("music/%s.ogg", ogg_ambient_track->string), sizeof(s_bgTrack.ambientName));
+
+	//mxd. No, we don't want to play "music/.ogg"
+	if (ogg_ambient_track->string[0])
+		Q_strncpyz(s_bgTrack.ambientName, va("music/%s.ogg", ogg_ambient_track->string), sizeof(s_bgTrack.ambientName));
+	else
+		s_bgTrack.ambientName[0] = '\0';
 
 	// set a loop counter so that this track will change to the ambient track later
 	ogg_loopcounter = 0;
@@ -402,7 +407,7 @@ void S_OGG_Init (void)
 
 	// Cvars
 	ogg_loopcount = Cvar_Get("ogg_loopcount", "5", CVAR_ARCHIVE);
-	ogg_ambient_track = Cvar_Get("ogg_ambient_track", "track11", CVAR_ARCHIVE); //TODO: HWY?
+	ogg_ambient_track = Cvar_Get("ogg_ambient_track", "", CVAR_ARCHIVE); //mxd. Default value was "track11"
 
 	// Console commands
 	Cmd_AddCommand("ogg", S_OGG_ParseCmd);
