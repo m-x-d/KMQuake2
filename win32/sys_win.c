@@ -584,10 +584,10 @@ static void Sys_DetectCPU (char *cpuString, int maxSize)
 	//mxd. Get number of cores
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo(&sysInfo);
-	Q_strncatz(cpuString, va(" (%i cores)", sysInfo.dwNumberOfProcessors), maxSize);
+	Q_strncatz(cpuString, va(" (%i logical cores)", sysInfo.dwNumberOfProcessors), maxSize);
 
-	// Get extended instruction sets supported
-	if (cpu.b3DNow || cpu.bSSE || cpu.bMMX || cpu.HyperThreading)
+	// Get extended instruction sets supported //mxd. We don't use any of these, so why bother?
+	/*if (cpu.b3DNow || cpu.bSSE || cpu.bMMX || cpu.HyperThreading)
 	{
 		Q_strncatz(cpuString, " with", maxSize);
 		qboolean first = true;
@@ -676,7 +676,7 @@ static void Sys_DetectCPU (char *cpuString, int maxSize)
 
 			Q_strncatz(cpuString, " HyperThreading", maxSize);
 		}
-	}
+	}*/
 
 #else
 	Q_strncpyz(cpuString, "Unknown", maxSize);
