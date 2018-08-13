@@ -260,7 +260,7 @@ V_AddLightStyle
 void V_AddLightStyle (int style, float r, float g, float b)
 {
 	if (style < 0 || style > MAX_LIGHTSTYLES)
-		Com_Error (ERR_DROP, "Bad light style %i", style);
+		Com_Error(ERR_DROP, "Bad light style %i", style);
 
 	lightstyle_t *ls = &r_lightstyles[style];
 
@@ -279,21 +279,16 @@ If cl_testparticles is set, create 4096 particles in the view
 */
 void V_TestParticles (void)
 {
-	particle_t	*p;
-	int			i, j;
-	float		d, r, u;
-
 	r_numparticles = 4096;
-	for (i=0 ; i<r_numparticles ; i++)
+	for (int i = 0; i < r_numparticles ; i++)
 	{
-		d = i*0.25;
-		r = 4*((i&7)-3.5);
-		u = 4*(((i>>3)&7)-3.5);
-		p = &r_particles[i];
+		const float d = i * 0.25;
+		const float r = 4 * ((i & 7) - 3.5);
+		const float u = 4 * (((i >> 3) & 7) - 3.5);
+		particle_t *p = &r_particles[i];
 
-		for (j=0; j<3; j++)
-			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d +
-			cl.v_right[j]*r + cl.v_up[j]*u;
+		for (int j = 0; j < 3; j++)
+			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j] * d + cl.v_right[j] * r + cl.v_up[j] * u;
 
 		p->color = 8;
 		p->alpha = cl_testparticles->value;
@@ -309,23 +304,18 @@ If cl_testentities is set, create 32 player models
 */
 void V_TestEntities (void)
 {
-	int			i, j;
-	float		f, r;
-	entity_t	*ent;
-
 	r_numentities = 32;
-	memset (r_entities, 0, sizeof(r_entities));
+	memset(r_entities, 0, sizeof(r_entities));
 
-	for (i=0 ; i<r_numentities ; i++)
+	for (int i = 0; i < r_numentities; i++)
 	{
-		ent = &r_entities[i];
+		entity_t *ent = &r_entities[i];
 
-		r = 64 * ( (i%4) - 1.5 );
-		f = 64 * (i/4) + 128;
+		const float r = 64 * ((i % 4) - 1.5);
+		const float f = 64 * (i / 4) + 128;
 
-		for (j=0; j<3; j++)
-			ent->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*f +
-			cl.v_right[j]*r;
+		for (int j = 0; j < 3; j++)
+			ent->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j] * f + cl.v_right[j] * r;
 
 		ent->model = cl.baseclientinfo.model;
 		ent->skin = cl.baseclientinfo.skin;
@@ -341,26 +331,22 @@ If cl_testlights is set, create 32 lights models
 */
 void V_TestLights (void)
 {
-	int			i, j;
-	float		f, r;
-	dlight_t	*dl;
-
 	r_numdlights = 32;
-	memset (r_dlights, 0, sizeof(r_dlights));
+	memset(r_dlights, 0, sizeof(r_dlights));
 
-	for (i=0 ; i<r_numdlights ; i++)
+	for (int i = 0; i < r_numdlights; i++)
 	{
-		dl = &r_dlights[i];
+		dlight_t *dl = &r_dlights[i];
 
-		r = 64 * ( (i%4) - 1.5 );
-		f = 64 * (i/4) + 128;
+		const float r = 64 * ((i % 4) - 1.5);
+		const float f = 64 * (i / 4) + 128;
 
-		for (j=0; j<3; j++)
-			dl->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*f +
-			cl.v_right[j]*r;
-		dl->color[0] = ((i%6)+1) & 1;
-		dl->color[1] = (((i%6)+1) & 2)>>1;
-		dl->color[2] = (((i%6)+1) & 4)>>2;
+		for (int j = 0; j < 3; j++)
+			dl->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j] * f + cl.v_right[j] * r;
+		
+		dl->color[0] = ((i % 6) + 1) & 1;
+		dl->color[1] = (((i % 6) + 1) & 2) >> 1;
+		dl->color[2] = (((i % 6) + 1) & 4) >> 2;
 		dl->intensity = 200;
 		dl->spotlight = false;
 	}
@@ -386,43 +372,41 @@ void CL_PrepRefresh (void)
 	const qboolean	newPlaque = needLoadingPlaque();
 
 	if (!cl.configstrings[CS_MODELS + 1][0])
-		return;		// no map loaded
+		return; // no map loaded
 
 	if (newPlaque)
 		SCR_BeginLoadingPlaque();
 
 	// Knightmare- for Psychospaz's map loading screen
 	loadingMessage = true;
-	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", cl.configstrings[CS_MODELS+1]);
+	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", cl.configstrings[CS_MODELS+1]);
 	loadingPercent = 0.0f;
 	// end Knightmare
 
 	// let the render dll load the map
-//	strncpy (mapname, cl.configstrings[CS_MODELS+1] + 5);	// skip "maps/"
-	Q_strncpyz (mapname, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapname));	// skip "maps/"
-	mapname[strlen(mapname) - 4] = 0;		// cut off ".bsp"
+	Q_strncpyz(mapname, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapname));	// skip "maps/"
+	mapname[strlen(mapname) - 4] = 0;	// cut off ".bsp"
 
 	// register models, pics, and skins
-	Com_Printf ("Map: %s\r", mapname); 
-	SCR_UpdateScreen ();
-	R_BeginRegistration (mapname);
-	Com_Printf ("                                     \r");
+	Com_Printf("Map: %s\r", mapname);
+	SCR_UpdateScreen();
+	R_BeginRegistration(mapname);
+	Com_Printf("                                     \r");
 
 	// Knightmare- for Psychospaz's map loading screen
-	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading models...");
+	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading models...");
 	loadingPercent += 20.0f;
 	// end Knightmare
 
 	// precache status bar pics
-	Com_Printf ("pics\r"); 
-	SCR_UpdateScreen ();
-	SCR_TouchPics ();
-	Com_Printf ("                                     \r");
+	Com_Printf("pics\r");
+	SCR_UpdateScreen();
+	SCR_TouchPics();
+	Com_Printf("                                     \r");
 
 	CL_RegisterTEntModels ();
 
 	num_cl_weaponmodels = 1;
-//	strncpy(cl_weaponmodels[0], "weapon.md2");
 	Q_strncpyz(cl_weaponmodels[0], "weapon.md2", sizeof(cl_weaponmodels[0]));
 
 	// Knightmare- for Psychospaz's map loading screen
@@ -431,28 +415,25 @@ void CL_PrepRefresh (void)
 
 	for (i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
 	{
-	//	strncpy (pname, cl.configstrings[CS_MODELS+i]);
-		Q_strncpyz (pname, cl.configstrings[CS_MODELS + i], sizeof(pname));
+		Q_strncpyz(pname, cl.configstrings[CS_MODELS + i], sizeof(pname));
 		pname[37] = 0;	// never go beyond one line
 		if (pname[0] != '*')
 		{
-			Com_Printf ("%s\r", pname); 
+			Com_Printf("%s\r", pname); 
 			// Knightmare- for Psychospaz's map loading screen
 			//only make max of 40 chars long
 			if (i > 1)
-				Com_sprintf (loadingMessages, sizeof(loadingMessages),
-					S_COLOR_ALT"loading %s", (strlen(pname) > 40 ? &pname[strlen(pname) - 40] : pname));
+				Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", (strlen(pname) > 40 ? &pname[strlen(pname) - 40] : pname));
 		}
 
-		SCR_UpdateScreen ();
-		Sys_SendKeyEvents ();	// pump message loop
+		SCR_UpdateScreen();
+		Sys_SendKeyEvents();	// pump message loop
 		if (pname[0] == '#')
 		{
 			// special player weapon model
 			if (num_cl_weaponmodels < MAX_CLIENTWEAPONMODELS)
 			{
-				strncpy(cl_weaponmodels[num_cl_weaponmodels], cl.configstrings[CS_MODELS + i] + 1,
-					sizeof(cl_weaponmodels[num_cl_weaponmodels]) - 1);
+				strncpy(cl_weaponmodels[num_cl_weaponmodels], cl.configstrings[CS_MODELS + i] + 1, sizeof(cl_weaponmodels[num_cl_weaponmodels]) - 1);
 				num_cl_weaponmodels++;
 			}
 		} 
@@ -466,17 +447,17 @@ void CL_PrepRefresh (void)
 		}
 
 		if (pname[0] != '*')
-			Com_Printf ("                                     \r");
+			Com_Printf("                                     \r");
 
 		// Knightmare- for Psychospaz's map loading screen
-		loadingPercent += 40.0f/(float)max;
+		loadingPercent += 40.0f / (float)max;
 	}
 
 	// Knightmare- for Psychospaz's map loading screen
-	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading pics...");
+	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading pics...");
 
-	Com_Printf ("images\r", i); 
-	SCR_UpdateScreen ();
+	Com_Printf("images\r", i); 
+	SCR_UpdateScreen();
 
 	// Knightmare- BIG UGLY HACK for connected to server using old protocol
 	// Changed configstrings require different parsing
@@ -497,9 +478,8 @@ void CL_PrepRefresh (void)
 	}
 
 	// Knightmare- for Psychospaz's map loading screen
-	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading players...");
-
-	Com_Printf ("                                     \r");
+	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading players...");
+	Com_Printf("                                     \r");
 
 	// Knightmare- for Psychospaz's map loading screen
 	const int playerskinsoffset = (LegacyProtocol() ? OLD_CS_PLAYERSKINS : CS_PLAYERSKINS); //mxd
@@ -516,52 +496,52 @@ void CL_PrepRefresh (void)
 		if (!cl.configstrings[playerskinsoffset + i][0]) //mxd
 			continue;
 		
-		Com_Printf ("client %i\r", i); 
-		SCR_UpdateScreen ();
-		Sys_SendKeyEvents ();	// pump message loop
-		CL_ParseClientinfo (i);
-		Com_Printf ("                                     \r");
+		Com_Printf("client %i\r", i);
+		SCR_UpdateScreen();
+		Sys_SendKeyEvents();	// pump message loop
+		CL_ParseClientinfo(i);
+		Com_Printf("                                     \r");
 
 		// Knightmare- for Psychospaz's map loading screen
 		loadingPercent += 20.0f / (float)max;
 	}
 
 	// Knightmare- for Psychospaz's map loading screen
-	Com_sprintf (loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading players...done");
+	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading players...done");
 	//hack hack hack - psychospaz
 	loadingPercent = 100.0f;
 
 	// Knightmare - Vics fix to get rid of male/grunt flicker
 	// CL_LoadClientinfo (&cl.baseclientinfo, "unnamed\\male/grunt");
-	CL_LoadClientinfo (&cl.baseclientinfo, va("unnamed\\%s", skin->string));
+	CL_LoadClientinfo(&cl.baseclientinfo, va("unnamed\\%s", skin->string));
 
 	// Knightmare- refresh the player model/skin info
 	userinfo_modified = true;
 
 	// set sky textures and speed
-	Com_Printf ("sky\r", i); 
-	SCR_UpdateScreen ();
-	const float rotate = atof (cl.configstrings[CS_SKYROTATE]);
-	sscanf (cl.configstrings[CS_SKYAXIS], "%f %f %f", &axis[0], &axis[1], &axis[2]);
-	R_SetSky (cl.configstrings[CS_SKY], rotate, axis);
-	Com_Printf ("                                     \r");
+	Com_Printf("sky\r", i); 
+	SCR_UpdateScreen();
+	const float rotate = atof(cl.configstrings[CS_SKYROTATE]);
+	sscanf(cl.configstrings[CS_SKYAXIS], "%f %f %f", &axis[0], &axis[1], &axis[2]);
+	R_SetSky(cl.configstrings[CS_SKY], rotate, axis);
+	Com_Printf("                                     \r");
 
 	// the renderer can now free unneeded stuff
-	R_EndRegistration ();
+	R_EndRegistration();
 
 #ifdef LOC_SUPPORT // Xile/NiceAss LOC
 	CL_LoadLoc();
 #endif	// LOC_SUPPORT 
 
 	// clear any lines of console text
-	Con_ClearNotify ();
+	Con_ClearNotify();
 
-	SCR_UpdateScreen ();
+	SCR_UpdateScreen();
 	cl.refresh_prepped = true;
 	cl.force_refdef = true;	// make sure we have a valid refdef
 
 	// start the cd track
-	CL_PlayBackgroundTrack ();
+	CL_PlayBackgroundTrack();
 
 	// Knightmare- for Psychospaz's map loading screen
 	loadingMessage = false;
@@ -570,7 +550,7 @@ void CL_PrepRefresh (void)
 
 	// Knightmare- don't start map with game paused
 	if (cls.key_dest != key_menu)
-		Cvar_Set ("paused", "0");
+		Cvar_Set("paused", "0");
 }
 
 /*
@@ -580,17 +560,12 @@ CalcFov
 */
 float CalcFov (float fov_x, float width, float height)
 {
-	float	a;
-	float	x;
-
 	if (fov_x < 1 || fov_x > 179)
-		Com_Error (ERR_DROP, "Bad fov: %f", fov_x);
+		Com_Error(ERR_DROP, "Bad fov: %f", fov_x);
 
-	x = width/tan(fov_x/360*M_PI);
-
-	a = atanf (height/x);
-
-	a = a*360/M_PI;
+	const float x = width / tan(fov_x / 360 * M_PI);
+	float a = atanf (height / x);
+	a *= 360 / M_PI;
 
 	return a;
 }
@@ -601,28 +576,28 @@ float CalcFov (float fov_x, float width, float height)
 void V_Gun_Next_f (void)
 {
 	gun_frame++;
-	Com_Printf ("frame %i\n", gun_frame);
+	Com_Printf("frame %i\n", gun_frame);
 }
 
 void V_Gun_Prev_f (void)
 {
 	gun_frame--;
-	if (gun_frame < 0)
-		gun_frame = 0;
+	gun_frame = max(0, gun_frame);
 	Com_Printf ("frame %i\n", gun_frame);
 }
 
 void V_Gun_Model_f (void)
 {
-	char	name[MAX_QPATH];
+	char name[MAX_QPATH];
 
 	if (Cmd_Argc() != 2)
 	{
 		gun_model = NULL;
 		return;
 	}
-	Com_sprintf (name, sizeof(name), "models/%s/tris.md2", Cmd_Argv(1));
-	gun_model = R_RegisterModel (name);
+
+	Com_sprintf(name, sizeof(name), "models/%s/tris.md2", Cmd_Argv(1));
+	gun_model = R_RegisterModel(name);
 }
 
 //============================================================================
@@ -635,41 +610,39 @@ V_RenderView
 */
 void V_RenderView (float stereo_separation)
 {
-	extern int entitycmpfnc( const entity_t *, const entity_t * );
-	float f; // Barnes added
+	extern int entitycmpfnc(const entity_t *, const entity_t *);
 
 	if (cls.state != ca_active)
 		return;
 
 	if (!cl.refresh_prepped)
-		return;			// still loading
+		return; // still loading
 
 	if (cl_timedemo->value)
 	{
 		if (!cl.timedemo_start)
-			cl.timedemo_start = Sys_Milliseconds ();
+			cl.timedemo_start = Sys_Milliseconds();
 		cl.timedemo_frames++;
 	}
 
 	// an invalid frame will just use the exact previous refdef
 	// we can't use the old frame if the video mode has changed, though...
-	if ( cl.frame.valid && (cl.force_refdef || !cl_paused->value) )
+	if (cl.frame.valid && (cl.force_refdef || !cl_paused->value))
 	{
 		cl.force_refdef = false;
 
-		V_ClearScene ();
+		V_ClearScene();
 
 		// build a refresh entity list and calc cl.sim*
-		// this also calls CL_CalcViewValues which loads
-		// v_forward, etc.
-		CL_AddEntities ();
+		// this also calls CL_CalcViewValues which loads v_forward, etc.
+		CL_AddEntities();
 
 		if (cl_testparticles->value)
-			V_TestParticles ();
+			V_TestParticles();
 		if (cl_testentities->value)
-			V_TestEntities ();
+			V_TestEntities();
 		if (cl_testlights->value)
-			V_TestLights ();
+			V_TestLights();
 		if (cl_testblend->value)
 		{
 			cl.refdef.blend[0] = 1;
@@ -690,9 +663,9 @@ void V_RenderView (float stereo_separation)
 		// never let it sit exactly on a node line, because a water plane can
 		// dissapear when viewed with the eye exactly on it.
 		// the server protocol only specifies to 1/8 pixel, so add 1/16 in each axis
-		cl.refdef.vieworg[0] += 1.0/16;
-		cl.refdef.vieworg[1] += 1.0/16;
-		cl.refdef.vieworg[2] += 1.0/16;
+		cl.refdef.vieworg[0] += 1.0 / 16;
+		cl.refdef.vieworg[1] += 1.0 / 16;
+		cl.refdef.vieworg[2] += 1.0 / 16;
 
 		cl.refdef.x = scr_vrect.x;
 		cl.refdef.y = scr_vrect.y;
@@ -702,26 +675,23 @@ void V_RenderView (float stereo_separation)
 		// adjust fov for wide aspect ratio
 		if (cl_widescreen_fov->value)
 		{
-		//	float standardRatio, currentRatio;
-		//	standardRatio = (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
-		//	currentRatio = (float)cl.refdef.width/(float)cl.refdef.height;
-		//	if (currentRatio > standardRatio)
-		//		cl.refdef.fov_x *= (1 + (0.5 * (currentRatio / standardRatio - 1)));
-			float aspectRatio = (float)cl.refdef.width/(float)cl.refdef.height;
+			const float aspectRatio = (float)cl.refdef.width / (float)cl.refdef.height;
+			
 			// changed to improved algorithm by Dopefish
 			if (aspectRatio > STANDARD_ASPECT_RATIO)
-				cl.refdef.fov_x = RAD2DEG( 2 * atan( (aspectRatio/ STANDARD_ASPECT_RATIO) * tan(DEG2RAD(cl.refdef.fov_x) * 0.5) ) );
-			//	cl.refdef.fov_x *= (1 + (0.5 * (aspectRatio / STANDARD_ASPECT_RATIO - 1)));
+				cl.refdef.fov_x = RAD2DEG(2 * atan((aspectRatio / STANDARD_ASPECT_RATIO) * tan(DEG2RAD(cl.refdef.fov_x) * 0.5)));
+
 			cl.refdef.fov_x = min(cl.refdef.fov_x, 160);
 		}
-		cl.refdef.fov_y = CalcFov (cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
-		cl.refdef.time = cl.time*0.001;
+		cl.refdef.fov_y = CalcFov(cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
+		cl.refdef.time = cl.time * 0.001;
 
 		// Barnes- Warp if underwater ala q3a :-)
-		if (cl.refdef.rdflags & RDF_UNDERWATER) {
-			f = sin(cl.time * 0.001 * 0.4 * (M_PI*2.7));
-			cl.refdef.fov_x += f * (cl.refdef.fov_x/90.0); // Knightmare- scale to fov
-			cl.refdef.fov_y -= f * (cl.refdef.fov_y/90.0); // Knightmare- scale to fov
+		if (cl.refdef.rdflags & RDF_UNDERWATER)
+		{
+			const float f = sin(cl.time * 0.001 * 0.4 * (M_PI * 2.7));
+			cl.refdef.fov_x += f * (cl.refdef.fov_x / 90.0); // Knightmare- scale to fov
+			cl.refdef.fov_y -= f * (cl.refdef.fov_y / 90.0); // Knightmare- scale to fov
 		} // end Barnes
 
 		cl.refdef.areabits = cl.frame.areabits;
@@ -733,9 +703,7 @@ void V_RenderView (float stereo_separation)
 		if (!cl_add_lights->value)
 			r_numdlights = 0;
 		if (!cl_add_blend->value)
-		{
-			VectorClear (cl.refdef.blend);
-		}
+			VectorClear(cl.refdef.blend);
 
 		cl.refdef.num_entities = r_numentities;
 		cl.refdef.entities = r_entities;
@@ -750,14 +718,14 @@ void V_RenderView (float stereo_separation)
 		cl.refdef.lightstyles = r_lightstyles;
 
 		cl.refdef.rdflags = cl.frame.playerstate.rdflags;
-        qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
+        qsort(cl.refdef.entities, cl.refdef.num_entities, sizeof(cl.refdef.entities[0]), (int (*)(const void *, const void *))entitycmpfnc);
 	}
 
-	R_RenderFrame (&cl.refdef);
+	R_RenderFrame(&cl.refdef);
 	if (cl_stats->value)
-		Com_Printf ("ent:%i  lt:%i  part:%i\n", r_numentities, r_numdlights, r_numparticles);
-	if ( log_stats->value && ( log_stats_file != 0 ) )
-		fprintf( log_stats_file, "%i,%i,%i,",r_numentities, r_numdlights, r_numparticles);
+		Com_Printf("ent:%i  lt:%i  part:%i\n", r_numentities, r_numdlights, r_numparticles);
+	if (log_stats->value && log_stats_file != 0)
+		fprintf(log_stats_file, "%i,%i,%i,",r_numentities, r_numdlights, r_numparticles);
 }
 
 

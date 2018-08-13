@@ -188,8 +188,8 @@ typedef struct
 
 typedef struct
 {
-	float		rgb[3];			// 0.0 - 2.0
-	float		white;			// highest of rgb
+	float		rgb[3];	 // 0.0 - 2.0
+	float		white;	 // highest of rgb
 } lightstyle_t;
 
 

@@ -2240,7 +2240,6 @@ CL_AddEntities
 Emits all entities, particles, and lights to the refresh
 ===============
 */
-//void CalcViewerCamTrans (void);
 void CL_AddEntities (void)
 {
 	if (cls.state != ca_active)
@@ -2249,37 +2248,29 @@ void CL_AddEntities (void)
 	if (cl.time > cl.frame.servertime)
 	{
 		if (cl_showclamp->value)
-			Com_Printf ("high clamp %i\n", cl.time - cl.frame.servertime);
+			Com_Printf("high clamp %i\n", cl.time - cl.frame.servertime);
 		cl.time = cl.frame.servertime;
 		cl.lerpfrac = 1.0;
 	}
 	else if (cl.time < cl.frame.servertime - 100)
 	{
 		if (cl_showclamp->value)
-			Com_Printf ("low clamp %i\n", cl.frame.servertime-100 - cl.time);
+			Com_Printf("low clamp %i\n", cl.frame.servertime - 100 - cl.time);
 		cl.time = cl.frame.servertime - 100;
 		cl.lerpfrac = 0;
 	}
 	else
+	{
 		cl.lerpfrac = 1.0 - (cl.frame.servertime - cl.time) * 0.01;
+	}
 
 	if (cl_timedemo->value)
 		cl.lerpfrac = 1.0;
 
-//	CL_AddPacketEntities (&cl.frame);
-//	CL_AddTEnts ();
-//	CL_AddParticles ();
-//	CL_AddDLights ();
-//	CL_AddLightStyles ();
-
-	CL_CalcViewValues ();
-
-	// Knightmare- added Psychospaz's chasecam
-	//if (cg_thirdperson->value)
-	//	CalcViewerCamTrans ();
+	CL_CalcViewValues();
 
 	// PMM - moved this here so the heat beam has the right values for the vieworg, and can lock the beam to the gun
-	CL_AddPacketEntities (&cl.frame);
+	CL_AddPacketEntities(&cl.frame);
 
 	//CL_AddProjectiles ();
 
@@ -2287,12 +2278,11 @@ void CL_AddEntities (void)
 	CL_AddViewLocs();
 #endif	// LOC_SUPPORT
 
-	CL_AddTEnts ();
-	CL_AddParticles ();
-	CL_AddDLights ();
-	CL_AddLightStyles ();
+	CL_AddTEnts();
+	CL_AddParticles();
+	CL_AddDLights();
+	CL_AddLightStyles();
 }
-
 
 
 /*
