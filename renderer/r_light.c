@@ -154,7 +154,7 @@ void R_MarkLights (dlight_t *light, int num, mnode_t *node)
 		// Knightmare- Discoloda's dynamic light clipping
 		if (r_dlights_normal->value)
 		{
-			dist = DotProduct (light->origin, surf->plane->normal) - surf->plane->dist;
+			dist = DotProduct(light->origin, surf->plane->normal) - surf->plane->dist;
 
 			const int sidebit = (dist < 0 ? SURF_PLANEBACK : 0); //mxd
 			if ((surf->flags & SURF_PLANEBACK) != sidebit)
@@ -271,7 +271,7 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 			continue;
 
 		byte *lightmap = surf->samples;
-		lightmap += 3 * ((dt >> surf->lmshift) * ((surf->extents[0] >> surf->lmshift) + 1) + (ds >> surf->lmshift)); //mxd. 4 -> lmshift
+		lightmap += 3 * ((dt >> gl_lms.lmshift) * ((surf->extents[0] >> gl_lms.lmshift) + 1) + (ds >> gl_lms.lmshift)); //mxd. 4 -> lmshift
 
 		if (r_newrefdef.lightstyles)
 		{
@@ -279,7 +279,7 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 			int r00 = 0, g00 = 0, b00 = 0, r01 = 0, g01 = 0, b01 = 0, r10 = 0, g10 = 0, b10 = 0, r11 = 0, g11 = 0, b11 = 0;
 			const int dsfrac = ds & 15;
 			const int dtfrac = dt & 15;
-			const int line3 = ((surf->extents[0] >> surf->lmshift) + 1) * 3;
+			const int line3 = ((surf->extents[0] >> gl_lms.lmshift) + 1) * 3;
 			
 			for (int maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
 			{
@@ -303,7 +303,7 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 				g11 += (float)lightmap[line3 + 4] * scale[1];
 				b11 += (float)lightmap[line3 + 5] * scale[2];
 
-				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) * ((surf->extents[1] >> surf->lmshift) + 1); //mxd. 4 -> lmshift
+				lightmap += 3 * ((surf->extents[0] >> gl_lms.lmshift) + 1) * ((surf->extents[1] >> gl_lms.lmshift) + 1); //mxd. 4 -> lmshift
 			}
 
 			color[0] = DIV256 * (float)(int)(((((((r11 - r10) * dsfrac >> 4) + r10) - (((r01 - r00) * dsfrac >> 4) + r00)) * dtfrac) >> 4) + (((r01 - r00) * dsfrac >> 4) + r00));
@@ -618,10 +618,10 @@ void R_AddDynamicLights (msurface_t *surf)
 	vec3_t		impact, local, dlorigin, entOrigin, entAngles;
 	qboolean	rotated = false;
 	vec3_t		forward, right, up;
-	const int	lmscale = 1 << surf->lmshift; //mxd
+	const int	lmscale = 1 << gl_lms.lmshift; //mxd
 
-	const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
-	const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+	const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+	const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 	mtexinfo_t *tex = surf->texinfo;
 
 	// currententity is not valid for trans surfaces
@@ -754,12 +754,12 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		VID_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
 
-	const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
-	const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+	const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+	const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 	const int size = smax * tmax;
 
 	// FIXME- can this limit be directly increased?		Yep - Knightmare
-	if (size > sizeof(s_blocklights) >> 4)
+	if (size > sizeof(s_blocklights) >> gl_lms.lmshift) //mxd. 4 -> lmshift
 		VID_Error(ERR_DROP, "Bad s_blocklights size: %d", size);
 
 	// set to full bright if no light data

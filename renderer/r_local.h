@@ -411,6 +411,7 @@ typedef struct
 	int			format;
 	int			type;
 	int			current_lightmap_texture;
+	int			lmshift; //mxd
 
 	msurface_t	*lightmap_surfaces[MAX_LIGHTMAPS];
 
@@ -739,7 +740,7 @@ typedef struct
 	qboolean	anisotropic;
 	float		max_anisotropy;
 
-	qboolean	newLMFormat;			// whether to use GL_BGRA lightmaps
+	qboolean	newLMFormat;	// whether to use GL_BGRA lightmaps //TODO: mxd. use newLMFormat only, remove newLMFormat var
 } glconfig_t;
 
 

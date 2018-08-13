@@ -407,11 +407,7 @@ void R_DrawWarpPoly (msurface_t *surf)
 
 	// warp texture, no lightmaps
 	GL_EnableMultitexture(false);
-//	GL_TexEnv(GL_MODULATE);
-
 	R_DrawWarpSurface(surf, 1.0, true);
-
-//	GL_TexEnv(GL_REPLACE);
 	GL_EnableMultitexture(true);
 }
 
@@ -584,7 +580,7 @@ void R_BlendLightmaps (void)
 	{
 		LM_InitBlock();
 
-		GL_Bind(glState.lightmap_textures+0);
+		GL_Bind(glState.lightmap_textures);
 
 		if (currentmodel == r_worldmodel)
 			c_visible_lightmaps++;
@@ -593,10 +589,10 @@ void R_BlendLightmaps (void)
 
 		for (msurface_t *surf = gl_lms.lightmap_surfaces[0]; surf != 0; surf = surf->lightmapchain)
 		{
-			const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
-			const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+			const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+			const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 
-			if ( LM_AllocBlock(smax, tmax, &surf->dlight_s, &surf->dlight_t) )
+			if (LM_AllocBlock(smax, tmax, &surf->dlight_s, &surf->dlight_t))
 			{
 				unsigned *base = gl_lms.lightmap_buffer;
 				base += (surf->dlight_t * LM_BLOCK_WIDTH + surf->dlight_s);		// * LIGHTMAP_BYTES
@@ -610,12 +606,12 @@ void R_BlendLightmaps (void)
 
 				// draw all surfaces that use this lightmap
 				msurface_t *drawsurf;
-				for ( drawsurf = newdrawsurf; drawsurf != surf; drawsurf = drawsurf->lightmapchain )
+				for (drawsurf = newdrawsurf; drawsurf != surf; drawsurf = drawsurf->lightmapchain)
 				{
 					if (drawsurf->polys)
-						R_DrawGLPolyChain( drawsurf->polys, 
-											(drawsurf->light_s - drawsurf->dlight_s) * (1.0 / 128.0), 
-											(drawsurf->light_t - drawsurf->dlight_t) * (1.0 / 128.0) );
+						R_DrawGLPolyChain(drawsurf->polys, 
+										 (drawsurf->light_s - drawsurf->dlight_s) * (1.0 / 128.0), 
+										 (drawsurf->light_t - drawsurf->dlight_t) * (1.0 / 128.0));
 				}
 
 				newdrawsurf = drawsurf;
@@ -636,14 +632,14 @@ void R_BlendLightmaps (void)
 
 		// draw remainder of dynamic lightmaps that haven't been uploaded yet
 		if (newdrawsurf)
-			LM_UploadBlock( true );
+			LM_UploadBlock(true);
 
 		for (msurface_t *surf = newdrawsurf; surf != 0; surf = surf->lightmapchain)
 		{
 			if (surf->polys)
-				R_DrawGLPolyChain( surf->polys, 
-									(surf->light_s - surf->dlight_s) * (1.0 / 128.0),
-									(surf->light_t - surf->dlight_t) * (1.0 / 128.0) );
+				R_DrawGLPolyChain(surf->polys, 
+								 (surf->light_s - surf->dlight_s) * (1.0 / 128.0),
+								 (surf->light_t - surf->dlight_t) * (1.0 / 128.0));
 		}
 	}
 
@@ -682,12 +678,10 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		if ( (fa->styles[maps] >= 32 || fa->styles[maps] == 0) && fa->dlightframe != r_framecount )
 		{
-			//unsigned temp[34 * 34];
-			
-			const int smax = (fa->extents[0] >> fa->lmshift) + 1; //mxd. 4 -> lmshift
-			const int tmax = (fa->extents[1] >> fa->lmshift) + 1; //mxd. 4 -> lmshift
+			const int smax = (fa->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+			const int tmax = (fa->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 
-			unsigned *temp = malloc(smax * tmax); //mxd. Was 34 *34
+			unsigned *temp = malloc(smax * tmax); //mxd. Was 34 * 34
 
 			R_BuildLightMap(fa, (void *)temp, smax * 4);
 			R_SetCacheState(fa);
@@ -1197,42 +1191,41 @@ backend for R_DrawLightmappedSurface
 */
 static void RB_RenderLightmappedSurface (msurface_t *surf)
 {
-	image_t		*image = R_TextureAnimation (surf);
-	image_t		*glow = R_TextureAnimationGlow (surf);
-	const float	alpha = colorArray[0][3];
-	const unsigned lmtex = surf->lightmaptexturenum;
-
 	if (rb_vertex == 0 || rb_index == 0) // nothing to render
 		return;
+	
+	image_t *image = R_TextureAnimation(surf);
+	image_t *glow = R_TextureAnimationGlow(surf);
+	const float	alpha = colorArray[0][3];
+	unsigned lmtex = surf->lightmaptexturenum;
 
-	const qboolean glowLayer = ( r_glows->value && (glow != glMedia.notexture) && (glConfig.max_texunits > 2) );
-	const qboolean glowPass = ( r_glows->value && (glow != glMedia.notexture) && !glowLayer );
+	const qboolean glowLayer = (r_glows->value && (glow != glMedia.notexture) && glConfig.max_texunits > 2);
+	const qboolean glowPass =  (r_glows->value && (glow != glMedia.notexture) && !glowLayer);
 	const qboolean envMap = R_SurfHasEnvMap(surf);
-	const qboolean causticPass = ( r_caustics->value && !(surf->texinfo->flags & SURF_ALPHATEST) && (surf->flags & SURF_MASK_CAUSTIC) );
+	const qboolean causticPass = (r_caustics->value && !(surf->texinfo->flags & SURF_ALPHATEST) && (surf->flags & SURF_MASK_CAUSTIC));
 
 	c_brush_calls++;
 
 #ifndef BATCH_LM_UPDATES
 	int map;
-	if (R_SurfIsDynamic (surf, &map))
+	if (R_SurfIsDynamic(surf, &map))
 	{
-		unsigned	temp[LM_BLOCK_WIDTH*LM_BLOCK_HEIGHT];
-		int			smax, tmax;
+		unsigned temp[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
 
-		smax = (surf->extents[0]>>4)+1;
-		tmax = (surf->extents[1]>>4)+1;
+		const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1;
+		const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1;
 
-		R_BuildLightMap (surf, (void *)temp, smax*4);
+		R_BuildLightMap(surf, (void *)temp, smax * 4);
 
-		if ((surf->styles[map] >= 32 || surf->styles[map] == 0) && (surf->dlightframe != r_framecount))
+		if ((surf->styles[map] >= 32 || surf->styles[map] == 0) && surf->dlightframe != r_framecount)
 		{
-			R_SetCacheState (surf);
-			GL_MBind (1, glState.lightmap_textures + surf->lightmaptexturenum);
+			R_SetCacheState(surf);
+			GL_MBind(1, glState.lightmap_textures + surf->lightmaptexturenum);
 			lmtex = surf->lightmaptexturenum;
 		}
 		else
 		{
-			GL_MBind (1, glState.lightmap_textures + 0);
+			GL_MBind(1, glState.lightmap_textures + 0);
 			lmtex = 0;
 		}
 
@@ -1260,8 +1253,8 @@ static void RB_RenderLightmappedSurface (msurface_t *surf)
 		for (int i = 0; i < rb_vertex; i++) // copy texture coords
 			VA_SetElem2(texCoordArray[2][i], texCoordArray[0][i][0], texCoordArray[0][i][1]);
 
-		GL_EnableTexture (2);
-		GL_MBind (2, glow->texnum);
+		GL_EnableTexture(2);
+		GL_MBind(2, glow->texnum);
 
 		if (!glConfig.mtexcombine) // if we've got > 2 TMUs, this can't be the case, right?
 		{
@@ -1289,7 +1282,7 @@ static void RB_RenderLightmappedSurface (msurface_t *surf)
 
 	RB_DrawArrays();
 
-	GL_Disable (GL_ALPHA_TEST); // Alpha test flag
+	GL_Disable(GL_ALPHA_TEST); // Alpha test flag
 
 	if (glowLayer) 
 		GL_DisableTexture(2);
@@ -2151,9 +2144,10 @@ LM_UploadBlock
 static void LM_UploadBlock (qboolean dynamic)
 {
 	const int texture = (dynamic ? 0 : gl_lms.current_lightmap_texture);
+	const int filter = (gl_lms.lmshift == 0 && !strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR); //mxd
 	GL_Bind(glState.lightmap_textures + texture);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
 	if (dynamic)
 	{
@@ -2249,7 +2243,7 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 	// reconstruct the polygon
 	medge_t *pedges = currentmodel->edges;
 	const int lnumverts = fa->numedges;
-	const int lmscale = (1 << fa->lmshift); //mxd
+	const int lmscale = (1 << gl_lms.lmshift); //mxd
 
 	//
 	// draw texture
@@ -2343,15 +2337,15 @@ void R_CreateSurfaceLightmap (msurface_t *surf)
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		return;
 
-	const int smax = (surf->extents[0] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
-	const int tmax = (surf->extents[1] >> surf->lmshift) + 1; //mxd. 4 -> lmshift
+	const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+	const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 
 	if (!LM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
 	{
 		LM_UploadBlock(false);
 		LM_InitBlock();
-		if (!LM_AllocBlock (smax, tmax, &surf->light_s, &surf->light_t))
-			VID_Error(ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d,%d) failed\n", smax, tmax);
+		if (!LM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
+			VID_Error(ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d, %d) failed\n", smax, tmax);
 	}
 
 	surf->lightmaptexturenum = gl_lms.current_lightmap_texture;
@@ -2404,7 +2398,7 @@ void R_BeginBuildingLightmaps (model_t *m)
 
 	r_framecount = 1;		// no dlightcache
 
-	GL_EnableMultitexture (true);
+	GL_EnableMultitexture(true);
 	GL_SelectTexture(1);
 
 	// setup the base lightstyles so the lightmaps won't have to be regenerated the first time they're seen
@@ -2418,11 +2412,7 @@ void R_BeginBuildingLightmaps (model_t *m)
 	r_newrefdef.lightstyles = lightstyles;
 
 	if (!glState.lightmap_textures)
-	{
-		glState.lightmap_textures	= TEXNUM_LIGHTMAPS;
-	//	glState.lightmap_textures	= glState.texture_extension_number;
-	//	glState.texture_extension_number = glState.lightmap_textures + MAX_LIGHTMAPS;
-	}
+		glState.lightmap_textures = TEXNUM_LIGHTMAPS;
 
 	gl_lms.current_lightmap_texture = 1;
 
@@ -2448,22 +2438,22 @@ void R_BeginBuildingLightmaps (model_t *m)
 	*/
 
 	// Knightmare- old internal formats for compatibility with older GPUs/drivers
-	if ( !glConfig.newLMFormat )
+	if (!glConfig.newLMFormat)
 	{
-		if ( toupper( r_monolightmap->string[0] ) == 'A' )
+		if (toupper(r_monolightmap->string[0]) == 'A')
 		{
 			gl_lms.internal_format = gl_tex_alpha_format;
 		}
 		// try to do hacked colored lighting with a blended texture
-		else if ( toupper( r_monolightmap->string[0] ) == 'C' )
+		else if (toupper(r_monolightmap->string[0]) == 'C')
 		{
 			gl_lms.internal_format = gl_tex_alpha_format;
 		}
-		else if ( toupper( r_monolightmap->string[0] ) == 'I' )
+		else if (toupper(r_monolightmap->string[0]) == 'I')
 		{
 			gl_lms.internal_format = GL_INTENSITY8;
 		}
-		else if ( toupper( r_monolightmap->string[0] ) == 'L' ) 
+		else if (toupper(r_monolightmap->string[0]) == 'L')
 		{
 			gl_lms.internal_format = GL_LUMINANCE8;
 		}
@@ -2477,9 +2467,9 @@ void R_BeginBuildingLightmaps (model_t *m)
 	}
 	else
 	{
-		if ( toupper( r_monolightmap->string[0] ) == 'I' )
+		if (toupper(r_monolightmap->string[0]) == 'I')
 			gl_lms.internal_format = GL_INTENSITY8;
-		else if ( toupper( r_monolightmap->string[0] ) == 'L' ) 
+		else if (toupper(r_monolightmap->string[0]) == 'L')
 			gl_lms.internal_format = GL_LUMINANCE8;
 		else
 			gl_lms.internal_format = GL_RGBA8;
@@ -2488,20 +2478,21 @@ void R_BeginBuildingLightmaps (model_t *m)
 		gl_lms.type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	}
 
+	//mxd
+	const int filter = (gl_lms.lmshift == 0 && !strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR);
+
 	// initialize the dynamic lightmap texture
 	GL_Bind(glState.lightmap_textures);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	qglTexImage2D( GL_TEXTURE_2D, 
-				   0, 
-				   gl_lms.internal_format,
-				   LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, 
-				   0, 
-				   gl_lms.format,
-				   gl_lms.type,
-	//			   GL_LIGHTMAP_FORMAT, 
-	//			   GL_UNSIGNED_BYTE, 
-				   dummy );
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+	qglTexImage2D(GL_TEXTURE_2D, 
+				  0, 
+				  gl_lms.internal_format,
+				  LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, 
+				  0, 
+				  gl_lms.format,	// GL_LIGHTMAP_FORMAT 
+				  gl_lms.type,		// GL_UNSIGNED_BYTE 
+				  dummy);
 }
 
 
@@ -2515,4 +2506,3 @@ void R_EndBuildingLightmaps (void)
 	LM_UploadBlock(false);
 	GL_EnableMultitexture(false);
 }
-

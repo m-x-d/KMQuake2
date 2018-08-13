@@ -158,15 +158,30 @@ void GL_TextureMode( char *string )
 	}
 
 	// change all the existing mipmap texture objects
-	int i; 
-	image_t *glt;
-	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
+	image_t *glt = gltextures;
+	for (int i = 0; i < numgltextures; i++, glt++)
 	{
 		if (glt->type != it_pic && glt->type != it_sky)
 		{
 			GL_Bind(glt->texnum);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+
+			// Set anisotropic filter if supported and enabled
+			if (glConfig.anisotropic && r_anisotropic->value)
+				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, r_anisotropic->value);
+		}
+	}
+
+	//mxd. Change lightmap filtering when _lightmap_scale is 1. The idea is to make them look like they are part of the texture
+	if(gl_lms.lmshift == 0)
+	{
+		const int filter = (!strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR);
+		for (int i = 1; i < gl_lms.current_lightmap_texture; i++)
+		{
+			GL_Bind(glState.lightmap_textures + i);
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
 			// Set anisotropic filter if supported and enabled
 			if (glConfig.anisotropic && r_anisotropic->value)

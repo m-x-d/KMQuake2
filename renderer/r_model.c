@@ -748,7 +748,7 @@ void CalcSurfaceExtents (msurface_t *s)
 		}
 	}
 
-	const int lmscale = 1 << s->lmshift; //mxd
+	const int lmscale = 1 << gl_lms.lmshift; //mxd
 
 	for (int i = 0; i < 2; i++)
 	{	
@@ -770,7 +770,7 @@ void R_BeginBuildingLightmaps (model_t *m);
 Mod_LoadFaces
 =================
 */
-void Mod_LoadFaces (lump_t *l, byte lmshift)
+void Mod_LoadFaces (lump_t *l)
 {
 	dface_t *in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -792,7 +792,6 @@ void Mod_LoadFaces (lump_t *l, byte lmshift)
 		out->numedges = LittleShort(in->numedges);
 		out->flags = 0;
 		out->polys = NULL;
-		out->lmshift = lmshift; //mxd
 
 		const int planenum = (unsigned short)LittleShort(in->planenum);
 		const int side = LittleShort(in->side);
@@ -810,7 +809,7 @@ void Mod_LoadFaces (lump_t *l, byte lmshift)
 		CalcSurfaceExtents(out);
 
 	// lighting info
-		for (int i = 0; i < MAXLIGHTMAPS ; i++)
+		for (int i = 0; i < MAXLIGHTMAPS; i++)
 			out->styles[i] = in->styles[i];
 
 		const int lightofs = LittleLong(in->lightofs);
@@ -832,17 +831,17 @@ void Mod_LoadFaces (lump_t *l, byte lmshift)
 			R_SubdivideSurface(out); // cut up polygon for warps
 		}
 		// Knightmare- Psychospaz's envmapping. Windows get glass (envmap) effect, warp surfaces don't
-		else if (out->texinfo->flags & (SURF_TRANS33|SURF_TRANS66))
+		else if (out->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
 		{
 			if (!(out->texinfo->flags & SURF_NOLIGHTENV))
 				out->flags |= SURF_ENVMAP;
 		}
 
 	// create lightmaps and polygons
-		if ( !(out->texinfo->flags & (SURF_SKY|SURF_WARP)) )
+		if (!(out->texinfo->flags & (SURF_SKY | SURF_WARP)))
 			R_CreateSurfaceLightmap(out);
 
-		if ( !(out->texinfo->flags & SURF_WARP) )
+		if (!(out->texinfo->flags & SURF_WARP))
 			R_BuildPolygonFromSurface(out);
 	}
 
@@ -1126,17 +1125,19 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	for (int i = 0; i < sizeof(dheader_t) / 4; i++)
 		((int *)header)[i] = LittleLong(((int *)header)[i]);
 
-	//mxd. Get _lightmap_scale form worldspawn...
+	//mxd. Get _lightmap_scale form worldspawn and store it in gl_lms.lmshift...
 	char scalebuf[16];
 	byte lmshift = 4;
 	if (Mod_ParseWorldspawnKey(&header->lumps[LUMP_ENTITIES], "lightmap_scale", scalebuf, sizeof(scalebuf)))
 	{
 		const int value = atoi(scalebuf);
-		for (lmshift = 0; (1 << lmshift) < value && lmshift < 254; lmshift++) { }
-
-		if (value != 16)
+		if(value > 0 && value != 16)
+		{
+			for (lmshift = 0; (1 << lmshift) < value && lmshift < 254; lmshift++) {}
 			VID_Printf(PRINT_DEVELOPER, "Using custom lightmap scale (%i) and shift (%i)\n", value, lmshift);
+		}
 	}
+	gl_lms.lmshift = lmshift;
 
 	// load into heap
 	Mod_LoadVertexes(&header->lumps[LUMP_VERTEXES]);
@@ -1145,7 +1146,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	Mod_LoadLighting(&header->lumps[LUMP_LIGHTING]);
 	Mod_LoadPlanes(&header->lumps[LUMP_PLANES]);
 	Mod_LoadTexinfo(&header->lumps[LUMP_TEXINFO]);
-	Mod_LoadFaces(&header->lumps[LUMP_FACES], lmshift); //mxd. +lmshift
+	Mod_LoadFaces(&header->lumps[LUMP_FACES]);
 	Mod_LoadMarksurfaces(&header->lumps[LUMP_LEAFFACES]);
 	Mod_LoadVisibility(&header->lumps[LUMP_VISIBILITY]);
 	Mod_LoadLeafs(&header->lumps[LUMP_LEAFS]);
