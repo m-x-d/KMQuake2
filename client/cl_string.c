@@ -222,7 +222,7 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 		case SCALETYPE_CONSOLE:
 		default:
 			textSize = FONT_SIZE;
-			textScale = FONT_SIZE/8.0;
+			textScale = FONT_SIZE / 8.0;
 			// hack for alternate text color
 			if (character & 128)
 				TextColor((int)alt_text_color->value, &red, &green, &blue);

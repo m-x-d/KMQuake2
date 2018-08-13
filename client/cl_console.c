@@ -683,9 +683,9 @@ void Con_DrawConsole (float frac, qboolean trans)
 	if (y < 1)	
 		y = 0;
 	else if (newconback_found && con_newconback->value)	// Q3-style console
-		R_DrawStretchPic(0, 0, viddef.width, lines-barheight, "/gfx/ui/newconback.pcx", alpha);
+		R_DrawStretchPic(0, 0, viddef.width, lines - barheight, "/gfx/ui/newconback.pcx", alpha);
 	else
-		R_DrawStretchPic(0, lines - viddef.height - (int)barheight, viddef.width, viddef.height, "conback", alpha);
+		R_DrawStretchPic(0, lines - viddef.width * 0.75 - (int)barheight, viddef.width, viddef.width * 0.75, "conback", alpha); //mxd. Preserve aspect ratio (width * 0.75 == width / 4 * 3)
 
 	// changed to "KMQuake2 vx.xx"
 #ifdef ERASER_COMPAT_BUILD

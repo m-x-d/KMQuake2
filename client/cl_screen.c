@@ -301,14 +301,14 @@ void SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align
 		break;
 	case ALIGN_STRETCH:
 	default:
-		if (x)
-			*x *= xscale;
-		if (y) 
-			*y *= yscale;
-		if (w) 
+		if (w)
 			*w *= xscale;
 		if (h)
 			*h *= yscale;
+		if (x)
+			*x *= xscale;
+		if (y)
+			*y *= yscale;
 		break;
 	}
 }
