@@ -322,17 +322,15 @@ BIG			Do you want a larger explosion model?
 void target_explosion_explode (edict_t *self)
 {
 	float		save;
+	const int type = (self->spawnflags & 1 ? TE_EXPLOSION1_BIG : TE_EXPLOSION1); //Knightmare- big explosion //mxd. Also reflection
 
 	gi.WriteByte (svc_temp_entity);
-	if (self->spawnflags & 1)	 //Knightmare- big explosion
-		gi.WriteByte (TE_EXPLOSION1_BIG);
-	else
-		gi.WriteByte (TE_EXPLOSION1);
+	gi.WriteByte (type);
 	gi.WritePosition (self->s.origin);
 	gi.multicast (self->s.origin, MULTICAST_PHS);
 
 	if(level.num_reflectors)
-		ReflectExplosion (TE_EXPLOSION1,self->s.origin);
+		ReflectExplosion (type, self->s.origin); //mxd. TE_EXPLOSION1 -> type
 
 	T_RadiusDamage (self, self->activator, self->dmg, NULL, self->dmg+40, MOD_EXPLOSIVE, -0.5);
 
