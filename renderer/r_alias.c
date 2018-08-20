@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 =============================================================
 */
 
-vec3_t	tempVertexArray[MD3_MAX_MESHES][MD3_MAX_VERTS];
+vec3_t	*tempVertexArray[MD3_MAX_MESHES];
 
 vec3_t	aliasLightDir;
 float	aliasShadowAlpha;
@@ -267,7 +267,6 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 	int				k, meshnum, skinnum;
 	vec3_t			move, delta, vectors[3];
 	vec3_t			curScale, oldScale, curNormal, oldNormal;
-	vec3_t			tempNormalsArray[MD3_MAX_VERTS];
 	vec2_t			tempSkinCoord;
 	vec3_t			meshlight, lightcolor;
 	float			alpha, shellscale;
@@ -367,6 +366,22 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 			indexArray[rb_index++] = rb_vertex + mesh.indexes[3 * i + 2];
 		}
 
+		//mxd. (re)allocate arrays
+		static int tempVertexArrayUsage[MD3_MAX_MESHES];
+
+		const int arraysize = mesh.num_verts * sizeof(vec3_t);
+		vec3_t *tempNormalsArray = malloc(arraysize);
+
+		if(tempVertexArrayUsage[meshnum] < arraysize)
+		{
+			tempVertexArrayUsage[meshnum] = arraysize;
+			
+			if (tempVertexArray[meshnum])
+				free(tempVertexArray[meshnum]);
+			
+			tempVertexArray[meshnum] = malloc(arraysize);
+		}
+
 		for (int i = 0; i < mesh.num_verts; i++, v++, ov++)
 		{
 			// lerp verts
@@ -422,6 +437,9 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 			rb_vertex++;
 		}
 
+		//mxd
+		free(tempNormalsArray);
+
 		if (!shellModel)
 			RB_ModifyTextureCoords(&texCoordArray[0][baseindex][0], &vertexArray[baseindex][0], mesh.num_verts, skinParms);
 
@@ -452,11 +470,11 @@ based on code from BeefQuake R6
 */
 void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
 {
-	BOOL	triangleFacingLight[MD3_MAX_TRIANGLES];
 	vec3_t  v0, v1, v2, v3;
 
 	const maliasmesh_t mesh = hdr->meshes[meshnum];
 	const float thisAlpha = aliasShadowAlpha; // was r_shadowalpha->value
+	qboolean *triangleFacingLight = malloc(mesh.num_tris * sizeof(qboolean)); //mxd
 
 	for (int i = 0; i < mesh.num_tris; i++)
 	{
@@ -476,102 +494,50 @@ void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float p
 		if (!triangleFacingLight[i])
 			continue;
 
-		if (mesh.trneighbors[i * 3 + 0] < 0 || !triangleFacingLight[mesh.trneighbors[i * 3 + 0]])
+		for(int c = 0; c < 3; c++)
 		{
-			for (int j = 0; j < 3; j++)
+			if (mesh.trneighbors[i * 3 + c] < 0 || !triangleFacingLight[mesh.trneighbors[i * 3 + c]])
 			{
-				v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 1]][j];
-				v1[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 0]][j];
-				v2[j] = v1[j] + ((v1[j] - light[j]) * projectdistance);
-				v3[j] = v0[j] + ((v0[j] - light[j]) * projectdistance);
+				for (int j = 0; j < 3; j++)
+				{
+					v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + (c + 1) % 3]][j];
+					v1[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + c]][j];
+					v2[j] = v1[j] + ((v1[j] - light[j]) * projectdistance);
+					v3[j] = v0[j] + ((v0[j] - light[j]) * projectdistance);
+				}
+
+				indexArray[shadow_index++] = shadow_va + 0;
+				indexArray[shadow_index++] = shadow_va + 1;
+				indexArray[shadow_index++] = shadow_va + 2;
+				indexArray[shadow_index++] = shadow_va + 0;
+				indexArray[shadow_index++] = shadow_va + 2;
+				indexArray[shadow_index++] = shadow_va + 3;
+
+				VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
+				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
+				shadow_va++;
+
+				VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
+				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
+				shadow_va++;
+
+				VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
+				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
+				shadow_va++;
+
+				VA_SetElem3(vertexArray[shadow_va], v3[0], v3[1], v3[2]);
+				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
+				shadow_va++;
 			}
-
-			indexArray[shadow_index++] = shadow_va + 0;
-			indexArray[shadow_index++] = shadow_va + 1;
-			indexArray[shadow_index++] = shadow_va + 2;
-			indexArray[shadow_index++] = shadow_va + 0;
-			indexArray[shadow_index++] = shadow_va + 2;
-			indexArray[shadow_index++] = shadow_va + 3;
-
-			VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v3[0], v3[1], v3[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-		}
-
-		if (mesh.trneighbors[i * 3 + 1] < 0 || !triangleFacingLight[mesh.trneighbors[i * 3 + 1]])
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 2]][j];
-				v1[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 1]][j];
-				v2[j] = v1[j] + ((v1[j] - light[j]) * projectdistance);
-				v3[j] = v0[j] + ((v0[j] - light[j]) * projectdistance);
-			}
-
-			indexArray[shadow_index++] = shadow_va + 0;
-			indexArray[shadow_index++] = shadow_va + 1;
-			indexArray[shadow_index++] = shadow_va + 2;
-			indexArray[shadow_index++] = shadow_va + 0;
-			indexArray[shadow_index++] = shadow_va + 2;
-			indexArray[shadow_index++] = shadow_va + 3;
-
-			VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v3[0], v3[1], v3[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-		}
-
-		if (mesh.trneighbors[i * 3 + 2] < 0 || !triangleFacingLight[mesh.trneighbors[i * 3 + 2]])
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 0]][j];
-				v1[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 2]][j];
-				v2[j] = v1[j] + ((v1[j] - light[j]) * projectdistance);
-				v3[j] = v0[j] + ((v0[j] - light[j]) * projectdistance);
-			}
-
-			indexArray[shadow_index++] = shadow_va + 0;
-			indexArray[shadow_index++] = shadow_va + 1;
-			indexArray[shadow_index++] = shadow_va + 2;
-			indexArray[shadow_index++] = shadow_va + 0;
-			indexArray[shadow_index++] = shadow_va + 2;
-			indexArray[shadow_index++] = shadow_va + 3;
-
-			VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
-			VA_SetElem3(vertexArray[shadow_va], v3[0], v3[1], v3[2]);
-			VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-			shadow_va++;
 		}
 	}
 
 	if (nocap)
+	{
+		free(triangleFacingLight); //mxd
 		return;
+	}
+		
 
 	// cap the volume
 	for (int i = 0; i < mesh.num_tris; i++)
@@ -621,6 +587,8 @@ void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float p
 		indexArray[shadow_index++] = shadow_va;
 		shadow_va++;
 	}
+
+	free(triangleFacingLight); //mxd
 }
 
 

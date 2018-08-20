@@ -86,8 +86,8 @@ typedef struct
 #define IDALIASHEADER		(('2'<<24)+('P'<<16)+('D'<<8)+'I')
 #define ALIAS_VERSION	8
 
-#define	MAX_TRIANGLES	4096
-#define MAX_VERTS		2048
+//#define MAX_TRIANGLES	4096 //mxd. No longer needed
+//#define MAX_VERTS		2048 //mxd. No longer needed
 #define MAX_FRAMES		512
 #define MAX_MD2SKINS	32
 #define	MAX_SKINNAME	64
@@ -172,17 +172,17 @@ typedef struct
 #define MD3_ALIAS_VERSION	15
 #define MD3_ALIAS_MAX_LODS	4
 
-#define	MD3_MAX_TRIANGLES	8192	// per mesh
-#define MD3_MAX_VERTS		4096	// per mesh
+//#define MD3_MAX_TRIANGLES	8192	// per mesh //mxd. No longer needed
+//#define MD3_MAX_VERTS		4096	// per mesh //mxd. No longer needed
 #define MD3_MAX_SHADERS		256		// per mesh
 #define MD3_MAX_FRAMES		1024	// per model
 #define	MD3_MAX_MESHES		32		// per model
 #define MD3_MAX_TAGS		16		// per frame
 #define MD3_MAX_PATH		64
 
-#ifndef M_TWOPI
+/*#ifndef M_TWOPI //mxd. Never used
 #define M_TWOPI		6.28318530717958647692
-#endif
+#endif*/
 
 // vertex scales
 #define	MD3_XYZ_SCALE		(1.0/64)

@@ -2082,9 +2082,9 @@ void NormalToLatLong (const vec3_t normal, byte bytes[2])
 	}
 }
 
-int				md2IndRemap[MAX_TRIANGLES * 3];
-unsigned int	md2TempIndex[MAX_TRIANGLES * 3];
-unsigned int	md2TempStIndex[MAX_TRIANGLES * 3];
+int				*md2IndRemap;
+unsigned int	*md2TempIndex;
+unsigned int	*md2TempStIndex;
 
 /*
 =================
@@ -2105,6 +2105,26 @@ size_t Mod_GetAllocSizeMD2New(void *buffer)
 	const int numIndex = numTris * 3;
 	dtriangle_t *pintri = (dtriangle_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_tris));
 
+	//mxd. (re)allocate remap arrays...
+	static int remaparraysize = 0;
+	const int newremaparraysize = numTris * 3 * sizeof(int);
+
+	if(newremaparraysize > remaparraysize)
+	{
+		remaparraysize = newremaparraysize;
+		
+		if (md2IndRemap)
+			free(md2IndRemap);
+		if (md2TempIndex)
+			free(md2TempIndex);
+		if (md2TempStIndex)
+			free(md2TempStIndex);
+
+		md2IndRemap = malloc(remaparraysize);
+		md2TempIndex = malloc(remaparraysize);
+		md2TempStIndex = malloc(remaparraysize);
+	}
+
 	for (int i = 0; i < numTris; i++)
 	{
 		for(int c = 0; c < 3; c++)
@@ -2114,7 +2134,7 @@ size_t Mod_GetAllocSizeMD2New(void *buffer)
 		}
 	}
 
-	memset(md2IndRemap, -1, MAX_TRIANGLES * 3 * sizeof(int));
+	memset(md2IndRemap, -1, remaparraysize);
 
 	for (int i = 0; i < numIndex; i++)
 	{
@@ -2189,14 +2209,10 @@ void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer)
 	poutmesh->num_tris = LittleLong(pinmodel->num_tris);
 	if (poutmesh->num_tris <= 0)
 		VID_Error(ERR_DROP, "model %s has invalid number of triangles (%i)", mod->name, poutmesh->num_tris);
-	else if(poutmesh->num_tris > MAX_TRIANGLES)
-		VID_Error(ERR_DROP, "model %s has too many triangles (%i, maximum is %i)", mod->name, poutmesh->num_tris, MAX_TRIANGLES);
 
 	poutmesh->num_verts = LittleLong(pinmodel->num_xyz);
 	if (poutmesh->num_verts <= 0)
 		VID_Error(ERR_DROP, "model %s has invalid number of vertices (%i)", mod->name, poutmesh->num_verts);
-	else if(poutmesh->num_verts > MAX_VERTS)
-		VID_Error(ERR_DROP, "model %s has too many vertices (%i, maximum is %i)", mod->name, poutmesh->num_verts, MAX_VERTS);
 
 	poutmesh->num_skins = LittleLong(pinmodel->num_skins);
 	if (poutmesh->num_skins < 0)
@@ -2515,13 +2531,9 @@ void Mod_LoadAliasMD3Model (model_t *mod, void *buffer)
 
 		if (poutmesh->num_tris <= 0)
 			VID_Error(ERR_DROP, "mesh %i in model %s has no triangles", i, mod->name);
-		else if (poutmesh->num_tris > MD3_MAX_TRIANGLES)
-			VID_Error(ERR_DROP, "mesh %i in model %s has too many triangles (%i, maximum is %i)", i, mod->name, poutmesh->num_tris, MD3_MAX_TRIANGLES);
 
 		if (poutmesh->num_verts <= 0)
 			VID_Error(ERR_DROP, "mesh %i in model %s has no vertices", i, mod->name);
-		else if (poutmesh->num_verts > MD3_MAX_VERTS)
-			VID_Error(ERR_DROP, "mesh %i in model %s has too many vertices (%i, maximum is %i)", i, mod->name, poutmesh->num_verts, MD3_MAX_VERTS);
 
 		//
 		// register all skins
