@@ -159,6 +159,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(ReleaseDir)quake2.bsc</OutputFile>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>copy /Y "$(BuildDir)kmquake2.exe" "$(GameDir)\kmquake2.exe"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\client\cl_cin.c" />

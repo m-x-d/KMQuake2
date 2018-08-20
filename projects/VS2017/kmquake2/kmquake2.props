@@ -3,9 +3,9 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <GameDir>d:\Gaems\Quake2</GameDir>
-    <DebugDir>.\debug/</DebugDir>
-    <ReleaseDir>.\release/</ReleaseDir>
-    <BuildDir>..\build/</BuildDir>
+    <DebugDir>.\debug\</DebugDir>
+    <ReleaseDir>.\release\</ReleaseDir>
+    <BuildDir>..\build\</BuildDir>
   </PropertyGroup>
   <PropertyGroup>
     <_PropertySheetDisplayName>KMQ2</_PropertySheetDisplayName>
