@@ -284,10 +284,9 @@ typedef struct model_s
 
 	// for alias models and skins
 	// Echon's per-mesh skin support
-	image_t      *skins[MD3_MAX_MESHES][MAX_MD2SKINS];
-	//image_t		*skins[MAX_MD2SKINS];
+	image_t		*skins[MD3_MAX_MESHES][MAX_MD2SKINS];
 
-	int			extradatasize;
+	size_t		extradatasize;
 	void		*extradata;
 
 	qboolean	hasAlpha; // if model has scripted transparency
