@@ -313,6 +313,8 @@ void	*Hunk_Alloc (int size);
 int		Hunk_End (void);
 void	Hunk_Free (void *base);*/
 
+void *ModChunk_Alloc(size_t size); //mxd
+
 void	Mod_FreeAll (void);
 void	Mod_Free (model_t *mod);
 

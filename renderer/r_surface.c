@@ -2248,7 +2248,7 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 	//
 	// draw texture
 	//
-	glpoly_t *poly = Hunk_Alloc(sizeof(glpoly_t) + (lnumverts - 4) * VERTEXSIZE * sizeof(float));
+	glpoly_t *poly = ModChunk_Alloc(sizeof(glpoly_t) + (lnumverts - 4) * VERTEXSIZE * sizeof(float));
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;
@@ -2258,8 +2258,8 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 	if (fa->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
 	{
 		const int size = lnumverts * 3 * sizeof(byte);
-		poly->vertexlight = Hunk_Alloc(size);
-		poly->vertexlightbase = Hunk_Alloc(size);
+		poly->vertexlight = ModChunk_Alloc(size);
+		poly->vertexlightbase = ModChunk_Alloc(size);
 		memset(poly->vertexlight, 0, size);
 		memset(poly->vertexlightbase, 0, size);
 		poly->vertexlightset = false;

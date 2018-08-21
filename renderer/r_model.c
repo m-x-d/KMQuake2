@@ -21,15 +21,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
+#define ALIGN_TO_CACHELINE(x) (((x) + 31) & ~31) //mxd
+
 model_t	*loadmodel;
 int		modfilelen;
 
 void *ModChunk_Begin (size_t maxsize);
-void *ModChunk_Alloc (size_t size);
+//void *ModChunk_Alloc (size_t size); //mxd. Moved to r_model.h
 size_t ModChunk_End (void);
 void ModChunk_Free (void *base);
 size_t Mod_GetAllocSizeSprite ();
 void Mod_LoadSpriteModel (model_t *mod, void *buffer);
+size_t Mod_GetAllocSizeBrushModel (void *buffer); //mxd
 void Mod_LoadBrushModel (model_t *mod, void *buffer);
 
 #ifdef MD2_AS_MD3
@@ -195,7 +198,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	
 	if (!name[0])
 		VID_Error(ERR_DROP, "Mod_ForName: NULL name");
-		
+
 	//
 	// inline models are grabbed only from worldmodel
 	//
@@ -269,33 +272,31 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeMD2Old(buf));
 		Mod_LoadAliasMD2ModelOld(mod, buf);
 #endif // MD2_AS_MD3
-		loadmodel->extradatasize = ModChunk_End();
 		break;
 
 	//Harven++ MD3
 	case IDMD3HEADER:
 		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeMD3(buf));
 		Mod_LoadAliasMD3Model(mod, buf);
-		loadmodel->extradatasize = ModChunk_End();
 		break;
 	//Harven-- MD3
 	
 	case IDSPRITEHEADER:
 		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeSprite());
 		Mod_LoadSpriteModel(mod, buf);
-		loadmodel->extradatasize = ModChunk_End();
 		break;
 	
 	case IDBSPHEADER:
-		loadmodel->extradata = Hunk_Begin(0x4000000); //mxd. Was 0x1000000
+		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeBrushModel(buf)); //mxd. Was 0x1000000
 		Mod_LoadBrushModel(mod, buf);
-		loadmodel->extradatasize = Hunk_End();
 		break;
 
 	default:
 		VID_Error(ERR_DROP, "Mod_NumForName: unknown fileid for %s", mod->name);
 		break;
 	}
+
+	loadmodel->extradatasize = ModChunk_End();
 
 	FS_FreeFile(buf);
 
@@ -319,14 +320,15 @@ Mod_LoadLighting
 */
 void Mod_LoadLighting (lump_t *l)
 {
-	if (!l->filelen)
+	if (l->filelen)
+	{
+		loadmodel->lightdata = ModChunk_Alloc(l->filelen);
+		memcpy(loadmodel->lightdata, mod_base + l->fileofs, l->filelen);
+	}
+	else
 	{
 		loadmodel->lightdata = NULL;
-		return;
 	}
-
-	loadmodel->lightdata = Hunk_Alloc(l->filelen);
-	memcpy(loadmodel->lightdata, mod_base + l->fileofs, l->filelen);
 }
 
 
@@ -339,18 +341,19 @@ void Mod_LoadVisibility (lump_t *l)
 {
 	if (!l->filelen)
 	{
-		loadmodel->vis = NULL;
-		return;
+		loadmodel->vis = ModChunk_Alloc(l->filelen);
+		memcpy(loadmodel->vis, mod_base + l->fileofs, l->filelen);
+
+		loadmodel->vis->numclusters = LittleLong(loadmodel->vis->numclusters);
+		for (int i = 0; i < loadmodel->vis->numclusters; i++)
+		{
+			loadmodel->vis->bitofs[i][0] = LittleLong(loadmodel->vis->bitofs[i][0]);
+			loadmodel->vis->bitofs[i][1] = LittleLong(loadmodel->vis->bitofs[i][1]);
+		}
 	}
-
-	loadmodel->vis = Hunk_Alloc(l->filelen);
-	memcpy(loadmodel->vis, mod_base + l->fileofs, l->filelen);
-
-	loadmodel->vis->numclusters = LittleLong(loadmodel->vis->numclusters);
-	for (int i = 0; i < loadmodel->vis->numclusters; i++)
+	else
 	{
-		loadmodel->vis->bitofs[i][0] = LittleLong(loadmodel->vis->bitofs[i][0]);
-		loadmodel->vis->bitofs[i][1] = LittleLong(loadmodel->vis->bitofs[i][1]);
+		loadmodel->vis = NULL;
 	}
 }
 
@@ -363,11 +366,8 @@ Mod_LoadVertexes
 void Mod_LoadVertexes (lump_t *l)
 {
 	dvertex_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadVertexes: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	mvertex_t *out = Hunk_Alloc ( count*sizeof(*out));
+	mvertex_t *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->vertexes = out;
 	loadmodel->numvertexes = count;
@@ -400,15 +400,8 @@ Mod_LoadSubmodels
 void Mod_LoadSubmodels (lump_t *l)
 {
 	dmodel_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadSubmodels: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	mmodel_t *out = Hunk_Alloc ( count*sizeof(*out));
-
-	// Knightmare- catch submodel overflow
-	if (count >= MAX_MOD_KNOWN)
-		VID_Error(ERR_DROP, "Mod_LoadSubmodels: too many submodels (%i >= %i) in %s", count, MAX_MOD_KNOWN, loadmodel->name);
+	mmodel_t *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->submodels = out;
 	loadmodel->numsubmodels = count;
@@ -438,11 +431,8 @@ Mod_LoadEdges
 void Mod_LoadEdges (lump_t *l)
 {
 	dedge_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadEdges: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	medge_t *out = Hunk_Alloc((count + 1) * sizeof(*out));
+	medge_t *out = ModChunk_Alloc((count + 1) * sizeof(*out));
 
 	loadmodel->edges = out;
 	loadmodel->numedges = count;
@@ -655,11 +645,8 @@ void Mod_LoadTexinfo (lump_t *l)
 	char name[MAX_QPATH];
 
 	texinfo_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadTexinfo: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	mtexinfo_t *out = Hunk_Alloc(count*sizeof(*out));
+	mtexinfo_t *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->texinfo = out;
 	loadmodel->numtexinfo = count;
@@ -780,11 +767,8 @@ Mod_LoadFaces
 void Mod_LoadFaces (lump_t *l)
 {
 	dface_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadFaces: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	msurface_t *out = Hunk_Alloc(count*sizeof(*out));
+	msurface_t *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->surfaces = out;
 	loadmodel->numsurfaces = count;
@@ -879,11 +863,8 @@ Mod_LoadNodes
 void Mod_LoadNodes (lump_t *l)
 {
 	dnode_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadNodes: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	mnode_t *out = Hunk_Alloc(count * sizeof(*out));
+	mnode_t *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->nodes = out;
 	loadmodel->numnodes = count;
@@ -924,11 +905,8 @@ Mod_LoadLeafs
 void Mod_LoadLeafs (lump_t *l)
 {
 	dleaf_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadLeafs: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	mleaf_t *out = Hunk_Alloc(count * sizeof(*out));
+	mleaf_t *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->leafs = out;
 	loadmodel->numleafs = count;
@@ -977,11 +955,8 @@ Mod_LoadMarksurfaces
 void Mod_LoadMarksurfaces (lump_t *l)
 {
 	unsigned short *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadMarksurfaces: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	msurface_t **out = Hunk_Alloc(count * sizeof(*out));
+	msurface_t **out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->marksurfaces = out;
 	loadmodel->nummarksurfaces = count;
@@ -1004,14 +979,8 @@ Mod_LoadSurfedges
 void Mod_LoadSurfedges (lump_t *l)
 {
 	int *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadSurfedges: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	if (count < 1 || count >= MAX_MAP_SURFEDGES)
-		VID_Error(ERR_DROP, "Mod_LoadSurfedges: bad surfedges count in %s: %i", loadmodel->name, count);
-
-	int *out = Hunk_Alloc(count * sizeof(*out));
+	int *out = ModChunk_Alloc(count * sizeof(*out));
 
 	loadmodel->surfedges = out;
 	loadmodel->numsurfedges = count;
@@ -1029,11 +998,8 @@ Mod_LoadPlanes
 void Mod_LoadPlanes (lump_t *l)
 {
 	dplane_t *in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		VID_Error(ERR_DROP, "Mod_LoadPlanes: funny lump size in %s", loadmodel->name);
-
 	const int count = l->filelen / sizeof(*in);
-	cplane_t *out = Hunk_Alloc(count * sizeof(*out));
+	cplane_t *out = ModChunk_Alloc(count * sizeof(*out));
 	
 	loadmodel->planes = out;
 	loadmodel->numplanes = count;
@@ -1111,26 +1077,169 @@ const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer,
 
 /*
 =================
+Mod_GetAllocSizeBrushModel (mxd)
+=================
+*/
+size_t Mod_GetAllocSizeBrushModel(void *buffer)
+{
+	if (loadmodel != mod_known)
+		VID_Error(ERR_DROP, "Loaded a brush model after the world");
+	
+	// Header...
+	dheader_t *header = (dheader_t *)buffer;
+
+	const int version = LittleLong(header->version);
+	if (version != BSPVERSION)
+		VID_Error(ERR_DROP, "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", loadmodel->name, version, BSPVERSION);
+
+	// swap all the lumps
+	for (unsigned i = 0; i < sizeof(dheader_t) / 4; i++)
+		((int *)header)[i] = LittleLong(((int *)header)[i]);
+
+	size_t allocSize = ALIGN_TO_CACHELINE(sizeof(dheader_t));
+
+	// LUMP_VERTEXES
+	lump_t *l = &header->lumps[LUMP_VERTEXES];
+	if (l->filelen % sizeof(dvertex_t))
+		VID_Error(ERR_DROP, "Mod_LoadVertexes: funny lump size in %s", loadmodel->name);
+
+	int count = l->filelen / sizeof(dvertex_t);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(mvertex_t));
+
+	// LUMP_EDGES
+	l = &header->lumps[LUMP_EDGES];
+	if (l->filelen % sizeof(dedge_t))
+		VID_Error(ERR_DROP, "Mod_LoadEdges: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(dedge_t);
+	allocSize += ALIGN_TO_CACHELINE((count + 1) * sizeof(medge_t));
+
+	// LUMP_SURFEDGES
+	l = &header->lumps[LUMP_SURFEDGES];
+	if (l->filelen % sizeof(int))
+		VID_Error(ERR_DROP, "Mod_LoadSurfedges: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(int);
+	if (count < 1 || count >= MAX_MAP_SURFEDGES)
+		VID_Error(ERR_DROP, "Mod_LoadSurfedges: bad surfedges count in %s: %i", loadmodel->name, count);
+
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(int));
+
+	// LUMP_LIGHTING
+	l = &header->lumps[LUMP_LIGHTING];
+	if (l->filelen > 0)
+		allocSize += ALIGN_TO_CACHELINE(l->filelen);
+
+	// LUMP_PLANES
+	l = &header->lumps[LUMP_PLANES];
+	if (l->filelen % sizeof(dplane_t))
+		VID_Error(ERR_DROP, "Mod_LoadPlanes: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(dplane_t);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(cplane_t));
+
+	// LUMP_TEXINFO
+	l = &header->lumps[LUMP_TEXINFO];
+	if (l->filelen % sizeof(texinfo_t))
+		VID_Error(ERR_DROP, "Mod_LoadTexinfo: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(texinfo_t);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(mtexinfo_t));
+
+	// LUMP_FACES
+	l = &header->lumps[LUMP_FACES];
+	if (l->filelen % sizeof(dface_t))
+		VID_Error(ERR_DROP, "Mod_LoadFaces: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(dface_t);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(msurface_t));
+
+	// Now count all glpoly_t allocations...
+	dface_t *face = (void *)((byte *)header + l->fileofs);
+	lump_t *lt = &header->lumps[LUMP_TEXINFO];
+	texinfo_t *texinfo = (void *)((byte *)header + lt->fileofs);
+
+	for(unsigned i = 0; i < count; i++, face++)
+	{
+		const int numedges = LittleShort(face->numedges);
+		const int flags = texinfo[LittleShort(face->texinfo)].flags;
+		int facesize;
+
+		if(flags & SURF_WARP)
+		{
+			// Assume 4x verts created by warp surface splitting (is this the worst scenario though?)...
+			facesize = sizeof(glpoly_t) + (numedges - 2) * VERTEXSIZE * sizeof(float) * 4;
+			facesize += numedges * 24 * sizeof(byte); // 2x vertex light fields
+		}
+		else
+		{
+			facesize = sizeof(glpoly_t) + (numedges - 4) * VERTEXSIZE * sizeof(float);
+
+			if (flags & (SURF_TRANS33 | SURF_TRANS66)) // 2x vertex light fields
+				facesize += numedges * 6 * sizeof(byte);
+		}
+
+		allocSize += ALIGN_TO_CACHELINE(facesize);
+	}
+
+	// LUMP_LEAFFACES
+	l = &header->lumps[LUMP_LEAFFACES];
+	if (l->filelen % sizeof(short))
+		VID_Error(ERR_DROP, "Mod_LoadMarksurfaces: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(short);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(msurface_t));
+
+	// LUMP_VISIBILITY
+	l = &header->lumps[LUMP_VISIBILITY];
+	if (l->filelen > 0)
+		allocSize += ALIGN_TO_CACHELINE(l->filelen);
+
+	// LUMP_LEAFS
+	l = &header->lumps[LUMP_LEAFS];
+	if (l->filelen % sizeof(dleaf_t))
+		VID_Error(ERR_DROP, "Mod_LoadLeafs: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(dleaf_t);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(mleaf_t));
+
+	// LUMP_NODES
+	l = &header->lumps[LUMP_NODES];
+	if (l->filelen % sizeof(dnode_t))
+		VID_Error(ERR_DROP, "Mod_LoadNodes: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(dnode_t);
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(mnode_t));
+
+	// LUMP_MODELS
+	l = &header->lumps[LUMP_MODELS];
+	if (l->filelen % sizeof(dmodel_t))
+		VID_Error(ERR_DROP, "Mod_LoadSubmodels: funny lump size in %s", loadmodel->name);
+
+	count = l->filelen / sizeof(dmodel_t);
+
+	// Knightmare- catch submodel overflow
+	if (count >= MAX_MOD_KNOWN)
+		VID_Error(ERR_DROP, "Mod_LoadSubmodels: too many submodels (%i >= %i) in %s", count, MAX_MOD_KNOWN, loadmodel->name);
+
+	allocSize += ALIGN_TO_CACHELINE(count * sizeof(mmodel_t));
+
+	// Return total size...
+	return allocSize;
+}
+
+
+/*
+=================
 Mod_LoadBrushModel
 =================
 */
 void Mod_LoadBrushModel (model_t *mod, void *buffer)
 {
 	loadmodel->type = mod_brush;
-	if (loadmodel != mod_known)
-		VID_Error(ERR_DROP, "Loaded a brush model after the world");
 
 	dheader_t *header = (dheader_t *)buffer;
-
-	const int version = LittleLong (header->version);
-	if (version != BSPVERSION)
-		VID_Error(ERR_DROP, "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", mod->name, version, BSPVERSION);
-
-	// swap all the lumps
 	mod_base = (byte *)header;
-
-	for (int i = 0; i < sizeof(dheader_t) / 4; i++)
-		((int *)header)[i] = LittleLong(((int *)header)[i]);
 
 	//mxd. Get _lightmap_scale form worldspawn and store it in gl_lms.lmshift...
 	char scalebuf[16];
@@ -1236,7 +1345,7 @@ void *ModChunk_Begin(size_t maxsize)
 void *ModChunk_Alloc(size_t size)
 {
 	// round to cacheline
-	size = (size + 31) & ~31;
+	size = ALIGN_TO_CACHELINE(size);
 
 	modChunkCurSize += size;
 	if (modChunkCurSize > modChunkMaxSize)
@@ -1276,7 +1385,8 @@ md3 skin protoshaders
 */
 GLenum Mod_ParseBlendMode (char *name)
 {
-	if (!name) return -1;
+	if (!name)
+		return -1;
 
 	if (!Q_strcasecmp(name, "gl_zero"))
 		return GL_ZERO;
@@ -1849,7 +1959,7 @@ size_t Mod_GetAllocSizeMD2Old (void *buffer)
 	size_t allocSize;
 
 	pinmodel = (dmd2_t *)buffer;
-	allocSize = (LittleLong(pinmodel->ofs_end) + 31) & ~31;
+	allocSize = ALIGN_TO_CACHELINE(LittleLong(pinmodel->ofs_end));
 	return allocSize;
 }
 
@@ -2153,14 +2263,14 @@ size_t Mod_GetAllocSizeMD2New(void *buffer)
 	const int numSkins = max(LittleLong(pinmodel->num_skins), 1);	// hack because player models have no skin refs
 
 	// calc sizes rounded to cacheline
-	const size_t headerSize = (sizeof(maliasmodel_t) + 31) & ~31;
-	const size_t meshSize = (sizeof(maliasmesh_t) + 31) & ~31;
-	const size_t indexSize = ((sizeof(index_t) * numTris * 3) + 31) & ~31;
-	const size_t coordSize = ((sizeof(maliascoord_t) * numVerts) + 31) & ~31;
-	const size_t frameSize = ((sizeof(maliasframe_t) * numFrames) + 31) & ~31;
-	const size_t vertSize = ((numFrames * numVerts * sizeof(maliasvertex_t)) + 31) & ~31;
-	const size_t trNeighborsSize = ((sizeof(int) * numTris * 3) + 31) & ~31;
-	const size_t skinSize = ((sizeof(maliasskin_t) * numSkins) + 31) & ~31;
+	const size_t headerSize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
+	const size_t meshSize = ALIGN_TO_CACHELINE(sizeof(maliasmesh_t));
+	const size_t indexSize = ALIGN_TO_CACHELINE(sizeof(index_t) * numTris * 3);
+	const size_t coordSize = ALIGN_TO_CACHELINE(sizeof(maliascoord_t) * numVerts);
+	const size_t frameSize = ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * numFrames);
+	const size_t vertSize = ALIGN_TO_CACHELINE(numFrames * numVerts * sizeof(maliasvertex_t));
+	const size_t trNeighborsSize = ALIGN_TO_CACHELINE(sizeof(int) * numTris * 3);
+	const size_t skinSize = ALIGN_TO_CACHELINE(sizeof(maliasskin_t) * numSkins);
 
 	const size_t allocSize = headerSize + meshSize + indexSize + coordSize + frameSize + vertSize + trNeighborsSize + skinSize;
 
@@ -2395,10 +2505,10 @@ size_t Mod_GetAllocSizeMD3(void *buffer)
 	const int numMeshes = LittleLong(pinmodel->num_meshes);
 
 	// calc sizes rounded to cacheline
-	const size_t headerSize = (sizeof(maliasmodel_t) + 31) & ~31;
-	const size_t frameSize = ((sizeof(maliasframe_t) * numFrames) + 31) & ~31;
-	const size_t tagSize = ((sizeof(maliastag_t) * numFrames * numTags) + 31) & ~31;
-	const size_t meshSize = ((sizeof(maliasmesh_t) * numMeshes) + 31) & ~31;
+	const size_t headerSize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
+	const size_t frameSize = ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * numFrames);
+	const size_t tagSize = ALIGN_TO_CACHELINE(sizeof(maliastag_t) * numFrames * numTags);
+	const size_t meshSize = ALIGN_TO_CACHELINE(sizeof(maliasmesh_t) * numMeshes);
 
 	dmd3mesh_t *pinmesh = (dmd3mesh_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_meshes));
 	size_t skinSize = 0, indexSize = 0, coordSize = 0, vertSize = 0, trNeighborsSize = 0;
@@ -2409,11 +2519,11 @@ size_t Mod_GetAllocSizeMD3(void *buffer)
 		const int numTris = LittleLong(pinmesh->num_tris);
 		const int numVerts = LittleLong(pinmesh->num_verts);
 
-		skinSize += ((sizeof(maliasskin_t) * numSkins) + 31) & ~31;
-		indexSize += ((sizeof(index_t) * numTris * 3) + 31) & ~31;
-		coordSize += ((sizeof(maliascoord_t) * numVerts) + 31) & ~31;
-		vertSize += ((numFrames * numVerts * sizeof(maliasvertex_t)) + 31) & ~31;
-		trNeighborsSize += ((sizeof(int) * numTris * 3) + 31) & ~31;
+		skinSize += ALIGN_TO_CACHELINE(sizeof(maliasskin_t) * numSkins);
+		indexSize += ALIGN_TO_CACHELINE(sizeof(index_t) * numTris * 3);
+		coordSize += ALIGN_TO_CACHELINE(sizeof(maliascoord_t) * numVerts);
+		vertSize += ALIGN_TO_CACHELINE(numFrames * numVerts * sizeof(maliasvertex_t));
+		trNeighborsSize += ALIGN_TO_CACHELINE(sizeof(int) * numTris * 3);
 
 		pinmesh = (dmd3mesh_t *)((byte *)pinmesh + LittleLong(pinmesh->meshsize));
 	}
@@ -2656,7 +2766,7 @@ Calc exact alloc size for sprite in memory
 size_t Mod_GetAllocSizeSprite()
 {
 	// calc memory allocation size
-	return (modfilelen + 31) & ~31;
+	return ALIGN_TO_CACHELINE(modfilelen);
 }
 
 /*
@@ -2833,19 +2943,7 @@ Mod_Free
 */
 void Mod_Free (model_t *mod)
 {
-	// Knightmare- only brush models use the hunk system now
-	switch (mod->type)
-	{
-	case mod_brush:
-		Hunk_Free(mod->extradata);
-		break;
-
-	case mod_alias:
-	case mod_sprite:
-	default:
-		ModChunk_Free(mod->extradata);
-		break;
-	}
+	ModChunk_Free(mod->extradata); //mxd
 
 #ifdef PROJECTION_SHADOWS // projection shadows from BeefQuake R6
 	if (mod->edge_tri)

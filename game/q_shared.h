@@ -493,10 +493,10 @@ void	Sys_Mkdir (char *path);
 void	Sys_Rmdir (char *path);
 
 // large block stack allocation routines
-void	*Hunk_Begin (int maxsize);
+/*void	*Hunk_Begin (int maxsize);
 void	*Hunk_Alloc (int size);
 void	Hunk_Free (void *buf);
-int		Hunk_End (void);
+int		Hunk_End (void);*/
 
 // directory searching
 #define SFF_ARCH    0x01

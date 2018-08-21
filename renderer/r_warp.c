@@ -53,7 +53,7 @@ void SubdividePolygon (int numverts, float *verts)
 	vec3_t	total;
 
 	if (numverts > 60)
-		VID_Error(ERR_DROP, "numverts = %i", numverts);
+		VID_Error(ERR_DROP, "SubdividePolygon: numverts = %i", numverts);
 
 	BoundPoly(numverts, verts, mins, maxs);
 
@@ -78,6 +78,7 @@ void SubdividePolygon (int numverts, float *verts)
 		int f = 0;
 		int b = 0;
 		v = verts;
+
 		for (j = 0; j < numverts; j++, v+= 3)
 		{
 			if (dist[j] >= 0)
@@ -95,7 +96,7 @@ void SubdividePolygon (int numverts, float *verts)
 			if (dist[j] == 0 || dist[j + 1] == 0)
 				continue;
 
-			if ( (dist[j] > 0) != (dist[j + 1] > 0) )
+			if (dist[j] > 0 != dist[j + 1] > 0)
 			{
 				// clip point
 				const float frac = dist[j] / (dist[j] - dist[j + 1]);
@@ -110,19 +111,20 @@ void SubdividePolygon (int numverts, float *verts)
 
 		SubdividePolygon(f, front[0]);
 		SubdividePolygon(b, back[0]);
+
 		return;
 	}
 
 	// add a point in the center to help keep warp valid
-	glpoly_t *poly = Hunk_Alloc(sizeof(glpoly_t) + ((numverts - 4) + 2) * VERTEXSIZE * sizeof(float));
+	glpoly_t *poly = ModChunk_Alloc(sizeof(glpoly_t) + (numverts - 2) * VERTEXSIZE * sizeof(float));
 	poly->next = warpface->polys;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;
 	
 	// alloc vertex light fields
 	const int size = poly->numverts * 3 * sizeof(byte);
-	poly->vertexlight = Hunk_Alloc(size);
-	poly->vertexlightbase = Hunk_Alloc(size);
+	poly->vertexlight = ModChunk_Alloc(size);
+	poly->vertexlightbase = ModChunk_Alloc(size);
 	memset(poly->vertexlight, 0, size);
 	memset(poly->vertexlightbase, 0, size);
 	poly->vertexlightset = false;
@@ -133,7 +135,7 @@ void SubdividePolygon (int numverts, float *verts)
 	float total_t = 0;
 	for (int i = 0; i < numverts; i++, verts += 3)
 	{
-		VectorCopy(verts, poly->verts[i+1]);
+		VectorCopy(verts, poly->verts[i + 1]);
 		const float s = DotProduct(verts, warpface->texinfo->vecs[0]);
 		const float t = DotProduct(verts, warpface->texinfo->vecs[1]);
 
@@ -151,7 +153,7 @@ void SubdividePolygon (int numverts, float *verts)
 	poly->verts[0][4] = total_t / numverts;
 
 	// copy first vertex to last
-	memcpy (poly->verts[numverts + 1], poly->verts[1], sizeof(poly->verts[0]));
+	memcpy(poly->verts[numverts + 1], poly->verts[1], sizeof(poly->verts[0]));
 }
 
 /*
@@ -169,7 +171,6 @@ void R_SubdivideSurface (msurface_t *fa)
 	warpface = fa;
 
 	// convert edges back to a normal polygon
-	int numverts = 0;
 	for (int i = 0; i < fa->numedges; i++)
 	{
 		const int lindex = loadmodel->surfedges[fa->firstedge + i];
@@ -179,11 +180,10 @@ void R_SubdivideSurface (msurface_t *fa)
 		else
 			vec = loadmodel->vertexes[loadmodel->edges[-lindex].v[1]].position;
 
-		VectorCopy(vec, verts[numverts]);
-		numverts++;
+		VectorCopy(vec, verts[i]);
 	}
 
-	SubdividePolygon(numverts, verts[0]);
+	SubdividePolygon(fa->numedges, verts[0]);
 }
 
 //=========================================================
@@ -195,7 +195,7 @@ float	r_turbsin[] =
 {
 	#include "warpsin.h"
 };
-#define TURBSCALE (256.0 / (2 * M_PI))
+#define TURBSCALE (256.0 / M_PI2)
 
 
 
@@ -360,9 +360,11 @@ void RB_RenderWarpSurface (msurface_t *fa)
 		GL_Enable (GL_TEXTURE_SHADER_NV);
 	}
 	else
+	{
 		GL_Bind(image->texnum);
+	}
 
-	RB_DrawArrays ();
+	RB_DrawArrays();
 
 	// MrG - texture shader waterwarp
 	if (texShaderWarpARB)
