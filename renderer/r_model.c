@@ -1156,27 +1156,35 @@ size_t Mod_GetAllocSizeBrushModel(void *buffer)
 
 	// Now count all glpoly_t allocations...
 	dface_t *face = (void *)((byte *)header + l->fileofs);
-	lump_t *lt = &header->lumps[LUMP_TEXINFO];
-	texinfo_t *texinfo = (void *)((byte *)header + lt->fileofs);
+
+	l = &header->lumps[LUMP_TEXINFO];
+	texinfo_t *texinfo = (void *)((byte *)header + l->fileofs);
+
+	l = &header->lumps[LUMP_VERTEXES];
+	dvertex_t *vert = (void *)((byte *)header + l->fileofs);
+
+	l = &header->lumps[LUMP_EDGES];
+	dedge_t *edge = (void *)((byte *)header + l->fileofs);
+
+	l = &header->lumps[LUMP_SURFEDGES];
+	int *surfedge = (void *)((byte *)header + l->fileofs);
 
 	for(unsigned i = 0; i < count; i++, face++)
 	{
-		const int numedges = LittleShort(face->numedges);
-		const int flags = texinfo[LittleShort(face->texinfo)].flags;
+		const int flags = LittleLong(texinfo[LittleShort(face->texinfo)].flags);
 		int facesize;
 
 		if(flags & SURF_WARP)
 		{
-			// Assume 4x verts created by warp surface splitting (is this the worst scenario though?)...
-			facesize = sizeof(glpoly_t) + (numedges - 2) * VERTEXSIZE * sizeof(float) * 4;
-			facesize += numedges * 24 * sizeof(byte); // 2x vertex light fields
+			facesize = R_GetWarpSurfaceVertsSize(face, vert, edge, surfedge);
 		}
 		else
 		{
-			facesize = sizeof(glpoly_t) + (numedges - 4) * VERTEXSIZE * sizeof(float);
+			const int numverts = LittleShort(face->numedges);
+			facesize = sizeof(glpoly_t) + (numverts - 4) * VERTEXSIZE * sizeof(float);
 
 			if (flags & (SURF_TRANS33 | SURF_TRANS66)) // 2x vertex light fields
-				facesize += numedges * 6 * sizeof(byte);
+				facesize += numverts * 6 * sizeof(byte);
 		}
 
 		allocSize += ALIGN_TO_CACHELINE(facesize);

@@ -186,6 +186,120 @@ void R_SubdivideSurface (msurface_t *fa)
 	SubdividePolygon(fa->numedges, verts[0]);
 }
 
+/*
+================
+R_GetWarpSurfaceVertsCount (mxd)
+
+Returns the number of verts, which will be created during warp polygon subdivision.
+Used in Mod_GetAllocSizeBrushModel.
+================
+*/
+
+size_t warppolyvertssize; //in bytes
+
+void CalculateWarpPolygonVertsSize(int numverts, float *verts)
+{
+	int		j;
+	vec3_t	mins, maxs;
+	vec3_t	front[64], back[64];
+	float	dist[64];
+	
+	if (numverts > 60)
+		VID_Error(ERR_DROP, "SubdividePolygon: numverts = %i", numverts);
+
+	BoundPoly(numverts, verts, mins, maxs);
+
+	for (int i = 0; i < 3; i++)
+	{
+		float m = (mins[i] + maxs[i]) * 0.5;
+		m = SUBDIVIDE_SIZE * floor(m / SUBDIVIDE_SIZE + 0.5);
+
+		if (maxs[i] - m < 8 || m - mins[i] < 8)
+			continue;
+
+		// cut it
+		float *v = verts + i;
+		for (j = 0; j < numverts; j++, v += 3)
+			dist[j] = *v - m;
+
+		// wrap cases
+		dist[j] = dist[0];
+		v -= i;
+		VectorCopy(verts, v);
+
+		int f = 0;
+		int b = 0;
+		v = verts;
+
+		for (j = 0; j < numverts; j++, v += 3)
+		{
+			if (dist[j] >= 0)
+			{
+				VectorCopy(v, front[f]);
+				f++;
+			}
+
+			if (dist[j] <= 0)
+			{
+				VectorCopy(v, back[b]);
+				b++;
+			}
+
+			if (dist[j] == 0 || dist[j + 1] == 0)
+				continue;
+
+			if (dist[j] > 0 != dist[j + 1] > 0)
+			{
+				// clip point
+				const float frac = dist[j] / (dist[j] - dist[j + 1]);
+
+				for (int k = 0; k < 3; k++)
+					front[f][k] = back[b][k] = v[k] + frac * (v[3 + k] - v[k]);
+
+				f++;
+				b++;
+			}
+		}
+
+		CalculateWarpPolygonVertsSize(f, front[0]);
+		CalculateWarpPolygonVertsSize(b, back[0]);
+
+		return;
+	}
+
+	// Add to total size...
+	warppolyvertssize += sizeof(glpoly_t) + (numverts - 2) * VERTEXSIZE * sizeof(float); // Center point...
+	warppolyvertssize += (numverts + 2) * 6 * sizeof(byte); // 2x vertex light fields
+}
+
+size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *edges, int *surfedges)
+{
+	vec3_t verts[64];
+
+	const int numedges = LittleShort(face->numedges);
+	const int firstedge = LittleLong(face->firstedge);
+
+	// convert edges back to a normal polygon
+	for (int i = 0; i < numedges; i++)
+	{
+		const int lindex = LittleLong(surfedges[firstedge + i]);
+		
+		int vindex;
+		if (lindex > 0)
+			vindex = (unsigned short)LittleShort(edges[lindex].v[0]);
+		else
+			vindex = (unsigned short)LittleShort(edges[-lindex].v[1]);
+
+		for (int c = 0; c < 3; c++)
+			verts[i][c] = LittleFloat(vertexes[vindex].point[c]);
+	}
+
+	warppolyvertssize = 0;
+	CalculateWarpPolygonVertsSize(numedges, verts[0]);
+
+	return warppolyvertssize;
+}
+
 //=========================================================
 
 

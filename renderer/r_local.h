@@ -590,6 +590,7 @@ extern GLuint vertex_programs[NUM_VERTEX_PROGRAM];
 //
 void R_InitDSTTex();
 void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render);
+size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *edges, int *surfedges); //mxd
 
 
 //
