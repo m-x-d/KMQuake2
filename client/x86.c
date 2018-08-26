@@ -28,7 +28,7 @@ static unsigned long *histogram;
 static unsigned long start, range;
 static unsigned long bias;
 
-__declspec( naked ) void x86_TimerStart( void )
+__declspec(naked) void x86_TimerStart(void)
 {
 	__asm _emit 0fh
 	__asm _emit 31h
@@ -36,7 +36,7 @@ __declspec( naked ) void x86_TimerStart( void )
 	__asm ret
 }
 
-__declspec( naked ) void x86_TimerStop( void )
+__declspec(naked) void x86_TimerStop(void)
 {
 	__asm push edi
 	__asm mov edi, histogram
@@ -54,8 +54,8 @@ discard:
 	__asm ret
 }
 
-#pragma warning( disable: 4035 )
-static __declspec( naked ) unsigned long x86_TimerStopBias( void )
+#pragma warning(disable: 4035)
+static __declspec(naked) unsigned long x86_TimerStopBias(void)
 {
 	__asm push edi
 	__asm mov edi, histogram
@@ -65,30 +65,27 @@ static __declspec( naked ) unsigned long x86_TimerStopBias( void )
 	__asm pop edi
 	__asm ret
 }
-#pragma warning( default:4035 )
+#pragma warning(default:4035)
 
-void x86_TimerInit( unsigned long smallest, unsigned length )
+void x86_TimerInit(unsigned long smallest, unsigned length)
 {
-	int i;
 	unsigned long biastable[100];
 
 	range = length;
 	bias = 10000;
 
-	for ( i = 0; i < 100; i++ )
+	for (int i = 0; i < 100; i++)
 	{
 		x86_TimerStart();
 		biastable[i] = x86_TimerStopBias();
-
-		if ( bias > biastable[i] )
-			bias = biastable[i];
+		bias = min(biastable[i], bias);
 	}
 
 	bias += smallest;
-	histogram = Z_Malloc( range * sizeof( unsigned long ) );
+	histogram = Z_Malloc(range * sizeof(unsigned long));
 }
 
-unsigned long *x86_TimerGetHistogram( void )
+unsigned long *x86_TimerGetHistogram(void)
 {
 	return histogram;
 }

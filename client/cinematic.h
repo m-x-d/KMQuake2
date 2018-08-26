@@ -18,7 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-
 #ifndef __CINEMATIC_H__
 #define __CINEMATIC_H__
 
@@ -32,21 +31,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef int cinHandle_t;
 
-// Will run a frame of the cinematic but will not draw it. Will return
-// false if the end of the cinematic has been reached.
-qboolean	CIN_RunCinematic (cinHandle_t handle);
+// Will run a frame of the cinematic but will not draw it. Will return false if the end of the cinematic has been reached.
+qboolean CIN_RunCinematic(cinHandle_t handle);
 
 // Allows you to resize the animation dynamically
-void		CIN_SetExtents (cinHandle_t handle, int x, int y, int width, int height);
+void CIN_SetExtents(cinHandle_t handle, int x, int y, int width, int height);
 
 // Draws the current frame
-void		CIN_DrawCinematic (cinHandle_t handle);
+void CIN_DrawCinematic(cinHandle_t handle);
 
 // Returns a handle to the cinematic
-cinHandle_t	CIN_PlayCinematic (const char *name, int x, int y, int width, int height, int flags);
+cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int width, int height, int flags);
 
 // Stops playing the cinematic
-void		CIN_StopCinematic (cinHandle_t handle);
-
+void CIN_StopCinematic(cinHandle_t handle);
 
 #endif	// __CINEMATIC_H__

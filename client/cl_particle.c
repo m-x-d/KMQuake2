@@ -87,7 +87,7 @@ CL_GetRandomBloodParticle
 */
 int CL_GetRandomBloodParticle (void)
 {
-	return particle_blooddecal1 + rand()%5;
+	return particle_blooddecal1 + rand() % 5;
 }
 
 
@@ -136,7 +136,9 @@ void CL_CleanDecalPolys (void)
 		d->next = NULL;
 
 		if (!tail)
+		{
 			active = tail = d;
+		}
 		else
 		{
 			tail->next = d;
@@ -158,8 +160,10 @@ void CL_ClearDecalPoly (decalpolys_t *decal)
 {
 	if (!decal)
 		return;
+
 	if (decal->nextpoly)
 		CL_ClearDecalPoly(decal->nextpoly);
+
 	decal->clearflag = true; // tell cleaning loop to clean this up
 }
 
@@ -175,7 +179,7 @@ void CL_ClearAllDecalPolys (void)
 	free_decals = &decalfrags[0];
 	active_decals = NULL;
 
-	for (int i = 0 ;i < cl_numdecalfrags ; i++)
+	for (int i = 0; i < cl_numdecalfrags; i++)
 	{
 		decalfrags[i].next = &decalfrags[i+1];
 		decalfrags[i].clearflag = false;
@@ -183,6 +187,7 @@ void CL_ClearAllDecalPolys (void)
 		decalfrags[i].nextpoly = NULL;
 		decalfrags[i].node = NULL; // vis node
 	}
+
 	decalfrags[cl_numdecalfrags - 1].next = NULL;
 }
 
@@ -198,6 +203,7 @@ int CL_NumFreeDecalPolys (void)
 	int count = 0;
 	for (decalpolys_t *d = free_decals; d; d = d->next)
 		count++;
+
 	return count;
 }
 
@@ -217,6 +223,7 @@ decalpolys_t *CL_NewDecalPoly(void)
 	free_decals = d->next;
 	d->next = active_decals;
 	active_decals = d;
+
 	return d;
 }
 
@@ -228,30 +235,30 @@ CL_ClipDecal
 */
 void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir)
 {
-	vec3_t	axis[3], verts[MAX_DECAL_VERTS];
+	vec3_t axis[3], verts[MAX_DECAL_VERTS];
 	int i;
 	markFragment_t *fr, fragments[MAX_FRAGMENTS_PER_DECAL];
 	
 	// invalid decal
-	if ( radius <= 0 || VectorCompare (dir, vec3_origin) ) 
+	if (radius <= 0 || VectorCompare(dir, vec3_origin)) 
 		return;
 
 	// calculate orientation matrix
-	VectorNormalize2 ( dir, axis[0] );
-	PerpendicularVector ( axis[1], axis[0] );
-	RotatePointAroundVector ( axis[2], axis[0], axis[1], orient );
-	CrossProduct ( axis[0], axis[2], axis[1] );
+	VectorNormalize2(dir, axis[0]);
+	PerpendicularVector(axis[1], axis[0]);
+	RotatePointAroundVector(axis[2], axis[0], axis[1], orient);
+	CrossProduct(axis[0], axis[2], axis[1]);
 
-	const int numfragments = R_MarkFragments (origin, axis, radius, MAX_DECAL_VERTS, verts, MAX_FRAGMENTS_PER_DECAL, fragments);
+	const int numfragments = R_MarkFragments(origin, axis, radius, MAX_DECAL_VERTS, verts, MAX_FRAGMENTS_PER_DECAL, fragments);
 	
 	if (numfragments == 0 || numfragments > CL_NumFreeDecalPolys()) // nothing to display / not enough decalpolys free
 		return;
 	
-	VectorScale ( axis[1], 0.5f / radius, axis[1] );
-	VectorScale ( axis[2], 0.5f / radius, axis[2] );
+	VectorScale(axis[1], 0.5f / radius, axis[1]);
+	VectorScale(axis[2], 0.5f / radius, axis[2]);
 
 	part->decalnum = numfragments;
-	for ( i = 0, fr = fragments; i < numfragments; i++, fr++ )
+	for (i = 0, fr = fragments; i < numfragments; i++, fr++)
 	{
 		decalpolys_t *decal = CL_NewDecalPoly();
 		vec3_t v;
@@ -261,15 +268,14 @@ void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin,
 
 		decal->nextpoly = part->decal;
 		part->decal = decal;
-		//Com_Printf("Number of verts in fragment: %i\n", fr->numPoints);
 		decal->node = fr->node; // vis node
 
-		for (int j = 0; j < fr->numPoints && j < MAX_VERTS_PER_FRAGMENT; j++ )
+		for (int j = 0; j < fr->numPoints && j < MAX_VERTS_PER_FRAGMENT; j++)
 		{
-			VectorCopy ( verts[fr->firstPoint+j], decal->polys[j] );
-			VectorSubtract ( decal->polys[j], origin, v );
-			decal->coords[j][0] = DotProduct ( v, axis[1] ) + 0.5f;
-			decal->coords[j][1] = DotProduct ( v, axis[2] ) + 0.5f;
+			VectorCopy(verts[fr->firstPoint + j], decal->polys[j]);
+			VectorSubtract(decal->polys[j], origin, v);
+			decal->coords[j][0] = DotProduct(v, axis[1]) + 0.5f;
+			decal->coords[j][1] = DotProduct(v, axis[2]) + 0.5f;
 			decal->numpolys = fr->numPoints;
 		}
 	}
@@ -281,10 +287,9 @@ void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin,
 CL_NewParticleTime
 ===============
 */
-float CL_NewParticleTime (void)
+float CL_NewParticleTime(void)
 {
-	float lerpedTime = cl.time;
-	return lerpedTime;
+	return (float)cl.time;
 }
 
 
@@ -302,7 +307,7 @@ cparticle_t *CL_SetupParticle (
 			float colorvel0,	float colorvel1,	float colorvel2,
 			float alpha,		float alphavel,
 			int	blendfunc_src,	int blendfunc_dst,
-			float size,			float sizevel,			
+			float size,			float sizevel,
 			int	image,
 			int flags,
 			void (*think)(cparticle_t *p, vec3_t p_org, vec3_t p_angle, float *p_alpha, float *p_size, int *p_image, float *p_time),
@@ -507,12 +512,10 @@ void CL_ClearParticles (void)
 
 /*
 ======================================
-
-GENERIC PARTICLE THINKING ROUTINES
-
+	GENERIC PARTICLE THINKING ROUTINES
 ======================================
 */
-//#define SplashSize		10
+
 #define	STOP_EPSILON	0.1
 
 /*
@@ -557,7 +560,7 @@ CL_ParticleBounceThink
 void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
 	const float clipsize = max(*size * 0.5, 0.25);
-	trace_t tr = CL_BrushTrace (p->oldorg, org, clipsize, MASK_SOLID); // was 1
+	trace_t tr = CL_BrushTrace(p->oldorg, org, clipsize, MASK_SOLID); // was 1
 	
 	if (tr.fraction < 1)
 	{
@@ -748,12 +751,12 @@ void CL_AddParticles (void)
 CL_ClearEffects
 ==============
 */
-void CL_ClearEffects (void)
+void CL_ClearEffects(void)
 {
-	CL_ClearParticles ();
-	CL_ClearAllDecalPolys ();
-	CL_ClearDlights ();
-	CL_ClearLightStyles ();
+	CL_ClearParticles();
+	CL_ClearAllDecalPolys();
+	CL_ClearDlights();
+	CL_ClearLightStyles();
 }
 
 
@@ -766,8 +769,7 @@ Called during a vid_restart
 */
 void CL_UnclipDecals (void)
 {
-	//Com_Printf ("Unclipping decals\n");
-	for (cparticle_t *p = active_particles; p; p=p->next)
+	for (cparticle_t *p = active_particles; p; p = p->next)
 	{
 		p->decalnum = 0;
 		p->decal = NULL;
@@ -786,11 +788,11 @@ Called during a vid_restart
 */
 void CL_ReclipDecals (void)
 {
-	//Com_Printf ("Reclipping decals\n");
 	for (cparticle_t *p = active_particles; p; p = p->next)
 	{
 		p->decalnum = 0;
 		p->decal = NULL;
+
 		if (p->flags & PART_DECAL)
 		{
 			vec3_t dir;

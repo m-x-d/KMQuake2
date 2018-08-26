@@ -1168,10 +1168,10 @@ void	G_UseTarget (edict_t *ent, edict_t *activator, edict_t *target);
 qboolean IsIdMap (void); //Knightmare added
 void my_bprintf (int printlevel, char *fmt, ...);
 
-void	G_ProjectSource2 (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t up, vec3_t result);
-float	vectoyaw2 (vec3_t vec);
-void	vectoangles2 (vec3_t vec, vec3_t angles);
-edict_t *findradius2 (edict_t *from, vec3_t org, float rad);
+void G_ProjectSource2(vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t up, vec3_t result);
+float vectoyaw2(vec3_t vec);
+void vectoangles2(vec3_t vec, vec3_t angles);
+//edict_t *findradius2 (edict_t *from, vec3_t org, float rad);
 
 //
 // g_weapon.c
@@ -1180,6 +1180,7 @@ edict_t *findradius2 (edict_t *from, vec3_t org, float rad);
 #define BLASTER_GREEN	2
 #define BLASTER_BLUE	3
 #define BLASTER_RED		4
+
 void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin, int skin, int effects);
 qboolean fire_hit (edict_t *self, vec3_t aim, int damage, int kick);
 void fire_bullet (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod);

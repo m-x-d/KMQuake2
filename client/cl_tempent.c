@@ -56,9 +56,9 @@ typedef struct
 	vec3_t	offset;
 	vec3_t	start, end;
 } beam_t;
-beam_t		cl_beams[MAX_BEAMS];
-//PMM - added this for player-linked beams.  Currently only used by the plasma beam
-beam_t		cl_playerbeams[MAX_BEAMS];
+
+beam_t	cl_beams[MAX_BEAMS];
+beam_t	cl_playerbeams[MAX_BEAMS]; //PMM - added this for player-linked beams.  Currently only used by the plasma beam
 
 
 #define	MAX_LASERS	512 // was 32
@@ -74,24 +74,24 @@ cl_sustain_t	cl_sustains[MAX_SUSTAINS];
 //ROGUE
 
 //PGM
-extern void CL_TeleportParticles (vec3_t org);
+extern void CL_TeleportParticles(vec3_t org);
 //PGM
 
 void CL_ExplosionParticles(const vec3_t org); //mxd. Vanilla particles
 
 // Psychospaz's enhanced particle code
-void CL_Explosion_Particle (vec3_t org, float scale, qboolean rocket);
-void CL_Explosion_FlashParticle (vec3_t org, float size, qboolean large);
-void CL_BloodHit (vec3_t org, vec3_t dir);
-void CL_GreenBloodHit (vec3_t org, vec3_t dir);
-void CL_ParticleEffectSparks (vec3_t org, vec3_t dir, vec3_t color, int count);
+void CL_Explosion_Particle(vec3_t org, float scale, qboolean rocket);
+void CL_Explosion_FlashParticle(vec3_t org, float size, qboolean large);
+void CL_BloodHit(vec3_t org, vec3_t dir);
+void CL_GreenBloodHit(vec3_t org, vec3_t dir);
+void CL_ParticleEffectSparks(vec3_t org, vec3_t dir, vec3_t color, int count);
 void CL_ParticleBulletDecal(vec3_t org, vec3_t dir, float size);
 void CL_ParticlePlasmaBeamDecal(vec3_t org, vec3_t dir, float size);
-void CL_ParticleBlasterDecal (vec3_t org, vec3_t dir, float size, int red, int green, int blue);
-void CL_Explosion_Decal (vec3_t org, float size, int decalnum);
+void CL_ParticleBlasterDecal(vec3_t org, vec3_t dir, float size, int red, int green, int blue);
+void CL_Explosion_Decal(vec3_t org, float size, int decalnum);
 
-void CL_Explosion_Sparks (vec3_t org, int size, int count);
-void CL_BFGExplosionParticles (vec3_t org);
+void CL_Explosion_Sparks(vec3_t org, int size, int count);
+void CL_BFGExplosionParticles(vec3_t org);
 
 clientMedia_t clMedia;
 
@@ -104,111 +104,96 @@ CL_RegisterTEntSounds
 */
 void CL_RegisterTEntSounds (void)
 {
-	int		i;
-	char	name[MAX_QPATH];
+	char name[MAX_QPATH];
 
-	clMedia.sfx_ric[0] = S_RegisterSound ("world/ric1.wav");
-	clMedia.sfx_ric[1] = S_RegisterSound ("world/ric2.wav");
-	clMedia.sfx_ric[2] = S_RegisterSound ("world/ric3.wav");
+	clMedia.sfx_ric[0] = S_RegisterSound("world/ric1.wav");
+	clMedia.sfx_ric[1] = S_RegisterSound("world/ric2.wav");
+	clMedia.sfx_ric[2] = S_RegisterSound("world/ric3.wav");
 	clMedia.sfx_lashit = S_RegisterSound("weapons/lashit.wav");
-	clMedia.sfx_spark[0] = S_RegisterSound ("world/spark5.wav");
-	clMedia.sfx_spark[1] = S_RegisterSound ("world/spark6.wav");
-	clMedia.sfx_spark[2] = S_RegisterSound ("world/spark7.wav");
-	clMedia.sfx_railg = S_RegisterSound ("weapons/railgf1a.wav");
-	clMedia.sfx_rockexp = S_RegisterSound ("weapons/rocklx1a.wav");
-	clMedia.sfx_grenexp = S_RegisterSound ("weapons/grenlx1a.wav");
-	clMedia.sfx_watrexp = S_RegisterSound ("weapons/xpld_wat.wav");
+	clMedia.sfx_spark[0] = S_RegisterSound("world/spark5.wav");
+	clMedia.sfx_spark[1] = S_RegisterSound("world/spark6.wav");
+	clMedia.sfx_spark[2] = S_RegisterSound("world/spark7.wav");
+	clMedia.sfx_railg = S_RegisterSound("weapons/railgf1a.wav");
+	clMedia.sfx_rockexp = S_RegisterSound("weapons/rocklx1a.wav");
+	clMedia.sfx_grenexp = S_RegisterSound("weapons/grenlx1a.wav");
+	clMedia.sfx_watrexp = S_RegisterSound("weapons/xpld_wat.wav");
 	// Xatrix
-	clMedia.sfx_plasexp = S_RegisterSound ("weapons/plasexpl.wav");
+	clMedia.sfx_plasexp = S_RegisterSound("weapons/plasexpl.wav");
 	// Rogue
-	clMedia.sfx_lightning = S_RegisterSound ("weapons/tesla.wav");
-	clMedia.sfx_disrexp = S_RegisterSound ("weapons/disrupthit.wav");
+	clMedia.sfx_lightning = S_RegisterSound("weapons/tesla.wav");
+	clMedia.sfx_disrexp = S_RegisterSound("weapons/disrupthit.wav");
 	// shockwave impact
-	clMedia.sfx_shockhit = S_RegisterSound ("weapons/shockhit.wav");
+	clMedia.sfx_shockhit = S_RegisterSound("weapons/shockhit.wav");
 
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/step%i.wav", i+1);
-		clMedia.sfx_footsteps[i] = S_RegisterSound (name);
-	}
+	for (int i = 0; i < 4; i++)
+	{
+		Com_sprintf(name, sizeof(name), "player/step%i.wav", i + 1);
+		clMedia.sfx_footsteps[i] = S_RegisterSound(name);
 
-	// Lazarus footstep sounds
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_metal%i.wav", i+1);
-		clMedia.sfx_metal_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_dirt%i.wav", i+1);
-		clMedia.sfx_dirt_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_duct%i.wav", i+1);
-		clMedia.sfx_vent_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_grate%i.wav", i+1);
-		clMedia.sfx_grate_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_tile%i.wav", i+1);
-		clMedia.sfx_tile_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_grass%i.wav", i+1);
-		clMedia.sfx_grass_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_snow%i.wav", i+1);
-		clMedia.sfx_snow_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_carpet%i.wav", i+1);
-		clMedia.sfx_carpet_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_force%i.wav", i+1);
-		clMedia.sfx_force_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0 ; i<4 ; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_gravel%i.wav", i+1);
-		clMedia.sfx_gravel_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0; i<4; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_ice%i.wav", i+1);
-		clMedia.sfx_ice_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0; i<4; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_sand%i.wav", i+1);
-		clMedia.sfx_sand_footsteps[i] = S_RegisterSound (name);
-	}
-	for (i=0; i<4; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_wood%i.wav", i+1);
-		clMedia.sfx_wood_footsteps[i] = S_RegisterSound (name);
+		// Lazarus footstep sounds
+		Com_sprintf(name, sizeof(name), "player/pl_metal%i.wav", i + 1);
+		clMedia.sfx_metal_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_dirt%i.wav", i + 1);
+		clMedia.sfx_dirt_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_duct%i.wav", i + 1);
+		clMedia.sfx_vent_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_grate%i.wav", i + 1);
+		clMedia.sfx_grate_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_tile%i.wav", i + 1);
+		clMedia.sfx_tile_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_grass%i.wav", i + 1);
+		clMedia.sfx_grass_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_snow%i.wav", i + 1);
+		clMedia.sfx_snow_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_carpet%i.wav", i + 1);
+		clMedia.sfx_carpet_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_force%i.wav", i + 1);
+		clMedia.sfx_force_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_gravel%i.wav", i + 1);
+		clMedia.sfx_gravel_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_ice%i.wav", i + 1);
+		clMedia.sfx_ice_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_sand%i.wav", i + 1);
+		clMedia.sfx_sand_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_wood%i.wav", i + 1);
+		clMedia.sfx_wood_footsteps[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_slosh%i.wav", i + 1);
+		clMedia.sfx_slosh[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_wade%i.wav", i + 1);
+		clMedia.sfx_wade[i] = S_RegisterSound(name);
+
+		Com_sprintf(name, sizeof(name), "player/pl_ladder%i.wav", i + 1);
+		clMedia.sfx_ladder[i] = S_RegisterSound(name);
 	}
 
-	for (i=0; i<4; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_slosh%i.wav", i+1);
-		clMedia.sfx_slosh[i] = S_RegisterSound (name);
+	for (int i = 0; i < 2; i++)
+	{
+		Com_sprintf(name, sizeof(name), "mud/wade_mud%i.wav", i + 1);
+		clMedia.sfx_mud_wade[i] = S_RegisterSound(name);
 	}
-	for (i=0; i<4; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_wade%i.wav", i+1);
-		clMedia.sfx_wade[i] = S_RegisterSound (name);
-	}
-	for (i=0; i<2; i++) {
-		Com_sprintf (name, sizeof(name), "mud/wade_mud%i.wav", i+1);
-		clMedia.sfx_mud_wade[i] = S_RegisterSound (name);
-	}
-	for (i=0; i<4; i++) {
-		Com_sprintf (name, sizeof(name), "player/pl_ladder%i.wav", i+1);
-		clMedia.sfx_ladder[i] = S_RegisterSound (name);
-	}
+
 	// read footstep defintion file
 	if (cl_footstep_override->value)
 		ReadTextureSurfaceAssignments();
 	// end Lazarus footstep sounds
 
-	S_RegisterSound ("player/land1.wav");
-	S_RegisterSound ("player/fall2.wav");
-	S_RegisterSound ("player/fall1.wav");
+	S_RegisterSound("player/land1.wav");
+	S_RegisterSound("player/fall2.wav");
+	S_RegisterSound("player/fall1.wav");
 }	
 
 /*
@@ -218,40 +203,40 @@ CL_RegisterTEntModels
 */
 void CL_RegisterTEntModels (void)
 {
-	clMedia.mod_explode = R_RegisterModel ("models/objects/explode/tris.md2");
-	clMedia.mod_smoke = R_RegisterModel ("models/objects/smoke/tris.md2");
-	clMedia.mod_flash = R_RegisterModel ("models/objects/flash/tris.md2");
-	clMedia.mod_parasite_segment = R_RegisterModel ("models/monsters/parasite/segment/tris.md2");
-	clMedia.mod_grapple_cable = R_RegisterModel ("models/ctf/segment/tris.md2");
-	clMedia.mod_parasite_tip = R_RegisterModel ("models/monsters/parasite/tip/tris.md2");
-	clMedia.mod_explo = R_RegisterModel ("models/objects/r_explode/tris.md2");
-	clMedia.mod_bfg_explo = R_RegisterModel ("sprites/s_bfg2.sp2");
-	clMedia.mod_powerscreen = R_RegisterModel ("models/items/armor/effect/tris.md2");
+	clMedia.mod_explode = R_RegisterModel("models/objects/explode/tris.md2");
+	clMedia.mod_smoke = R_RegisterModel("models/objects/smoke/tris.md2");
+	clMedia.mod_flash = R_RegisterModel("models/objects/flash/tris.md2");
+	clMedia.mod_parasite_segment = R_RegisterModel("models/monsters/parasite/segment/tris.md2");
+	clMedia.mod_grapple_cable = R_RegisterModel("models/ctf/segment/tris.md2");
+	clMedia.mod_parasite_tip = R_RegisterModel("models/monsters/parasite/tip/tris.md2");
+	clMedia.mod_explo = R_RegisterModel("models/objects/r_explode/tris.md2");
+	clMedia.mod_bfg_explo = R_RegisterModel("sprites/s_bfg2.sp2");
+	clMedia.mod_powerscreen = R_RegisterModel("models/items/armor/effect/tris.md2");
 
 	// Rogue
-	clMedia.mod_explo_big = R_RegisterModel ("models/objects/r_explode2/tris.md2");
-	clMedia.mod_lightning = R_RegisterModel ("models/proj/lightning/tris.md2");
-	clMedia.mod_heatbeam = R_RegisterModel ("models/proj/beam/tris.md2");
-	clMedia.mod_monster_heatbeam = R_RegisterModel ("models/proj/widowbeam/tris.md2");
+	clMedia.mod_explo_big = R_RegisterModel("models/objects/r_explode2/tris.md2");
+	clMedia.mod_lightning = R_RegisterModel("models/proj/lightning/tris.md2");
+	clMedia.mod_heatbeam = R_RegisterModel("models/proj/beam/tris.md2");
+	clMedia.mod_monster_heatbeam = R_RegisterModel("models/proj/widowbeam/tris.md2");
 
 	// new effect models
-	clMedia.mod_shocksplash = R_RegisterModel ("models/objects/shocksplash/tris.md2");
+	clMedia.mod_shocksplash = R_RegisterModel("models/objects/shocksplash/tris.md2");
 
-	R_RegisterModel ("models/objects/laser/tris.md2");
-	R_RegisterModel ("models/objects/grenade2/tris.md2");
-	R_RegisterModel ("models/weapons/v_machn/tris.md2");
-	R_RegisterModel ("models/weapons/v_handgr/tris.md2");
-	R_RegisterModel ("models/weapons/v_shotg2/tris.md2");
-	R_RegisterModel ("models/objects/gibs/bone/tris.md2");
-	R_RegisterModel ("models/objects/gibs/sm_meat/tris.md2");
-	R_RegisterModel ("models/objects/gibs/bone2/tris.md2");
+	R_RegisterModel("models/objects/laser/tris.md2");
+	R_RegisterModel("models/objects/grenade2/tris.md2");
+	R_RegisterModel("models/weapons/v_machn/tris.md2");
+	R_RegisterModel("models/weapons/v_handgr/tris.md2");
+	R_RegisterModel("models/weapons/v_shotg2/tris.md2");
+	R_RegisterModel("models/objects/gibs/bone/tris.md2");
+	R_RegisterModel("models/objects/gibs/sm_meat/tris.md2");
+	R_RegisterModel("models/objects/gibs/bone2/tris.md2");
 	// Xatrix
 //	R_RegisterModel ("models/objects/blaser/tris.md2");
 
-	R_DrawFindPic ("w_machinegun");
-	R_DrawFindPic ("a_bullets");
-	R_DrawFindPic ("i_health");
-	R_DrawFindPic ("a_grenades");
+	R_DrawFindPic("w_machinegun");
+	R_DrawFindPic("a_bullets");
+	R_DrawFindPic("i_health");
+	R_DrawFindPic("a_grenades");
 }	
 
 /*
@@ -261,14 +246,14 @@ CL_ClearTEnts
 */
 void CL_ClearTEnts (void)
 {
-	memset (cl_beams, 0, sizeof(cl_beams));
-	memset (cl_explosions, 0, sizeof(cl_explosions));
-	memset (cl_lasers, 0, sizeof(cl_lasers));
+	memset(cl_beams, 0, sizeof(cl_beams));
+	memset(cl_explosions, 0, sizeof(cl_explosions));
+	memset(cl_lasers, 0, sizeof(cl_lasers));
 
-//ROGUE
-	memset (cl_playerbeams, 0, sizeof(cl_playerbeams));
-	memset (cl_sustains, 0, sizeof(cl_sustains));
-//ROGUE
+	//ROGUE
+	memset(cl_playerbeams, 0, sizeof(cl_playerbeams));
+	memset(cl_sustains, 0, sizeof(cl_sustains));
+	//ROGUE
 }
 
 //mxd
@@ -321,7 +306,7 @@ explosion_t *CL_AllocExplosion (void)
 	{
 		if (cl_explosions[i].type == ex_free)
 		{
-			memset (&cl_explosions[i], 0, sizeof (cl_explosions[i]));
+			memset(&cl_explosions[i], 0, sizeof (cl_explosions[i]));
 			return &cl_explosions[i];
 		}
 	}
@@ -339,7 +324,7 @@ explosion_t *CL_AllocExplosion (void)
 		}
 	}
 
-	memset (&cl_explosions[index], 0, sizeof (cl_explosions[index]));
+	memset(&cl_explosions[index], 0, sizeof (cl_explosions[index]));
 	return &cl_explosions[index];
 }
 
@@ -383,7 +368,7 @@ void CL_SmokeAndFlash(vec3_t origin)
 	//mxd. Classic particles
 	if (r_particle_mode->integer == 0)
 	{
-		ex = CL_AllocExplosion ();
+		ex = CL_AllocExplosion();
 		VectorCopy(origin, ex->ent.origin);
 		ex->type = ex_misc;
 		ex->frames = 4;
@@ -392,7 +377,7 @@ void CL_SmokeAndFlash(vec3_t origin)
 		ex->ent.model = clMedia.mod_smoke;
 	}
 
-	ex = CL_AllocExplosion ();
+	ex = CL_AllocExplosion();
 	VectorCopy(origin, ex->ent.origin);
 	ex->type = ex_flash;
 	ex->ent.flags |= RF_FULLBRIGHT;
@@ -453,12 +438,12 @@ CL_ParseBeam2
 */
 int CL_ParseBeam2 (struct model_s *model)
 {
-	const int ent = MSG_ReadShort (&net_message);
-	
+	const int ent = MSG_ReadShort(&net_message);
+
 	vec3_t	start, end, offset;
-	MSG_ReadPos (&net_message, start);
-	MSG_ReadPos (&net_message, end);
-	MSG_ReadPos (&net_message, offset);
+	MSG_ReadPos(&net_message, start);
+	MSG_ReadPos(&net_message, end);
+	MSG_ReadPos(&net_message, offset);
 
 	//mxd
 	beam_t *b = CL_FindFreeBeam(ent, cl_beams);
@@ -484,27 +469,29 @@ CL_ParsePlayerBeam
 */
 int CL_ParsePlayerBeam (struct model_s *model)
 {
-	const int ent = MSG_ReadShort (&net_message);
+	const int ent = MSG_ReadShort(&net_message);
 	
-	vec3_t	start, end, offset;
-	MSG_ReadPos (&net_message, start);
-	MSG_ReadPos (&net_message, end);
+	vec3_t start, end, offset;
+	MSG_ReadPos(&net_message, start);
+	MSG_ReadPos(&net_message, end);
 	
 	// PMM - network optimization
 	if (model == clMedia.mod_heatbeam)
+	{
 		VectorSet(offset, 2, 7, -3);
+	}
 	else if (model == clMedia.mod_monster_heatbeam)
 	{
 		model = clMedia.mod_heatbeam;
 		VectorSet(offset, 0, 0, 0);
 	}
 	else
-		MSG_ReadPos (&net_message, offset);
-
-//	Com_Printf ("end- %f %f %f\n", end[0], end[1], end[2]);
+	{
+		MSG_ReadPos(&net_message, offset);
+	}
 
 	//mxd
-	beam_t	*b = CL_FindFreeBeam(ent, cl_playerbeams);
+	beam_t *b = CL_FindFreeBeam(ent, cl_playerbeams);
 	if(b != NULL)
 	{
 		b->model = model;
@@ -528,12 +515,12 @@ CL_ParseLightning
 // Psychspaz's enhanced particles
 int CL_ParseLightning ()
 {
-	const int srcEnt = MSG_ReadShort (&net_message); // len
-	const int dstEnt = MSG_ReadShort (&net_message); // dec
+	const int srcEnt = MSG_ReadShort(&net_message); // len
+	const int dstEnt = MSG_ReadShort(&net_message); // dec
 
 	vec3_t start, end; // ,move,vec;
-	MSG_ReadPos (&net_message, start);
-	MSG_ReadPos (&net_message, end);
+	MSG_ReadPos(&net_message, start);
+	MSG_ReadPos(&net_message, end);
 
 	// Psychospaz's enhanced particle code
 	if (r_particle_mode->integer == 1)
@@ -570,8 +557,8 @@ void CL_ParseLaser (int colors)
 {
 	vec3_t start,end;
 	
-	MSG_ReadPos (&net_message, start);
-	MSG_ReadPos (&net_message, end);
+	MSG_ReadPos(&net_message, start);
+	MSG_ReadPos(&net_message, end);
 
 	if(r_particle_mode->integer == 1)
 	{
@@ -621,7 +608,7 @@ void CL_ParseLaser (int colors)
 				VectorCopy(start, l->ent.origin);
 				VectorCopy(end, l->ent.oldorigin);
 				l->ent.alpha = 0.3;
-				l->ent.skinnum = (colors >> ((rand()%4) * 8)) & 0xff;
+				l->ent.skinnum = (colors >> ((rand() % 4) * 8)) & 0xff;
 				l->ent.model = NULL;
 				l->ent.frame = 4;
 				l->endtime = cl.time + 100;
@@ -642,66 +629,61 @@ void CL_ParseSteam (void)
 	int		cnt;
 	int		magnitude;
 
-	const int id = MSG_ReadShort (&net_message);		// an id of -1 is an instant effect
+	const int id = MSG_ReadShort(&net_message);		// an id of -1 is an instant effect
 	if (id != -1) // sustains
 	{
-		//Com_Printf ("Sustain effect id %d\n", id);
 		cl_sustain_t *s = CL_FindFreeSustain();
 
 		if (s)
 		{
 			s->id = id;
-			s->count = MSG_ReadByte (&net_message);
-			MSG_ReadPos (&net_message, s->org);
-			MSG_ReadDir (&net_message, s->dir);
-			r = MSG_ReadByte (&net_message);
+			s->count = MSG_ReadByte(&net_message);
+			MSG_ReadPos(&net_message, s->org);
+			MSG_ReadDir(&net_message, s->dir);
+			r = MSG_ReadByte(&net_message);
 			s->color = r & 0xff;
-			s->magnitude = MSG_ReadShort (&net_message);
-			s->endtime = cl.time + MSG_ReadLong (&net_message);
+			s->magnitude = MSG_ReadShort(&net_message);
+			s->endtime = cl.time + MSG_ReadLong(&net_message);
 			s->think = CL_ParticleSteamEffect2;
 			s->thinkinterval = 100;
 			s->nextthink = cl.time;
 		}
 		else
 		{
-			//Com_Printf ("No free sustains!\n");
 			// FIXME - read the stuff anyway
-			cnt = MSG_ReadByte (&net_message);
-			MSG_ReadPos (&net_message, pos);
-			MSG_ReadDir (&net_message, dir);
-			r = MSG_ReadByte (&net_message);
-			magnitude = MSG_ReadShort (&net_message);
-			magnitude = MSG_ReadLong (&net_message); // really interval
+			cnt = MSG_ReadByte(&net_message);
+			MSG_ReadPos(&net_message, pos);
+			MSG_ReadDir(&net_message, dir);
+			r = MSG_ReadByte(&net_message);
+			magnitude = MSG_ReadShort(&net_message);
+			magnitude = MSG_ReadLong(&net_message); // really interval
 		}
 	}
 	else // instant
 	{
-		cnt = MSG_ReadByte (&net_message);
-		MSG_ReadPos (&net_message, pos);
-		MSG_ReadDir (&net_message, dir);
-		r = MSG_ReadByte (&net_message);
-		magnitude = MSG_ReadShort (&net_message);
+		cnt = MSG_ReadByte(&net_message);
+		MSG_ReadPos(&net_message, pos);
+		MSG_ReadDir(&net_message, dir);
+		r = MSG_ReadByte(&net_message);
+		magnitude = MSG_ReadShort(&net_message);
 
 		const int color = r & 0xff;
-		CL_ParticleSteamEffect (pos, dir,
+		CL_ParticleSteamEffect(pos, dir,
 			color8red(color), color8green(color), color8blue(color),
 			-20, -20, -20, cnt, magnitude);
-
-		//CL_ParticleSteamEffect (pos, dir, 240, 240, 240, -20, -20, -20, cnt, magnitude);
-		//S_StartSound (pos,  0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 	}
 }
 
 void CL_ParseWidow (void)
 {
 	vec3_t	pos;
-	const int id = MSG_ReadShort (&net_message);
+	const int id = MSG_ReadShort(&net_message);
 	cl_sustain_t *s = CL_FindFreeSustain(); //mxd
 
 	if (s)
 	{
 		s->id = id;
-		MSG_ReadPos (&net_message, s->org);
+		MSG_ReadPos(&net_message, s->org);
 		s->endtime = cl.time + 2100;
 		s->thinkinterval = 1;
 		s->think = CL_Widowbeamout;
@@ -710,7 +692,7 @@ void CL_ParseWidow (void)
 	else // no free sustains
 	{
 		// FIXME - read the stuff anyway
-		MSG_ReadPos (&net_message, pos);
+		MSG_ReadPos(&net_message, pos);
 	}
 }
 
@@ -722,7 +704,7 @@ void CL_ParseNuke (void)
 	if (s)
 	{
 		s->id = 21000;
-		MSG_ReadPos (&net_message, s->org);
+		MSG_ReadPos(&net_message, s->org);
 		s->endtime = cl.time + 1000;
 		s->thinkinterval = 1;
 		s->think = CL_Nukeblast;
@@ -731,7 +713,7 @@ void CL_ParseNuke (void)
 	else // no free sustains
 	{
 		// FIXME - read the stuff anyway
-		MSG_ReadPos (&net_message, pos);
+		MSG_ReadPos(&net_message, pos);
 	}
 }
 
@@ -1265,8 +1247,8 @@ void CL_ParseTEnt (void)
 		{
 			explosion_t	*ex = CL_AllocExplosion();
 			VectorMA(pos, 16.0 * (i + 1), dir, ex->ent.origin);
-			vectoangles2(dir, ex->ent.angles);
-			//VectorCopy (dir, ex->ent.angles);
+			vectoangles(dir, ex->ent.angles);
+
 			ex->type = ex_poly2;
 			ex->ent.flags |= RF_FULLBRIGHT | RF_TRANSLUCENT | RF_NOSHADOW;
 			ex->start = cl.frame.servertime - 100;
@@ -1509,7 +1491,7 @@ void CL_AddBeams (void)
 
 			player_state_t *ops = &oldframe->playerstate;
 
-			vec3_t		f, r, u;
+			vec3_t f, r, u;
 			AngleVectors(old_viewangles, f, r, u);
 			VectorClear (grapple_offset_dir);
 			for (int j = 0; j < 3; j++)
@@ -1555,7 +1537,7 @@ void CL_AddBeams (void)
 			if (yaw < 0)
 				yaw += 360;
 
-			const float forward = sqrtf (dist[0]*dist[0] + dist[1]*dist[1]);
+			const float forward = sqrtf(dist[0] * dist[0] + dist[1] * dist[1]);
 			pitch = (atan2(dist[2], forward) * -180.0 / M_PI);
 
 			if (pitch < 0)
@@ -1579,24 +1561,19 @@ void CL_AddBeams (void)
 		const float steps = ceilf(d / model_length);
 		const float len = (d - model_length) / (steps - 1);
 
-		// PMM - special case for lightning model .. if the real length is shorter than the model,
-		// flip it around & draw it from the end to the start.  This prevents the model from going
-		// through the tesla mine (instead it goes through the target)
-		if ((b->model == clMedia.mod_lightning) && (d <= model_length))
+		// PMM - special case for lightning model .. if the real length is shorter than the model, flip it around & draw it from the end to the start.
+		// This prevents the model from going through the tesla mine (instead it goes through the target)
+		if (b->model == clMedia.mod_lightning && d <= model_length)
 		{
-//			Com_Printf ("special case\n");
 			VectorCopy (b->end, ent.origin);
-			// offset to push beam outside of tesla model (negative because dist is from end to start
-			// for this beam)
-//			for (j=0 ; j<3 ; j++)
-//				ent.origin[j] -= dist[j]*10.0;
+
 			ent.model = b->model;
 			ent.flags |= RF_FULLBRIGHT;
 			ent.angles[0] = pitch;
 			ent.angles[1] = yaw;
-			ent.angles[2] = rand()%360;
-			//AnglesToAxis(ent.angles, ent.axis);
-			V_AddEntity (&ent);
+			ent.angles[2] = rand() % 360;
+
+			V_AddEntity(&ent);
 			
 			return;
 		}
@@ -1605,45 +1582,31 @@ void CL_AddBeams (void)
 		{
 			VectorCopy (org, ent.origin);
 			ent.model = b->model;
+
 			if (b->model == clMedia.mod_lightning)
 			{
 				ent.flags |= RF_FULLBRIGHT;
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
-				ent.angles[2] = rand()%360;
 			}
 			else
 			{
 				ent.angles[0] = pitch;
 				ent.angles[1] = yaw;
-				ent.angles[2] = rand()%360;
 			}
-			//AnglesToAxis(ent.angles, ent.axis);
 
+			ent.angles[2] = rand() % 360;
 			ent.flags |= RF_NOSHADOW; // beams don't cast shadows
-//			Com_Printf("B: %d -> %d\n", b->entity, b->dest_entity);
-			V_AddEntity (&ent);
+			V_AddEntity(&ent);
 
 			for (int j = 0; j < 3; j++)
 				org[j] += dist[j] * len;
+
 			d -= model_length;
 		}
 	}
 }
 
-
-/*
-//				Com_Printf ("Endpoint:  %f %f %f\n", b->end[0], b->end[1], b->end[2]);
-//				Com_Printf ("Pred View Angles:  %f %f %f\n", cl.predicted_angles[0], cl.predicted_angles[1], cl.predicted_angles[2]);
-//				Com_Printf ("Act View Angles: %f %f %f\n", cl.refdef.viewangles[0], cl.refdef.viewangles[1], cl.refdef.viewangles[2]);
-//				VectorCopy (cl.predicted_origin, b->start);
-//				b->start[2] += 22;	// adjust for view height
-//				if (fabs(cl.refdef.vieworg[2] - b->start[2]) >= 10) {
-//					b->start[2] = cl.refdef.vieworg[2];
-//				}
-
-//				Com_Printf ("Time:  %d %d %f\n", cl.time, cls.realtime, cls.renderFrameTime);
-*/
 
 /*
 =================
@@ -1653,21 +1616,14 @@ CL_AddPlayerBeams
 */
 void CL_AddPlayerBeams (void)
 {
-	int			i,j;
+	int			i;
 	beam_t		*b;
 	vec3_t		dist, org;
-	float		d;
 	entity_t	ent;
 	float		yaw, pitch;
-	float		forward;
-	float		len, steps;
 	int			framenum;
 	float		model_length;
 	float		hand_multiplier;
-	frame_t		*oldframe;
-	player_state_t	*ps, *ops;
-	qboolean	firstperson, chasecam;
-	int			newhandmult;
 	vec3_t		thirdp_pbeam_offset;
 	vec3_t		pbeam_offset_dir;
 
@@ -1688,113 +1644,127 @@ void CL_AddPlayerBeams (void)
 //PMM
 
 	// chasecam beam offset stuff
-	newhandmult = hand_multiplier;
+	int newhandmult = hand_multiplier;
 	if (newhandmult == 0)
 		newhandmult = 1;
 
 	VectorSet(thirdp_pbeam_offset, 6.5, 0, 12);
 	// end chasecam beam offset stuff
 
-// update beams
-	for (i=0, b=cl_playerbeams; i< MAX_BEAMS; i++, b++)
+	// update beams
+	for (i = 0, b = cl_playerbeams; i < MAX_BEAMS; i++, b++)
 	{
-		vec3_t		f,r,u;
+		vec3_t f, r, u;
 
 		if (!b->model || b->endtime < cl.time)
 			continue;
 
-		firstperson = ((b->entity == cl.playernum+1) && !cg_thirdperson->value);
-		chasecam = ((b->entity == cl.playernum+1) && cg_thirdperson->value);
+		const qboolean firstperson = ((b->entity == cl.playernum + 1) && !cg_thirdperson->value);
+		const qboolean chasecam = ((b->entity == cl.playernum + 1) && cg_thirdperson->value);
 
-		if(clMedia.mod_heatbeam && (b->model == clMedia.mod_heatbeam))
+		if(clMedia.mod_heatbeam && b->model == clMedia.mod_heatbeam)
 		{
-
 			// if coming from the player, update the start position
 			if (firstperson || chasecam)
-			{	
-				// set up gun position
-				// code straight out of CL_AddViewWeapon
-				ps = &cl.frame.playerstate;
-				j = (cl.frame.serverframe - 1) & UPDATE_MASK;
-				oldframe = &cl.frames[j];
-				if (oldframe->serverframe != cl.frame.serverframe-1 || !oldframe->valid)
-					oldframe = &cl.frame;		// previous frame was dropped or involid
-				ops = &oldframe->playerstate;
+			{
+				// Set up gun position. Code straight out of CL_AddViewWeapon
+				player_state_t *ps = &cl.frame.playerstate;
+				const int frame = (cl.frame.serverframe - 1) & UPDATE_MASK;
+				frame_t *oldframe = &cl.frames[frame];
+				if (oldframe->serverframe != cl.frame.serverframe - 1 || !oldframe->valid)
+					oldframe = &cl.frame; // previous frame was dropped or involid
+
+				player_state_t *ops = &oldframe->playerstate;
+
 				// lerp for chasecam mode
 				if (chasecam)
-				{	// use player's original viewangles
+				{
+					// use player's original viewangles
 					AngleVectors(old_viewangles, f, r, u);
-					VectorClear (pbeam_offset_dir);
-					for (j=0; j<3; j++)
+					VectorClear(pbeam_offset_dir);
+
+					for (int j = 0; j < 3; j++)
 					{
-						pbeam_offset_dir[j] += f[j]*thirdp_pbeam_offset[1];
-						pbeam_offset_dir[j] += r[j]*thirdp_pbeam_offset[0]*newhandmult;
-						pbeam_offset_dir[j] += u[j]*(-thirdp_pbeam_offset[2]);
+						pbeam_offset_dir[j] += f[j] * thirdp_pbeam_offset[1];
+						pbeam_offset_dir[j] += r[j] * thirdp_pbeam_offset[0] * newhandmult;
+						pbeam_offset_dir[j] += u[j] * (-thirdp_pbeam_offset[2]);
 					}
-					for (j=0; j<3; j++)
+
+					for (int j = 0; j < 3; j++)
+					{
 						b->start[j] = cl.predicted_origin[j] + ops->viewoffset[j]
-						+ cl.lerpfrac * (ps->viewoffset[j] - ops->viewoffset[j])
-						+ pbeam_offset_dir[j];
-				//	Com_Printf("%f, %f, %f\n", pbeam_offset_dir[0], pbeam_offset_dir[1], pbeam_offset_dir[2]);
-					VectorMA (b->start, (newhandmult * b->offset[0]), r, org);
-					VectorMA (     org, b->offset[1], f, org);
-				 	VectorMA (     org, b->offset[2], u, org);
+									+ cl.lerpfrac * (ps->viewoffset[j] - ops->viewoffset[j])
+									+ pbeam_offset_dir[j];
+					}
+
+					VectorMA(b->start, newhandmult * b->offset[0], r, org);
+					VectorMA(org, b->offset[1], f, org);
+					VectorMA(org, b->offset[2], u, org);
 				}
 				else // firstperson
 				{
-					for (j=0; j<3; j++)
+					for (int j = 0; j < 3; j++)
 					{
 						b->start[j] = cl.refdef.vieworg[j] + ops->gunoffset[j]
-							+ cl.lerpfrac * (ps->gunoffset[j] - ops->gunoffset[j]);
+									+ cl.lerpfrac * (ps->gunoffset[j] - ops->gunoffset[j]);
 					}
-					VectorMA (b->start, (hand_multiplier * b->offset[0]), cl.v_right, org);
-					VectorMA (     org, b->offset[1], cl.v_forward, org);
-					VectorMA (     org, b->offset[2], cl.v_up, org);
-					if ((hand) && (hand->value == 2)) {
-						VectorMA (org, -1, cl.v_up, org);
-					}
+
+					VectorMA(b->start, (hand_multiplier * b->offset[0]), cl.v_right, org);
+					VectorMA(org, b->offset[1], cl.v_forward, org);
+					VectorMA(org, b->offset[2], cl.v_up, org);
+					
+					if (hand && hand->value == 2) 
+						VectorMA(org, -1, cl.v_up, org);
+
 					// FIXME - take these out when final
-					VectorCopy (cl.v_right, r);
-					VectorCopy (cl.v_forward, f);
-					VectorCopy (cl.v_up, u);
+					VectorCopy(cl.v_right, r);
+					VectorCopy(cl.v_forward, f);
+					VectorCopy(cl.v_up, u);
 				}
 			}
 			else // some other player or monster
-				VectorCopy (b->start, org);
+			{
+				VectorCopy(b->start, org);
+			}
 		}
 		else // some other beam model
 		{
-			// if coming from the player, update the start position
-			// skip for chasecam mode
+			// If coming from the player, update the start position. Skip for chasecam mode
 			if (firstperson)
 			{
-				VectorCopy (cl.refdef.vieworg, b->start);
+				VectorCopy(cl.refdef.vieworg, b->start);
 				b->start[2] -= 22;	// adjust for view height
 			}
-			VectorAdd (b->start, b->offset, org);
+
+			VectorAdd(b->start, b->offset, org);
 		}
 
-	// calculate pitch and yaw
-		VectorSubtract (b->end, org, dist);
+		// calculate pitch and yaw
+		VectorSubtract(b->end, org, dist);
 
 //PMM
-		if (clMedia.mod_heatbeam && (b->model == clMedia.mod_heatbeam) && (firstperson||chasecam))
+		if (clMedia.mod_heatbeam && b->model == clMedia.mod_heatbeam && (firstperson || chasecam))
 		{
-			vec_t l = VectorLength (dist);
+			const vec_t l = VectorLength(dist);
 			VectorScale (f, l, dist);
+
 			if (chasecam)
-				VectorMA (dist, (newhandmult * b->offset[0]), r, dist);
+				VectorMA(dist, newhandmult * b->offset[0], r, dist);
 			else
-				VectorMA (dist, (hand_multiplier * b->offset[0]), r, dist);
-			VectorMA (dist, b->offset[1], f, dist);
-			VectorMA (dist, b->offset[2], u, dist);
-			if (chasecam) {
-				VectorMA (dist, -(newhandmult * thirdp_pbeam_offset[0]), r, dist);
-				VectorMA (dist, thirdp_pbeam_offset[1], f, dist);
-				VectorMA (dist, thirdp_pbeam_offset[2], u, dist);
+				VectorMA(dist, hand_multiplier * b->offset[0], r, dist);
+
+			VectorMA(dist, b->offset[1], f, dist);
+			VectorMA(dist, b->offset[2], u, dist);
+
+			if (chasecam)
+			{
+				VectorMA(dist, -(newhandmult * thirdp_pbeam_offset[0]), r, dist);
+				VectorMA(dist, thirdp_pbeam_offset[1], f, dist);
+				VectorMA(dist, thirdp_pbeam_offset[2], u, dist);
 			}
-			if ((hand) && (hand->value == 2) && !chasecam)
-				VectorMA (org, -1, cl.v_up, org);
+
+			if (hand && hand->value == 2 && !chasecam)
+				VectorMA(org, -1, cl.v_up, org);
 		}
 //PMM
 
@@ -1815,16 +1785,17 @@ void CL_AddPlayerBeams (void)
 				yaw = 90;
 			else
 				yaw = 270;
+
 			if (yaw < 0)
 				yaw += 360;
-	
-			forward = sqrtf (dist[0]*dist[0] + dist[1]*dist[1]);
+
+			const float forward = sqrtf(dist[0] * dist[0] + dist[1] * dist[1]);
 			pitch = (atan2(dist[2], forward) * -180.0 / M_PI);
 			if (pitch < 0)
-				pitch += 360.0; 
+				pitch += 360.0;
 		}
 		
-		if (clMedia.mod_heatbeam && (b->model == clMedia.mod_heatbeam) )
+		if (clMedia.mod_heatbeam && b->model == clMedia.mod_heatbeam)
 		{
 			if (!firstperson)
 			{
@@ -1832,18 +1803,18 @@ void CL_AddPlayerBeams (void)
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
 				ent.angles[2] = 0;
+
 				// skip this for chasecam mode
 				if (!chasecam)
 				{
-				//	Com_Printf ("%f %f - %f %f %f\n", -pitch, yaw+180.0, b->offset[0], b->offset[1], b->offset[2]);
 					AngleVectors(ent.angles, f, r, u);
 
 					// if it's a non-origin offset, it's a player, so use the hardcoded player offset
 					if (!VectorCompare (b->offset, vec3_origin))
 					{
-						VectorMA (org, -(b->offset[0])+1, r, org);
-						VectorMA (org, -(b->offset[1])+12, f, org); //was 0
-						VectorMA (org, -(b->offset[2])-5, u, org); //was -10
+						VectorMA(org, -b->offset[0] + 1,  r, org);
+						VectorMA(org, -b->offset[1] + 12, f, org); //was 0
+						VectorMA(org, -b->offset[2] - 5,  u, org); //was -10
 					}
 					else
 					{
@@ -1858,17 +1829,14 @@ void CL_AddPlayerBeams (void)
 			}
 		}
 
-		// if it's the heatbeam, draw the particle effect
-		// also do this in chasecam mode
-		if ((clMedia.mod_heatbeam && (b->model == clMedia.mod_heatbeam) && (firstperson||chasecam)))
-		{
-			CL_HeatbeamParticles (org, dist);
-		}
+		// If it's the heatbeam, draw the particle effect. Also do this in chasecam mode
+		if (clMedia.mod_heatbeam && b->model == clMedia.mod_heatbeam && (firstperson || chasecam))
+			CL_HeatbeamParticles(org, dist);
 
-	// add new entities for the beams
-		d = VectorNormalize(dist);
+		// add new entities for the beams
+		float d = VectorNormalize(dist);
 
-		memset (&ent, 0, sizeof(ent));
+		memset(&ent, 0, sizeof(ent));
 		if (b->model == clMedia.mod_heatbeam)
 		{
 			model_length = 32.0;
@@ -1876,50 +1844,44 @@ void CL_AddPlayerBeams (void)
 		else if (b->model == clMedia.mod_lightning)
 		{
 			model_length = 35.0;
-			d-= 20.0;  // correction so it doesn't end in middle of tesla
+			d-= 20.0; // correction so it doesn't end in middle of tesla
 		}
 		else
 		{
 			model_length = 30.0;
 		}
-		steps = ceilf(d/model_length);
-		len = (d-model_length)/(steps-1);
 
-		// PMM - special case for lightning model .. if the real length is shorter than the model,
-		// flip it around & draw it from the end to the start.  This prevents the model from going
-		// through the tesla mine (instead it goes through the target)
-		if ((b->model == clMedia.mod_lightning) && (d <= model_length))
+		const float steps = ceilf(d / model_length);
+		const float len = (d - model_length) / (steps - 1);
+
+		// PMM - special case for lightning model .. if the real length is shorter than the model, flip it around & draw it from the end to the start.
+		// This prevents the model from going through the tesla mine (instead it goes through the target)
+		if (b->model == clMedia.mod_lightning && d <= model_length)
 		{
-//			Com_Printf ("special case\n");
-			VectorCopy (b->end, ent.origin);
-			// offset to push beam outside of tesla model (negative because dist is from end to start
-			// for this beam)
-//			for (j=0 ; j<3 ; j++)
-//				ent.origin[j] -= dist[j]*10.0;
+			VectorCopy(b->end, ent.origin);
+
 			ent.model = b->model;
 			ent.flags |= RF_FULLBRIGHT;
 			ent.angles[0] = pitch;
 			ent.angles[1] = yaw;
-			ent.angles[2] = rand()%360;
-			//AnglesToAxis(ent.angles, ent.axis);
+			ent.angles[2] = rand() % 360;
 			ent.flags |= RF_NOSHADOW; // beams don't cast shadows
-			V_AddEntity (&ent);			
+
+			V_AddEntity(&ent);
 			return;
 		}
 
 		while (d > 0)
 		{
-			VectorCopy (org, ent.origin);
+			VectorCopy(org, ent.origin);
 			ent.model = b->model;
-			if (clMedia.mod_heatbeam && (b->model == clMedia.mod_heatbeam))
+
+			if (clMedia.mod_heatbeam && b->model == clMedia.mod_heatbeam)
 			{
-			//	ent.flags |= RF_FULLBRIGHT|RF_TRANSLUCENT;
-			//	ent.alpha = 0.6;
 				ent.flags |= RF_FULLBRIGHT;
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
 				ent.angles[2] = (cl.time) % 360;
-			//	ent.angles[2] = rand()%360;
 				ent.frame = framenum;
 			}
 			else if (b->model == clMedia.mod_lightning)
@@ -1927,21 +1889,20 @@ void CL_AddPlayerBeams (void)
 				ent.flags |= RF_FULLBRIGHT;
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
-				ent.angles[2] = rand()%360;
+				ent.angles[2] = rand() % 360;
 			}
 			else
 			{
 				ent.angles[0] = pitch;
 				ent.angles[1] = yaw;
-				ent.angles[2] = rand()%360;
+				ent.angles[2] = rand() % 360;
 			}
-			//AnglesToAxis(ent.angles, ent.axis);
 			ent.flags |= RF_NOSHADOW; // beams don't cast shadows
-		//	Com_Printf("B: %d -> %d\n", b->entity, b->dest_entity);
-			V_AddEntity (&ent);
+			V_AddEntity(&ent);
 
-			for (j=0 ; j<3 ; j++)
-				org[j] += dist[j]*len;
+			for (int j = 0; j < 3; j++)
+				org[j] += dist[j] * len;
+
 			d -= model_length;
 		}
 	}
@@ -1957,56 +1918,53 @@ void CL_AddExplosions (void)
 	entity_t	*ent;
 	int			i;
 	explosion_t	*ex;
-	float		frac;
-	int			f;
 
-	memset (&ent, 0, sizeof(ent));
+	memset(&ent, 0, sizeof(ent));
 
-	for (i=0, ex=cl_explosions ; i< MAX_EXPLOSIONS ; i++, ex++)
+	for (i = 0, ex = cl_explosions; i < MAX_EXPLOSIONS; i++, ex++)
 	{
 		if (ex->type == ex_free)
 			continue;
-		frac = (cl.time - ex->start)/100.0;
-		f = floorf(frac);
+
+		const float frac = (cl.time - ex->start) / 100.0;
+		int f = floorf(frac);
 
 		ent = &ex->ent;
 
 		switch (ex->type)
 		{
 		case ex_mflash:
-			if (f >= ex->frames-1)
+			if (f >= ex->frames - 1)
 				ex->type = ex_free;
 			break;
+
 		case ex_misc:
-			if (f >= ex->frames-1)
-			{
+			if (f >= ex->frames - 1)
 				ex->type = ex_free;
-				break;
-			}
-			ent->alpha = 1.0 - frac/(ex->frames-1);
+			else
+				ent->alpha = 1.0 - frac / (ex->frames - 1);
 			break;
+
 		case ex_flash:
 			if (f >= 1)
-			{
 				ex->type = ex_free;
-				break;
-			}
-			ent->alpha = 1.0;
+			else
+				ent->alpha = 1.0;
 			break;
+
 		case ex_poly:
-			if (f >= ex->frames-1)
+			if (f >= ex->frames - 1)
 			{
 				ex->type = ex_free;
 				break;
 			}
 
-			ent->alpha = (16.0 - (float)f)/16.0;
+			ent->alpha = (16.0 - (float)f) / 16.0;
 
 			if (f < 10)
 			{
-				ent->skinnum = (f>>1);
-				if (ent->skinnum < 0)
-					ent->skinnum = 0;
+				ent->skinnum = (f >> 1);
+				ent->skinnum = max(0, ent->skinnum);
 			}
 			else
 			{
@@ -2017,39 +1975,36 @@ void CL_AddExplosions (void)
 					ent->skinnum = 6;
 			}
 			break;
+
 		case ex_poly2:
-			if (f >= ex->frames-1)
+			if (f >= ex->frames - 1)
 			{
 				ex->type = ex_free;
-				break;
 			}
-			// since nothing else uses this,
-			// I'd just thought I'd change it...
-			ent->alpha = max((0.7 - f*0.10), 0.10);
-			//ent->alpha = (5.0 - (float)f)/5.0;
-			ent->skinnum = 0;
-			ent->flags |= RF_TRANSLUCENT;
+			else
+			{
+				// since nothing else uses this, I'd just thought I'd change it...
+				ent->alpha = max((0.7f - f * 0.1f), 0.1f);
+				ent->skinnum = 0;
+				ent->flags |= RF_TRANSLUCENT;
+			}
 			break;
 		}
 
 		if (ex->type == ex_free)
 			continue;
+
 		if (ex->light)
-		{
-			V_AddLight (ent->origin, ex->light*ent->alpha,
-				ex->lightcolor[0], ex->lightcolor[1], ex->lightcolor[2]);
-		}
+			V_AddLight(ent->origin, ex->light * ent->alpha, ex->lightcolor[0], ex->lightcolor[1], ex->lightcolor[2]);
 
-		VectorCopy (ent->origin, ent->oldorigin);
+		VectorCopy(ent->origin, ent->oldorigin);
 
-		if (f < 0)
-			f = 0;
+		f = max(0, f);
 		ent->frame = ex->baseframe + f + 1;
 		ent->oldframe = ex->baseframe + f;
 		ent->backlerp = 1.0 - cl.lerpfrac;
-		//AnglesToAxis(ent->angles, ent->axis);
 
-		V_AddEntity (ent);
+		V_AddEntity(ent);
 	}
 }
 
@@ -2059,10 +2014,10 @@ void CL_AddExplosions (void)
 CL_AddLasers
 =================
 */
-void CL_AddLasers (void)
+void CL_AddLasers(void)
 {
-	laser_t		*l;
-	int			i;
+	laser_t	*l;
+	int		i;
 
 	for (i = 0, l = cl_lasers; i < MAX_LASERS; i++, l++)
 	{
@@ -2072,20 +2027,18 @@ void CL_AddLasers (void)
 }
 
 /* PMM - CL_Sustains */
-void CL_ProcessSustain ()
+void CL_ProcessSustain()
 {
 	cl_sustain_t	*s;
 	int				i;
 
 	for (i = 0, s = cl_sustains; i < MAX_SUSTAINS; i++, s++)
 	{
-		if (!s->id) continue;
+		if (!s->id)
+			continue;
 
-		if ((s->endtime >= cl.time) && (cl.time >= s->nextthink))
-		{
-//			Com_Printf ("think %d %d %d\n", cl.time, s->nextthink, s->thinkinterval);
-			s->think (s);
-		}
+		if (s->endtime >= cl.time && cl.time >= s->nextthink)
+			s->think(s);
 		else if (s->endtime < cl.time)
 			s->id = 0;
 	}
@@ -2098,11 +2051,11 @@ CL_AddTEnts
 */
 void CL_AddTEnts (void)
 {
-	CL_AddBeams ();
+	CL_AddBeams();
 	// PMM - draw plasma beams
-	CL_AddPlayerBeams ();
-	CL_AddExplosions ();
-	CL_AddLasers ();
+	CL_AddPlayerBeams();
+	CL_AddExplosions();
+	CL_AddLasers();
 	// PMM - set up sustain
 	CL_ProcessSustain();
 }

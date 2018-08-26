@@ -55,81 +55,56 @@ char *svc_strings[256] =
 CL_RegisterSounds
 ======================
 */
-void CL_RegisterSounds (void)
+void CL_RegisterSounds(void)
 {
-	int		i;
+	S_BeginRegistration();
+	CL_RegisterTEntSounds();
 
-	S_BeginRegistration ();
-	CL_RegisterTEntSounds ();
-
-	// Knightmare- 1/2/2002- ULTRA-CHEESY HACK for old demos or
-	// connected to server using old protocol
+	// Knightmare- 1/2/2002- ULTRA-CHEESY HACK for old demos or connected to server using old protocol
 	// Changed config strings require different offsets
-	if ( LegacyProtocol() )
-	{
-		for (i=1; i < OLD_MAX_SOUNDS; i++)
-		{
-			if (!cl.configstrings[OLD_CS_SOUNDS+i][0])
-				break;
-			cl.sound_precache[i] = S_RegisterSound (cl.configstrings[OLD_CS_SOUNDS+i]);
-			Sys_SendKeyEvents ();	// pump message loop
-		}
+	const int cs_sounds = (LegacyProtocol() ? OLD_CS_SOUNDS : CS_SOUNDS); //mxd
+	const int max_sounds = (LegacyProtocol() ? OLD_MAX_SOUNDS : MAX_SOUNDS); //mxd
 
-	}
-	else
+	for (int i = 1; i < max_sounds; i++)
 	{
-		for (i=1; i < MAX_SOUNDS; i++)
-		{
-			if (!cl.configstrings[CS_SOUNDS+i][0])
-				break;
-			cl.sound_precache[i] = S_RegisterSound (cl.configstrings[CS_SOUNDS+i]);
-			Sys_SendKeyEvents ();	// pump message loop
-		}
+		if (!cl.configstrings[cs_sounds + i][0])
+			break;
+
+		cl.sound_precache[i] = S_RegisterSound(cl.configstrings[cs_sounds + i]);
+		Sys_SendKeyEvents(); // pump message loop
 	}
+
 	//end Knightmare
-	S_EndRegistration ();
+	S_EndRegistration();
 }
 
 /*
 =====================================================================
-
-  SERVER CONNECTING MESSAGES
-
+	SERVER CONNECTING MESSAGES
 =====================================================================
 */
 
 /*
 ==================
 LegacyProtocol
-A utility function that determines
-if parsing of old protocol should be used.
+A utility function that determines if parsing of old protocol should be used.
 ==================
 */
 qboolean LegacyProtocol (void)
 {
-	//if (dedicated->value)	// Server always uses new protocol
-	//	return false;
-	if ( (Com_ServerState() && cls.serverProtocol <= OLD_PROTOCOL_VERSION)
-		|| (cls.serverProtocol == OLD_PROTOCOL_VERSION) )
-		return true;
-	return false;
+	return ((Com_ServerState() && cls.serverProtocol <= OLD_PROTOCOL_VERSION) || cls.serverProtocol == OLD_PROTOCOL_VERSION);
 }
 
 
 /*
 ==================
 R1Q2Protocol
-A utility function that determines
-if parsing of R1Q2 protocol should be used.
+A utility function that determines if parsing of R1Q2 protocol should be used.
 ==================
 */
-qboolean R1Q2Protocol (void)
+qboolean R1Q2Protocol(void)
 {
-	//if (dedicated->value)	// Server always uses new protocol
-	//	return false;
-	if ( cls.serverProtocol == R1Q2_PROTOCOL_VERSION )
-		return true;
-	return false;
+	return (cls.serverProtocol == R1Q2_PROTOCOL_VERSION);
 }
 
 
@@ -141,13 +116,12 @@ CL_ParseServerData
 void CL_ParseServerData (void)
 {
 	Com_DPrintf("Serverdata packet received.\n");
-//
-// wipe the client_state_t struct
-//
+
+	// wipe the client_state_t struct
 	CL_ClearState();
 	cls.state = ca_connected;
 
-// parse protocol version number
+	// parse protocol version number
 	const int i = MSG_ReadLong(&net_message);
 	cls.serverProtocol = i;
 
@@ -207,23 +181,22 @@ void CL_ParseBaseline (void)
 
 	const int newnum = CL_ParseEntityBits(&bits);
 	entity_state_t *es = &cl_entities[newnum].baseline;
-	CL_ParseDelta (&nullstate, es, newnum, bits);
+	CL_ParseDelta(&nullstate, es, newnum, bits);
 }
 
 
 /*
 ================
 CL_LoadClientinfo
-
 ================
 */
-void CL_LoadClientinfo (clientinfo_t *ci, char *s)
+void CL_LoadClientinfo(clientinfo_t *ci, char *s)
 {
-	char		model_name[MAX_QPATH];
-	char		skin_name[MAX_QPATH];
-	char		model_filename[MAX_QPATH];
-	char		skin_filename[MAX_QPATH];
-	char		weapon_filename[MAX_QPATH];
+	char model_name[MAX_QPATH];
+	char skin_name[MAX_QPATH];
+	char model_filename[MAX_QPATH];
+	char skin_filename[MAX_QPATH];
+	char weapon_filename[MAX_QPATH];
 
 	strncpy(ci->cinfo, s, sizeof(ci->cinfo));
 	ci->cinfo[sizeof(ci->cinfo) - 1] = 0;
@@ -344,9 +317,8 @@ void CL_ParseClientinfo (int player)
 {
 	// Knightmare- 1/2/2002- GROSS HACK for old demos or connected to server using old protocol
 	// Changed config strings require different offsets
-	const int csplayerskins = (LegacyProtocol() ? OLD_CS_PLAYERSKINS : CS_PLAYERSKINS); //mxd
-	char *s = cl.configstrings[player + csplayerskins];
-	//end Knightmare
+	const int cs_playerskins = (LegacyProtocol() ? OLD_CS_PLAYERSKINS : CS_PLAYERSKINS); //mxd
+	char *s = cl.configstrings[player + cs_playerskins];
 
 	clientinfo_t *ci = &cl.clientinfo[player];
 	CL_LoadClientinfo(ci, s);
@@ -366,6 +338,7 @@ int CL_MissionPackCDTrack (int tracknum)
 	{
 		if (tracknum >= 2 && tracknum <= 11)
 			return tracknum + 10;
+
 		return tracknum;
 	}
 
@@ -401,9 +374,9 @@ CL_PlayBackgroundTrack
 
 #include "snd_ogg.h"
 
-void CL_PlayBackgroundTrack (void)
+void CL_PlayBackgroundTrack(void)
 {
-	char	name[MAX_QPATH];
+	char name[MAX_QPATH];
 
 	if (!cl.refresh_prepped)
 		return;
@@ -449,6 +422,7 @@ void CL_PlayBackgroundTrack (void)
 
 #endif // OGG_SUPPORT
 
+
 /*
 ================
 CL_ParseConfigString
@@ -456,8 +430,8 @@ CL_ParseConfigString
 */
 void CL_ParseConfigString (void)
 {
-	int		max_models, max_sounds, max_images, cs_lights, cs_sounds, cs_images, cs_playerskins;
-	char	olds[MAX_QPATH];
+	int max_models, max_sounds, max_images, cs_lights, cs_sounds, cs_images, cs_playerskins;
+	char olds[MAX_QPATH];
 
 	// Knightmare- hack for connected to server using old protocol
 	// Changed config strings require different parsing
@@ -485,6 +459,7 @@ void CL_ParseConfigString (void)
 	int i = MSG_ReadShort(&net_message);
 	if (i < 0 || i >= MAX_CONFIGSTRINGS)
 		Com_Error(ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
+
 	char *s = MSG_ReadString(&net_message);
 
 	strncpy (olds, cl.configstrings[i], sizeof(olds));
@@ -547,9 +522,7 @@ void CL_ParseConfigString (void)
 
 /*
 =====================================================================
-
-ACTION MESSAGES
-
+	ACTION MESSAGES
 =====================================================================
 */
 
@@ -560,12 +533,12 @@ CL_ParseStartSoundPacket
 */
 void CL_ParseStartSoundPacket(void)
 {
-    vec3_t  pos_v;
+	vec3_t	pos_v;
 	float	*pos;
-    int 	channel, ent;
-    int 	sound_num;
-    float 	volume;
-    float 	attenuation;
+	int		channel, ent;
+	int		sound_num;
+	float	volume;
+	float	attenuation;
 	float	ofs;
 
 	const int flags = MSG_ReadByte(&net_message);
@@ -634,35 +607,6 @@ void SHOWNET(char *s)
 		Com_Printf ("%3i:%s\n", net_message.readcount - 1, s);
 }
 
-/*
-=====================
-CL_ParseStuffText
-Catches stuffed quit or error commands from the server.
-Shutting down suddenly in this way can hang some SMP systems.
-This simply disconnects, same effect as kicking player.
-=====================
-*/
-/*qboolean CL_ParseStuffText (char *stufftext)
-{
-	char	*parsetext = stufftext;
-
-	// skip leading spaces
-	while (*parsetext == ' ') parsetext++;
-	if (strncmp(parsetext, "quit", 4))
-	{
-		Com_Printf("server stuffed quit command, disconnecting...\n");
-		CL_Disconnect ();
-		return false;
-	}
-	if (strncmp(parsetext, "error", 5))    	
-	{
-		Com_Printf("server stuffed error command, disconnecting...\n");
-		CL_Disconnect ();
-		return false;
-	}
-	return true;
-}*/
-
 
 // Knightmare- server-controlled fog
 /*
@@ -695,6 +639,7 @@ void CL_ParseFog (void)
 
 	R_SetFogVars(fogenable, model, density, start, end, red, green, blue);
 }
+
 
 /*
 =====================
@@ -734,7 +679,7 @@ void CL_ParseServerMessage (void)
 				SHOWNET(svc_strings[cmd]);
 		}
 	
-	// other commands
+		// other commands
 		switch (cmd)
 		{
 		default:
@@ -742,7 +687,6 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_nop:
-//			Com_Printf ("svc_nop\n");
 			break;
 			
 		case svc_disconnect:
@@ -757,6 +701,7 @@ void CL_ParseServerMessage (void)
 				fclose (cls.download);
 				cls.download = NULL;
 			}
+
 			cls.state = ca_connecting;
 			cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 			break;
@@ -771,7 +716,9 @@ void CL_ParseServerMessage (void)
 				Com_Printf(S_COLOR_ALT"%s", MSG_ReadString(&net_message)); // Knightmare- add green flag
 			}
 			else
+			{
 				Com_Printf("%s", MSG_ReadString(&net_message));
+			}
 			con.ormask = 0;
 		}
 			break;

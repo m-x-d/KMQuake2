@@ -24,27 +24,25 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 /*
-
-key up events are sent even if in console mode
-
+  Key up events are sent even if in console mode
 */
 
+#define MAXCMDLINE	256
 
-#define		MAXCMDLINE	256
-char	key_lines[32][MAXCMDLINE];
-int		key_linepos;
-int		shift_down=false;
-int	anykeydown;
+char		key_lines[32][MAXCMDLINE];
+int			key_linepos;
+int			shift_down = false;
+int			anykeydown;
 
-int		edit_line=0;
-int		history_line=0;
+int			edit_line = 0;
+int			history_line = 0;
 
-int		key_waiting;
-char	*keybindings[256];
+int			key_waiting;
+char		*keybindings[256];
 qboolean	consolekeys[256];	// if true, can't be rebound while in console
-qboolean	menubound[256];	// if true, can't be rebound while in menu
-int		keyshift[256];		// key to map to if shift held down in console
-int		key_repeats[256];	// if > 1, it is autorepeating
+qboolean	menubound[256];		// if true, can't be rebound while in menu
+int			keyshift[256];		// key to map to if shift held down in console
+int			key_repeats[256];	// if > 1, it is autorepeating
 qboolean	keydown[256];
 
 typedef struct
@@ -168,9 +166,7 @@ keyname_t keynames[] =
 
 /*
 ==============================================================================
-
-			LINE TYPING INTO THE CONSOLE
-
+	LINE TYPING INTO THE CONSOLE
 ==============================================================================
 */
 
@@ -182,6 +178,7 @@ void CompleteCommand (void)
 
 	qboolean exactmatch = false; //mxd
 	char *cmd = Cmd_CompleteCommand(s, &exactmatch);
+
 	// Knightmare - added command auto-complete
 	if (cmd)
 	{
@@ -205,7 +202,7 @@ Interactive line editing and console scrollback
 */
 void Key_Console (int key)
 {
-	switch ( key )
+	switch (key)
 	{
 		case K_KP_SLASH:      key = '/'; break;
 		case K_KP_MULT:       key = '*'; break;
@@ -224,22 +221,22 @@ void Key_Console (int key)
 		case K_KP_DEL:        key = '.'; break;
 	}
 
-	if ( (toupper(key) == 'V' && keydown[K_CTRL]) || ((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]) )
+	if ((toupper(key) == 'V' && keydown[K_CTRL]) || ((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
 	{
 		char *cbd = Sys_GetClipboardData();
 		if (cbd)
 		{
 			strtok(cbd, "\n\r\b");
 
-			int i = strlen(cbd);
-			if (i + key_linepos >= MAXCMDLINE)
-				i = MAXCMDLINE - key_linepos;
+			int len = strlen(cbd);
+			if (len + key_linepos >= MAXCMDLINE)
+				len = MAXCMDLINE - key_linepos;
 
-			if (i > 0)
+			if (len > 0)
 			{
-				cbd[i] = 0;
-				Q_strncatz( key_lines[edit_line], cbd, sizeof(key_lines[edit_line]) );
-				key_linepos += i;
+				cbd[len] = 0;
+				Q_strncatz(key_lines[edit_line], cbd, sizeof(key_lines[edit_line]));
+				key_linepos += len;
 			}
 
 			free(cbd);
@@ -270,12 +267,12 @@ void Key_Console (int key)
 		con.backedit = 0;
 
 		if (cls.state == ca_disconnected)
-			SCR_UpdateScreen ();	// force an update, because the command may take some time
+			SCR_UpdateScreen();	// force an update, because the command may take some time
 	}
 	else if (key == K_TAB)
 	{
 		// command completion
-		CompleteCommand ();
+		CompleteCommand();
 		con.backedit = 0; // Knightmare added
 	}
 	else if (key == K_BACKSPACE)
@@ -329,7 +326,7 @@ void Key_Console (int key)
 		} while (history_line != edit_line && !key_lines[history_line][1]);
 
 		if (history_line == edit_line)
-			history_line = (edit_line + 1)&31;
+			history_line = (edit_line + 1) & 31;
 
 		Q_strncpyz(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 		key_linepos = strlen(key_lines[edit_line]);
@@ -440,6 +437,7 @@ void Key_Message (int key)
 			Cbuf_AddText ("say_team \"");
 		else
 			Cbuf_AddText ("say \"");
+
 		Cbuf_AddText(chat_buffer);
 		Cbuf_AddText("\"\n");
 
@@ -544,10 +542,8 @@ int Key_StringToKeynum (char *str)
 		return str[0];
 
 	for (keyname_t *kn = keynames; kn->name; kn++)
-	{
 		if (!Q_strcasecmp(str, kn->name))
 			return kn->keynum;
-	}
 
 	return -1;
 }
@@ -621,8 +617,8 @@ void Key_Unbind_f (void)
 		Com_Printf ("unbind <key> : remove commands from a key\n");
 		return;
 	}
-	
-	int b = Key_StringToKeynum(Cmd_Argv(1));
+
+	const int b = Key_StringToKeynum(Cmd_Argv(1));
 	if (b == -1)
 	{
 		Com_Printf("\"%s\" isn't a valid key\n", Cmd_Argv(1));
@@ -873,12 +869,12 @@ void Key_Event (int key, qboolean down, unsigned time)
 		return;
 	}
 
-	// While in attract loop all keys besides F1 to F12 (to	allow quick load and the like) are treated like escape.
+	// While in attract loop all keys besides F1 to F12 (to allow quick load and the like) are treated like escape.
 	// Knightmare changed
 	if (!cls.consoleActive && cl.attractloop && cls.key_dest != key_menu
 		&& !(key >= K_F1 && key <= K_F12) 
 		&& cl.cinematictime > 0 && cls.realtime - cl.cinematictime > 1000)
-		key = K_ESCAPE;
+		key = K_ESCAPE; //TODO: (mxd) restore ability to skip cinematic using any key, or at least don't show main menu after skipping
 
 	// Menu key is hardcoded, so the user can never unbind it
 	if (key == K_ESCAPE)
@@ -904,7 +900,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 		if (cl.frame.playerstate.stats[STAT_LAYOUTS] && cls.key_dest == key_game)
 		{
 			// Put away help computer / inventory
-			Cbuf_AddText ("cmd putaway\n");
+			Cbuf_AddText("cmd putaway\n");
 
 			return;
 		}
@@ -930,11 +926,9 @@ void Key_Event (int key, qboolean down, unsigned time)
 	decided, that they'll need special move state BUTTON_ANY to solve this problem. So there's
 	this global variable anykeydown. If it's not 0, CL_FinishMove() encodes BUTTON_ANY into the
 	button state. The server reads this value and sends it to gi->ClientThink() where it's used
-	to determine if the intermission shall end.	Needless to say that this is the only consumer
-	of BUTTON_ANY.
+	to determine if the intermission shall end.	Needless to say that this is the only consumer of BUTTON_ANY.
 
-	Since we cannot alter the network protocol nor the server <-> game API, I'll leave things alone
-	and try to forget. */
+	Since we cannot alter the network protocol nor the server <-> game API, I'll leave things alone	and try to forget. */
 	keydown[key] = down;
 	if (down)
 	{
@@ -959,8 +953,8 @@ void Key_Event (int key, qboolean down, unsigned time)
 		char *kb = keybindings[key];
 		if (kb && kb[0] == '+')
 		{
-			Com_sprintf (cmd, sizeof(cmd), "-%s %i %i\n", kb+1, key, time);
-			Cbuf_AddText (cmd);
+			Com_sprintf(cmd, sizeof(cmd), "-%s %i %i\n", kb+1, key, time);
+			Cbuf_AddText(cmd);
 		}
 
 		if (keyshift[key] != key)
@@ -968,8 +962,8 @@ void Key_Event (int key, qboolean down, unsigned time)
 			kb = keybindings[keyshift[key]];
 			if (kb && kb[0] == '+')
 			{
-				Com_sprintf (cmd, sizeof(cmd), "-%s %i %i\n", kb+1, key, time);
-				Cbuf_AddText (cmd);
+				Com_sprintf(cmd, sizeof(cmd), "-%s %i %i\n", kb+1, key, time);
+				Cbuf_AddText(cmd);
 			}
 		}
 
@@ -980,11 +974,8 @@ void Key_Event (int key, qboolean down, unsigned time)
 // If not a consolekey, send to the interpreter no matter what mode is
 //
 	// Knightmare changed
-	if ( (cls.key_dest == key_menu && menubound[key])
-		|| (cls.consoleActive && !consolekeys[key])
-		|| (cls.key_dest == key_game && (cls.state == ca_active || !consolekeys[key]) && !cls.consoleActive) )
-	//|| (cls.key_dest == key_console && !consolekeys[key])
-	//|| (cls.key_dest == key_game && ( cls.state == ca_active || !consolekeys[key] ) ) )
+	if ((cls.key_dest == key_menu && menubound[key]) || (cls.consoleActive && !consolekeys[key])
+		|| (cls.key_dest == key_game && (cls.state == ca_active || !consolekeys[key]) && !cls.consoleActive))
 	{
 		char cmd[1024];
 		char *kb = keybindings[key];

@@ -178,7 +178,7 @@ centity_t		cl_entities[MAX_EDICTS];
 entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
 
 
-float ClampCvar(float min, float max, float value)
+float ClampCvar(float min, float max, float value) //TODO: mxd. Replace with clamp()
 {
 	if (value < min) return min;
 	if (value > max) return max;
@@ -221,7 +221,7 @@ void CL_Stop_f (void)
 		return;
 	}
 
-// finish up
+	// finish up
 	int len = -1;
 	fwrite(&len, 4, 1, cls.demofile);
 	fclose(cls.demofile);

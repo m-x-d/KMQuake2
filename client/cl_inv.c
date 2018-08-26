@@ -26,12 +26,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 CL_ParseInventory
 ================
 */
-void CL_ParseInventory (void)
+void CL_ParseInventory(void)
 {
-	int		i;
-
-	for (i=0 ; i<MAX_ITEMS ; i++)
-		cl.inventory[i] = MSG_ReadShort (&net_message);
+	for (int i = 0; i < MAX_ITEMS; i++)
+		cl.inventory[i] = MSG_ReadShort(&net_message);
 }
 
 
@@ -40,13 +38,14 @@ void CL_ParseInventory (void)
 Inv_DrawString
 ================
 */
-void Hud_DrawString (int x, int y, const char *string, int alpha, qboolean isStatusBar);
-void Inv_DrawString (int x, int y, char *string)
+void Hud_DrawString(int x, int y, const char *string, int alpha, qboolean isStatusBar);
+
+void Inv_DrawString(int x, int y, char *string)
 {
 	Hud_DrawString(x, y, string, 255, false);
 }
 
-void SetStringHighBit (char *s)
+void SetStringHighBit(char *s)
 {
 	while (*s)
 		*s++ |= 128;
@@ -57,28 +56,24 @@ void SetStringHighBit (char *s)
 CL_DrawInventory
 ================
 */
-#define	DISPLAY_ITEMS	17
+#define DISPLAY_ITEMS	17
 
-void CL_DrawInventory (void)
+void CL_DrawInventory(void)
 {
-	int		i, j;
-	int		num, selected_num, item;
 	int		index[MAX_ITEMS];
 	char	string[1024];
-	int		x, y;
 	char	binding[1024];
-	char	*bind;
-	int		selected;
-	int		top;
 
-	selected = cl.frame.playerstate.stats[STAT_SELECTED_ITEM];
+	const int selected = cl.frame.playerstate.stats[STAT_SELECTED_ITEM];
 
-	num = 0;
-	selected_num = 0;
-	for (i=0; i<MAX_ITEMS; i++)
+	int num = 0;
+	int selected_num = 0;
+
+	for (int i = 0; i < MAX_ITEMS; i++)
 	{
-		if (i==selected)
+		if (i == selected)
 			selected_num = num;
+
 		if (cl.inventory[i])
 		{
 			index[num] = i;
@@ -87,89 +82,53 @@ void CL_DrawInventory (void)
 	}
 
 	// determine scroll point
-	top = selected_num - DISPLAY_ITEMS/2;
+	int top = selected_num - DISPLAY_ITEMS / 2;
 	if (num - top < DISPLAY_ITEMS)
 		top = num - DISPLAY_ITEMS;
 	if (top < 0)
 		top = 0;
 
-	//x = (viddef.width-256)/2;
-	//y = (viddef.height-240)/2;
-//	x = viddef.width/2 - scaledHud(128);
-//	y = viddef.height/2 - scaledHud(120);
-	x = SCREEN_WIDTH/2 - 128;
-	y = SCREEN_HEIGHT/2 - 116;
+	int x = SCREEN_WIDTH / 2 - 128;
+	int y = SCREEN_HEIGHT / 2 - 116;
 
-//	R_DrawScaledPic (x, y+scaledHud(8), HudScale(), hud_alpha->value, "inventory");
-//	y += scaledHud(24);
-//	x += scaledHud(24);
-//	Inv_DrawString (x, y, S_COLOR_BOLD"hotkey ### item");
-//	Inv_DrawString (x, y+scaledHud(8), S_COLOR_BOLD"------ --- ----");
-//	y += scaledHud(16);
-	SCR_DrawPic (x, y, 256, 192, ALIGN_CENTER, "inventory", hud_alpha->value);
+	SCR_DrawPic(x, y, 256, 192, ALIGN_CENTER, "inventory", hud_alpha->value);
 	x += 24;
 	y += 20;
-	SCR_DrawString (x, y, ALIGN_CENTER, S_COLOR_BOLD"hotkey ### item", 255);
+
+	SCR_DrawString(x, y, ALIGN_CENTER, S_COLOR_BOLD"hotkey ### item", 255);
 	y += 8;
-	SCR_DrawString (x, y, ALIGN_CENTER, S_COLOR_BOLD"------ --- ----", 255);
+
+	SCR_DrawString(x, y, ALIGN_CENTER, S_COLOR_BOLD"------ --- ----", 255);
 	x += 16;
 	y += 8;
 
-	for (i=top; i<num && i < top+DISPLAY_ITEMS; i++)
+	for (int i = top; i < num && i < top + DISPLAY_ITEMS; i++)
 	{
-		item = index[i];
+		const int item = index[i];
+
 		// search for a binding
+		const int cs_items = (LegacyProtocol() ? OLD_CS_ITEMS : CS_ITEMS); // Knightmare- BIG UGLY HACK for connected to server using old protocol. Changed config strings require different parsing
+		Com_sprintf(binding, sizeof(binding), "use %s", cl.configstrings[cs_items + item]);
 
-		// Knightmare- BIG UGLY HACK for connected to server using old protocol
-		// Changed config strings require different parsing
-		if ( LegacyProtocol() )
-			Com_sprintf (binding, sizeof(binding), "use %s", cl.configstrings[OLD_CS_ITEMS+item]);
-		else
-			Com_sprintf (binding, sizeof(binding), "use %s", cl.configstrings[CS_ITEMS+item]);
-
-		bind = "";
-		for (j=0; j<256; j++)
-			if (keybindings[j] && !Q_stricmp (keybindings[j], binding))
+		char *bind = "";
+		for (int j = 0; j < 256; j++)
+		{
+			if (keybindings[j] && !Q_stricmp(keybindings[j], binding))
 			{
 				bind = Key_KeynumToString(j);
 				break;
 			}
-
-		// Knightmare- BIG UGLY HACK for connected to server using old protocol
-		// Changed config strings require different parsing
-		if ( LegacyProtocol() )
-		{
-			if (item != selected)
-			{
-				Com_sprintf (string, sizeof(string), " "S_COLOR_BOLD S_COLOR_ALT"%3s %3i %7s", bind, cl.inventory[item],
-					cl.configstrings[OLD_CS_ITEMS+item] );
-			}
-			else	// draw a blinky cursor by the selected item
-			{
-				Com_sprintf (string, sizeof(string), S_COLOR_BOLD">"S_COLOR_ITALIC"%3s %3i %7s", bind, cl.inventory[item],
-					cl.configstrings[OLD_CS_ITEMS+item] );
-			}
-		}
-		else
-		{
-			if (item != selected)
-			{
-				Com_sprintf (string, sizeof(string), " "S_COLOR_BOLD S_COLOR_ALT"%3s %3i %7s", bind, cl.inventory[item],
-					cl.configstrings[CS_ITEMS+item] );
-			}
-			else	// draw a blinky cursor by the selected item
-			{
-				Com_sprintf (string, sizeof(string), S_COLOR_BOLD">"S_COLOR_ITALIC"%3s %3i %7s", bind, cl.inventory[item],
-					cl.configstrings[CS_ITEMS+item] );
-			}
 		}
 
-//		Inv_DrawString (x, y, string);
-//		y += scaledHud(8);
-		SCR_DrawString (x, y, ALIGN_CENTER, string, 255);
+		char *text;
+		if (item == selected) // draw a blinky cursor by the selected item
+			text = S_COLOR_BOLD">"S_COLOR_ITALIC"%3s %3i %7s";
+		else 
+			text = " "S_COLOR_BOLD S_COLOR_ALT"%3s %3i %7s";
+
+		Com_sprintf(string, sizeof(string), text, bind, cl.inventory[item], cl.configstrings[cs_items + item]);
+		SCR_DrawString(x, y, ALIGN_CENTER, string, 255);
+
 		y += 8;
 	}
-
 }
-
-

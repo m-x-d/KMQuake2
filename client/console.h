@@ -22,12 +22,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // console
 //
 
-#define	NUM_CON_TIMES 8	// was 4
+#ifndef CONSOLE_H
+#define CONSOLE_H
 
-#define		CON_TEXTSIZE	32768
+#define	NUM_CON_TIMES 8	// was 4
+#define CON_TEXTSIZE	32768
+
 typedef struct
 {
-	qboolean	initialized;
+	qboolean initialized;
 
 	char	text[CON_TEXTSIZE];
 	int		current;		// line where next message will be printed
@@ -45,25 +48,21 @@ typedef struct
 	int		vislines;
 
 	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated
-								// for transparent notify lines
+									// for transparent notify lines
 } console_t;
 
-extern	console_t	con;
+extern console_t con;
+extern qboolean halfconback;	// whether to draw Q3-style console
 
-extern	qboolean	halfconback;	// whether to draw Q3-style console
-
-//void Con_DrawCharacter (int cx, int line, int num); //mxd. Undeclared and unused
-
-void Con_CheckResize (void);
-void Con_Init (void);
-//Knightmare changed
-//void Con_DrawConsole (float frac);
-void Con_DrawConsole (float frac, qboolean ingame);
-//void Con_Print (char *txt); //mxd. Redundant declaration
-void Con_CenteredPrint (char *text);
+void Con_CheckResize(void);
+void Con_Init(void);
+void Con_DrawConsole(float frac, qboolean ingame); //Knightmare changed
+void Con_CenteredPrint(char *text);
 int Con_LinesOnScreen(); //mxd
 int Con_FirstLine(); //mxd
-void Con_Clear_f (void);
-void Con_DrawNotify (void);
-void Con_ClearNotify (void);
-void Con_ToggleConsole_f (void);
+void Con_Clear_f(void);
+void Con_DrawNotify(void);
+void Con_ClearNotify(void);
+void Con_ToggleConsole_f(void);
+
+#endif // CONSOLE_H

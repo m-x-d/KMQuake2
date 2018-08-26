@@ -85,11 +85,9 @@ float viewermodelalpha;
 
 void ClipCam (vec3_t start, vec3_t end, vec3_t newpos)
 {
-	int i;
-
-	trace_t tr = CL_Trace (start, end, 5, MASK_SOLID);
-	for (i=0;i<3;i++)
-		newpos[i]=tr.endpos[i];
+	const trace_t tr = CL_Trace(start, end, 5, MASK_SOLID);
+	for (int i = 0; i < 3; i++)
+		newpos[i] = tr.endpos[i];
 }
 
 void AddViewerEntAlpha (entity_t *ent)
@@ -98,23 +96,16 @@ void AddViewerEntAlpha (entity_t *ent)
 		return;
 
 	ent->alpha *= viewermodelalpha;
-	if (ent->alpha < 1.0F)
+	if (ent->alpha < 1.0f)
 		ent->flags |= RF_TRANSLUCENT;
 }
 
 #define ANGLEMAX 90.0
+
 void CalcViewerCamTrans (float distance)
 {
-	float alphacalc = cg_thirdperson_dist->value;
-
-	// no div by 0
-	if (alphacalc < 1)
-		alphacalc = 1;
-
-	viewermodelalpha = distance/alphacalc;
-
-	if (viewermodelalpha>1)
-		viewermodelalpha = 1;
+	const float alphacalc = max(1, cg_thirdperson_dist->value); // no div by 0
+	viewermodelalpha = min(1, distance / alphacalc);
 }
 
 
@@ -127,27 +118,25 @@ void V_AddEntity (entity_t *ent)
 {
 	// Knightmare- added Psychospaz's chasecam
 	if (ent->flags & RF_VIEWERMODEL) //here is our client
-	{	int i; 
-
+	{
 		// what was i thinking before!?
-		for (i=0;i<3;i++)
+		for (int i = 0; i < 3; i++)
 			clientOrg[i] = ent->oldorigin[i] = ent->origin[i] = cl.predicted_origin[i];
 
 		if (hand->value == 1) //lefthanded
 			ent->flags |= RF_MIRRORMODEL;
 
-		if (cg_thirdperson->value
-			&& !(cl.attractloop && !(cl.cinematictime > 0 && cls.realtime - cl.cinematictime > 1000)))
+		if (cg_thirdperson->value && !(cl.attractloop && !(cl.cinematictime > 0 && cls.realtime - cl.cinematictime > 1000)))
 		{
 			AddViewerEntAlpha(ent);
 			ent->flags &= ~RF_VIEWERMODEL;
 			ent->renderfx |= RF2_CAMERAMODEL;
 		}
 	}
+
 	// end Knightmare
-	if (r_numentities >= MAX_ENTITIES)
-		return;
-	r_entities[r_numentities++] = *ent;
+	if (r_numentities < MAX_ENTITIES)
+		r_entities[r_numentities++] = *ent;
 }
 
 
@@ -157,8 +146,7 @@ V_AddParticle
 =====================
 */
 //Knightmare- Psychospaz's enhanced particle code
-void V_AddParticle (vec3_t org, vec3_t angle, vec3_t color, float alpha,
-				int alpha_src, int alpha_dst, float size, int image, int flags)
+void V_AddParticle (vec3_t org, vec3_t angle, vec3_t color, float alpha, int alpha_src, int alpha_dst, float size, int image, int flags)
 {
 	if (r_numparticles >= MAX_PARTICLES)
 		return;
@@ -185,8 +173,7 @@ void V_AddParticle (vec3_t org, vec3_t angle, vec3_t color, float alpha,
 V_AddDecal
 =====================
 */
-void V_AddDecal (vec3_t org, vec3_t angle, vec3_t color, float alpha,
-				int alpha_src, int alpha_dst, float size, int image, int flags, decalpolys_t *decal)
+void V_AddDecal (vec3_t org, vec3_t angle, vec3_t color, float alpha, int alpha_src, int alpha_dst, float size, int image, int flags, decalpolys_t *decal)
 {
 	if (r_numdecalfrags >= MAX_DECAL_FRAGS)
 		return;
@@ -211,7 +198,6 @@ void V_AddDecal (vec3_t org, vec3_t angle, vec3_t color, float alpha,
 /*
 =====================
 V_AddLight
-
 =====================
 */
 void V_AddLight (vec3_t org, float intensity, float r, float g, float b)
@@ -220,19 +206,16 @@ void V_AddLight (vec3_t org, float intensity, float r, float g, float b)
 		return;
 
 	dlight_t *dl = &r_dlights[r_numdlights++];
-	VectorCopy (org, dl->origin);
+	VectorCopy(org, dl->origin);
 	dl->intensity = intensity;
-	dl->color[0] = r;
-	dl->color[1] = g;
-	dl->color[2] = b;
-	VectorCopy (vec3_origin, dl->direction);
+	VectorSet(dl->color, r, g, b);
+	VectorCopy(vec3_origin, dl->direction);
 	dl->spotlight = false;
 }
 
 /*
 =====================
 V_AddSpotLight
-
 =====================
 */
 void V_AddSpotLight (vec3_t org, vec3_t direction, float intensity, float r, float g, float b)
@@ -243,18 +226,14 @@ void V_AddSpotLight (vec3_t org, vec3_t direction, float intensity, float r, flo
 	dlight_t *dl = &r_dlights[r_numdlights++];
 	VectorCopy(org, dl->origin);
 	VectorCopy(direction, dl->direction);
+	VectorSet(dl->color, r, g, b);
 	dl->intensity = intensity;
-	dl->color[0] = r;
-	dl->color[1] = g;
-	dl->color[2] = b;
-
 	dl->spotlight = true;
 }
 
 /*
 =====================
 V_AddLightStyle
-
 =====================
 */
 void V_AddLightStyle (int style, float r, float g, float b)
@@ -265,9 +244,7 @@ void V_AddLightStyle (int style, float r, float g, float b)
 	lightstyle_t *ls = &r_lightstyles[style];
 
 	ls->white = r + g + b;
-	ls->rgb[0] = r;
-	ls->rgb[1] = g;
-	ls->rgb[2] = b;
+	VectorSet(ls->rgb, r, g, b);
 }
 
 /*
@@ -344,7 +321,7 @@ void V_TestLights (void)
 		for (int j = 0; j < 3; j++)
 			dl->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j] * f + cl.v_right[j] * r;
 		
-		dl->color[0] = ((i % 6) + 1) & 1;
+		dl->color[0] =  ((i % 6) + 1) & 1;
 		dl->color[1] = (((i % 6) + 1) & 2) >> 1;
 		dl->color[2] = (((i % 6) + 1) & 4) >> 2;
 		dl->intensity = 200;
@@ -365,11 +342,10 @@ qboolean needLoadingPlaque (void);
 
 void CL_PrepRefresh (void)
 {
-	char		mapname[64];
-	int			i, max;
-	char		pname[MAX_QPATH];
-	vec3_t		axis;
-	const qboolean	newPlaque = needLoadingPlaque();
+	char	mapname[64];
+	char	pname[MAX_QPATH];
+	vec3_t	axis;
+	const qboolean newPlaque = needLoadingPlaque();
 
 	if (!cl.configstrings[CS_MODELS + 1][0])
 		return; // no map loaded
@@ -379,7 +355,7 @@ void CL_PrepRefresh (void)
 
 	// Knightmare- for Psychospaz's map loading screen
 	loadingMessage = true;
-	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", cl.configstrings[CS_MODELS+1]);
+	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", cl.configstrings[CS_MODELS + 1]);
 	loadingPercent = 0.0f;
 	// end Knightmare
 
@@ -404,24 +380,25 @@ void CL_PrepRefresh (void)
 	SCR_TouchPics();
 	Com_Printf("                                     \r");
 
-	CL_RegisterTEntModels ();
+	CL_RegisterTEntModels();
 
 	num_cl_weaponmodels = 1;
 	Q_strncpyz(cl_weaponmodels[0], "weapon.md2", sizeof(cl_weaponmodels[0]));
 
 	// Knightmare- for Psychospaz's map loading screen
-	for (i = 1, max = 0; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
+	int max = 0;
+	for (int i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
 		max++;
 
-	for (i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
+	for (int i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS + i][0]; i++)
 	{
 		Q_strncpyz(pname, cl.configstrings[CS_MODELS + i], sizeof(pname));
 		pname[37] = 0;	// never go beyond one line
 		if (pname[0] != '*')
 		{
 			Com_Printf("%s\r", pname); 
-			// Knightmare- for Psychospaz's map loading screen
-			//only make max of 40 chars long
+
+			// Knightmare- for Psychospaz's map loading screen. Only make max of 40 chars long
 			if (i > 1)
 				Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", (strlen(pname) > 40 ? &pname[strlen(pname) - 40] : pname));
 		}
@@ -436,12 +413,12 @@ void CL_PrepRefresh (void)
 				strncpy(cl_weaponmodels[num_cl_weaponmodels], cl.configstrings[CS_MODELS + i] + 1, sizeof(cl_weaponmodels[num_cl_weaponmodels]) - 1);
 				num_cl_weaponmodels++;
 			}
-		} 
+		}
 		else
 		{
-			cl.model_draw[i] = R_RegisterModel (cl.configstrings[CS_MODELS + i]);
+			cl.model_draw[i] = R_RegisterModel(cl.configstrings[CS_MODELS + i]);
 			if (pname[0] == '*')
-				cl.model_clip[i] = CM_InlineModel (cl.configstrings[CS_MODELS + i]);
+				cl.model_clip[i] = CM_InlineModel(cl.configstrings[CS_MODELS + i]);
 			else
 				cl.model_clip[i] = NULL;
 		}
@@ -455,8 +432,7 @@ void CL_PrepRefresh (void)
 
 	// Knightmare- for Psychospaz's map loading screen
 	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading pics...");
-
-	Com_Printf("images\r", i); 
+	Com_Printf("images\r");
 	SCR_UpdateScreen();
 
 	// Knightmare- BIG UGLY HACK for connected to server using old protocol
@@ -465,10 +441,11 @@ void CL_PrepRefresh (void)
 	const int csimages = (LegacyProtocol() ? OLD_CS_IMAGES : CS_IMAGES); //mxd
 
 	// Knightmare- for Psychospaz's map loading screen
-	for (i = 1, max = 0; i < maximages && cl.configstrings[csimages + i][0]; i++)
+	max = 0;
+	for (int i = 1; i < maximages && cl.configstrings[csimages + i][0]; i++)
 		max++;
 
-	for (i = 1; i < maximages && cl.configstrings[csimages + i][0]; i++)
+	for (int i = 1; i < maximages && cl.configstrings[csimages + i][0]; i++)
 	{
 		cl.image_precache[i] = R_DrawFindPic(cl.configstrings[csimages + i]);
 		Sys_SendKeyEvents();	// pump message loop
@@ -483,13 +460,12 @@ void CL_PrepRefresh (void)
 
 	// Knightmare- for Psychospaz's map loading screen
 	const int playerskinsoffset = (LegacyProtocol() ? OLD_CS_PLAYERSKINS : CS_PLAYERSKINS); //mxd
-	for (i = 1, max = 0; i < MAX_CLIENTS; i++)
-	{
+	max = 0;
+	for (int i = 1; i < MAX_CLIENTS; i++)
 		if (cl.configstrings[playerskinsoffset + i][0]) //mxd
 			max++;
-	}
 
-	for (i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
 		// Knightmare- BIG UGLY HACK for old connected to server using old protocol
 		// Changed configstrings require different parsing
@@ -519,7 +495,7 @@ void CL_PrepRefresh (void)
 	userinfo_modified = true;
 
 	// set sky textures and speed
-	Com_Printf("sky\r", i); 
+	Com_Printf("sky\r"); 
 	SCR_UpdateScreen();
 	const float rotate = atof(cl.configstrings[CS_SKYROTATE]);
 	sscanf(cl.configstrings[CS_SKYAXIS], "%f %f %f", &axis[0], &axis[1], &axis[2]);
@@ -583,7 +559,7 @@ void V_Gun_Prev_f (void)
 {
 	gun_frame--;
 	gun_frame = max(0, gun_frame);
-	Com_Printf ("frame %i\n", gun_frame);
+	Com_Printf("frame %i\n", gun_frame);
 }
 
 void V_Gun_Model_f (void)
@@ -622,6 +598,7 @@ void V_RenderView (float stereo_separation)
 	{
 		if (!cl.timedemo_start)
 			cl.timedemo_start = Sys_Milliseconds();
+
 		cl.timedemo_frames++;
 	}
 
@@ -639,10 +616,13 @@ void V_RenderView (float stereo_separation)
 
 		if (cl_testparticles->value)
 			V_TestParticles();
+
 		if (cl_testentities->value)
 			V_TestEntities();
+
 		if (cl_testlights->value)
 			V_TestLights();
+
 		if (cl_testblend->value)
 		{
 			cl.refdef.blend[0] = 1;
@@ -652,20 +632,18 @@ void V_RenderView (float stereo_separation)
 		}
 
 		// offset vieworg appropriately if we're doing stereo separation
-		if ( stereo_separation != 0 )
+		if (stereo_separation != 0)
 		{
 			vec3_t tmp;
-
-			VectorScale( cl.v_right, stereo_separation, tmp );
-			VectorAdd( cl.refdef.vieworg, tmp, cl.refdef.vieworg );
+			VectorScale(cl.v_right, stereo_separation, tmp);
+			VectorAdd(cl.refdef.vieworg, tmp, cl.refdef.vieworg);
 		}
 
 		// never let it sit exactly on a node line, because a water plane can
 		// dissapear when viewed with the eye exactly on it.
 		// the server protocol only specifies to 1/8 pixel, so add 1/16 in each axis
-		cl.refdef.vieworg[0] += 1.0 / 16;
-		cl.refdef.vieworg[1] += 1.0 / 16;
-		cl.refdef.vieworg[2] += 1.0 / 16;
+		for(int c = 0; c < 3; c++)
+			cl.refdef.vieworg[c] += 1.0 / 16;
 
 		cl.refdef.x = scr_vrect.x;
 		cl.refdef.y = scr_vrect.y;
@@ -683,6 +661,7 @@ void V_RenderView (float stereo_separation)
 
 			cl.refdef.fov_x = min(cl.refdef.fov_x, 160);
 		}
+
 		cl.refdef.fov_y = CalcFov(cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
 		cl.refdef.time = cl.time * 0.001;
 
@@ -692,16 +671,19 @@ void V_RenderView (float stereo_separation)
 			const float f = sin(cl.time * 0.001 * 0.4 * (M_PI * 2.7));
 			cl.refdef.fov_x += f * (cl.refdef.fov_x / 90.0); // Knightmare- scale to fov
 			cl.refdef.fov_y -= f * (cl.refdef.fov_y / 90.0); // Knightmare- scale to fov
-		} // end Barnes
+		}
 
 		cl.refdef.areabits = cl.frame.areabits;
 
 		if (!cl_add_entities->value)
 			r_numentities = 0;
+
 		if (!cl_add_particles->value)
 			r_numparticles = 0;
+
 		if (!cl_add_lights->value)
 			r_numdlights = 0;
+
 		if (!cl_add_blend->value)
 			VectorClear(cl.refdef.blend);
 
@@ -718,12 +700,14 @@ void V_RenderView (float stereo_separation)
 		cl.refdef.lightstyles = r_lightstyles;
 
 		cl.refdef.rdflags = cl.frame.playerstate.rdflags;
-        qsort(cl.refdef.entities, cl.refdef.num_entities, sizeof(cl.refdef.entities[0]), (int (*)(const void *, const void *))entitycmpfnc);
+		qsort(cl.refdef.entities, cl.refdef.num_entities, sizeof(cl.refdef.entities[0]), (int (*)(const void *, const void *))entitycmpfnc);
 	}
 
 	R_RenderFrame(&cl.refdef);
+
 	if (cl_stats->value)
 		Com_Printf("ent:%i  lt:%i  part:%i\n", r_numentities, r_numdlights, r_numparticles);
+
 	if (log_stats->value && log_stats_file != 0)
 		fprintf(log_stats_file, "%i,%i,%i,",r_numentities, r_numdlights, r_numparticles);
 }
@@ -736,8 +720,10 @@ V_Viewpos_f
 */
 void V_Viewpos_f (void)
 {
-	Com_Printf ("(%i %i %i) : %i\n", (int)cl.refdef.vieworg[0],
-		(int)cl.refdef.vieworg[1], (int)cl.refdef.vieworg[2], 
+	Com_Printf("(%i %i %i) : %i\n",
+		(int)cl.refdef.vieworg[0],
+		(int)cl.refdef.vieworg[1],
+		(int)cl.refdef.vieworg[2],
 		(int)cl.refdef.viewangles[YAW]);
 }
 
@@ -749,8 +735,7 @@ V_Texture_f
 */
 void V_Texture_f (void)
 {
-	trace_t	tr;
-	vec3_t	forward, start, end;
+	vec3_t forward, start, end;
 
 	if (!developer->value) // only works in developer mode
 		return;
@@ -758,14 +743,18 @@ void V_Texture_f (void)
 	VectorCopy(cl.refdef.vieworg, start);
 	AngleVectors(cl.refdef.viewangles, forward, NULL, NULL);
 	VectorMA(start, 8192, forward, end);
-	tr = CL_PMSurfaceTrace(cl.playernum+1, start,NULL,NULL,end,MASK_ALL);
+	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_ALL);
+
 	if (!tr.ent)
+	{
 		Com_Printf("Nothing hit?\n");
-	else {
+	}
+	else
+	{
 		if (!tr.surface)
 			Com_Printf("Not a brush\n");
 		else
-			Com_Printf("Texture=%s, surface=0x%08x, value=%d\n",tr.surface->name,tr.surface->flags,tr.surface->value);
+			Com_Printf("Texture=%s, surface=0x%08x, value=%d\n", tr.surface->name, tr.surface->flags, tr.surface->value);
 	}
 }
 
@@ -776,16 +765,13 @@ V_Surf_f
 */
 void V_Surf_f (void)
 {
-	trace_t	tr;
-	vec3_t	forward, start, end;
-	int		s;
+	vec3_t forward, start, end;
 
 	if (!developer->value) // only works in developer mode
 		return;
 
 	// Disable this in multiplayer
-	if ( cl.configstrings[CS_MAXCLIENTS][0] &&
-		strcmp(cl.configstrings[CS_MAXCLIENTS], "1") )
+	if (cl.configstrings[CS_MAXCLIENTS][0] && strcmp(cl.configstrings[CS_MAXCLIENTS], "1"))
 		return;
 
 	if (Cmd_Argc() < 2)
@@ -793,15 +779,18 @@ void V_Surf_f (void)
 		Com_Printf("Syntax: surf <value>\n");
 		return;
 	}
-	else
-		s = atoi(Cmd_Argv(1));
+
+	const int s = atoi(Cmd_Argv(1));
 
 	VectorCopy(cl.refdef.vieworg, start);
 	AngleVectors(cl.refdef.viewangles, forward, NULL, NULL);
 	VectorMA(start, 8192, forward, end);
-	tr = CL_PMSurfaceTrace(cl.playernum+1, start,NULL,NULL,end,MASK_ALL);
+	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_ALL);
+
 	if (!tr.ent)
+	{
 		Com_Printf("Nothing hit?\n");
+	}
 	else
 	{
 		if (!tr.surface)
@@ -819,23 +808,23 @@ V_Init
 */
 void V_Init (void)
 {
-	Cmd_AddCommand ("gun_next", V_Gun_Next_f);
-	Cmd_AddCommand ("gun_prev", V_Gun_Prev_f);
-	Cmd_AddCommand ("gun_model", V_Gun_Model_f);
+	Cmd_AddCommand("gun_next", V_Gun_Next_f);
+	Cmd_AddCommand("gun_prev", V_Gun_Prev_f);
+	Cmd_AddCommand("gun_model", V_Gun_Model_f);
 
-	Cmd_AddCommand ("viewpos", V_Viewpos_f);
+	Cmd_AddCommand("viewpos", V_Viewpos_f);
 
 	// Knightmare- diagnostic commands from Lazarus
-	Cmd_AddCommand ("texture", V_Texture_f);
-	Cmd_AddCommand ("surf", V_Surf_f);
-	//Cmd_AddCommand ("bbox", V_BBox_f);
+	Cmd_AddCommand("texture", V_Texture_f);
+	Cmd_AddCommand("surf", V_Surf_f);
+	//Cmd_AddCommand("bbox", V_BBox_f);
 
-	hand = Cvar_Get ("hand", "0", CVAR_ARCHIVE);
+	hand = Cvar_Get("hand", "0", CVAR_ARCHIVE);
 
-	cl_testblend = Cvar_Get ("cl_testblend", "0", 0);
-	cl_testparticles = Cvar_Get ("cl_testparticles", "0", 0);
-	cl_testentities = Cvar_Get ("cl_testentities", "0", 0);
-	cl_testlights = Cvar_Get ("cl_testlights", "0", CVAR_CHEAT);
+	cl_testblend = Cvar_Get("cl_testblend", "0", 0);
+	cl_testparticles = Cvar_Get("cl_testparticles", "0", 0);
+	cl_testentities = Cvar_Get("cl_testentities", "0", 0);
+	cl_testlights = Cvar_Get("cl_testlights", "0", CVAR_CHEAT);
 
-	cl_stats = Cvar_Get ("cl_stats", "0", 0);
+	cl_stats = Cvar_Get("cl_stats", "0", 0);
 }

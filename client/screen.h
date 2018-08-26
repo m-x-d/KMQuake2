@@ -19,6 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // screen.h
 
+#ifndef SCREEN_H
+#define SCREEN_H
+
 typedef struct
 {
 	float x;
@@ -31,54 +34,47 @@ screenscale_t screenScale;
 
 typedef enum
 {
-ALIGN_STRETCH,
-ALIGN_CENTER,
-ALIGN_TOP,
-ALIGN_BOTTOM,
-ALIGN_RIGHT,
-ALIGN_LEFT,
-ALIGN_TOPRIGHT,
-ALIGN_TOPLEFT,
-ALIGN_BOTTOMRIGHT,
-ALIGN_BOTTOMLEFT,
-ALIGN_BOTTOM_STRETCH
+	ALIGN_STRETCH,
+	ALIGN_CENTER,
+	ALIGN_TOP,
+	ALIGN_BOTTOM,
+	ALIGN_RIGHT,
+	ALIGN_LEFT,
+	ALIGN_TOPRIGHT,
+	ALIGN_TOPLEFT,
+	ALIGN_BOTTOMRIGHT,
+	ALIGN_BOTTOMLEFT,
+	ALIGN_BOTTOM_STRETCH
 } scralign_t;
 
 typedef enum
 {
-SCALETYPE_CONSOLE,
-SCALETYPE_HUD,
-SCALETYPE_MENU
+	SCALETYPE_CONSOLE,
+	SCALETYPE_HUD,
+	SCALETYPE_MENU
 } textscaletype_t;
 
 
-void	SCR_Init (void);
+void SCR_Init(void);
+void SCR_UpdateScreen(void);
+void SCR_CenterPrint(char *str);
+void SCR_EndLoadingPlaque(void);
 
-void	SCR_UpdateScreen (void);
+void SCR_TouchPics(void);
 
-//void	SCR_SizeUp (void); //mxd. Undefined and unused
-//void	SCR_SizeDown (void); //mxd. Undefined and unused
-void	SCR_CenterPrint (char *str);
-//void	SCR_BeginLoadingPlaque (void); //mxd. Redundant declaration
-void	SCR_EndLoadingPlaque (void);
+void SCR_RunLetterbox(void);
+void SCR_RunConsole(void);
 
-//void	SCR_DebugGraph (float value, int color); //mxd. Redundant declaration
+void SCR_InitScreenScale(void);
+void SCR_AdjustFrom640(float *x, float *y, float *w, float *h, scralign_t align);
+float SCR_ScaledVideo(float param);
+float SCR_VideoScale(void);
 
-void	SCR_TouchPics (void);
-
-void	SCR_RunLetterbox (void);
-void	SCR_RunConsole (void);
-
-void	SCR_InitScreenScale (void);
-void	SCR_AdjustFrom640 (float *x, float *y, float *w, float *h, scralign_t align);
-float	SCR_ScaledVideo (float param);
-float	SCR_VideoScale (void);
-
-void	SCR_DrawFill (float x, float y, float width, float height, scralign_t align, int red, int green, int blue, int alpha);
-void	SCR_DrawPic (float x, float y, float width, float height, scralign_t align, char *pic, float alpha);
-void	SCR_DrawChar (float x, float y, scralign_t align, int num, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
-void	SCR_DrawString (float x, float y, scralign_t align, const char *string, int alpha);
-void	SCR_DrawCrosshair (void);
+void SCR_DrawFill(float x, float y, float width, float height, scralign_t align, int red, int green, int blue, int alpha);
+void SCR_DrawPic(float x, float y, float width, float height, scralign_t align, char *pic, float alpha);
+void SCR_DrawChar(float x, float y, scralign_t align, int num, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
+void SCR_DrawString(float x, float y, scralign_t align, const char *string, int alpha);
+void SCR_DrawCrosshair(void);
 
 
 extern	float		scr_con_current;
@@ -120,9 +116,10 @@ extern	int			crosshair_width, crosshair_height;
 //
 // scr_cin.c
 //
-void SCR_PlayCinematic (char *name);
-qboolean SCR_DrawCinematic (void);
-void SCR_RunCinematic (void);
-void SCR_StopCinematic (void);
-void SCR_FinishCinematic (void);
+void SCR_PlayCinematic(char *name);
+qboolean SCR_DrawCinematic(void);
+void SCR_RunCinematic(void);
+void SCR_StopCinematic(void);
+void SCR_FinishCinematic(void);
 
+#endif // SCREEN_H

@@ -3299,7 +3299,7 @@ void CL_TrackerTrail (vec3_t start, vec3_t end)
 	float len = VectorNormalize(vec);
 
 	VectorCopy(vec, forward);
-	vectoangles2(forward, angle_dir);
+	vectoangles(forward, angle_dir);
 	AngleVectors(angle_dir, forward, right, up);
 
 	const float dec = 3 * max(cl_particle_scale->value / 2, 1);

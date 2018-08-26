@@ -25,8 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //=================================================
 
 // Here I convert old 256 color palette to RGB
-const byte default_pal[768] = {
-#include "q2palette.h"
+const byte default_pal[768] =
+{
+	#include "q2palette.h"
 };
 
 
@@ -48,22 +49,21 @@ int	color8blue (int color8)
 }
 
 //mxd
-void color8_to_vec3 (int color8, vec3_t v)
+void color8_to_vec3(int color8, vec3_t v)
 {
 	VectorSet(v, color8red(color8), color8green(color8), color8blue(color8));
 }
 
 //=================================================
 
-void vectoangles (vec3_t value1, vec3_t angles)
+void vectoangles(vec3_t vec, vec3_t angles)
 {
-	float	forward;
-	float	yaw, pitch;
+	float yaw, pitch;
 	
-	if (value1[1] == 0 && value1[0] == 0)
+	if (vec[1] == 0 && vec[0] == 0)
 	{
 		yaw = 0;
-		if (value1[2] > 0)
+		if (vec[2] > 0)
 			pitch = 90;
 		else
 			pitch = 270;
@@ -71,9 +71,9 @@ void vectoangles (vec3_t value1, vec3_t angles)
 	else
 	{
 		// PMM - fixed to correct for pitch of 0
-		if (value1[0])
-			yaw = (atan2(value1[1], value1[0]) * 180 / M_PI);
-		else if (value1[1] > 0)
+		if (vec[0])
+			yaw = (atan2(vec[1], vec[0]) * 180 / M_PI);
+		else if (vec[1] > 0)
 			yaw = 90;
 		else
 			yaw = 270;
@@ -81,8 +81,8 @@ void vectoangles (vec3_t value1, vec3_t angles)
 		if (yaw < 0)
 			yaw += 360;
 
-		forward = sqrtf (value1[0]*value1[0] + value1[1]*value1[1]);
-		pitch = (atan2(value1[2], forward) * 180 / M_PI);
+		const float forward = sqrtf(vec[0] * vec[0] + vec[1] * vec[1]);
+		pitch = (atan2(vec[2], forward) * 180 / M_PI);
 		if (pitch < 0)
 			pitch += 360;
 	}
@@ -93,39 +93,7 @@ void vectoangles (vec3_t value1, vec3_t angles)
 }
 
 
-void vectoangles2 (vec3_t value1, vec3_t angles)
+void vectoangles2(vec3_t vec, vec3_t angles)
 {
-	float	forward;
-	float	yaw, pitch;
-	
-	if (value1[1] == 0 && value1[0] == 0)
-	{
-		yaw = 0;
-		if (value1[2] > 0)
-			pitch = 90;
-		else
-			pitch = 270;
-	}
-	else
-	{
-	// PMM - fixed to correct for pitch of 0
-		if (value1[0])
-			yaw = (atan2(value1[1], value1[0]) * 180 / M_PI);
-		else if (value1[1] > 0)
-			yaw = 90;
-		else
-			yaw = 270;
-
-		if (yaw < 0)
-			yaw += 360;
-
-		forward = sqrtf (value1[0]*value1[0] + value1[1]*value1[1]);
-		pitch = (atan2(value1[2], forward) * 180 / M_PI);
-		if (pitch < 0)
-			pitch += 360;
-	}
-
-	angles[PITCH] = -pitch;
-	angles[YAW] = yaw;
-	angles[ROLL] = 0;
+	vectoangles(vec, angles); //mxd. Identical implementation...
 }

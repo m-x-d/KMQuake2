@@ -19,19 +19,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // vid.h -- video driver defs
 
+#ifndef VID_H
+#define VID_H
+
 typedef struct vrect_s
 {
-	int				x,y,width,height;
+	int	x, y, width, height;
 } vrect_t;
 
 typedef struct
 {
-	unsigned		width, height;			// coordinates from main game
+	unsigned width, height;	// coordinates from main game
 } viddef_t;
 
-extern	viddef_t	viddef;				// global video state
+extern viddef_t viddef;		// global video state
 
 // Video module initialisation etc
-void	VID_Init (void);
-void	VID_Shutdown (void);
-void	VID_CheckChanges (void);
+void VID_Init(void);
+void VID_Shutdown(void);
+void VID_CheckChanges(void);
+
+#endif // VID_H

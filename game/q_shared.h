@@ -103,6 +103,14 @@ typedef enum {false, true}	qboolean;
 #define clamp(value, minimum, maximum) (min(maximum, max(minimum, value)))
 #endif
 
+#ifndef nonzero //mxd
+#define nonzero(value, default_value) (value ? value : default_value)
+#endif
+
+#ifndef sign //mxd. Same as Math.Sign in C#
+#define sign(value) (value == 0 ? 0 : (value > 0 ? 1 : -1))
+#endif
+
 // from Quake3 source
 #ifdef _MSC_VER	// _WIN32
 //#define Q_vsnprintf _vsnprintf
@@ -336,6 +344,7 @@ void ClearBounds (vec3_t mins, vec3_t maxs);
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
 int VectorCompare (vec3_t v1, vec3_t v2);
 vec_t VectorLength (vec3_t v);
+vec_t VectorLengthSquared(vec3_t v); //mxd
 void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross);
 vec_t VectorNormalize (vec3_t v);		// returns vector length
 vec_t VectorNormalize2 (vec3_t v, vec3_t out);
@@ -818,10 +827,8 @@ typedef struct
 
 
 // entity_state_t->effects
-// Effects are things handled on the client side (lights, particles, frame animations)
-// that happen constantly on the given entity.
-// An entity that has effects will be sent to the client
-// even if it has a zero index model.
+// Effects are things handled on the client side (lights, particles, frame animations) that happen constantly on the given entity.
+// An entity that has effects will be sent to the client even if it has a zero index model.
 #define	EF_ROTATE			0x00000001		// rotate (bonus items)
 #define	EF_GIB				0x00000002		// leave a trail
 #define	EF_BLASTER			0x00000008		// redlight + trail
