@@ -48,9 +48,7 @@ void SV_FlushRedirect (int sv_redirected, char *outputbuf)
 
 /*
 =============================================================================
-
-EVENT MESSAGES
-
+	EVENT MESSAGES
 =============================================================================
 */
 
@@ -64,8 +62,8 @@ Sends text across to be displayed if the level passes
 */
 void SV_ClientPrintf (client_t *cl, int level, char *fmt, ...)
 {
-	va_list		argptr;
-	char		string[1024];
+	va_list	argptr;
+	char	string[1024];
 	
 	if (level < cl->messagelevel)
 		return;
@@ -93,9 +91,9 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 	client_t	*cl;
 	int			i;
 
-	va_start (argptr, fmt);
-	Q_vsnprintf (string, sizeof(string), fmt, argptr);
-	va_end (argptr);
+	va_start(argptr, fmt);
+	Q_vsnprintf(string, sizeof(string), fmt, argptr);
+	va_end(argptr);
 	
 	// echo to console
 	if (dedicated->value)
@@ -105,7 +103,7 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 		
 		// mask off high bits
 		for (c = 0; c < 1023 && string[c]; c++)
-			copy[c] = string[c]&127;
+			copy[c] = string[c] & 127;
 
 		copy[c] = 0;
 		Com_Printf("%s", copy);
@@ -131,8 +129,8 @@ Sends text to all active clients
 */
 void SV_BroadcastCommand (char *fmt, ...)
 {
-	va_list		argptr;
-	char		string[1024];
+	va_list	argptr;
+	char	string[1024];
 	
 	if (!sv.state)
 		return;
@@ -226,7 +224,7 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 
 			if (!CM_AreasConnected(area1, area2))
 				continue;
-			if ( !(mask[cluster >> 3] & 1 << (cluster&7)) )
+			if ( !(mask[cluster >> 3] & 1 << (cluster & 7)) )
 				continue;
 		}
 
@@ -244,43 +242,31 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 ==================
 SV_StartSound
 
-Each entity can have eight independant sound sources, like voice,
-weapon, feet, etc.
+Each entity can have eight independant sound sources, like voice, weapon, feet, etc.
+If cahnnel & 8, the sound will be sent to everyone, not just things in the PHS.
 
-If cahnnel & 8, the sound will be sent to everyone, not just
-things in the PHS.
+FIXME: if entity isn't in PHS, they must be forced to be sent or have the origin explicitly sent.
 
-FIXME: if entity isn't in PHS, they must be forced to be sent or
-have the origin explicitly sent.
-
-Channel 0 is an auto-allocate channel, the others override anything
-already running on that entity/channel pair.
+Channel 0 is an auto-allocate channel, the others override anything already running on that entity/channel pair.
 
 An attenuation of 0 will play full volume everywhere in the level.
 Larger attenuations will drop off.  (max 4 attenuation)
 
-Timeofs can range from 0.0 to 0.1 to cause sounds to be started
-later in the frame than they normally would.
+Timeofs can range from 0.0 to 0.1 to cause sounds to be started later in the frame than they normally would.
 
-If origin is NULL, the origin is determined from the entity origin
-or the midpoint of the entity box for bmodels.
+If origin is NULL, the origin is determined from the entity origin or the midpoint of the entity box for bmodels.
 ==================
 */  
-void SV_StartSound (vec3_t origin, edict_t *entity, int channel,
-					int soundindex, float volume,
-					float attenuation, float timeofs)
+void SV_StartSound (vec3_t origin, edict_t *entity, int channel, int soundindex, float volume, float attenuation, float timeofs)
 {
 	vec3_t		origin_v;
 	qboolean	use_phs;
 
 	if (volume < 0 || volume > 1.0)
-		Com_Error (ERR_FATAL, "SV_StartSound: volume = %f", volume);
+		Com_Error(ERR_FATAL, "SV_StartSound: volume = %f", volume);
 
 	if (attenuation < 0 || attenuation > 4)
-		Com_Error (ERR_FATAL, "SV_StartSound: attenuation = %f", attenuation);
-
-//	if (channel < 0 || channel > 15)
-//		Com_Error (ERR_FATAL, "SV_StartSound: channel = %i", channel);
+		Com_Error(ERR_FATAL, "SV_StartSound: attenuation = %f", attenuation);
 
 	if (timeofs < 0 || timeofs > 0.255)
 		Com_Error(ERR_FATAL, "SV_StartSound: timeofs = %f", timeofs);
@@ -297,11 +283,12 @@ void SV_StartSound (vec3_t origin, edict_t *entity, int channel,
 		use_phs = true;
 	}
 
-	const int sendchan = (ent << 3) | (channel&7);
+	const int sendchan = (ent << 3) | (channel & 7);
 
 	int flags = 0;
 	if (volume != DEFAULT_SOUND_PACKET_VOLUME)
 		flags |= SND_VOLUME;
+
 	if (attenuation != DEFAULT_SOUND_PACKET_ATTENUATION)
 		flags |= SND_ATTENUATION;
 
@@ -363,13 +350,9 @@ void SV_StartSound (vec3_t origin, edict_t *entity, int channel,
 
 /*
 ===============================================================================
-
-FRAME UPDATES
-
+	FRAME UPDATES
 ===============================================================================
 */
-
-
 
 /*
 =======================

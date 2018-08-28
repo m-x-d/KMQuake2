@@ -33,24 +33,21 @@ Sends the contents of the mutlicast buffer to a single client
 */
 void PF_Unicast (edict_t *ent, qboolean reliable)
 {
-	int		p;
-	client_t	*client;
-
 	if (!ent)
 		return;
 
-	p = NUM_FOR_EDICT(ent);
+	const int p = NUM_FOR_EDICT(ent);
 	if (p < 1 || p > maxclients->value)
 		return;
 
-	client = svs.clients + (p-1);
+	client_t *client = svs.clients + (p - 1);
 
 	if (reliable)
-		SZ_Write (&client->netchan.message, sv.multicast.data, sv.multicast.cursize);
+		SZ_Write(&client->netchan.message, sv.multicast.data, sv.multicast.cursize);
 	else
-		SZ_Write (&client->datagram, sv.multicast.data, sv.multicast.cursize);
+		SZ_Write(&client->datagram, sv.multicast.data, sv.multicast.cursize);
 
-	SZ_Clear (&sv.multicast);
+	SZ_Clear(&sv.multicast);
 }
 
 
@@ -63,15 +60,14 @@ Debug print to server console
 */
 void PF_dprintf (char *fmt, ...)
 {
-	char		msg[1024];
-	va_list		argptr;
+	char	msg[1024];
+	va_list	argptr;
 	
-	va_start (argptr, fmt);
-//	vsprintf (msg, fmt, argptr);
-	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
-	va_end (argptr);
+	va_start(argptr, fmt);
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
 
-	Com_Printf ("%s", msg);
+	Com_Printf("%s", msg);
 }
 
 
@@ -84,26 +80,25 @@ Print to a single client
 */
 void PF_cprintf (edict_t *ent, int level, char *fmt, ...)
 {
-	char		msg[1024];
-	va_list		argptr;
-	int			n;
+	char	msg[1024];
+	va_list	argptr;
+	int		n;
 
 	if (ent)
 	{
 		n = NUM_FOR_EDICT(ent);
 		if (n < 1 || n > maxclients->value)
-			Com_Error (ERR_DROP, "cprintf to a non-client");
+			Com_Error(ERR_DROP, "cprintf to a non-client");
 	}
 
-	va_start (argptr, fmt);
-//	vsprintf (msg, fmt, argptr);
-	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
-	va_end (argptr);
+	va_start(argptr, fmt);
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
 
 	if (ent)
-		SV_ClientPrintf (svs.clients+(n-1), level, "%s", msg);
+		SV_ClientPrintf(svs.clients + (n - 1), level, "%s", msg);
 	else
-		Com_Printf ("%s", msg);
+		Com_Printf("%s", msg);
 }
 
 
@@ -116,22 +111,20 @@ centerprint to a single client
 */
 void PF_centerprintf (edict_t *ent, char *fmt, ...)
 {
-	char		msg[1024];
-	va_list		argptr;
-	int			n;
-	
-	n = NUM_FOR_EDICT(ent);
+	char	msg[1024];
+	va_list	argptr;
+
+	const int n = NUM_FOR_EDICT(ent);
 	if (n < 1 || n > maxclients->value)
-		return;	// Com_Error (ERR_DROP, "centerprintf to a non-client");
+		return;
 
-	va_start (argptr, fmt);
-//	vsprintf (msg, fmt, argptr);
-	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
-	va_end (argptr);
+	va_start(argptr, fmt);
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
 
-	MSG_WriteByte (&sv.multicast,svc_centerprint);
-	MSG_WriteString (&sv.multicast,msg);
-	PF_Unicast (ent, true);
+	MSG_WriteByte(&sv.multicast, svc_centerprint);
+	MSG_WriteString(&sv.multicast, msg);
+	PF_Unicast(ent, true);
 }
 
 
@@ -144,15 +137,14 @@ Abort the server with a game error
 */
 void PF_error (char *fmt, ...)
 {
-	char		msg[1024];
-	va_list		argptr;
+	char	msg[1024];
+	va_list	argptr;
 	
-	va_start (argptr, fmt);
-//	vsprintf (msg, fmt, argptr);
-	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
-	va_end (argptr);
+	va_start(argptr, fmt);
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
 
-	Com_Error (ERR_DROP, "Game Error: %s", msg);
+	Com_Error(ERR_DROP, "Game Error: %s", msg);
 }
 
 
@@ -165,26 +157,19 @@ Also sets mins and maxs for inline bmodels
 */
 void PF_setmodel (edict_t *ent, char *name)
 {
-	int		i;
-	cmodel_t	*mod;
-
 	if (!name)
-		Com_Error (ERR_DROP, "PF_setmodel: NULL");
+		Com_Error(ERR_DROP, "PF_setmodel: NULL");
 
-	i = SV_ModelIndex (name);
-		
-//	ent->model = name;
-	ent->s.modelindex = i;
+	ent->s.modelindex = SV_ModelIndex(name);
 
-// if it is an inline model, get the size information for it
+	// if it is an inline model, get the size information for it
 	if (name[0] == '*')
 	{
-		mod = CM_InlineModel (name);
-		VectorCopy (mod->mins, ent->mins);
-		VectorCopy (mod->maxs, ent->maxs);
-		SV_LinkEdict (ent);
+		cmodel_t *mod = CM_InlineModel(name);
+		VectorCopy(mod->mins, ent->mins);
+		VectorCopy(mod->maxs, ent->maxs);
+		SV_LinkEdict(ent);
 	}
-
 }
 
 /*
@@ -195,52 +180,49 @@ PF_Configstring
 */
 void PF_Configstring (int index, char *val)
 {
-	size_t	len, maxlen;
-	char	*dest;
-
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
-		Com_Error (ERR_DROP, "PF_Configstring: bad index %i\n", index);
+		Com_Error(ERR_DROP, "PF_Configstring: bad index %i\n", index);
 
 	if (!val)
 		val = "";
 
 	// catch overflow of indvidual configstrings
-	len = strlen(val);
-	maxlen = CS_SIZE(index);
-	if (len >= maxlen) {
+	size_t len = strlen(val);
+	const size_t maxlen = CS_SIZE(index);
+	if (len >= maxlen)
+	{
 		Com_Printf(S_COLOR_YELLOW"PF_Configstring: index %d overflowed: %d > %d\n", index, len, maxlen);
 		len = maxlen - 1;
 	}
 
 	// change the string in sv
 	// Don't use a null-terminated strncpy here!!
-//	strncpy (sv.configstrings[index], val);
-	dest = sv.configstrings[index];
+	char *dest = sv.configstrings[index];
 	memcpy(dest, val, len);
 	dest[len] = 0;
 	
 	if (sv.state != ss_loading)
-	{	// send the update to everyone
-		SZ_Clear (&sv.multicast);
-		MSG_WriteChar (&sv.multicast, svc_configstring);
-		MSG_WriteShort (&sv.multicast, index);
-		MSG_WriteString (&sv.multicast, val);
+	{
+		// send the update to everyone
+		SZ_Clear(&sv.multicast);
+		MSG_WriteChar(&sv.multicast, svc_configstring);
+		MSG_WriteShort(&sv.multicast, index);
+		MSG_WriteString(&sv.multicast, val);
 
-		SV_Multicast (vec3_origin, MULTICAST_ALL_R);
+		SV_Multicast(vec3_origin, MULTICAST_ALL_R);
 	}
 }
 
 
-
-void PF_WriteChar (int c) {MSG_WriteChar (&sv.multicast, c);}
-void PF_WriteByte (int c) {MSG_WriteByte (&sv.multicast, c);}
-void PF_WriteShort (int c) {MSG_WriteShort (&sv.multicast, c);}
-void PF_WriteLong (int c) {MSG_WriteLong (&sv.multicast, c);}
-void PF_WriteFloat (float f) {MSG_WriteFloat (&sv.multicast, f);}
-void PF_WriteString (char *s) {MSG_WriteString (&sv.multicast, s);}
-void PF_WritePos (vec3_t pos) {MSG_WritePos (&sv.multicast, pos);}
-void PF_WriteDir (vec3_t dir) {MSG_WriteDir (&sv.multicast, dir);}
-void PF_WriteAngle (float f) {MSG_WriteAngle (&sv.multicast, f);}
+void PF_WriteChar(int c) { MSG_WriteChar(&sv.multicast, c); }
+void PF_WriteByte(int c) { MSG_WriteByte(&sv.multicast, c); }
+void PF_WriteShort(int c) { MSG_WriteShort(&sv.multicast, c); }
+void PF_WriteLong(int c) { MSG_WriteLong(&sv.multicast, c); }
+void PF_WriteFloat(float f) { MSG_WriteFloat(&sv.multicast, f); }
+void PF_WriteString(char *s) { MSG_WriteString(&sv.multicast, s); }
+void PF_WritePos(vec3_t pos) { MSG_WritePos(&sv.multicast, pos); }
+void PF_WriteDir(vec3_t dir) { MSG_WriteDir(&sv.multicast, dir); }
+void PF_WriteAngle(float f) { MSG_WriteAngle(&sv.multicast, f); }
 
 
 /*
@@ -252,23 +234,21 @@ Also checks portalareas so that doors block sight
 */
 qboolean PF_inPVS (vec3_t p1, vec3_t p2)
 {
-	int		leafnum;
-	int		cluster;
-	int		area1, area2;
-	byte	*mask;
+	int leafnum = CM_PointLeafnum(p1);
+	int cluster = CM_LeafCluster(leafnum);
+	const int area1 = CM_LeafArea(leafnum);
+	byte *mask = CM_ClusterPVS(cluster);
 
-	leafnum = CM_PointLeafnum (p1);
-	cluster = CM_LeafCluster (leafnum);
-	area1 = CM_LeafArea (leafnum);
-	mask = CM_ClusterPVS (cluster);
+	leafnum = CM_PointLeafnum(p2);
+	cluster = CM_LeafCluster(leafnum);
+	const int area2 = CM_LeafArea(leafnum);
 
-	leafnum = CM_PointLeafnum (p2);
-	cluster = CM_LeafCluster (leafnum);
-	area2 = CM_LeafArea (leafnum);
-	if ( mask && (!(mask[cluster>>3] & (1<<(cluster&7)) ) ) )
+	if (mask && (!(mask[cluster >> 3] & (1 << (cluster & 7)))))
 		return false;
-	if (!CM_AreasConnected (area1, area2))
-		return false;		// a door blocks sight
+
+	if (!CM_AreasConnected(area1, area2))
+		return false; // a door blocks sight
+
 	return true;
 }
 
@@ -282,33 +262,28 @@ Also checks portalareas so that doors block sound
 */
 qboolean PF_inPHS (vec3_t p1, vec3_t p2)
 {
-	int		leafnum;
-	int		cluster;
-	int		area1, area2;
-	byte	*mask;
+	int leafnum = CM_PointLeafnum(p1);
+	int cluster = CM_LeafCluster(leafnum);
+	const int area1 = CM_LeafArea(leafnum);
+	byte *mask = CM_ClusterPHS(cluster);
 
-	leafnum = CM_PointLeafnum (p1);
-	cluster = CM_LeafCluster (leafnum);
-	area1 = CM_LeafArea (leafnum);
-	mask = CM_ClusterPHS (cluster);
+	leafnum = CM_PointLeafnum(p2);
+	cluster = CM_LeafCluster(leafnum);
+	const int area2 = CM_LeafArea(leafnum);
 
-	leafnum = CM_PointLeafnum (p2);
-	cluster = CM_LeafCluster (leafnum);
-	area2 = CM_LeafArea (leafnum);
-	if ( mask && (!(mask[cluster>>3] & (1<<(cluster&7)) ) ) )
-		return false;		// more than one bounce away
-	if (!CM_AreasConnected (area1, area2))
-		return false;		// a door blocks hearing
+	if (mask && (!(mask[cluster >> 3] & (1 << (cluster & 7)))))
+		return false; // more than one bounce away
+
+	if (!CM_AreasConnected(area1, area2))
+		return false; // a door blocks hearing
 
 	return true;
 }
 
-void PF_StartSound (edict_t *entity, int channel, int sound_num, float volume,
-    float attenuation, float timeofs)
+void PF_StartSound (edict_t *entity, int channel, int sound_num, float volume, float attenuation, float timeofs)
 {
-	if (!entity)
-		return;
-	SV_StartSound (NULL, entity, channel, sound_num, volume, attenuation, timeofs);
+	if (entity)
+		SV_StartSound(NULL, entity, channel, sound_num, volume, attenuation, timeofs);
 }
 
 //==============================================
@@ -317,18 +292,19 @@ void PF_StartSound (edict_t *entity, int channel, int sound_num, float volume,
 ===============
 SV_ShutdownGameProgs
 
-Called when either the entire server is being killed, or
-it is changing to a different game directory.
+Called when either the entire server is being killed, or it is changing to a different game directory.
 ===============
 */
 void SV_ShutdownGameProgs (void)
 {
 	if (!ge)
 		return;
-	ge->Shutdown ();
-	Sys_UnloadGame ();
+
+	ge->Shutdown();
+	Sys_UnloadGame();
 	ge = NULL;
 }
+
 
 /*
 ===============
@@ -337,15 +313,13 @@ SV_InitGameProgs
 Init the game subsystem for a new map
 ===============
 */
-//void SCR_DebugGraph (float value, int color); //mxd. Redundant declaration
-
 void SV_InitGameProgs (void)
 {
-	game_import_t	import;
+	game_import_t import;
 
 	// unload anything we have now
 	if (ge)
-		SV_ShutdownGameProgs ();
+		SV_ShutdownGameProgs();
 
 	// load a new game dll
 	import.multicast = SV_Multicast;
@@ -409,14 +383,13 @@ void SV_InitGameProgs (void)
 	import.SetAreaPortalState = CM_SetAreaPortalState;
 	import.AreasConnected = CM_AreasConnected;
 
-	ge = (game_export_t *)Sys_GetGameAPI (&import);
+	ge = (game_export_t *)Sys_GetGameAPI(&import);
 
 	if (!ge)
-		Com_Error (ERR_DROP, "failed to load game DLL");
+		Com_Error(ERR_DROP, "failed to load game DLL");
 
 	if (ge->apiversion != GAME_API_VERSION)
-		Com_Error (ERR_DROP, "game is version %i, not %i", ge->apiversion, GAME_API_VERSION);
+		Com_Error(ERR_DROP, "game is version %i, not %i", ge->apiversion, GAME_API_VERSION);
 
-	ge->Init ();
+	ge->Init();
 }
-
