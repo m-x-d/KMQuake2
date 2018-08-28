@@ -492,7 +492,7 @@ qboolean SCR_DrawCinematic(void)
 		return true;
 
 	// fix odd-colored lines at top and bottom of screen
-	R_DrawStretchRaw(-2, -2, viddef.width + 4, viddef.height + 4, cin.pic, cin.width, cin.height);
+	R_DrawStretchRaw(-2, -2, viddef.width + 4, viddef.height + 4, cin.width, cin.height, cin.pic);
 
 	return true;
 }
