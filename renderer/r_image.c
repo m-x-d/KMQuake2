@@ -126,10 +126,26 @@ gltmode_t gl_solid_modes[] =
 
 /*
 ===============
+GL_ApplyTextureMode (mxd)
+===============
+*/
+void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy)
+{
+	GL_Bind(texnum);
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_min);
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mag);
+
+	// Set anisotropic filter if supported and enabled
+	if (glConfig.anisotropic && anisotropy)
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+}
+
+/*
+===============
 GL_TextureMode
 ===============
 */
-void GL_TextureMode( char *string )
+void GL_TextureMode(char *string)
 {
 	unsigned mode;
 
@@ -159,34 +175,30 @@ void GL_TextureMode( char *string )
 
 	// change all the existing mipmap texture objects
 	image_t *glt = gltextures;
+	const int filter = (!strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR); //mxd
+
 	for (int i = 0; i < numgltextures; i++, glt++)
 	{
-		if (glt->type != it_pic && glt->type != it_sky)
-		{
-			GL_Bind(glt->texnum);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+		if (glt->texnum < 1) //mxd
+			continue;
 
-			// Set anisotropic filter if supported and enabled
-			if (glConfig.anisotropic && r_anisotropic->value)
-				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, r_anisotropic->value);
+		//mxd. Also sky
+		if(glt->type == it_sky)
+		{
+			for (int c = 0; c < 6; c++)
+				GL_ApplyTextureMode(sky_images[c]->texnum, filter, filter, r_anisotropic->value);
+		}
+		else if (glt->type != it_pic)
+		{
+			GL_ApplyTextureMode(glt->texnum, gl_filter_min, gl_filter_max, r_anisotropic->value);
 		}
 	}
 
 	//mxd. Change lightmap filtering when _lightmap_scale is 1. The idea is to make them look like they are part of the texture
 	if(gl_lms.lmshift == 0)
 	{
-		const int filter = (!strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR);
 		for (int i = 1; i < gl_lms.current_lightmap_texture; i++)
-		{
-			GL_Bind(glState.lightmap_textures + i);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-
-			// Set anisotropic filter if supported and enabled
-			if (glConfig.anisotropic && r_anisotropic->value)
-				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, r_anisotropic->value);
-		}
+			GL_ApplyTextureMode(glState.lightmap_textures + i, filter, filter, r_anisotropic->value);
 	}
 }
 
@@ -1426,7 +1438,7 @@ GL_LightScaleTexture
 Scale up the pixel values in a texture to increase the lighting range
 ================
 */
-void GL_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only_gamma )
+void GL_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only_gamma)
 {
 	byte *p = (byte *)in;
 	const int size = inwidth * inheight;

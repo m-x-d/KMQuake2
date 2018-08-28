@@ -596,6 +596,7 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 //
 // r_sky.c
 //
+extern image_t *sky_images[6]; //mxd. For applying texture filtering
 void R_AddSkySurface(msurface_t *fa);
 void R_ClearSkyBox();
 void R_DrawSkyBox();
@@ -627,7 +628,7 @@ float	R_CharMapScale();
 #ifdef ROQ_SUPPORT
 void	R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
 #else // old 8-bit, 256x256 version
-void	r_DrawStretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
+void	R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data);
 #endif // ROQ_SUPPORT
 
 
