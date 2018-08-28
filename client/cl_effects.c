@@ -2054,7 +2054,8 @@ qboolean FartherPoint (vec3_t pt1, vec3_t pt2)
 
 	VectorSubtract(pt1, cl.refdef.vieworg, distance1);
 	VectorSubtract(pt2, cl.refdef.vieworg, distance2);
-	return (VectorLength(distance1) > VectorLength(distance2));
+
+	return (VectorLengthSquared(distance1) > VectorLengthSquared(distance2));
 }
 
 

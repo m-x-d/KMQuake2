@@ -1746,7 +1746,7 @@ void CL_AddPlayerBeams (void)
 		if (clMedia.mod_heatbeam && b->model == clMedia.mod_heatbeam && (firstperson || chasecam))
 		{
 			const vec_t l = VectorLength(dist);
-			VectorScale (f, l, dist);
+			VectorScale(f, l, dist);
 
 			if (chasecam)
 				VectorMA(dist, newhandmult * b->offset[0], r, dist);

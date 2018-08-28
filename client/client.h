@@ -77,7 +77,7 @@ typedef struct
 	int				serverframe;
 	int				servertime;		// server time the message is valid for (in msec)
 	int				deltaframe;
-	byte			areabits[MAX_MAP_AREAS/8];		// portalarea visibility bits
+	byte			areabits[MAX_MAP_AREAS / 8]; // portalarea visibility bits
 	player_state_t	playerstate;
 	int				num_entities;
 	int				parse_entities;	// non-masked index into cl_parse_entities array
@@ -563,11 +563,11 @@ typedef struct cl_sustain
 void CL_ParticleSteamEffect2(cl_sustain_t *self);
 
 void CL_TeleporterParticles(entity_state_t *ent);
-void CL_ParticleEffect(vec3_t org, vec3_t dir, int color, int count);
-void CL_ParticleEffect2(vec3_t org, vec3_t dir, int color, int count);
-void CL_ParticleEffect3(vec3_t org, vec3_t dir, int color, int count); // RAFAEL
+void CL_ParticleEffect(vec3_t org, vec3_t dir, int color8, int count);
+void CL_ParticleEffect2(vec3_t org, vec3_t dir, int color8, int count);
+void CL_ParticleEffect3(vec3_t org, vec3_t dir, int color8, int count); // RAFAEL
 
-void CL_ParticleEffectSplash(vec3_t org, vec3_t dir, int color, int count);
+void CL_ParticleEffectSplash(vec3_t org, vec3_t dir, int color8, int count);
 void CL_ElectricParticles(vec3_t org, vec3_t dir, int count);
 
 // Psychospaz's mod detector
@@ -681,9 +681,7 @@ void CL_Quit_f(void);
 
 /*
 ====================================================================
-
-IMPORTED FUNCTIONS
-
+	IMPORTED FUNCTIONS
 ====================================================================
 */
 
