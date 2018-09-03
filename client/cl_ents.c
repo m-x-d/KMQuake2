@@ -88,7 +88,7 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 	// set everything to the state we are delta'ing from
 	*to = *from;
 
-	VectorCopy (from->origin, to->old_origin);
+	VectorCopy(from->origin, to->old_origin);
 	to->number = number;
 
 	// Knightmare- read deltas the old way if playing old demos or connected to server using old protocol
@@ -160,9 +160,6 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 	}	
 	else //new CL_ParseDelta code
 	{
-#ifndef NEW_ENTITY_STATE_MEMBERS
-		int ignore;	// holder for messages to be ignored
-#endif
 	// Knightmare- 12/23/2001- read model indices as shorts 
 		if (bits & U_MODEL)
 			to->modelindex = MSG_ReadShort(&net_message);
@@ -181,9 +178,9 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 			to->modelindex6 = MSG_ReadShort(&net_message);
 #else // we need to read and ignore this for eraser client compatibility
 		if (bits & U_MODEL5)
-			ignore = MSG_ReadShort(&net_message);
+			MSG_ReadShort(&net_message);
 		if (bits & U_MODEL6)
-			ignore = MSG_ReadShort(&net_message);
+			MSG_ReadShort(&net_message);
 #endif // NEW_ENTITY_STATE_MEMBERS
 		if (bits & U_FRAME8)
 			to->frame = MSG_ReadByte(&net_message);
@@ -218,12 +215,13 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 		if (bits & U_ORIGIN3)
 			to->origin[2] = MSG_ReadCoord(&net_message);
 
+		//mxd. Read more precise angles (MSG_ReadAngle -> MSG_ReadAngle16). Fixes jerky movement of func_rotating with slow speed.
 		if (bits & U_ANGLE1)
-			to->angles[0] = MSG_ReadAngle(&net_message);
+			to->angles[0] = MSG_ReadAngle16(&net_message);
 		if (bits & U_ANGLE2)
-			to->angles[1] = MSG_ReadAngle(&net_message);
+			to->angles[1] = MSG_ReadAngle16(&net_message);
 		if (bits & U_ANGLE3)
-			to->angles[2] = MSG_ReadAngle(&net_message);
+			to->angles[2] = MSG_ReadAngle16(&net_message);
 
 		if (bits & U_OLDORIGIN)
 			MSG_ReadPos(&net_message, to->old_origin);
@@ -233,7 +231,7 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 #ifdef NEW_ENTITY_STATE_MEMBERS
 			to->alpha = (float)(MSG_ReadByte(&net_message) / 255.0);
 #else // we need to read and ignore this for eraser client compatibility
-			ignore = (float)(MSG_ReadByte(&net_message) / 255.0);
+			MSG_ReadByte(&net_message);
 #endif
 
 		// 12/23/2001- read sound indices as shorts
@@ -245,7 +243,7 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 #ifdef NEW_ENTITY_STATE_MEMBERS
 			to->attenuation = MSG_ReadByte(&net_message) / 64.0;
 #else // we need to read and ignore this for eraser client compatibility
-			ignore = MSG_ReadByte(&net_message) / 64.0;
+			MSG_ReadByte(&net_message);
 #endif
 #endif
 

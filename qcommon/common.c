@@ -593,7 +593,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 		else if ((unsigned)to->skinnum < 0x10000)
 			bits |= U_SKIN16;
 		else
-			bits |= (U_SKIN8|U_SKIN16);
+			bits |= (U_SKIN8 | U_SKIN16);
 	}
 		
 	if (to->frame != from->frame)
@@ -611,7 +611,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 		else if (to->effects < 0x8000)
 			bits |= U_EFFECTS16;
 		else
-			bits |= U_EFFECTS8|U_EFFECTS16;
+			bits |= U_EFFECTS8 | U_EFFECTS16;
 	}
 	
 	if (to->renderfx != from->renderfx)
@@ -651,11 +651,9 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	if (to->sound != from->sound)
 		bits |= U_SOUND;
 
-#ifdef NEW_ENTITY_STATE_MEMBERS
-#ifdef LOOP_SOUND_ATTENUATION
+#if defined(NEW_ENTITY_STATE_MEMBERS) && defined(LOOP_SOUND_ATTENUATION)
 	if (to->attenuation != from->attenuation)
 		bits |= U_ATTENUAT;
-#endif
 #endif
 
 	if (newentity || (to->renderfx & RF_BEAM))
@@ -763,12 +761,24 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	if (bits & U_ORIGIN3)
 		MSG_WriteCoord(msg, to->origin[2]);
 
-	if (bits & U_ANGLE1)
-		MSG_WriteAngle(msg, to->angles[0]);
-	if (bits & U_ANGLE2)
-		MSG_WriteAngle(msg, to->angles[1]);
-	if (bits & U_ANGLE3)
-		MSG_WriteAngle(msg, to->angles[2]);
+	if (LegacyProtocol())
+	{
+		if (bits & U_ANGLE1)
+			MSG_WriteAngle(msg, to->angles[0]);
+		if (bits & U_ANGLE2)
+			MSG_WriteAngle(msg, to->angles[1]);
+		if (bits & U_ANGLE3)
+			MSG_WriteAngle(msg, to->angles[2]);
+	}
+	else //mxd. Send more precise angles. Fixes jerky movement of func_rotating with slow speed.
+	{
+		if (bits & U_ANGLE1)
+			MSG_WriteAngle16(msg, to->angles[0]);
+		if (bits & U_ANGLE2)
+			MSG_WriteAngle16(msg, to->angles[1]);
+		if (bits & U_ANGLE3)
+			MSG_WriteAngle16(msg, to->angles[2]);
+	}
 
 	if (bits & U_OLDORIGIN)
 	{
@@ -787,11 +797,9 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	if (bits & U_SOUND)
 		MSG_WriteShort(msg, to->sound);
 
-#ifdef NEW_ENTITY_STATE_MEMBERS
-#ifdef LOOP_SOUND_ATTENUATION
+#if defined(NEW_ENTITY_STATE_MEMBERS) && defined(LOOP_SOUND_ATTENUATION)
 	if (bits & U_ATTENUAT)
 		MSG_WriteByte(msg, (int)(min(max(to->attenuation, 0.0f), 4.0f) * 64.0));
-#endif
 #endif
 
 	if (bits & U_EVENT)
