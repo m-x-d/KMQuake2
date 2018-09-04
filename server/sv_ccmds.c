@@ -511,18 +511,14 @@ Example:
 
 *inter.cin+jail
 
-Clears the archived maps, plays the inter.cin cinematic, then
-goes to map jail.bsp.
+Clears the archived maps, plays the inter.cin cinematic, then goes to map jail.bsp.
 ==================
 */
 void SV_GameMap_f (void)
 {
-	int			i;
-	client_t	*cl;
-
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("Usage: gamemap <map>\n");
+		Com_Printf("Usage: gamemap <map>\n");
 		return;
 	}
 
@@ -545,7 +541,8 @@ void SV_GameMap_f (void)
 			// clear all the client inuse flags before saving so that when the level is re-entered, 
 			// the clients will spawn at spawn points instead of occupying body shells
 			qboolean *savedInuse = malloc(maxclients->value * sizeof(qboolean));
-			for (i = 0, cl = svs.clients; i < maxclients->value; i++,cl++)
+			client_t *cl = svs.clients;
+			for (int i = 0; i < maxclients->value; i++, cl++)
 			{
 				savedInuse[i] = cl->edict->inuse;
 				cl->edict->inuse = false;
@@ -554,7 +551,8 @@ void SV_GameMap_f (void)
 			SV_WriteLevelFile();
 
 			// we must restore these for clients to transfer over correctly
-			for (i = 0, cl = svs.clients; i < maxclients->value; i++,cl++)
+			cl = svs.clients;
+			for (int i = 0; i < maxclients->value; i++, cl++)
 				cl->edict->inuse = savedInuse[i];
 
 			free(savedInuse);
@@ -570,8 +568,7 @@ void SV_GameMap_f (void)
 	// copy off the level to the autosave slot
 	// Knightmare- don't do this in deathmatch or for cinematics
 	char *ext = map + strlen(map) - 4; //mxd
-	if (!dedicated->value && !Cvar_VariableValue("deathmatch")
-		&& Q_strcasecmp(ext, ".cin") && Q_strcasecmp(ext, ".roq") && Q_strcasecmp(ext, ".pcx"))
+	if (!dedicated->value && !Cvar_VariableValue("deathmatch") && Q_strcasecmp(ext, ".cin") && Q_strcasecmp(ext, ".roq") && Q_strcasecmp(ext, ".pcx"))
 	{
 		SV_WriteServerFile(true);
 		SV_CopySaveGame("current", "kmq2save0");
@@ -676,7 +673,6 @@ void SV_Loadgame_f (void)
 /*
 ==============
 SV_Savegame_f
-
 ==============
 */
 extern char fs_gamedir[MAX_OSPATH];
@@ -685,7 +681,7 @@ void SV_Savegame_f (void)
 {
 	if (sv.state != ss_game)
 	{
-		Com_Printf ("You must be in a game to save.\n");
+		Com_Printf("You must be in a game to save.\n");
 		return;
 	}
 

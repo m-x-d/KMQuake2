@@ -781,7 +781,6 @@ qboolean FS_LocalFileExists(char *path);
 void FS_RenameFile(const char *oldPath, const char *newPath);
 void FS_DeleteFile(const char *path);
 
-char *FS_GameDir(void);
 void FS_CreatePath(char *path);
 void FS_DeletePath(char *path);
 char *FS_NextPath(char *prevPath);

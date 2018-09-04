@@ -302,11 +302,6 @@ FS_GameDir
 Called to find where to write a file (demos, savegames, etc...)
 =================
 */
-char *FS_GameDir (void)
-{
-	return fs_gamedir;
-}
-
 char *FS_Gamedir (void)
 {
 	return fs_gamedir;
@@ -1017,7 +1012,7 @@ FS_LocalFileExists
 qboolean FS_LocalFileExists (char *path)
 {
 	char realPath[MAX_OSPATH];
-	Com_sprintf(realPath, sizeof(realPath), "%s/%s", FS_GameDir(), path);
+	Com_sprintf(realPath, sizeof(realPath), "%s/%s", FS_Gamedir(), path);
 	FILE *f = fopen(realPath, "rb");
 	
 	if (f)
