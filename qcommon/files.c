@@ -1445,7 +1445,7 @@ void FS_AddGameDirectory (const char *dir)
 	//
 	fsSearchPath_t *search = Z_Malloc(sizeof(fsSearchPath_t));
 	Q_strncpyz(search->path, dir, sizeof(search->path));
-	search->path[sizeof(search->path)-1] = 0;
+	search->path[sizeof(search->path) - 1] = 0;
 	search->next = fs_searchPaths;
 	fs_searchPaths = search;
 
