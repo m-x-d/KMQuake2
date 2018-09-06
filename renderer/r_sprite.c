@@ -55,6 +55,12 @@ void R_DrawSpriteModel (entity_t *e)
 
 	R_SetVertexRGBScale(true);
 
+	if (e->flags & RF_DEPTHHACK) //mxd. Hack the depth range to prevent sprites from poking into walls
+	{
+		const float scaler = (r_newrefdef.rdflags & RDF_NOWORLDMODEL ? 0.01 : 0.3);
+		GL_DepthRange(gldepthmin, gldepthmin + scaler * (gldepthmax - gldepthmin));
+	}
+
 	// Psychospaz's additive transparency
 	if ((currententity->flags & RF_TRANS_ADDITIVE) && alpha != 1.0f)
 	{ 
@@ -128,5 +134,9 @@ void R_DrawSpriteModel (entity_t *e)
 	R_SetVertexRGBScale(false);
 
 	RB_DrawMeshTris();
+
+	if (e->flags & RF_DEPTHHACK) //mxd
+		GL_DepthRange(gldepthmin, gldepthmax);
+
 	rb_vertex = rb_index = 0;
 }
