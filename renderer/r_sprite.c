@@ -47,10 +47,24 @@ void R_DrawSpriteModel (entity_t *e)
 
 	c_alias_polys += 2;
 
-	// normal sprite
-	float *up = vup;
-	float *right = vright;
+	//mxd. Rotated sprite
+	float *up, *right;
+	if(e->angles[ROLL])
+	{
+		vec3_t tmp, ang_right, ang_up;
 
+		VecToAngleRolled(vpn, e->angles[ROLL], tmp); // Roll the forward view vector
+		AngleVectors(tmp, NULL, ang_right, ang_up);
+
+		up = ang_up;
+		right = ang_right;
+	}
+	else // normal sprite
+	{
+		up = vup;
+		right = vright;
+	}
+	
 	const float alpha = (e->flags & RF_TRANSLUCENT ? e->alpha : 1.0f);
 
 	R_SetVertexRGBScale(true);
@@ -62,7 +76,7 @@ void R_DrawSpriteModel (entity_t *e)
 	}
 
 	// Psychospaz's additive transparency
-	if ((currententity->flags & RF_TRANS_ADDITIVE) && alpha != 1.0f)
+	if ((currententity->flags & RF_TRANS_ADDITIVE) /*&& alpha != 1.0f*/) //mxd. Works fine even with alpha 1
 	{ 
 		GL_Enable(GL_BLEND);
 		GL_TexEnv(GL_MODULATE);
@@ -73,18 +87,18 @@ void R_DrawSpriteModel (entity_t *e)
 	else
 	{
 		GL_TexEnv(GL_MODULATE);
-		if (alpha == 1.0f)
+		/*if (alpha == 1.0f) //mxd. Works fine even with alpha 1
 		{
 			GL_Enable(GL_ALPHA_TEST);
 			GL_DepthMask(true);
 		}
 		else
-		{
+		{*/
 			GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			GL_DepthMask(false);
 			GL_Enable(GL_BLEND);
 			GL_Disable(GL_ALPHA_TEST);
-		}
+		//}
 	}
 	GL_Bind(currentmodel->skins[0][e->frame]->texnum);
 
@@ -94,18 +108,27 @@ void R_DrawSpriteModel (entity_t *e)
 	Vector2Set(texCoord[2], 1, 0);
 	Vector2Set(texCoord[3], 1, 1);
 
+	//mxd
+	float scale = 1.0f;
+	if (e->flags & RF_NOSCALE)
+	{
+		vec3_t diff;
+		VectorSubtract(e->origin, r_newrefdef.vieworg, diff);
+		scale = VectorLength(diff) * 0.00625f;
+	}
+
 	vec3_t point[4];
-	VectorMA(e->origin, -frame->origin_y, up, point[0]);
-	VectorMA(point[0], -frame->origin_x, right, point[0]);
+	VectorMA(e->origin, -frame->origin_y * scale, up, point[0]);
+	VectorMA(point[0], -frame->origin_x * scale, right, point[0]);
 
-	VectorMA(e->origin, frame->height - frame->origin_y, up, point[1]);
-	VectorMA(point[1], -frame->origin_x, right, point[1]);
+	VectorMA(e->origin, (frame->height - frame->origin_y) * scale, up, point[1]);
+	VectorMA(point[1], -frame->origin_x * scale, right, point[1]);
 
-	VectorMA(e->origin, frame->height - frame->origin_y, up, point[2]);
-	VectorMA(point[2], frame->width - frame->origin_x, right, point[2]);
+	VectorMA(e->origin, (frame->height - frame->origin_y) * scale, up, point[2]);
+	VectorMA(point[2], (frame->width - frame->origin_x) * scale, right, point[2]);
 
-	VectorMA(e->origin, -frame->origin_y, up, point[3]);
-	VectorMA(point[3], frame->width - frame->origin_x, right, point[3]);
+	VectorMA(e->origin, -frame->origin_y * scale, up, point[3]);
+	VectorMA(point[3], (frame->width - frame->origin_x) * scale, right, point[3]);
 
 	rb_vertex = rb_index = 0;
 	indexArray[rb_index++] = rb_vertex + 0;

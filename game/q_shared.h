@@ -897,6 +897,7 @@ typedef struct
 //ROGUE
 
 #define RF_NOSHADOW			0x00080000 // Knightmare- no shadow flag
+#define RF_NOSCALE			0x00160000 //mxd. Used in R_DrawSpriteModel
 
 #define RF_MASK_SHELL		(RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE|RF_SHELL_DOUBLE|RF_SHELL_HALF_DAM)
 

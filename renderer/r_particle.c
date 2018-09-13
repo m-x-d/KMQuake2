@@ -779,7 +779,7 @@ void R_RenderParticle (particle_t *p)
 		for (int j = 0; j < 4; j++)
 		{
 			VA_SetElem2(texCoordArray[0][rb_vertex], tex_coord[j][0], tex_coord[j][1]);
-			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[j][0],ParticleVec[j][1], ParticleVec[j][2]);
+			VA_SetElem3(vertexArray[rb_vertex], ParticleVec[j][0], ParticleVec[j][1], ParticleVec[j][2]);
 			VA_SetElem4(colorArray[rb_vertex], partColor[0], partColor[1], partColor[2], partColor[3]);
 			rb_vertex++;
 		}
