@@ -1019,7 +1019,7 @@ void R_LoadPNG (char *filename, byte **pic, int *width, int *height)
 	// only load 32 bit by now...
 	if (r_png_handle->bitDepth == 8)
 	{
-		*pic= r_png_handle->data;
+		*pic = r_png_handle->data;
 		*width = r_png_handle->width;
 		*height = r_png_handle->height;
 	}
@@ -2085,7 +2085,9 @@ image_t	*R_FindImage (char *name, imagetype_t type)
 	{
 		R_LoadPNG(name, &pic, &width, &height);
 		if (pic)
+		{
 			image = R_LoadPic(name, pic, width, height, type, 32);
+		}
 		else
 		{
 			// fall back to jpg

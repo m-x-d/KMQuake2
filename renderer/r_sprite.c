@@ -115,6 +115,7 @@ void R_DrawSpriteModel (entity_t *e)
 		vec3_t diff;
 		VectorSubtract(e->origin, r_newrefdef.vieworg, diff);
 		scale = VectorLength(diff) * 0.00625f;
+		scale = max(1.0f, scale);
 	}
 
 	vec3_t point[4];

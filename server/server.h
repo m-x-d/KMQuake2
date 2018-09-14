@@ -228,17 +228,17 @@ int SV_ModelIndex (char *name);
 int SV_SoundIndex (char *name);
 int SV_ImageIndex (char *name);
 
-void SV_WriteClientdataToMessage (client_t *client, sizebuf_t *msg);
+//void SV_WriteClientdataToMessage (client_t *client, sizebuf_t *msg); //mxd. No definition
 
 void SV_ExecuteUserCommand (char *s);
 void SV_InitOperatorCommands (void);
 
-void SV_SendServerinfo (client_t *client);
+//void SV_SendServerinfo (client_t *client); //mxd. No definition
 void SV_UserinfoChanged (client_t *cl);
 
 
 void Master_Heartbeat (void);
-void Master_Packet (void);
+//void Master_Packet (void); //mxd. No definition
 
 //
 // sv_init.c
