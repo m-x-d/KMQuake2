@@ -489,9 +489,9 @@ void CL_ParticleBloodThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 			if (p->flags & PART_GRAVITY && !(p->flags & PART_DIRECTION))
 			{
 				// gekk gibs go flyin faster...
-				if (greenblood && (cl.time - p->time)*0.001 > 1.0F)
+				if (greenblood && (cl.time - p->time) * 0.001 > 1.0F)
 					timedout = true;
-				if (!greenblood && (cl.time - p->time)*0.001 > 0.5F)
+				if (!greenblood && (cl.time - p->time) * 0.001 > 0.5F)
 					timedout = true;
 			}
 
@@ -506,9 +506,9 @@ void CL_ParticleBloodThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 				p->image = CL_GetRandomBloodParticle();
 				p->blendfunc_src = GL_SRC_ALPHA; //GL_ZERO
 				p->blendfunc_dst = GL_ONE_MINUS_SRC_ALPHA; //GL_ONE_MINUS_SRC_COLOR
-				p->flags = PART_DECAL|PART_SHADED|PART_ALPHACOLOR;
+				p->flags = PART_DECAL | PART_SHADED | PART_ALPHACOLOR;
 				p->alpha = *alpha;
-				p->alphavel = -1/r_decal_life->value;
+				p->alphavel = -1 / r_decal_life->value;
 
 				if (greenblood)
 					p->color[1] = 210;
@@ -1096,7 +1096,7 @@ void CL_ParticlePlasmaBeamDecal (vec3_t org, vec3_t dir, float size)
  
 	VectorMA(org, DECAL_OFFSET, dir, origin);
 	VectorMA(org, -DECAL_OFFSET, dir, end);
-	trace_t tr = CL_Trace (origin, end, 0, CONTENTS_SOLID);
+	trace_t tr = CL_Trace(origin, end, 0, CONTENTS_SOLID);
 
 	if (tr.fraction == 1 || VectorCompare(tr.plane.normal, vec3_origin))
 		return;
@@ -1113,6 +1113,47 @@ void CL_ParticlePlasmaBeamDecal (vec3_t org, vec3_t dir, float size)
 		255, 255, 255,
 		0, 0, 0,
 		0.85, -1 / r_decal_life->value,
+		GL_ZERO, GL_ONE_MINUS_SRC_ALPHA,
+		size, 0,
+		particle_shadow,
+		PART_SHADED | PART_DECAL,
+		NULL, false);
+}
+
+
+/*
+===============
+CL_Shadow_Decal (mxd)
+===============
+*/
+
+void CL_Shadow_Decal(vec3_t org, float size, float alpha)
+{
+	vec3_t ang, angle, end, origin, dir;
+
+	VectorSet(dir, 0, 0, -1); // Straight down
+	VectorMA(org, -DECAL_OFFSET, dir, origin);
+	VectorMA(org, size, dir, end);
+	trace_t tr = CL_Trace(origin, end, 0, CONTENTS_SOLID);
+
+	if (tr.fraction == 1 || VectorCompare(tr.plane.normal, vec3_origin))
+		return;
+
+	size *= 1.0f - tr.fraction; // Shrink by distance
+	alpha *= 1.0f - tr.fraction; // Fade by distance
+
+	VectorNegate(tr.plane.normal, angle);
+	VecToAngleRolled(angle, 0, ang);
+	VectorCopy(tr.endpos, origin);
+
+	CL_SetupParticle(
+		ang[0], ang[1], ang[2],
+		origin[0], origin[1], origin[2],
+		0, 0, 0,
+		0, 0, 0,
+		255, 255, 255,
+		0, 0, 0,
+		alpha, INSTANT_PARTICLE,
 		GL_ZERO, GL_ONE_MINUS_SRC_ALPHA,
 		size, 0,
 		particle_shadow,

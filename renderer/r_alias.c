@@ -468,7 +468,7 @@ R_BuildShadowVolume
 based on code from BeefQuake R6
 =============
 */
-void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
+void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
 {
 	vec3_t  v0, v1, v2, v3;
 
@@ -553,10 +553,12 @@ void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float p
 		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
 		indexArray[shadow_index++] = shadow_va;
 		shadow_va++;
+
 		VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
 		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
 		indexArray[shadow_index++] = shadow_va;
 		shadow_va++;
+
 		VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
 		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
 		indexArray[shadow_index++] = shadow_va;
@@ -578,10 +580,12 @@ void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float p
 		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
 		indexArray[shadow_index++] = shadow_va;
 		shadow_va++;
+
 		VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
 		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
 		indexArray[shadow_index++] = shadow_va;
 		shadow_va++;
+
 		VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
 		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
 		indexArray[shadow_index++] = shadow_va;
@@ -597,7 +601,7 @@ void R_BuildShadowVolume (maliasmodel_t *hdr, int meshnum, vec3_t light, float p
 R_DrawShadowVolume 
 =============
 */
-void R_DrawShadowVolume (void)
+void R_DrawShadowVolume(void)
 {
 	if (glConfig.drawRangeElements)
 		qglDrawRangeElementsEXT(GL_TRIANGLES, 0, shadow_va, shadow_index, GL_UNSIGNED_INT, indexArray);
@@ -612,7 +616,7 @@ R_DrawAliasVolumeShadow
 based on code from BeefQuake R6
 =============
 */
-void R_DrawAliasVolumeShadow (maliasmodel_t *paliashdr, vec3_t bbox[8])
+void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 {
 	vec3_t light, temp, vecAdd;
 
@@ -632,8 +636,8 @@ void R_DrawAliasVolumeShadow (maliasmodel_t *paliashdr, vec3_t bbox[8])
 			continue;
 
 		// Factor in the intensity of a dlight
-		VectorScale (temp, dist * 0.25, temp);
-		VectorAdd (vecAdd, temp, vecAdd);
+		VectorScale(temp, dist * 0.25, temp);
+		VectorAdd(vecAdd, temp, vecAdd);
 	}
 
 	VectorNormalize(vecAdd);
@@ -648,7 +652,7 @@ void R_DrawAliasVolumeShadow (maliasmodel_t *paliashdr, vec3_t bbox[8])
 		if (bbox[i][2] < lowest) lowest = bbox[i][2];
 	}
 
-	const float projected_distance = (fabsf(highest - lightspot[2]) + (highest-lowest)) / vecAdd[2];
+	const float projected_distance = (fabsf(highest - lightspot[2]) + (highest - lowest)) / vecAdd[2];
 
 	VectorCopy(vecAdd, light);
 	
@@ -666,23 +670,22 @@ void R_DrawAliasVolumeShadow (maliasmodel_t *paliashdr, vec3_t bbox[8])
 	const float sinr = sinf(angle);
 
 	// rotate for yaw (z axis)
-	float ix, iy, iz;
-	ix = light[0];
-	iy = light[1];
-	light[0] = cosy * ix - siny * iy + 0;
-	light[1] = siny * ix + cosy * iy + 0;
+	float ix = light[0];
+	float iy = light[1];
+	light[0] = cosy * ix - siny * iy;
+	light[1] = siny * ix + cosy * iy;
 
 	// rotate for pitch (y axis)
 	ix = light[0];
-	iz = light[2];
-	light[0] = cosp * ix + 0 + sinp * iz;
-	light[2] = -sinp * ix + 0 + cosp * iz;
+	float iz = light[2];
+	light[0] =  cosp * ix + sinp * iz;
+	light[2] = -sinp * ix + cosp * iz;
 
 	// rotate for roll (x axis)
 	iy = light[1];
 	iz = light[2];
-	light[1] = 0 + cosr * iy - sinr * iz;
-	light[2] = 0 + sinr * iy + cosr * iz;
+	light[1] = cosr * iy - sinr * iz;
+	light[2] = sinr * iy + cosr * iz;
 
 
 	// set up stenciling
@@ -715,8 +718,8 @@ void R_DrawAliasVolumeShadow (maliasmodel_t *paliashdr, vec3_t bbox[8])
 			{
 				GL_Disable(GL_CULL_FACE);
 
-				qglStencilOpSeparateATI (GL_BACK, GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP); 
-				qglStencilOpSeparateATI (GL_FRONT, GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
+				qglStencilOpSeparateATI(GL_BACK, GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP); 
+				qglStencilOpSeparateATI(GL_FRONT, GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
 
 				R_DrawShadowVolume();
 
@@ -847,13 +850,13 @@ static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
 
 	if (e->frame >= paliashdr->num_frames || e->frame < 0)
 	{
-		VID_Printf (PRINT_ALL, "R_CullAliasModel %s: no such frame %d\n", currentmodel->name, e->frame);
+		VID_Printf(PRINT_ALL, "R_CullAliasModel %s: no such frame %d\n", currentmodel->name, e->frame);
 		e->frame = 0;
 	}
 
 	if (e->oldframe >= paliashdr->num_frames || e->oldframe < 0)
 	{
-		VID_Printf (PRINT_ALL, "R_CullAliasModel %s: no such oldframe %d\n", currentmodel->name, e->oldframe);
+		VID_Printf(PRINT_ALL, "R_CullAliasModel %s: no such oldframe %d\n", currentmodel->name, e->oldframe);
 		e->oldframe = 0;
 	}
 
@@ -925,6 +928,8 @@ static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
 R_DrawAliasModel
 =================
 */
+void CL_Shadow_Decal(vec3_t org, float size, float alpha); //mxd
+
 void R_DrawAliasModel (entity_t *e)
 {
 	vec3_t bbox[8];
@@ -976,9 +981,9 @@ void R_DrawAliasModel (entity_t *e)
 		c_alias_polys += paliashdr->meshes[i].num_tris;
 
 	qglPushMatrix();
-	e->angles[ROLL] = e->angles[ROLL] * R_RollMult();		// roll is backwards
+	e->angles[ROLL] = e->angles[ROLL] * R_RollMult(); // roll is backwards
 	R_RotateForEntity(e, true);
-	e->angles[ROLL] = e->angles[ROLL] * R_RollMult();		// roll is backwards
+	e->angles[ROLL] = e->angles[ROLL] * R_RollMult(); // roll is backwards
 
 	if (e->frame >= paliashdr->num_frames || e->frame < 0)
 	{
@@ -989,7 +994,7 @@ void R_DrawAliasModel (entity_t *e)
 
 	if (e->oldframe >= paliashdr->num_frames || e->oldframe < 0)
 	{
-		VID_Printf (PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %d\n", currentmodel->name, e->oldframe);
+		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %d\n", currentmodel->name, e->oldframe);
 		e->frame = 0;
 		e->oldframe = 0;
 	}
@@ -1017,25 +1022,60 @@ void R_DrawAliasModel (entity_t *e)
 		&& !(e->flags & RF_MASK_SHELL && e->flags & RF_TRANSLUCENT) // no shadows from shells
 		&& r_shadows->value >= 1 && aliasShadowAlpha >= DIV255)
 	{
- 		qglPushMatrix();
-		GL_DisableTexture(0);
-		GL_Enable(GL_BLEND);
-
-		if (r_shadows->value == 3)
+ 		//mxd. Simple decal shadows...
+		if(r_shadows->value == 1)
 		{
-			e->angles[ROLL] = e->angles[ROLL] * R_RollMult();	// roll is backwards
-			R_RotateForEntity (e, true);
-			e->angles[ROLL] = e->angles[ROLL] * R_RollMult();	// roll is backwards
-			R_DrawAliasVolumeShadow(paliashdr, bbox);
+			// Lerp origin...
+			vec3_t origin, delta;
+			VectorSubtract(e->oldorigin, e->origin, delta);
+			VectorMA(e->origin, e->backlerp, delta, origin);
+
+			// Get model shading...
+			vec3_t shadecolor;
+			R_LightPoint(origin, shadecolor, false);
+			float maxlight = 0;
+			for (int i = 0; i < 3; i++)
+				maxlight = max(shadecolor[i], maxlight);
+			maxlight = min(1.0f, maxlight * 2); // Model shading is very dim...
+
+			// Scale by distance fading part of aliasShadowAlpha...
+			maxlight *= (aliasShadowAlpha / r_shadowalpha->value);
+
+			if(maxlight > 0.25f)
+			{
+				// Get model size from the first frame (which is the first frame of Idle animation for all vanilla monsters)
+				maliasframe_t *pframe = paliashdr->frames;
+				const float size = ((pframe->maxs[0] - pframe->mins[0]) + (pframe->maxs[1] - pframe->mins[1])) * 0.45f;
+
+				// Trace from feet, not entity origin...
+				origin[2] += pframe->mins[2];
+
+				// Add decal
+				CL_Shadow_Decal(origin, size, maxlight);
+			}
 		}
 		else
 		{
-			R_RotateForEntity(e, false);
-			R_DrawAliasPlanarShadow(paliashdr);
-		}
+			qglPushMatrix();
+			GL_DisableTexture(0);
+			GL_Enable(GL_BLEND);
 
-		GL_Disable(GL_BLEND);
-		GL_EnableTexture(0);
-		qglPopMatrix ();
+			if (r_shadows->value == 3)
+			{
+				e->angles[ROLL] = e->angles[ROLL] * R_RollMult();	// roll is backwards
+				R_RotateForEntity(e, true);
+				e->angles[ROLL] = e->angles[ROLL] * R_RollMult();	// roll is backwards
+				R_DrawAliasVolumeShadow(paliashdr, bbox);
+			}
+			else
+			{
+				R_RotateForEntity(e, false);
+				R_DrawAliasPlanarShadow(paliashdr);
+			}
+
+			GL_Disable(GL_BLEND);
+			GL_EnableTexture(0);
+			qglPopMatrix();
+		}
 	}
 }

@@ -305,7 +305,7 @@ void Menu_Video_Advanced_Init (void)
 	static const char *shadow_names[] =
 	{
 		"no",
-		"static planar",
+		"simple", //mxd. Was "static planar"
 		"dynamic planar",
 		"projection",
 		0

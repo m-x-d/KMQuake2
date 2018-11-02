@@ -854,7 +854,7 @@ void R_Register (void)
 	r_bitdepth = Cvar_Get("r_bitdepth", "0", 0);
 	r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = Cvar_Get("r_lightmap", "0", 0);
-	r_shadows = Cvar_Get("r_shadows", "0", CVAR_ARCHIVE);
+	r_shadows = Cvar_Get("r_shadows", "1", CVAR_ARCHIVE); //mxd. Was 0
 	r_shadowalpha = Cvar_Get("r_shadowalpha", "0.4", CVAR_ARCHIVE);
 	r_shadowrange = Cvar_Get("r_shadowrange", "768", CVAR_ARCHIVE);
 	r_shadowvolumes = Cvar_Get("r_shadowvolumes", "0", CVAR_CHEAT);
