@@ -643,7 +643,7 @@ void CL_AddParticles (void)
 					// faded out
 					p->alpha = 0;
 					p->flags = 0;
-					CL_ClearDecalPoly (p->decal); // flag decal chain for cleaning
+					CL_ClearDecalPoly(p->decal); // flag decal chain for cleaning
 					p->decalnum = 0;
 					p->decal = NULL;
 					p->next = free_particles;
@@ -670,7 +670,9 @@ void CL_AddParticles (void)
 
 		p->next = NULL;
 		if (!tail)
+		{
 			active = tail = p;
+		}
 		else
 		{
 			tail->next = p;

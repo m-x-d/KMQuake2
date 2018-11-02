@@ -278,8 +278,7 @@ typedef struct
 ========================================================================
 */
 
-#define IDSPRITEHEADER	(('2'<<24)+('S'<<16)+('D'<<8)+'I')
-		// little-endian "IDS2"
+#define IDSPRITEHEADER	(('2'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDS2"
 #define SPRITE_VERSION	2
 
 typedef struct
@@ -289,7 +288,8 @@ typedef struct
 	char	name[MAX_SKINNAME];		// name of pcx file
 } dsprframe_t;
 
-typedef struct {
+typedef struct
+{
 	int			ident;
 	int			version;
 	int			numframes;

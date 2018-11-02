@@ -151,7 +151,7 @@ void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up)
 void VecToAngleRolled(vec3_t value1, float angleyaw, vec3_t angles)
 {
 	const float yaw = (int)(atan2(value1[1], value1[0]) * 180 / M_PI);
-	const float forward = sqrtf (value1[0] * value1[0] + value1[1] * value1[1]);
+	const float forward = sqrtf(value1[0] * value1[0] + value1[1] * value1[1]);
 	float pitch = (int)(atan2(value1[2], forward) * 180 / M_PI);
 
 	if (pitch < 0)

@@ -146,7 +146,7 @@ V_AddParticle
 =====================
 */
 //Knightmare- Psychospaz's enhanced particle code
-void V_AddParticle (vec3_t org, vec3_t angle, vec3_t color, float alpha, int alpha_src, int alpha_dst, float size, int image, int flags)
+void V_AddParticle(vec3_t org, vec3_t angle, vec3_t color, float alpha, int alpha_src, int alpha_dst, float size, int image, int flags)
 {
 	if (r_numparticles >= MAX_PARTICLES)
 		return;
@@ -173,7 +173,7 @@ void V_AddParticle (vec3_t org, vec3_t angle, vec3_t color, float alpha, int alp
 V_AddDecal
 =====================
 */
-void V_AddDecal (vec3_t org, vec3_t angle, vec3_t color, float alpha, int alpha_src, int alpha_dst, float size, int image, int flags, decalpolys_t *decal)
+void V_AddDecal(vec3_t org, vec3_t angle, vec3_t color, float alpha, int alpha_src, int alpha_dst, float size, int image, int flags, decalpolys_t *decal)
 {
 	if (r_numdecalfrags >= MAX_DECAL_FRAGS)
 		return;

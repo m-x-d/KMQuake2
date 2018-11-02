@@ -84,7 +84,7 @@ float R_CalcShadowAlpha (entity_t *e)
 	else if (dist >= maxRange) // out of range
 		outAlpha = 0.0f;
 	else // fade based on distance
-		outAlpha = r_shadowalpha->value * (fabsf(dist-maxRange) / SHADOW_FADE_DIST);
+		outAlpha = r_shadowalpha->value * (fabsf(dist - maxRange) / SHADOW_FADE_DIST);
 
 	return outAlpha;
 }
@@ -163,10 +163,8 @@ capColorVec
 */
 void capColorVec (vec3_t color)
 {
-	int i;
-
-	for (i=0;i<3;i++)
-		color[i] = max(min(color[i], 1.0f), 0.0f);
+	for (int i = 0; i < 3; i++)
+		color[i] = clamp(color[i], 0.0f, 1.0f);
 }
 
 /*
@@ -368,8 +366,6 @@ R_SetShadeLight
 */
 void R_SetShadeLight (void)
 {
-	int		i;
-
 	if (currententity->flags & RF_MASK_SHELL)
 	{
 		VectorClear(shadelight);
@@ -430,6 +426,7 @@ void R_SetShadeLight (void)
 
 	if (currententity->flags & RF_MINLIGHT)
 	{
+		int i;
 		for (i = 0; i < 3; i++)
 			if (shadelight[i] > 0.02)
 				break;
@@ -442,12 +439,11 @@ void R_SetShadeLight (void)
 	{
 		// bonus items will pulse with time
 		const float scale = 0.2 * sinf(r_newrefdef.time * 7);
-		for (i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
 		{
 			const float min = shadelight[i] * 0.8;
 			shadelight[i] += scale;
-			if (shadelight[i] < min)
-				shadelight[i] = min;
+			shadelight[i] = max(min, shadelight[i]);
 		}
 	}
 
