@@ -1569,7 +1569,7 @@ void Qcommon_Init (int argc, char **argv)
 	// end Knightmare
 	
 	s = va("%4.2f %s %s %s", VERSION, CPUSTRING, __DATE__, BUILDSTRING);
-	Cvar_Get ("version", s, CVAR_SERVERINFO|CVAR_NOSET);
+	Cvar_Get("version", s, CVAR_SERVERINFO|CVAR_NOSET);
 
 	if (dedicated->value)
 		Cmd_AddCommand("quit", Com_Quit);

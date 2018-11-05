@@ -116,7 +116,7 @@ DLL GLUE
 */
 
 #define	MAXPRINTMSG	8192 // was 4096
-void VID_Printf (int print_level, char *fmt, ...)
+void VID_Printf(int print_level, char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
@@ -698,10 +698,10 @@ VID_Init
 void VID_Init (void)
 {
 	/* Create the video variables so we know how to start the graphics drivers */
-	vid_ref = Cvar_Get ("vid_ref", "gl", CVAR_ARCHIVE);
-	vid_xpos = Cvar_Get ("vid_xpos", "3", CVAR_ARCHIVE);
-	vid_ypos = Cvar_Get ("vid_ypos", "22", CVAR_ARCHIVE);
-	vid_fullscreen = Cvar_Get ("vid_fullscreen", "1", CVAR_ARCHIVE);
+	vid_ref = Cvar_Get("vid_ref", "gl", CVAR_ARCHIVE);
+	vid_xpos = Cvar_Get("vid_xpos", "3", CVAR_ARCHIVE);
+	vid_ypos = Cvar_Get("vid_ypos", "22", CVAR_ARCHIVE);
+	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE);
 	vid_gamma = Cvar_Get( "vid_gamma", "0.8", CVAR_ARCHIVE ); // was 1.0
 	win_noalttab = Cvar_Get( "win_noalttab", "0", CVAR_ARCHIVE );
 	win_alttab_restore_desktop = Cvar_Get( "win_alttab_restore_desktop", "1", CVAR_ARCHIVE );	// Knightmare- whether to restore desktop resolution on alt-tab

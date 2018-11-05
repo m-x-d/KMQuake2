@@ -277,13 +277,13 @@ void CL_LoadClientinfo(clientinfo_t *ci, char *s)
 		// weapon file
 		for (int i = 0; i < num_cl_weaponmodels; i++)
 		{
-			Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/%s/%s", model_name, cl_weaponmodels[i]);
+			Com_sprintf(weapon_filename, sizeof(weapon_filename), "players/%s/%s", model_name, cl_weaponmodels[i]);
 			ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
 
 			if (!ci->weaponmodel[i] && strcmp(model_name, "cyborg") == 0)
 			{
 				// try male
-				Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/male/%s", cl_weaponmodels[i]);
+				Com_sprintf(weapon_filename, sizeof(weapon_filename), "players/male/%s", cl_weaponmodels[i]);
 				ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
 			}
 
@@ -384,7 +384,7 @@ void CL_PlayBackgroundTrack(void)
 	// using a named audio track intead of numbered
 	if (strlen(cl.configstrings[CS_CDTRACK]) > 2)
 	{
-		Com_sprintf (name, sizeof(name), "music/%s.ogg", cl.configstrings[CS_CDTRACK]);
+		Com_sprintf(name, sizeof(name), "music/%s.ogg", cl.configstrings[CS_CDTRACK]);
 		if (FS_LoadFile(name, NULL) != -1)
 		{
 			CDAudio_Stop();

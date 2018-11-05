@@ -1544,7 +1544,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 
 	if (token[0] != '{')
 	{
-		VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: found %s when expecting { in %s.%i in %s\n", token, meshname, skinnum, scriptname);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: found %s when expecting { in %s.%i in %s\n", token, meshname, skinnum, scriptname);
 		return;
 	}
 
@@ -1554,7 +1554,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 		token = COM_ParseExt(data, true);
 		if (!*data)
 		{
-			VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: EOF in %s.%i in %s without closing brace\n", meshname, skinnum, scriptname);
+			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: EOF in %s.%i in %s without closing brace\n", meshname, skinnum, scriptname);
 			break;
 		}
 
@@ -1653,7 +1653,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 			{
 				if (!Mod_ParseWaveFunc(data, &skinParms->stretch.type))
 				{
-					VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: missing or invalid waveform for 'tcmod stretch' in %s.%i in %s\n", meshname, skinnum, scriptname);
+					VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: missing or invalid waveform for 'tcmod stretch' in %s.%i in %s\n", meshname, skinnum, scriptname);
 					break;
 				}
 
@@ -1706,7 +1706,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 			// parse blend parm
 			if (!Mod_GetNextParm(data, &token))
 			{
-				VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: missing parameter(s) for 'blendfunc' in %s.%i in %s\n", meshname, skinnum, scriptname);
+				VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: missing parameter(s) for 'blendfunc' in %s.%i in %s\n", meshname, skinnum, scriptname);
 				break;
 			}
 			
@@ -1745,7 +1745,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 				skinParms->blendfunc_dst = Mod_ParseBlendMode(token2);
 				if (skinParms->blendfunc_dst == -1)
 				{
-					VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: invalid dst blend func in %s.%i in %s\n", meshname, skinnum, scriptname);
+					VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: invalid dst blend func in %s.%i in %s\n", meshname, skinnum, scriptname);
 					break;
 				}
 			}
@@ -1756,7 +1756,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 		{
 			if (!Mod_GetNextParm(data, &token)) // glowname
 			{
-				VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: missing image name for 'glow' in %s.%i in %s\n", meshname, skinnum, scriptname);
+				VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: missing image name for 'glow' in %s.%i in %s\n", meshname, skinnum, scriptname);
 				break;
 			}
 
@@ -1792,7 +1792,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 			}
 			else // only wave or identity
 			{
-				VID_Printf (PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: unknown type '%s' for 'glow' in %s.%i in %s\n", token, meshname, skinnum, scriptname);
+				VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Mod_ParseModelScript: unknown type '%s' for 'glow' in %s.%i in %s\n", token, meshname, skinnum, scriptname);
 				break;
 			}
 

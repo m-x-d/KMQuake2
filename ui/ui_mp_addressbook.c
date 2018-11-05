@@ -73,7 +73,7 @@ void AddressBook_MenuInit( void )
 		cvar_t *adr;
 		char buffer[20];
 
-		Com_sprintf (buffer, sizeof(buffer), "adr%d", i);
+		Com_sprintf(buffer, sizeof(buffer), "adr%d", i);
 
 		adr = Cvar_Get( buffer, "", CVAR_ARCHIVE );
 

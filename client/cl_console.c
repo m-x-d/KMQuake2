@@ -310,9 +310,9 @@ void Con_Init (void)
 	// Knightmare- Psychospaz's transparent console
 	con_alpha = Cvar_Get("con_alpha", "0.5", CVAR_ARCHIVE);
 	// Knightmare- how far the console drops down
-	//con_height = Cvar_Get ("con_height", "0.5", CVAR_ARCHIVE);
+	//con_height = Cvar_Get("con_height", "0.5", CVAR_ARCHIVE);
 	con_newconback = Cvar_Get("con_newconback", "0", CVAR_ARCHIVE);	// whether to use new console background
-	con_oldconbar = Cvar_Get("con_oldconbar", "1", CVAR_ARCHIVE);		// whether to draw bottom bar on old console
+	con_oldconbar = Cvar_Get("con_oldconbar", "1", CVAR_ARCHIVE);	// whether to draw bottom bar on old console
 
 	// whether to use new-style console background
 	newconback_found = false;
@@ -690,15 +690,15 @@ void Con_DrawConsole (float frac, qboolean trans)
 	// changed to "KMQuake2 vx.xx"
 #ifdef ERASER_COMPAT_BUILD
 #ifdef NET_SERVER_BUILD
-	Com_sprintf (version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake2 v%4.2f (Eraser net server)", VERSION);
+	Com_sprintf(version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake2 v%4.2f (Eraser net server)", VERSION);
 #else // NET_SERVER_BUILD
-	Com_sprintf (version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake2 v%4.2f (Eraser compatible)", VERSION);
+	Com_sprintf(version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake2 v%4.2f (Eraser compatible)", VERSION);
 #endif // NET_SERVER_BUILD
 #else // ERASER_COMPAT_BUILD
 #ifdef NET_SERVER_BUILD
-	Com_sprintf (version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake2 v%4.2f (net server)", VERSION);
+	Com_sprintf(version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake2 v%4.2f (net server)", VERSION);
 #else
-	Com_sprintf (version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake 2 SBE v%4.2f", VERSION); //mxd. Version
+	Com_sprintf(version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"KMQuake 2 SBE v%4.2f", VERSION); //mxd. Version
 #endif // ERASER_COMPAT_BUILD
 #endif // NEW_ENTITY_STATE_MEMBERS
 

@@ -95,9 +95,9 @@ void Netchan_Init (void)
 	// pick a port value that should be nice and random
 	port = Sys_Milliseconds() & 0xffff;
 
-	showpackets = Cvar_Get ("showpackets", "0", 0);
-	showdrop = Cvar_Get ("showdrop", "0", 0);
-	qport = Cvar_Get ("qport", va("%i", port), CVAR_NOSET);
+	showpackets = Cvar_Get("showpackets", "0", 0);
+	showdrop = Cvar_Get("showdrop", "0", 0);
+	qport = Cvar_Get("qport", va("%i", port), CVAR_NOSET);
 }
 
 /*
@@ -223,7 +223,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 	{
 		chan->fatal_error = true;
 		Com_Printf ("%s:Outgoing message overflow\n"
-			, NET_AdrToString (chan->remote_address));
+			, NET_AdrToString(chan->remote_address));
 		return;
 	}
 
@@ -340,7 +340,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	{
 		if (showdrop->value)
 			Com_Printf ("%s:Out of order packet %i at %i\n"
-				, NET_AdrToString (chan->remote_address)
+				, NET_AdrToString(chan->remote_address)
 				,  sequence
 				, chan->incoming_sequence);
 		return false;
@@ -354,7 +354,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	{
 		if (showdrop->value)
 			Com_Printf ("%s:Dropped %i packets at %i\n"
-			, NET_AdrToString (chan->remote_address)
+			, NET_AdrToString(chan->remote_address)
 			, chan->dropped
 			, sequence);
 	}

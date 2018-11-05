@@ -215,7 +215,7 @@ char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave )
 		return NULL;
 	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
 		return NULL;
-	Com_sprintf (findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
+	Com_sprintf(findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
 	return findpath;
 */
 // Knightmare- AnthonyJ's player menu bug fix
@@ -224,7 +224,7 @@ char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave )
 	{
 		if (CompareAttributes(findinfo.attrib, musthave, canthave))
 		{
-			Com_sprintf (findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
+			Com_sprintf(findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
 			return findpath;
 		}
 		else if (_findnext(findhandle, &findinfo) == -1)
@@ -250,7 +250,7 @@ char *Sys_FindNext ( unsigned musthave, unsigned canthave )
 	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
 		return NULL;
 
-	Com_sprintf (findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
+	Com_sprintf(findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
 	return findpath;
 */
 // Knightmare- AnthonyJ's player menu bug fix
@@ -259,7 +259,7 @@ char *Sys_FindNext ( unsigned musthave, unsigned canthave )
 	{
 		if (CompareAttributes(findinfo.attrib, musthave, canthave))
 		{
-			Com_sprintf (findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
+			Com_sprintf(findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
 			return findpath;
 		}
 	}

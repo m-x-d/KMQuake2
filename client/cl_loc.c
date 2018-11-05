@@ -68,7 +68,7 @@ void CL_LoadLoc(void)
 	// format map pathname
 	Q_strncpyz(mapname, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapname));	// skip "maps/"
 	mapname[strlen(mapname) - 4] = 0;	// remove ".bsp"
-	Com_sprintf (filename, sizeof(filename), "locs/%s.loc", mapname);
+	Com_sprintf(filename, sizeof(filename), "locs/%s.loc", mapname);
 	
 	// load file and check buffer and size
 	const int fSize = FS_LoadFile(filename, &buf);

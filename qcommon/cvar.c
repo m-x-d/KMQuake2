@@ -179,7 +179,7 @@ char *Cvar_CompleteVariable (char *partial)
 
 	// check partial match
 	for (cvar=cvar_vars ; cvar ; cvar=cvar->next)
-		if (!strncmp (partial,cvar->name, len))
+		if (!strncmp(partial,cvar->name, len))
 			return cvar->name;
 
 	return NULL;
@@ -194,7 +194,7 @@ If the variable already exists, the value will not be set
 The flags will be or'ed in if the variable exists.
 ============
 */
-cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
+cvar_t *Cvar_Get(char *var_name, char *var_value, int flags)
 {
 	cvar_t	*var;
 	
@@ -260,7 +260,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	var = Cvar_FindVar (var_name);
 	if (!var)
 	{	// create it
-		return Cvar_Get (var_name, value, 0);
+		return Cvar_Get(var_name, value, 0);
 	}
 
 	if (var->flags & (CVAR_USERINFO | CVAR_SERVERINFO))
@@ -390,7 +390,7 @@ cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
 	var = Cvar_FindVar (var_name);
 	if (!var)
 	{	// create it
-		return Cvar_Get (var_name, value, flags);
+		return Cvar_Get(var_name, value, flags);
 	}
 
 	var->modified = true;
@@ -419,9 +419,9 @@ void Cvar_SetValue (char *var_name, float value)
 	char	val[32];
 
 	if (value == (int)value)
-		Com_sprintf (val, sizeof(val), "%i",(int)value);
+		Com_sprintf(val, sizeof(val), "%i",(int)value);
 	else
-		Com_sprintf (val, sizeof(val), "%f",value);
+		Com_sprintf(val, sizeof(val), "%f",value);
 	Cvar_Set (var_name, val);
 }
 
@@ -435,7 +435,7 @@ void Cvar_SetInteger (char *var_name, int integer)
 {
 	char	val[32];
 
-	Com_sprintf (val, sizeof(val), "%i",integer);
+	Com_sprintf(val, sizeof(val), "%i",integer);
 	Cvar_Set (var_name, val);
 }
 
@@ -641,7 +641,7 @@ void Cvar_WriteVariables (char *path)
 	{
 		if (var->flags & CVAR_ARCHIVE)
 		{
-			Com_sprintf (buffer, sizeof(buffer), "set %s \"%s\"\n", var->name, var->string);
+			Com_sprintf(buffer, sizeof(buffer), "set %s \"%s\"\n", var->name, var->string);
 			fprintf (f, "%s", buffer);
 		}
 	}

@@ -45,17 +45,21 @@ void R_SetFog (void)
 
 	r_fogColor[3] = 1.0;
 	qglEnable(GL_FOG);
-	qglClearColor (r_fogColor[0], r_fogColor[1], r_fogColor[2], r_fogColor[3]); // Clear the background color to the fog color
+	qglClearColor(r_fogColor[0], r_fogColor[1], r_fogColor[2], r_fogColor[3]); // Clear the background color to the fog color
 	qglFogi(GL_FOG_MODE, r_fogmodel);
 	qglFogfv(GL_FOG_COLOR, r_fogColor);
+
 	if (r_fogmodel == GL_LINEAR)
 	{
 		qglFogf(GL_FOG_START, r_fognear); 
 		qglFogf(GL_FOG_END, r_fogfar);
 	}
 	else
-		qglFogf(GL_FOG_DENSITY, r_fogdensity/10000.f);
-	qglHint (GL_FOG_HINT, GL_NICEST);
+	{
+		qglFogf(GL_FOG_DENSITY, r_fogdensity / 10000.f);
+	}
+
+	qglHint(GL_FOG_HINT, GL_NICEST);
 }
 
 /*
@@ -78,48 +82,41 @@ void R_InitFogVars (void)
 R_SetFogVars
 ================
 */
-void R_SetFogVars (qboolean enable, int model, int density,
-				   int start, int end, int red, int green, int blue)
+void R_SetFogVars (qboolean enable, int model, int density, int start, int end, int red, int green, int blue)
 {
-	int	temp;
-
-	//VID_Printf( PRINT_ALL, "Setting fog variables: model %i density %i near %i far %i red %i green %i blue %i\n",
-	//	model, density, start, end, red, green, blue );
-
 	// Skip this if QGL subsystem is already down
-	if (!qglDisable)	return;
+	if (!qglDisable)
+		return;
 
 	r_fogenable = enable;
-	if (!r_fogenable) { // recieved fog disable message
+	if (!r_fogenable) // recieved fog disable message
+	{
 		qglDisable(GL_FOG);
 		return;
 	}
-	temp = model;
-	if ((temp > 2) || (temp < 0)) temp = 0;
+
+	int temp = model;
+	if (temp > 2 || temp < 0)
+		temp = 0;
+
 	r_fogmodel = FogModels[temp];
 	r_fogdensity = (float)density;
-	if (temp == 0) {	// GL_LINEAR
+	
+	if (temp == 0) // GL_LINEAR
+	{
 		r_fognear = (float)start;
 		r_fogfar = (float)end;
 	}
-	r_fogColor[0] = ((float)red)/255.0;
-	r_fogColor[1] = ((float)green)/255.0;
-	r_fogColor[2] = ((float)blue)/255.0;
+
+	r_fogColor[0] = (float)red / 255.0f;
+	r_fogColor[1] = (float)green / 255.0f;
+	r_fogColor[2] = (float)blue / 255.0f;
 
 	// clamp vars
-	r_fogdensity = max(r_fogdensity, 0.0);
-	r_fogdensity = min(r_fogdensity, 100.0);
-	r_fognear = max(r_fognear, 0.0f);
-	r_fognear = min(r_fognear, 10000.0-64.0);
-	r_fogfar = max(r_fogfar, r_fognear+64.0);
-	r_fogfar = min(r_fogfar, 10000.0);
-	r_fogColor[0] = max(r_fogColor[0], 0.0);
-	r_fogColor[0] = min(r_fogColor[0], 1.0);
-	r_fogColor[1] = max(r_fogColor[1], 0.0);
-	r_fogColor[1] = min(r_fogColor[1], 1.0);
-	r_fogColor[2] = max(r_fogColor[2], 0.0);
-	r_fogColor[2] = min(r_fogColor[2], 1.0);
+	r_fogdensity = clamp(r_fogdensity, 0.0f, 100.0f);
+	r_fognear = clamp(r_fognear, 0.0f, 10000.0f - 64.0f);
+	r_fogfar = clamp(r_fogfar, r_fognear + 64.0f, 10000.0f);
 
-	//VID_Printf( PRINT_ALL, "Set fog variables: model %i density %f near %f far %f red %f green %f blue %f\n",
-	//	model, r_fogdensity, r_fognear, r_fogfar, r_fogColor[0], r_fogColor[1], r_fogColor[2] );
+	for (int i = 0; i < 3; i++)
+		r_fogColor[i] = clamp(r_fogColor[i], 0.0f, 1.0f);
 }

@@ -860,7 +860,7 @@ void Menu_DrawStringDark (int x, int y, const char *string, int alpha)
 {
 	char	newstring[1024];
 
-	Com_sprintf (newstring, sizeof(newstring), S_COLOR_ALT"%s", string);
+	Com_sprintf(newstring, sizeof(newstring), S_COLOR_ALT"%s", string);
 	SCR_DrawString (x, y, ALIGN_CENTER, newstring, alpha);
 }
 
@@ -874,7 +874,7 @@ void Menu_DrawStringR2LDark (int x, int y, const char *string, int alpha)
 {
 	char	newstring[1024];
 
-	Com_sprintf (newstring, sizeof(newstring), S_COLOR_ALT"%s", string);
+	Com_sprintf(newstring, sizeof(newstring), S_COLOR_ALT"%s", string);
 	x -= stringLen(string)*MENU_FONT_SIZE;
 	SCR_DrawString (x, y, ALIGN_CENTER, newstring, alpha);
 }

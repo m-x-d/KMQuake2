@@ -857,7 +857,7 @@ struct model_s *S_RegisterSexedModel (entity_state_t *ent, char *base)
 	if (!model[0])
 		Q_strncpyz(model, "male", sizeof(model));
 
-	Com_sprintf (buffer, sizeof(buffer), "players/%s/%s", model, base + 1);
+	Com_sprintf(buffer, sizeof(buffer), "players/%s/%s", model, base + 1);
 	struct model_s *mdl = R_RegisterModel(buffer);
 
 	if (!mdl)
@@ -869,13 +869,13 @@ struct model_s *S_RegisterSexedModel (entity_state_t *ent, char *base)
 		if (!mdl)
 		{
 			// no, revert to the male model
-			Com_sprintf (buffer, sizeof(buffer), "players/%s/%s", "male", base + 1);
+			Com_sprintf(buffer, sizeof(buffer), "players/%s/%s", "male", base + 1);
 			mdl = R_RegisterModel(buffer);
 
 			if (!mdl)
 			{
 				// last try, default male weapon.md2
-				Com_sprintf (buffer, sizeof(buffer), "players/male/weapon.md2");
+				Com_sprintf(buffer, sizeof(buffer), "players/male/weapon.md2");
 				mdl = R_RegisterModel(buffer);
 			}
 		} 

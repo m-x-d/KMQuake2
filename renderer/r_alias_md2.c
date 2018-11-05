@@ -750,13 +750,13 @@ static qboolean R_CullAliasMD2Model (vec3_t bbox[8], entity_t *e)
 
 	if ( (e->frame >= paliashdr->num_frames) || (e->frame < 0) )
 	{
-		VID_Printf (PRINT_ALL, "R_CullAliasMD2Model %s: no such frame %d\n", 
+		VID_Printf(PRINT_ALL, "R_CullAliasMD2Model %s: no such frame %d\n", 
 			currentmodel->name, e->frame);
 		e->frame = 0;
 	}
 	if ( (e->oldframe >= paliashdr->num_frames) || (e->oldframe < 0) )
 	{
-		VID_Printf (PRINT_ALL, "R_CullAliasMD2Model %s: no such oldframe %d\n", 
+		VID_Printf(PRINT_ALL, "R_CullAliasMD2Model %s: no such oldframe %d\n", 
 			currentmodel->name, e->oldframe);
 		e->oldframe = 0;
 	}
@@ -922,7 +922,7 @@ void R_DrawAliasMD2Model (entity_t *e)
 	if ( (e->frame >= paliashdr->num_frames) 
 		|| (e->frame < 0) )
 	{
-		VID_Printf (PRINT_ALL, "R_DrawAliasMD2Model %s: no such frame %d\n",
+		VID_Printf(PRINT_ALL, "R_DrawAliasMD2Model %s: no such frame %d\n",
 			currentmodel->name, e->frame);
 		e->frame = 0;
 		e->oldframe = 0;
@@ -931,7 +931,7 @@ void R_DrawAliasMD2Model (entity_t *e)
 	if ( (e->oldframe >= paliashdr->num_frames)
 		|| (e->oldframe < 0))
 	{
-		VID_Printf (PRINT_ALL, "R_DrawAliasMD2Model %s: no such oldframe %d\n",
+		VID_Printf(PRINT_ALL, "R_DrawAliasMD2Model %s: no such oldframe %d\n",
 			currentmodel->name, e->oldframe);
 		e->frame = 0;
 		e->oldframe = 0;

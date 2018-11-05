@@ -163,7 +163,7 @@ void SV_WipeSavegame (char *savename)
 
 	Com_sprintf(name, sizeof(name), "%s/save/%s/server.ssv", FS_Gamedir(), savename);
 	remove(name);
-	Com_sprintf (name, sizeof(name), "%s/save/%s/game.ssv", FS_Gamedir(), savename);
+	Com_sprintf(name, sizeof(name), "%s/save/%s/game.ssv", FS_Gamedir(), savename);
 	remove(name);
 	// Knightmare- delete screenshot
 	Com_sprintf(name, sizeof(name), "%s/save/%s/shot.jpg", FS_Gamedir(), savename);
@@ -178,7 +178,7 @@ void SV_WipeSavegame (char *savename)
 	}
 	Sys_FindClose();
 
-	Com_sprintf (name, sizeof(name), "%s/save/%s/*.sv2", FS_Gamedir(), savename);
+	Com_sprintf(name, sizeof(name), "%s/save/%s/*.sv2", FS_Gamedir(), savename);
 	s = Sys_FindFirst(name, 0, 0);
 	while (s)
 	{
@@ -347,7 +347,7 @@ void SV_WriteServerFile (qboolean autosave)
 	
 	Com_DPrintf("SV_WriteServerFile(%s)\n", autosave ? "true" : "false");
 
-	Com_sprintf (fileName, sizeof(fileName), "%s/save/current/server.ssv", FS_Gamedir());
+	Com_sprintf(fileName, sizeof(fileName), "%s/save/current/server.ssv", FS_Gamedir());
 	FILE *f = fopen (fileName, "wb");
 	if (!f)
 	{

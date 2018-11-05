@@ -297,7 +297,7 @@ void R_Compile_ARB_Programs (void)
 		if (error_pos != -1) 
 		{
 			errors = qglGetString(GL_PROGRAM_ERROR_STRING_ARB);	
-			VID_Printf (PRINT_ALL, S_COLOR_RED"FragmentProgram error at position %d in shader %d\nARB_ERROR: %s\n", 
+			VID_Printf(PRINT_ALL, S_COLOR_RED"FragmentProgram error at position %d in shader %d\nARB_ERROR: %s\n", 
 						error_pos, fragment_programs[i], errors);
 			qglDeleteProgramsARB(1, &fragment_programs[i]);
 			break;
@@ -317,13 +317,13 @@ void R_Compile_ARB_Programs (void)
 			if (error_pos != -1)
 			{
 				errors = qglGetString(GL_PROGRAM_ERROR_STRING_ARB);	
-				VID_Printf (PRINT_ALL, S_COLOR_RED"VertexProgram error at position %d in shader %d\nARB_ERROR: %s\n", 
+				VID_Printf(PRINT_ALL, S_COLOR_RED"VertexProgram error at position %d in shader %d\nARB_ERROR: %s\n", 
 							error_pos, vertex_programs[i], errors);
 				qglDeleteProgramsARB(1, &vertex_programs[i]);
 				break;
 			}
 		}
 	}
-	VID_Printf (PRINT_ALL, "...loading ARB programs... succeeded\n");
+	VID_Printf(PRINT_ALL, "...loading ARB programs... succeeded\n");
 }
 

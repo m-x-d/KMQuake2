@@ -120,7 +120,7 @@ void SetFontCursor (void)
 	s_options_interface_font_box.curvalue = 0;
 
 	if (!con_font)
-		con_font = Cvar_Get ("con_font", "default", CVAR_ARCHIVE);
+		con_font = Cvar_Get("con_font", "default", CVAR_ARCHIVE);
 
 	if (numfonts>1)
 		for (i=0; font_names[i]; i++)

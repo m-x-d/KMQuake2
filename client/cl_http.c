@@ -298,9 +298,9 @@ static void CL_StartHTTPDownload (dlqueue_t *entry, dlhandle_t *dl)
 	{
 		CL_HTTP_Reset_KBps_counter ();	// Knightmare- for KB/s counter
 
-		Com_sprintf (dl->filePath, sizeof(dl->filePath), "%s/%s", FS_Gamedir(), entry->quakePath);
+		Com_sprintf(dl->filePath, sizeof(dl->filePath), "%s/%s", FS_Gamedir(), entry->quakePath);
 
-		Com_sprintf (tempFile, sizeof(tempFile), "%s/%s", cl.gamedir, entry->quakePath);
+		Com_sprintf(tempFile, sizeof(tempFile), "%s/%s", cl.gamedir, entry->quakePath);
 		CL_EscapeHTTPPath (dl->filePath, escapedFilePath);
 
 	//	strncat (dl->filePath, ".tmp");
@@ -329,7 +329,7 @@ static void CL_StartHTTPDownload (dlqueue_t *entry, dlhandle_t *dl)
 	if (!dl->curl)
 		dl->curl = curl_easy_init ();
 
-	Com_sprintf (dl->URL, sizeof(dl->URL), "%s%s", cls.downloadServer, escapedFilePath);
+	Com_sprintf(dl->URL, sizeof(dl->URL), "%s%s", cls.downloadServer, escapedFilePath);
 
 	curl_easy_setopt (dl->curl, CURLOPT_ENCODING, "");
 	//curl_easy_setopt (dl->curl, CURLOPT_DEBUGFUNCTION, CL_CURL_Debug);
@@ -528,7 +528,7 @@ qboolean CL_QueueHTTPDownload (const char *quakePath)
 		char	listPath[MAX_OSPATH];
 		char	filePath[MAX_OSPATH];
 
-		Com_sprintf (filePath, sizeof(filePath), "%s/%s", cl.gamedir, quakePath);
+		Com_sprintf(filePath, sizeof(filePath), "%s/%s", cl.gamedir, quakePath);
 
 		COM_StripExtension (filePath, listPath);
 	//	strncat (listPath, ".filelist");
@@ -654,7 +654,7 @@ static void CL_CheckAndQueueDownload (char *path)
 
 		if (pak)
 		{
-			Com_sprintf (gamePath, sizeof(gamePath),"%s/%s",FS_Gamedir(), path);
+			Com_sprintf(gamePath, sizeof(gamePath),"%s/%s",FS_Gamedir(), path);
 			f = fopen (gamePath, "rb");
 			if (!f)
 			{
@@ -1001,7 +1001,7 @@ static void CL_FinishHTTPDownload (void)
 		if (isFile)
 		{
 			//rename the temp file
-			Com_sprintf (tempName, sizeof(tempName), "%s/%s", FS_Gamedir(), dl->queueEntry->quakePath);
+			Com_sprintf(tempName, sizeof(tempName), "%s/%s", FS_Gamedir(), dl->queueEntry->quakePath);
 
 			if (rename (dl->filePath, tempName))
 				Com_Printf ("Failed to rename %s for some odd reason...", dl->filePath);

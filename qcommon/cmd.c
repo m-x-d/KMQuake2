@@ -716,7 +716,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 Cmd_RemoveCommand
 ============
 */
-void Cmd_RemoveCommand (char *cmd_name)
+void Cmd_RemoveCommand(char *cmd_name)
 {
 	cmd_function_t **back = &cmd_functions;
 	while (true)

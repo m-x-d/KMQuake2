@@ -400,7 +400,7 @@ void Menu_Video_Init (void)
 	char	*customStr;
 
 	if ( !con_font_size )
-		con_font_size = Cvar_Get ("con_font_size", "8", CVAR_ARCHIVE);
+		con_font_size = Cvar_Get("con_font_size", "8", CVAR_ARCHIVE);
 
 	s_video_menu.x = SCREEN_WIDTH*0.5;
 //	s_video_menu.x = viddef.width * 0.50;

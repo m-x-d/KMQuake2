@@ -339,7 +339,7 @@ void Menu_Video_Advanced_Init (void)
 	};
 
 	int y = 0;
-	r_intensity = Cvar_Get ("r_intensity", "1", 0);
+	r_intensity = Cvar_Get("r_intensity", "1", 0);
 
 	s_video_advanced_menu.x = SCREEN_WIDTH * 0.5;
 	s_video_advanced_menu.y = SCREEN_HEIGHT * 0.5 - 100;

@@ -427,7 +427,7 @@ void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *heigh
 		|| pcx->xmax >= 640
 		|| pcx->ymax >= 480)
 	{
-		VID_Printf (PRINT_ALL, "Bad pcx file %s\n", filename);
+		VID_Printf(PRINT_ALL, "Bad pcx file %s\n", filename);
 		return;
 	}
 
@@ -950,7 +950,7 @@ void R_LoadPNG (char *filename, byte **pic, int *width, int *height)
 	{
 		// Knightmare- skip this unless developer >= 2 because it spams the console
 		if (developer->value > 1)
-			VID_Printf (PRINT_DEVELOPER, "Bad png file %s\n", filename);
+			VID_Printf(PRINT_DEVELOPER, "Bad png file %s\n", filename);
 
 		return;
 	}

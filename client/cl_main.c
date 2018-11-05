@@ -730,7 +730,7 @@ void CL_Disconnect (void)
 	Netchan_Transmit(&cls.netchan, strlen(final), final);
 	Netchan_Transmit(&cls.netchan, strlen(final), final);
 
-	CL_ClearState ();
+	CL_ClearState();
 
 	// stop download
 	if (cls.download)
@@ -988,7 +988,7 @@ void CL_PingServers_f (void)
 	// send a broadcast packet
 	Com_Printf ("pinging broadcast...\n");
 
-	noudp = Cvar_Get ("noudp", "0", CVAR_NOSET);
+	noudp = Cvar_Get("noudp", "0", CVAR_NOSET);
 	if (!noudp->value)
 	{
 		adr.type = NA_BROADCAST;
@@ -1001,7 +1001,7 @@ void CL_PingServers_f (void)
 			Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
 	}
 
-	noipx = Cvar_Get ("noipx", "0", CVAR_NOSET);
+	noipx = Cvar_Get("noipx", "0", CVAR_NOSET);
 	if (!noipx->value)
 	{
 		adr.type = NA_BROADCAST_IPX;
@@ -1017,7 +1017,7 @@ void CL_PingServers_f (void)
 	// send a packet to each address book entry
 	for (i=0; i<16; i++)
 	{
-		Com_sprintf (name, sizeof(name), "adr%i", i);
+		Com_sprintf(name, sizeof(name), "adr%i", i);
 		adrstring = Cvar_VariableString (name);
 		if (!adrstring || !adrstring[0])
 			continue;
@@ -1095,7 +1095,7 @@ void CL_ConnectionlessPacket (void)
 
 	char *c = Cmd_Argv(0);
 
-	Com_Printf("%s: %s\n", NET_AdrToString (net_from), c);
+	Com_Printf("%s: %s\n", NET_AdrToString(net_from), c);
 
 	// server connection
 	if (!strcmp(c, "client_connect"))
@@ -1113,11 +1113,11 @@ void CL_ConnectionlessPacket (void)
 		for (int i = 1; i < Cmd_Argc(); i++)
 		{
 			char *p = Cmd_Argv(i);
-			if ( !strncmp (p, "dlserver=", 9) )
+			if ( !strncmp(p, "dlserver=", 9) )
 			{
 #ifdef USE_CURL
 				p += 9;
-				Com_sprintf (cls.downloadReferer, sizeof(cls.downloadReferer), "quake2://%s", buff);
+				Com_sprintf(cls.downloadReferer, sizeof(cls.downloadReferer), "quake2://%s", buff);
 				CL_SetHTTPServer(p);
 
 				if (cls.downloadServer[0])
@@ -1133,6 +1133,7 @@ void CL_ConnectionlessPacket (void)
 		MSG_WriteString(&cls.netchan.message, "new");	
 		cls.forcePacket = true;
 		cls.state = ca_connected;
+
 		return;
 	}
 
@@ -1156,6 +1157,7 @@ void CL_ConnectionlessPacket (void)
 		s = MSG_ReadString(&net_message);
 		Cbuf_AddText(s);
 		Cbuf_AddText("\n");
+
 		return;
 	}
 
@@ -1164,6 +1166,7 @@ void CL_ConnectionlessPacket (void)
 	{
 		s = MSG_ReadString(&net_message);
 		Com_Printf("%s", s);
+
 		return;
 	}
 
@@ -1476,7 +1479,7 @@ void CL_InitLocal (void)
 	cl_noskins = Cvar_Get("cl_noskins", "0", 0);
 	cl_autoskins = Cvar_Get("cl_autoskins", "0", 0);
 	cl_predict = Cvar_Get("cl_predict", "1", 0);
-	//	cl_minfps = Cvar_Get ("cl_minfps", "5", 0);
+	//	cl_minfps = Cvar_Get("cl_minfps", "5", 0);
 	cl_maxfps = Cvar_Get("cl_maxfps", "90", 0);
 
 #ifdef CLIENT_SPLIT_NETFRAME
@@ -1544,10 +1547,10 @@ void CL_InitLocal (void)
 	menu_sensitivity = Cvar_Get("menu_sensitivity", "1", CVAR_ARCHIVE);
 	menu_rotate = Cvar_Get("menu_rotate", "0", CVAR_ARCHIVE);
 	menu_alpha = Cvar_Get("menu_alpha", "0.6", CVAR_ARCHIVE);
-//	hud_scale = Cvar_Get ("hud_scale", "3", CVAR_ARCHIVE);
-//	hud_width = Cvar_Get ("hud_width", "640", CVAR_ARCHIVE);
-//	hud_height = Cvar_Get ("hud_height", "480", CVAR_ARCHIVE);
-//	hud_alpha = Cvar_Get ("hud_alpha", "1", CVAR_ARCHIVE);
+//	hud_scale = Cvar_Get("hud_scale", "3", CVAR_ARCHIVE);
+//	hud_width = Cvar_Get("hud_width", "640", CVAR_ARCHIVE);
+//	hud_height = Cvar_Get("hud_height", "480", CVAR_ARCHIVE);
+//	hud_alpha = Cvar_Get("hud_alpha", "1", CVAR_ARCHIVE);
 
 	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE);
 	m_yaw = Cvar_Get("m_yaw", "0.022", 0);

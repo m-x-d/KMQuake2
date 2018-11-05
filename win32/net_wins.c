@@ -170,16 +170,16 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 NET_AdrToString
 ===================
 */
-char	*NET_AdrToString (netadr_t a)
+char	*NET_AdrToString(netadr_t a)
 {
 	static	char	s[64];
 
 	if (a.type == NA_LOOPBACK)
-		Com_sprintf (s, sizeof(s), "loopback");
+		Com_sprintf(s, sizeof(s), "loopback");
 	else if (a.type == NA_IP)
-		Com_sprintf (s, sizeof(s), "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], ntohs(a.port));
+		Com_sprintf(s, sizeof(s), "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], ntohs(a.port));
 	else
-		Com_sprintf (s, sizeof(s), "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%i", a.ipx[0], a.ipx[1], a.ipx[2], a.ipx[3], a.ipx[4], a.ipx[5], a.ipx[6], a.ipx[7], a.ipx[8], a.ipx[9], ntohs(a.port));
+		Com_sprintf(s, sizeof(s), "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%i", a.ipx[0], a.ipx[1], a.ipx[2], a.ipx[3], a.ipx[4], a.ipx[5], a.ipx[6], a.ipx[7], a.ipx[8], a.ipx[9], ntohs(a.port));
 
 	return s;
 }
@@ -408,7 +408,7 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 
 		if (ret == net_message->maxsize)
 		{
-			Com_Printf ("Oversize packet from %s\n", NET_AdrToString (*net_from));
+			Com_Printf ("Oversize packet from %s\n", NET_AdrToString(*net_from));
 			continue;
 		}
 
@@ -482,19 +482,19 @@ void NET_SendPacket (netsrc_t sock, int length, void *data, netadr_t to)
 		if (dedicated->value)	// let dedicated servers continue after errors
 		{
 			Com_Printf ("NET_SendPacket ERROR: %s to %s\n", NET_ErrorString(),
-				NET_AdrToString (to));
+				NET_AdrToString(to));
 		}
 		else
 		{
 			if (err == WSAEADDRNOTAVAIL)
 			{
 				Com_DPrintf (S_COLOR_YELLOW"NET_SendPacket Warning: %s : %s\n", 
-						NET_ErrorString(), NET_AdrToString (to));
+						NET_ErrorString(), NET_AdrToString(to));
 			}
 			else
 			{
 				Com_Error (ERR_DROP, "NET_SendPacket ERROR: %s to %s\n", 
-						NET_ErrorString(), NET_AdrToString (to));
+						NET_ErrorString(), NET_AdrToString(to));
 			}
 		}
 	}
@@ -573,7 +573,7 @@ void NET_OpenIP (void)
 	int		port;
 	int		dedicated;
 
-	ip = Cvar_Get ("ip", "localhost", CVAR_NOSET);
+	ip = Cvar_Get("ip", "localhost", CVAR_NOSET);
 
 	dedicated = Cvar_VariableValue ("dedicated");
 
@@ -806,10 +806,10 @@ void NET_Init (void)
 
 	Com_Printf("Winsock Initialized\n");
 
-	noudp = Cvar_Get ("noudp", "0", CVAR_NOSET);
-	noipx = Cvar_Get ("noipx", "0", CVAR_NOSET);
+	noudp = Cvar_Get("noudp", "0", CVAR_NOSET);
+	noipx = Cvar_Get("noipx", "0", CVAR_NOSET);
 
-	net_shownet = Cvar_Get ("net_shownet", "0", 0);
+	net_shownet = Cvar_Get("net_shownet", "0", 0);
 }
 
 

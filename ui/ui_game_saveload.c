@@ -70,7 +70,7 @@ void Load_Savestrings (qboolean update)
 
 	for (i=0 ; i<MAX_SAVEGAMES ; i++)
 	{
-		Com_sprintf (name, sizeof(name), "%s/save/kmq2save%i/server.ssv", FS_Gamedir(), i);
+		Com_sprintf(name, sizeof(name), "%s/save/kmq2save%i/server.ssv", FS_Gamedir(), i);
 
 		old_timestamp = m_savetimestamps[i];
 		stat(name, &st);
@@ -93,7 +93,7 @@ void Load_Savestrings (qboolean update)
 		else
 		{
 			fclose (fp);
-			Com_sprintf (name, sizeof(name), "save/kmq2save%i/server.ssv", i);
+			Com_sprintf(name, sizeof(name), "save/kmq2save%i/server.ssv", i);
 			FS_FOpenFile (name, &f, FS_READ);
 			if (!f)
 			{
@@ -110,9 +110,9 @@ void Load_Savestrings (qboolean update)
 				if (i==0) { // grab mapname
 					FS_Read (mapname, sizeof(mapname), f);
 					if (mapname[0] == '*') // skip * marker
-						Com_sprintf (m_mapname, sizeof(m_mapname), mapname+1);
+						Com_sprintf(m_mapname, sizeof(m_mapname), mapname+1);
 					else
-						Com_sprintf (m_mapname, sizeof(m_mapname), mapname);
+						Com_sprintf(m_mapname, sizeof(m_mapname), mapname);
 					if (ch = strchr (m_mapname, '$'))
 						*ch = 0; // terminate string at $ marker
 				}

@@ -661,7 +661,7 @@ void SCR_DrawCenterString (void)
 			if (start[l] == '\n' || !start[l])
 				break;
 
-		Com_sprintf (line, sizeof(line), "");
+		Com_sprintf(line, sizeof(line), "");
 		unsigned skipchars = 0; //mxd
 		for (int j = 0; j < l; j++)
 		{
@@ -669,7 +669,7 @@ void SCR_DrawCenterString (void)
 			if(start[j] == '^' && j + 1 < l && StringCheckParams(start[j + 1]))
 				skipchars += 2;
 			
-			Com_sprintf (line, sizeof(line), "%s%c", line, start[j]);
+			Com_sprintf(line, sizeof(line), "%s%c", line, start[j]);
 			
 			if (!remaining--)
 				return;

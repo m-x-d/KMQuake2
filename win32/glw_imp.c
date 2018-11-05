@@ -176,8 +176,8 @@ qboolean VID_CreateWindow (int width, int height, qboolean fullscreen)
 	}
 	else
 	{
-		cvar_t *vid_xpos = Cvar_Get ("vid_xpos", "0", 0);
-		cvar_t *vid_ypos = Cvar_Get ("vid_ypos", "0", 0);
+		cvar_t *vid_xpos = Cvar_Get("vid_xpos", "0", 0);
+		cvar_t *vid_ypos = Cvar_Get("vid_ypos", "0", 0);
 		x = vid_xpos->value;
 		y = vid_ypos->value;
 	}
@@ -529,12 +529,12 @@ qboolean GLimp_InitGL (void)
 	{
 		if ( (pixelformat = qwglChoosePixelFormat( glw_state.hDC, &pfd)) == 0 )
 		{
-			VID_Printf (PRINT_ALL, "GLimp_Init() - qwglChoosePixelFormat failed\n");
+			VID_Printf(PRINT_ALL, "GLimp_Init() - qwglChoosePixelFormat failed\n");
 			return false;
 		}
 		if ( qwglSetPixelFormat( glw_state.hDC, pixelformat, &pfd) == FALSE )
 		{
-			VID_Printf (PRINT_ALL, "GLimp_Init() - qwglSetPixelFormat failed\n");
+			VID_Printf(PRINT_ALL, "GLimp_Init() - qwglSetPixelFormat failed\n");
 			return false;
 		}
 		qwglDescribePixelFormat( glw_state.hDC, pixelformat, sizeof( pfd ), &pfd );
@@ -543,12 +543,12 @@ qboolean GLimp_InitGL (void)
 	{
 		if ( ( pixelformat = ChoosePixelFormat( glw_state.hDC, &pfd)) == 0 )
 		{
-			VID_Printf (PRINT_ALL, "GLimp_Init() - ChoosePixelFormat failed\n");
+			VID_Printf(PRINT_ALL, "GLimp_Init() - ChoosePixelFormat failed\n");
 			return false;
 		}
 		if ( SetPixelFormat( glw_state.hDC, pixelformat, &pfd) == FALSE )
 		{
-			VID_Printf (PRINT_ALL, "GLimp_Init() - SetPixelFormat failed\n");
+			VID_Printf(PRINT_ALL, "GLimp_Init() - SetPixelFormat failed\n");
 			return false;
 		}
 		DescribePixelFormat( glw_state.hDC, pixelformat, sizeof( pfd ), &pfd );
@@ -584,14 +584,14 @@ qboolean GLimp_InitGL (void)
 	*/
 	if ( ( glw_state.hGLRC = qwglCreateContext( glw_state.hDC ) ) == 0 )
 	{
-		VID_Printf (PRINT_ALL, "GLimp_Init() - qwglCreateContext failed\n");
+		VID_Printf(PRINT_ALL, "GLimp_Init() - qwglCreateContext failed\n");
 
 		goto fail;
 	}
 
     if ( !qwglMakeCurrent( glw_state.hDC, glw_state.hGLRC ) )
 	{
-		VID_Printf (PRINT_ALL, "GLimp_Init() - qwglMakeCurrent failed\n");
+		VID_Printf(PRINT_ALL, "GLimp_Init() - qwglMakeCurrent failed\n");
 
 		goto fail;
 	}
@@ -710,7 +710,7 @@ void GLimp_EndFrame (void)
 	err = qglGetError();
 //	assert( err == GL_NO_ERROR );
 	if (err != GL_NO_ERROR)	// Output error code instead
-		VID_Printf (PRINT_DEVELOPER, "OpenGL Error %i\n", err);
+		VID_Printf(PRINT_DEVELOPER, "OpenGL Error %i\n", err);
 
 	if ( stricmp( r_drawbuffer->string, "GL_BACK" ) == 0 )
 	{

@@ -122,20 +122,20 @@ void S_Init (void)
 
 	Com_Printf("\n------- Sound Initialization -------\n");
 
-	cv = Cvar_Get ("s_initsound", "1", 0);
+	cv = Cvar_Get("s_initsound", "1", 0);
 	if (!cv->value)
 		Com_Printf ("not initializing.\n");
 	else
 	{
-		s_volume = Cvar_Get ("s_volume", "1.0", CVAR_ARCHIVE);
-		s_khz = Cvar_Get ("s_khz", "22", CVAR_ARCHIVE);
-		s_loadas8bit = Cvar_Get ("s_loadas8bit", "0", CVAR_ARCHIVE);
-		s_mixahead = Cvar_Get ("s_mixahead", "0.2", CVAR_ARCHIVE);
-		s_show = Cvar_Get ("s_show", "0", 0);
-		s_testsound = Cvar_Get ("s_testsound", "0", 0);
-		s_primary = Cvar_Get ("s_primary", "0", CVAR_ARCHIVE);	// win32 specific
+		s_volume = Cvar_Get("s_volume", "1.0", CVAR_ARCHIVE);
+		s_khz = Cvar_Get("s_khz", "22", CVAR_ARCHIVE);
+		s_loadas8bit = Cvar_Get("s_loadas8bit", "0", CVAR_ARCHIVE);
+		s_mixahead = Cvar_Get("s_mixahead", "0.2", CVAR_ARCHIVE);
+		s_show = Cvar_Get("s_show", "0", 0);
+		s_testsound = Cvar_Get("s_testsound", "0", 0);
+		s_primary = Cvar_Get("s_primary", "0", CVAR_ARCHIVE);	// win32 specific
 	#ifdef OGG_SUPPORT
-		s_musicvolume = Cvar_Get ("s_musicvolume", "1.0", CVAR_ARCHIVE); // Q2E
+		s_musicvolume = Cvar_Get("s_musicvolume", "1.0", CVAR_ARCHIVE); // Q2E
 	#endif
 
 		Cmd_AddCommand("play", S_Play);
@@ -658,7 +658,7 @@ struct sfx_s *S_RegisterSexedSound (entity_state_t *ent, char *base)
 		Q_strncpyz(model, "male", sizeof(model));
 
 	// see if we already know of the model specific sound
-	Com_sprintf (sexedFilename, sizeof(sexedFilename), "#players/%s/%s", model, base+1);
+	Com_sprintf(sexedFilename, sizeof(sexedFilename), "#players/%s/%s", model, base+1);
 	sfx = S_FindName (sexedFilename, false);
 
 	if (!sfx)
@@ -674,7 +674,7 @@ struct sfx_s *S_RegisterSexedSound (entity_state_t *ent, char *base)
 		else
 		{
 			// no, revert to the male sound in the pak0.pak
-			Com_sprintf (maleFilename, sizeof(maleFilename), "player/%s/%s", "male", base+1);
+			Com_sprintf(maleFilename, sizeof(maleFilename), "player/%s/%s", "male", base+1);
 			sfx = S_AliasName (sexedFilename, maleFilename);
 		}
 	}

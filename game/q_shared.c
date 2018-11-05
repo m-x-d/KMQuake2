@@ -1640,7 +1640,7 @@ char *Q_strupr (char *string)
 }
 
 
-void Com_sprintf (char *dest, int size, char *fmt, ...)
+void Com_sprintf(char *dest, int size, char *fmt, ...)
 {
 	char	bigbuffer[0x10000];
 	va_list	argptr;

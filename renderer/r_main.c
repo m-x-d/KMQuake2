@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 #include "vlights.h"
 
-void R_Clear (void);
+void R_Clear(void);
 
 viddef_t	vid;
 
@@ -50,7 +50,7 @@ float		v_blend[4];			// final blending color
 
 int			maxsize;			// Nexus
 
-void GL_Strings_f( void );
+void GL_Strings_f(void);
 
 //
 // view origin
@@ -187,7 +187,7 @@ cvar_t	*vid_fullscreen;
 cvar_t	*vid_gamma;
 cvar_t	*vid_ref;
 
-cvar_t  *r_bloom;	// BLOOMS
+cvar_t	*r_bloom;	// BLOOMS
 
 cvar_t	*r_skydistance; //Knightmare- variable sky range
 cvar_t	*r_saturation;	//** DMP
@@ -208,6 +208,7 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 	for (int i = 0; i < 4; i++)
 		if (BOX_ON_PLANE_SIDE(mins, maxs, &frustum[i]) == 2)
 			return true;
+
 	return false;
 }
 
@@ -319,7 +320,7 @@ void R_SetupFrame (void)
 	AngleVectors(r_newrefdef.viewangles, vpn, vright, vup);
 
 // current viewcluster
-	if ( !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) )
+	if (!(r_newrefdef.rdflags & RDF_NOWORLDMODEL))
 	{
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
@@ -335,7 +336,7 @@ void R_SetupFrame (void)
 			VectorCopy (r_origin, temp);
 			temp[2] -= 16;
 			leaf = Mod_PointInLeaf(temp, r_worldmodel);
-			if ( !(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
+			if (!(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
 				r_viewcluster2 = leaf->cluster;
 		}
 		else
@@ -345,8 +346,8 @@ void R_SetupFrame (void)
 
 			VectorCopy (r_origin, temp);
 			temp[2] += 16;
-			leaf = Mod_PointInLeaf (temp, r_worldmodel);
-			if ( !(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
+			leaf = Mod_PointInLeaf(temp, r_worldmodel);
+			if (!(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
 				r_viewcluster2 = leaf->cluster;
 		}
 	}
@@ -400,16 +401,16 @@ void R_SetupGL (void)
 	//end Knightmare
 
 	// Knightmare- update r_modulate in real time
-    if (r_modulate->modified && r_worldmodel) //Don't do this if no map is loaded
+	if (r_modulate->modified && r_worldmodel) //Don't do this if no map is loaded
 	{
-		msurface_t *surf; 
+		msurface_t *surf;
 		int i;
 		
-        for (i = 0, surf = r_worldmodel->surfaces; i < r_worldmodel->numsurfaces; i++, surf++)
-            surf->cached_light[0]=0; 
+		for (i = 0, surf = r_worldmodel->surfaces; i < r_worldmodel->numsurfaces; i++, surf++)
+			surf->cached_light[0] = 0; 
 
-        r_modulate->modified = 0; 
-	} 
+		r_modulate->modified = 0; 
+	}
 
 	//
 	// set up viewport
@@ -452,7 +453,7 @@ void R_SetupGL (void)
 	const float screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
 //	yfov = 2*atan((float)r_newrefdef.height/r_newrefdef.width)*180/M_PI;
 	qglMatrixMode(GL_PROJECTION);
-    qglLoadIdentity ();
+    qglLoadIdentity();
 
 	//Knightmare- 12/26/2001- increase back clipping plane distance
     MYgluPerspective(r_newrefdef.fov_y,  screenaspect,  4, farz); //was 4096
@@ -515,13 +516,13 @@ void R_Clear (void)
 		{
 			gldepthmin = 0;
 			gldepthmax = 0.49999;
-			GL_DepthFunc (GL_LEQUAL);
+			GL_DepthFunc(GL_LEQUAL);
 		}
 		else
 		{
 			gldepthmin = 1;
 			gldepthmax = 0.5;
-			GL_DepthFunc (GL_GEQUAL);
+			GL_DepthFunc(GL_GEQUAL);
 		}
 	}
 	else
@@ -596,7 +597,7 @@ void R_RenderView (refdef_t *fd)
 
 	r_newrefdef = *fd;
 
-	if (!r_worldmodel && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL) )
+	if (!r_worldmodel && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL))
 		VID_Error(ERR_DROP, "R_RenderView: NULL worldmodel");
 
 	if (r_speeds->value)
@@ -688,8 +689,8 @@ void R_RenderView (refdef_t *fd)
 R_SetGL2D
 ================
 */
-void	Con_DrawString (int x, int y, char *string, int alpha);
-float	SCR_ScaledVideo (float param);
+void	Con_DrawString(int x, int y, char *string, int alpha);
+float	SCR_ScaledVideo(float param);
 #define	FONT_SIZE		SCR_ScaledVideo(con_font_size->value)
 
 void R_SetGL2D (void)
@@ -765,7 +766,6 @@ void R_SetLightLevel (void)
 /*
 @@@@@@@@@@@@@@@@@@@@@
 R_RenderFrame
-
 @@@@@@@@@@@@@@@@@@@@@
 */
 void R_RenderFrame (refdef_t *fd)
@@ -803,14 +803,14 @@ void AssertCvarRange (cvar_t *var, float min, float max, qboolean isInteger)
 void R_Register (void)
 {
 	// added Psychospaz's console font size option
-	con_font = Cvar_Get ("con_font", "default", CVAR_ARCHIVE);
-	con_font_size = Cvar_Get ("con_font_size", "8", CVAR_ARCHIVE);
-	alt_text_color = Cvar_Get ("alt_text_color", "2", CVAR_ARCHIVE);
-	scr_netgraph_pos = Cvar_Get ("netgraph_pos", "0", CVAR_ARCHIVE);
+	con_font = Cvar_Get("con_font", "default", CVAR_ARCHIVE);
+	con_font_size = Cvar_Get("con_font_size", "8", CVAR_ARCHIVE);
+	alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
+	scr_netgraph_pos = Cvar_Get("netgraph_pos", "0", CVAR_ARCHIVE);
 
 	gl_driver = Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
 	gl_allow_software = Cvar_Get("gl_allow_software", "0", 0);
-	gl_clear = Cvar_Get ("gl_clear", "0", 0);
+	gl_clear = Cvar_Get("gl_clear", "0", 0);
 
 	r_lefthand = Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_norefresh = Cvar_Get("r_norefresh", "0", CVAR_CHEAT);
@@ -1000,6 +1000,7 @@ qboolean R_SetMode (void)
 			vid_fullscreen->modified = false;
 			VID_Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
 			err = GLimp_SetMode(&vid.width, &vid.height, r_mode->value, false);
+
 			if (err == rserr_ok)
 				return true;
 		}
@@ -1138,13 +1139,13 @@ qboolean R_CheckGLExtensions (char *reason)
 
 			if (!qglLockArraysEXT || !qglUnlockArraysEXT)
 			{
-				VID_Printf (PRINT_ALL, "..." S_COLOR_RED "GL_EXT/SGI_compiled_vertex_array not properly supported!\n");
+				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_EXT/SGI_compiled_vertex_array not properly supported!\n");
 				qglLockArraysEXT	= NULL;
 				qglUnlockArraysEXT	= NULL;
 			}
 			else
 			{
-				VID_Printf (PRINT_ALL, "...enabling GL_EXT/SGI_compiled_vertex_array\n");
+				VID_Printf(PRINT_ALL, "...enabling GL_EXT/SGI_compiled_vertex_array\n");
 				glConfig.extCompiledVertArray = true;
 			}
 		}
@@ -1160,7 +1161,7 @@ qboolean R_CheckGLExtensions (char *reason)
 
 	// glDrawRangeElements on GL 1.2 or higher or GL_EXT_draw_range_elements
 	glConfig.drawRangeElements = false;
-	if ( (glConfig.version_major >= 2) || (glConfig.version_major == 1 && glConfig.version_minor >= 2) )
+	if (glConfig.version_major >= 2 || (glConfig.version_major == 1 && glConfig.version_minor >= 2))
 	{
 		if (r_ext_draw_range_elements->value)
 		{
@@ -1265,10 +1266,10 @@ qboolean R_CheckGLExtensions (char *reason)
 			qglUnmapBufferARB = (void *) qwglGetProcAddress( "glUnmapBufferARB" );
 		}
 		else*/
-			VID_Printf (PRINT_ALL, "...ignoring GL_ARB_vertex_buffer_object\n");
+			VID_Printf(PRINT_ALL, "...ignoring GL_ARB_vertex_buffer_object\n");
 	}
 	else
-		VID_Printf (PRINT_ALL, "...GL_ARB_vertex_buffer_object not found\n" );
+		VID_Printf(PRINT_ALL, "...GL_ARB_vertex_buffer_object not found\n" );
 #endif
 
 	// GL_ARB_texture_env_combine - Vic
@@ -1277,7 +1278,7 @@ qboolean R_CheckGLExtensions (char *reason)
 	{
 		if (r_ext_mtexcombine->value)
 		{
-			VID_Printf (PRINT_ALL, "...using GL_ARB_texture_env_combine\n");
+			VID_Printf(PRINT_ALL, "...using GL_ARB_texture_env_combine\n");
 			glConfig.mtexcombine = true;
 		}
 		else
@@ -1298,14 +1299,14 @@ qboolean R_CheckGLExtensions (char *reason)
 		{
 			if (r_ext_mtexcombine->value)
 			{
-				VID_Printf (PRINT_ALL, "..using GL_EXT_texture_env_combine\n");
+				VID_Printf(PRINT_ALL, "..using GL_EXT_texture_env_combine\n");
 				glConfig.mtexcombine = true;
 			}
 			else
-				VID_Printf (PRINT_ALL, "...ignoring GL_EXT_texture_env_combine\n");
+				VID_Printf(PRINT_ALL, "...ignoring GL_EXT_texture_env_combine\n");
 		}
 		else
-			VID_Printf (PRINT_ALL, "...GL_EXT_texture_env_combine not found\n");
+			VID_Printf(PRINT_ALL, "...GL_EXT_texture_env_combine not found\n");
 	}
 #endif
 
@@ -1332,12 +1333,12 @@ qboolean R_CheckGLExtensions (char *reason)
 
 			if (!qglStencilOpSeparateATI)
 			{
-				VID_Printf (PRINT_ALL, "..." S_COLOR_RED "GL_ATI_separate_stencil not properly supported!\n");
+				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_ATI_separate_stencil not properly supported!\n");
 				qglStencilOpSeparateATI = NULL;
 			}
 			else
 			{
-				VID_Printf (PRINT_ALL, "...using GL_ATI_separate_stencil\n");
+				VID_Printf(PRINT_ALL, "...using GL_ATI_separate_stencil\n");
 				glConfig.atiSeparateStencil = true;
 			}
 		}
@@ -1541,11 +1542,11 @@ qboolean R_CheckGLExtensions (char *reason)
 R_Init
 ===============
 */
-qboolean R_Init ( void *hinstance, void *hWnd, char *reason )
+qboolean R_Init (void *hinstance, void *hWnd, char *reason)
 {	
 	char renderer_buffer[1000];
 	char vendor_buffer[1000];
-	int		err;
+	int	err;
 	extern float r_turbsin[256];
 
 	for (int j = 0; j < 256; j++)
@@ -1612,7 +1613,7 @@ qboolean R_Init ( void *hinstance, void *hWnd, char *reason )
 	VID_Printf(PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %i\n", glConfig.max_texsize);
 
 	glConfig.extensions_string = qglGetString(GL_EXTENSIONS);
-//	VID_Printf (PRINT_DEVELOPER, "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
+//	VID_Printf(PRINT_DEVELOPER, "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
 	if (developer->value > 0)	// print extensions 2 to a line
 	{
 		unsigned line = 0;
@@ -1676,28 +1677,28 @@ qboolean R_Init ( void *hinstance, void *hWnd, char *reason )
 		if (glConfig.rendType == GLREND_PERMEDIA2)
 		{
 			Cvar_Set( "r_monolightmap", "A" );
-			VID_Printf (PRINT_ALL, "...using r_monolightmap 'a'\n" );
+			VID_Printf(PRINT_ALL, "...using r_monolightmap 'a'\n" );
 		}
 		else
 			Cvar_Set( "r_monolightmap", "0" );
 	}
 
-	Cvar_Set( "scr_drawall", "0" );
+	Cvar_Set("scr_drawall", "0");
 
 #ifdef __linux__
 	Cvar_SetValue( "r_finish", 1 );
 #else
-	Cvar_SetValue( "r_finish", 0 );
+	Cvar_SetValue("r_finish", 0);
 #endif
 	r_swapinterval->modified = true;	// force swapinterval update
 
 	// MCD has buffering issues
 	if (glConfig.rendType == GLREND_MCD)
-		Cvar_SetValue( "r_finish", 1 );
+		Cvar_SetValue("r_finish", 1);
 
 	if (glConfig.rendType & GLREND_3DLABS)
 	{
-		if ( r_3dlabs_broken->value )
+		if (r_3dlabs_broken->value)
 			glConfig.allowCDS = false;
 		else
 			glConfig.allowCDS = true;
@@ -1706,29 +1707,29 @@ qboolean R_Init ( void *hinstance, void *hWnd, char *reason )
 		glConfig.allowCDS = true;
 
 	if (glConfig.allowCDS)
-		VID_Printf (PRINT_ALL, "...allowing CDS\n" );
+		VID_Printf(PRINT_ALL, "...allowing CDS\n" );
 	else
-		VID_Printf (PRINT_ALL, "...disabling CDS\n" );
+		VID_Printf(PRINT_ALL, "...disabling CDS\n" );
 
 	// If using one of the mini-drivers, a Voodoo w/ WickedGL, or pre-1.2 driver,
 	// use the texture formats determined by gl_texturesolidmode and gl_texturealphamode.
-	if ( Q_stricmp(gl_driver->string, "opengl32") || glConfig.rendType == GLREND_VOODOO
+	if (Q_stricmp(gl_driver->string, "opengl32") || glConfig.rendType == GLREND_VOODOO
 		|| (glConfig.version_major < 2 && glConfig.version_minor < 2)
 		|| (!r_newlightmapformat || !r_newlightmapformat->value) )
 	{
-		VID_Printf (PRINT_ALL, "...using legacy lightmap format\n" );
+		VID_Printf(PRINT_ALL, "...using legacy lightmap format\n" );
 		glConfig.newLMFormat = false;
 	}
 	else
 	{
-		VID_Printf (PRINT_ALL, "...using new lightmap format\n" );
+		VID_Printf(PRINT_ALL, "...using new lightmap format\n" );
 		glConfig.newLMFormat = true;
 	}
 
 	//
 	// grab extensions
 	//
-	if ( !R_CheckGLExtensions (reason) )
+	if (!R_CheckGLExtensions(reason))
 		return false;
 
 /*
@@ -1745,18 +1746,18 @@ qboolean R_Init ( void *hinstance, void *hWnd, char *reason )
 	GL_DrawStereoPattern();
 #endif
 
-	R_InitImages ();
-	Mod_Init ();
-	R_InitMedia ();
-	R_DrawInitLocal ();
+	R_InitImages();
+	Mod_Init();
+	R_InitMedia();
+	R_DrawInitLocal();
 
-	R_InitDSTTex (); // init shader warp texture
-	R_InitFogVars (); // reset fog variables
-	VLight_Init (); // Vic's bmodel lights
+	R_InitDSTTex(); // init shader warp texture
+	R_InitFogVars(); // reset fog variables
+	VLight_Init(); // Vic's bmodel lights
 
 	err = qglGetError();
-	if ( err != GL_NO_ERROR )
-		VID_Printf (PRINT_ALL, "glGetError() = 0x%x\n", err);
+	if (err != GL_NO_ERROR)
+		VID_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
 
 	return true;
 }
@@ -1769,9 +1770,9 @@ R_ClearState
 */
 void R_ClearState (void)
 {	
-	R_SetFogVars (false, 0, 0, 0, 0, 0, 0, 0); // clear fog effets
-	GL_EnableMultitexture (false);
-	GL_SetDefaultState ();
+	R_SetFogVars(false, 0, 0, 0, 0, 0, 0, 0); // clear fog effets
+	GL_EnableMultitexture(false);
+	GL_SetDefaultState();
 }
 
 
@@ -1784,13 +1785,11 @@ void GL_Strings_f (void)
 {
 	unsigned line = 0;
 
-	VID_Printf (PRINT_ALL, "GL_VENDOR: %s\n", glConfig.vendor_string );
-	VID_Printf (PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
-	VID_Printf (PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
-	VID_Printf (PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %i\n", glConfig.max_texsize );
-//	VID_Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
-	// print extensions 2 to a line
-	VID_Printf (PRINT_ALL, "GL_EXTENSIONS: " );
+	VID_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glConfig.vendor_string);
+	VID_Printf(PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string);
+	VID_Printf(PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string);
+	VID_Printf(PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %i\n", glConfig.max_texsize);
+	VID_Printf(PRINT_ALL, "GL_EXTENSIONS: ");
 
 	char *extString = (char *)glConfig.extensions_string;
 	while (true)
@@ -1800,13 +1799,13 @@ void GL_Strings_f (void)
 			break;
 		line++;
 		if ((line % 2) == 0)
-			VID_Printf (PRINT_ALL, "%s\n", extTok );
+			VID_Printf(PRINT_ALL, "%s\n", extTok);
 		else
-			VID_Printf (PRINT_ALL, "%s ", extTok );
+			VID_Printf(PRINT_ALL, "%s ", extTok);
 	}
 
 	if ((line % 2) != 0)
-		VID_Printf (PRINT_ALL, "\n" );
+		VID_Printf(PRINT_ALL, "\n");
 }
 
 
@@ -1817,31 +1816,27 @@ R_Shutdown
 */
 void R_Shutdown (void)
 {	
-	Cmd_RemoveCommand ("modellist");
-	Cmd_RemoveCommand ("screenshot");
-	Cmd_RemoveCommand ("screenshot_silent");
-	Cmd_RemoveCommand ("imagelist");
-	Cmd_RemoveCommand ("gl_strings");
-//	Cmd_RemoveCommand ("resetvertexlights");
+	Cmd_RemoveCommand("modellist");
+	Cmd_RemoveCommand("screenshot");
+	Cmd_RemoveCommand("screenshot_silent");
+	Cmd_RemoveCommand("imagelist");
+	Cmd_RemoveCommand("gl_strings");
+//	Cmd_RemoveCommand("resetvertexlights");
 
 	// Knightmare- Free saveshot buffer
 	if (saveshotdata)
 		free(saveshotdata);
 	saveshotdata = NULL;	// make sure this is null after a vid restart!
 
-	Mod_FreeAll ();
+	Mod_FreeAll();
 
-	R_ShutdownImages ();
-	R_ClearDisplayLists ();
+	R_ShutdownImages();
+	R_ClearDisplayLists();
 
-	//
-	// shut down OS specific OpenGL stuff like contexts, etc.
-	//
+	// Shut down OS-specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
 
-	//
-	// shutdown our QGL subsystem
-	//
+	// Shutdown our QGL subsystem
 	QGL_Shutdown();
 }
 
@@ -1852,9 +1847,10 @@ void R_Shutdown (void)
 R_BeginFrame
 @@@@@@@@@@@@@@@@@@@@@
 */
-void UpdateGammaRamp (void); //Knightmare added
-void RefreshFont (void);
-void R_BeginFrame( float camera_separation )
+void UpdateGammaRamp(void); //Knightmare added
+void RefreshFont(void);
+
+void R_BeginFrame(float camera_separation)
 {
 
 	glState.camera_separation = camera_separation;
@@ -1877,33 +1873,31 @@ void R_BeginFrame( float camera_separation )
 	//
 	// change modes if necessary
 	//
-	if ( r_mode->modified || vid_fullscreen->modified )
+	if (r_mode->modified || vid_fullscreen->modified)
 	{
 		// FIXME: only restart if CDS is required
-		cvar_t *ref = Cvar_Get ("vid_ref", "gl", 0);
+		cvar_t *ref = Cvar_Get("vid_ref", "gl", 0);
 		ref->modified = true;
 	}
 
-	if ( r_log->modified )
+	if (r_log->modified)
 	{
-		GLimp_EnableLogging( r_log->value );
+		GLimp_EnableLogging(r_log->value);
 		r_log->modified = false;
 	}
 
-	if ( r_log->value )
-	{
+	if (r_log->value)
 		GLimp_LogNewFrame();
-	}
 
 	//
 	// update 3Dfx gamma -- it is expected that a user will do a vid_restart
 	// after tweaking this value
 	//
-	if ( vid_gamma->modified )
+	if (vid_gamma->modified)
 	{
 		vid_gamma->modified = false;
 
-		if ( glConfig.rendType == GLREND_VOODOO )
+		if (glConfig.rendType == GLREND_VOODOO)
 		{
 			char envbuffer[1024];
 			float g;
@@ -1914,10 +1908,10 @@ void R_BeginFrame( float camera_separation )
 			Com_sprintf( envbuffer, sizeof(envbuffer), "SST_GAMMA=%f", g );
 			putenv( envbuffer );
 		}
-		UpdateGammaRamp ();
+		UpdateGammaRamp();
 	}
 
-	GLimp_BeginFrame( camera_separation );
+	GLimp_BeginFrame(camera_separation);
 
 	//
 	// go into 2D mode
@@ -1938,38 +1932,38 @@ void R_BeginFrame( float camera_separation )
 	//
 	// draw buffer stuff
 	//
-	if ( r_drawbuffer->modified )
+	if (r_drawbuffer->modified)
 	{
 		r_drawbuffer->modified = false;
 
-		if ( glState.camera_separation == 0 || !glState.stereo_enabled )
+		if (glState.camera_separation == 0 || !glState.stereo_enabled)
 		{
-			if ( Q_stricmp( r_drawbuffer->string, "GL_FRONT" ) == 0 )
-				qglDrawBuffer( GL_FRONT );
+			if (Q_stricmp(r_drawbuffer->string, "GL_FRONT") == 0)
+				qglDrawBuffer(GL_FRONT);
 			else
-				qglDrawBuffer( GL_BACK );
+				qglDrawBuffer(GL_BACK);
 		}
 	}
 
 	//
 	// texturemode stuff
 	//
-	if ( r_texturemode->modified || (glConfig.anisotropic && r_anisotropic->modified) ) //mxd. https://github.com/yquake2/yquake2/blob/1e3135d4fc306b6085d607afdf766a9514235b0b/src/client/refresh/gl1/gl1_main.c#L1705
+	if (r_texturemode->modified || (glConfig.anisotropic && r_anisotropic->modified)) //mxd. https://github.com/yquake2/yquake2/blob/1e3135d4fc306b6085d607afdf766a9514235b0b/src/client/refresh/gl1/gl1_main.c#L1705
 	{
-		GL_TextureMode( r_texturemode->string );
+		GL_TextureMode(r_texturemode->string);
 		r_texturemode->modified = false;
 		r_anisotropic->modified = false;
 	}
 
-	if ( r_texturealphamode->modified )
+	if (r_texturealphamode->modified)
 	{
-		GL_TextureAlphaMode( r_texturealphamode->string );
+		GL_TextureAlphaMode(r_texturealphamode->string);
 		r_texturealphamode->modified = false;
 	}
 
-	if ( r_texturesolidmode->modified )
+	if (r_texturesolidmode->modified)
 	{
-		GL_TextureSolidMode( r_texturesolidmode->string );
+		GL_TextureSolidMode(r_texturesolidmode->string);
 		r_texturesolidmode->modified = false;
 	}
 
@@ -1981,7 +1975,7 @@ void R_BeginFrame( float camera_separation )
 	//
 	// clear screen if desired
 	//
-	R_Clear ();
+	R_Clear();
 }
 
 /*
@@ -1991,35 +1985,33 @@ R_SetPalette
 */
 unsigned r_rawpalette[256];
 
-void R_SetPalette ( const unsigned char *palette)
+void R_SetPalette (const unsigned char *palette)
 {
-	int		i;
+	byte *rp = (byte*)r_rawpalette;
 
-	byte *rp = ( byte * ) r_rawpalette;
-
-	if ( palette )
+	if (palette)
 	{
-		for ( i = 0; i < 256; i++ )
+		for (int i = 0; i < 256; i++ )
 		{
-			rp[i*4+0] = palette[i*3+0];
-			rp[i*4+1] = palette[i*3+1];
-			rp[i*4+2] = palette[i*3+2];
-			rp[i*4+3] = 0xff;
+			rp[i * 4 + 0] = palette[i * 3 + 0];
+			rp[i * 4 + 1] = palette[i * 3 + 1];
+			rp[i * 4 + 2] = palette[i * 3 + 2];
+			rp[i * 4 + 3] = 0xff;
 		}
 	}
 	else
 	{
-		for ( i = 0; i < 256; i++ )
+		for (int i = 0; i < 256; i++ )
 		{
-			rp[i*4+0] = d_8to24table[i] & 0xff;
-			rp[i*4+1] = ( d_8to24table[i] >> 8 ) & 0xff;
-			rp[i*4+2] = ( d_8to24table[i] >> 16 ) & 0xff;
-			rp[i*4+3] = 0xff;
+			rp[i * 4 + 0] = d_8to24table[i] & 0xff;
+			rp[i * 4 + 1] = (d_8to24table[i] >> 8) & 0xff;
+			rp[i * 4 + 2] = (d_8to24table[i] >> 16) & 0xff;
+			rp[i * 4 + 3] = 0xff;
 		}
 	}
-	//GL_SetTexturePalette( r_rawpalette );
+	//GL_SetTexturePalette(r_rawpalette);
 
-	qglClearColor (0,0,0,0);
-	qglClear (GL_COLOR_BUFFER_BIT);
-	qglClearColor (1,0, 0.5 , 0.5);
+	qglClearColor(0, 0, 0, 0);
+	qglClear(GL_COLOR_BUFFER_BIT);
+	qglClearColor(1, 0, 0.5, 0.5);
 }

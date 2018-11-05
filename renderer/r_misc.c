@@ -525,7 +525,7 @@ void R_ScreenShot_JPG (qboolean silent) //TODO: mxd: error handling
 	int								i;
 
 	// Create the scrnshots directory if it doesn't exist
-	Com_sprintf (checkname, sizeof(checkname), "%s/scrnshot", FS_Gamedir());
+	Com_sprintf(checkname, sizeof(checkname), "%s/scrnshot", FS_Gamedir());
 	Sys_Mkdir (checkname);
 
 	// Knightmare- changed screenshot filenames, up to 1000 screenies
@@ -540,8 +540,8 @@ void R_ScreenShot_JPG (qboolean silent) //TODO: mxd: error handling
 		ten = (i - hundred*100)*0.1;
 		one = i - hundred*100 - ten*10;
 
-		Com_sprintf (picname, sizeof(picname), "kmquake2_%i%i%i.jpg", hundred, ten, one);
-		Com_sprintf (checkname, sizeof(checkname), "%s/scrnshot/%s", FS_Gamedir(), picname);
+		Com_sprintf(picname, sizeof(picname), "kmquake2_%i%i%i.jpg", hundred, ten, one);
+		Com_sprintf(checkname, sizeof(checkname), "%s/scrnshot/%s", FS_Gamedir(), picname);
 		file = fopen (checkname, "rb");
 		if (!file)
 			break;	// file doesn't exist
@@ -549,7 +549,7 @@ void R_ScreenShot_JPG (qboolean silent) //TODO: mxd: error handling
 	} 
 	if (i==1000) 
 	{
-		VID_Printf (PRINT_ALL, "R_ScreenShot_JPG: Couldn't create a file\n"); 
+		VID_Printf(PRINT_ALL, "R_ScreenShot_JPG: Couldn't create a file\n"); 
 		return;
  	}
 
@@ -557,7 +557,7 @@ void R_ScreenShot_JPG (qboolean silent) //TODO: mxd: error handling
 	file = fopen(checkname, "wb");
 	if(!file)
 	{
-		VID_Printf (PRINT_ALL, "R_ScreenShot_JPG: Couldn't create a file\n"); 
+		VID_Printf(PRINT_ALL, "R_ScreenShot_JPG: Couldn't create a file\n"); 
 		return;
  	}
 
@@ -616,7 +616,7 @@ void R_ScreenShot_JPG (qboolean silent) //TODO: mxd: error handling
 
 	// Done!
 	if (!silent)
-		VID_Printf (PRINT_ALL, "Wrote %s\n", picname);
+		VID_Printf(PRINT_ALL, "Wrote %s\n", picname);
 }
 
 
@@ -634,7 +634,7 @@ void R_ScreenShot_PNG (qboolean silent)
 	FILE		*file;
 
 	// create the scrnshots directory if it doesn't exist
-	Com_sprintf (checkname, sizeof(checkname), "%s/scrnshot", FS_Gamedir());
+	Com_sprintf(checkname, sizeof(checkname), "%s/scrnshot", FS_Gamedir());
 	Sys_Mkdir (checkname);
 
 // 
@@ -654,8 +654,8 @@ void R_ScreenShot_PNG (qboolean silent)
 		ten = (i - hundred*100)*0.1;
 		one = i - hundred*100 - ten*10;
 
-		Com_sprintf (picname, sizeof(picname), "kmquake2_%i%i%i.png", hundred, ten, one);
-		Com_sprintf (checkname, sizeof(checkname), "%s/scrnshot/%s", FS_Gamedir(), picname);
+		Com_sprintf(picname, sizeof(picname), "kmquake2_%i%i%i.png", hundred, ten, one);
+		Com_sprintf(checkname, sizeof(checkname), "%s/scrnshot/%s", FS_Gamedir(), picname);
 		file = fopen (checkname, "rb");
 		if (!file)
 			break;	// file doesn't exist
@@ -663,7 +663,7 @@ void R_ScreenShot_PNG (qboolean silent)
 	} 
 	if (i==1000) 
 	{
-		VID_Printf (PRINT_ALL, "R_ScreenShot_PNG: Couldn't create a file\n"); 
+		VID_Printf(PRINT_ALL, "R_ScreenShot_PNG: Couldn't create a file\n"); 
 		return;
  	}
 
@@ -714,7 +714,7 @@ void R_ScreenShot_PNG (qboolean silent)
 		png_destroy_info_struct(png_sptr, &png_infoptr);
 		png_destroy_write_struct (&png_sptr, 0);
 		free(rgbdata);
-		VID_Printf (PRINT_ALL, "R_ScreenShot_PNG: Couldn't create a file\n"); 
+		VID_Printf(PRINT_ALL, "R_ScreenShot_PNG: Couldn't create a file\n"); 
 		return;
  	}
 

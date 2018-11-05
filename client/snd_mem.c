@@ -302,7 +302,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 	//	strncpy(namebuffer, &name[1]);
 		Q_strncpyz(namebuffer, &name[1], sizeof(namebuffer));
 	else
-		Com_sprintf (namebuffer, sizeof(namebuffer), "sound/%s", name);
+		Com_sprintf(namebuffer, sizeof(namebuffer), "sound/%s", name);
 
 //	Com_Printf ("loading %s\n",namebuffer);
 
@@ -347,7 +347,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 	sc->speed = info.rate * info.channels;	//CDawg changed
 	sc->width = info.width;
 	sc->stereo = info.channels;
-	sc->music = !strncmp (namebuffer, "music/", 6);
+	sc->music = !strncmp(namebuffer, "music/", 6);
 
 	// force loopstart if it's a music file
 	if ( sc->music && (sc->loopstart == -1) )
@@ -509,7 +509,7 @@ wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength)
 		FindNextChunk ("LIST");
 		if (data_p)
 		{
-			if (!strncmp (data_p + 28, "mark", 4))
+			if (!strncmp(data_p + 28, "mark", 4))
 			{	// this is not a proper parse, but it works with cooledit...
 				data_p += 24;
 				i = GetLittleLong ();	// samples in loop

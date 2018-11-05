@@ -448,7 +448,7 @@ void UI_Precache (void)
 	R_DrawFindPic (UI_MOUSECURSOR_PIC);
 
 	for (i = 0; i < NUM_MAINMENU_CURSOR_FRAMES; i++) {
-		Com_sprintf (scratch, sizeof(scratch), "/pics/m_cursor%d.pcx", i);
+		Com_sprintf(scratch, sizeof(scratch), "/pics/m_cursor%d.pcx", i);
 		R_DrawFindPic (scratch);
 	}
 
@@ -504,9 +504,9 @@ void UI_Init (void)
 {
 	// init this cvar here so M_Print can use it
 	if (!alt_text_color)
-		alt_text_color = Cvar_Get ("alt_text_color", "2", CVAR_ARCHIVE);
+		alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
 
-	ui_cursor_scale = Cvar_Get ("ui_cursor_scale", "0.4", 0);
+	ui_cursor_scale = Cvar_Get("ui_cursor_scale", "0.4", 0);
 
 	UI_LoadMapList();	// load map list
 	UI_InitSavegameData ();	// load savegame data

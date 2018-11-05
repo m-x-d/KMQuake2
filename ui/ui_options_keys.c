@@ -87,9 +87,9 @@ static void M_UnbindCommand (char *command)
 		if (!b)
 			continue;
 		// Knightmare- fix bug with key bound to +attack2 being confused with +attack
-		if (!strncmp (b, "+attack2", 8) && strncmp (command, "+attack2", 8))
+		if (!strncmp(b, "+attack2", 8) && strncmp(command, "+attack2", 8))
 			continue;
-		if (!strncmp (b, command, l) )
+		if (!strncmp(b, command, l) )
 			Key_SetBinding (j, "");
 	}
 }
@@ -111,9 +111,9 @@ static void M_FindKeysForCommand (char *command, int *twokeys)
 		if (!b)
 			continue;
 		// Knightmare- fix bug with key bound to +attack2 being confused with +attack
-		if (!strncmp (b, "+attack2", 8) && strncmp (command, "+attack2", 8))
+		if (!strncmp(b, "+attack2", 8) && strncmp(command, "+attack2", 8))
 			continue;
-		if (!strncmp (b, command, l))
+		if (!strncmp(b, command, l))
 		{
 			twokeys[count] = j;
 			count++;
@@ -262,7 +262,7 @@ static const char *Keys_MenuKey( int key )
 		{
 			char cmd[1024];
 
-			Com_sprintf (cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[item->generic.localdata[0]][0]);
+			Com_sprintf(cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[item->generic.localdata[0]][0]);
 			Cbuf_InsertText (cmd);
 		}
 		

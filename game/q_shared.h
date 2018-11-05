@@ -406,7 +406,7 @@ char *COM_Parse (char **data_p);
 // data is an in/out parm, returns a parsed out token
 char *COM_ParseExt (char **data_p, qboolean allowNewLines);
 
-void Com_sprintf (char *dest, int size, char *fmt, ...);
+void Com_sprintf(char *dest, int size, char *fmt, ...);
 long Com_HashFileName (const char *fname, int hashSize, qboolean sized);
 
 void Com_PageInMemory (byte *buffer, int size);
