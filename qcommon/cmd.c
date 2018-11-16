@@ -97,7 +97,7 @@ void Cbuf_AddText (char *text)
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
 	{
-		Com_Printf ("Cbuf_AddText: overflow\n");
+		Com_Printf("Cbuf_AddText: overflow\n");
 		return;
 	}
 
@@ -363,7 +363,7 @@ void Cmd_Exec_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("exec <filename> : execute a script file\n");
+		Com_Printf("exec <filename> : execute a script file\n");
 		return;
 	}
 
@@ -373,7 +373,7 @@ void Cmd_Exec_f (void)
 		Com_Printf("couldn't exec %s\n", Cmd_Argv(1));
 		return;
 	}
-	Com_Printf ("execing %s\n", Cmd_Argv(1));
+	Com_Printf("execing %s\n", Cmd_Argv(1));
 	
 	// the file doesn't have a trailing 0, so we need to copy it off
 	char *f2 = Z_Malloc(len + 2); // Echon fix- was len+1
@@ -383,7 +383,7 @@ void Cmd_Exec_f (void)
 
 	Cbuf_InsertText (f2);
 
-	Z_Free (f2);
+	Z_Free(f2);
 	FS_FreeFile (f);
 }
 
@@ -416,16 +416,16 @@ void Cmd_Alias_f (void)
 
 	if (Cmd_Argc() == 1)
 	{
-		Com_Printf ("Current alias commands:\n");
+		Com_Printf("Current alias commands:\n");
 		for (a = cmd_alias ; a ; a=a->next)
-			Com_Printf ("%s : %s\n", a->name, a->value);
+			Com_Printf("%s : %s\n", a->name, a->value);
 		return;
 	}
 
 	char *s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Com_Printf ("Alias name is too long\n");
+		Com_Printf("Alias name is too long\n");
 		return;
 	}
 
@@ -446,7 +446,7 @@ void Cmd_Alias_f (void)
 		cmd_alias = a;
 	}
 
-	Q_strncpyz (a->name, s, sizeof(a->name));	
+	Q_strncpyz(a->name, s, sizeof(a->name));	
 
 	// copy the rest of the command line
 	cmd[0] = 0;		// start out with a null string
@@ -501,7 +501,7 @@ int Cmd_Argc (void)
 Cmd_Argv
 ============
 */
-char *Cmd_Argv (int arg)
+char *Cmd_Argv(int arg)
 {
 	if (arg < 0 || arg >= cmd_argc)
 		return cmd_null_string;
@@ -537,7 +537,7 @@ char *Cmd_MacroExpandString (char *text)
 	int len = strlen (scan);
 	if (len >= MAX_STRING_CHARS)
 	{
-		Com_Printf ("Line exceeded %i chars, discarded.\n", MAX_STRING_CHARS);
+		Com_Printf("Line exceeded %i chars, discarded.\n", MAX_STRING_CHARS);
 		return NULL;
 	}
 
@@ -564,31 +564,31 @@ char *Cmd_MacroExpandString (char *text)
 		len += j;
 		if (len >= MAX_STRING_CHARS)
 		{
-			Com_Printf ("Expanded line exceeded %i chars, discarded.\n", MAX_STRING_CHARS);
+			Com_Printf("Expanded line exceeded %i chars, discarded.\n", MAX_STRING_CHARS);
 			return NULL;
 		}
 
 		strncpy (temporary, scan, i);
 	//	strncpy (temporary+i, token);
 	//	strncpy (temporary+i+j, start);
-		Q_strncpyz (temporary + i, token, sizeof(temporary) - i);
-		Q_strncpyz (temporary + i + j, start, sizeof(temporary) - i - j);
+		Q_strncpyz(temporary + i, token, sizeof(temporary) - i);
+		Q_strncpyz(temporary + i + j, start, sizeof(temporary) - i - j);
 
 //		strncpy (expanded, temporary);
-		Q_strncpyz (expanded, temporary, sizeof(expanded));
+		Q_strncpyz(expanded, temporary, sizeof(expanded));
 		scan = expanded;
 		i--;
 
 		if (++count == 100)
 		{
-			Com_Printf ("Macro expansion loop, discarded.\n");
+			Com_Printf("Macro expansion loop, discarded.\n");
 			return NULL;
 		}
 	}
 
 	if (inquote)
 	{
-		Com_Printf ("Line has unmatched quote, discarded.\n");
+		Com_Printf("Line has unmatched quote, discarded.\n");
 		return NULL;
 	}
 
@@ -608,7 +608,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 {
 	// clear the args from the last string
 	for (int i = 0; i < cmd_argc; i++)
-		Z_Free (cmd_argv[i]);
+		Z_Free(cmd_argv[i]);
 		
 	cmd_argc = 0;
 	cmd_args[0] = 0;
@@ -648,7 +648,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 		{
 			// [SkulleR]'s fix for overflow vulnerability
 			//strncpy (cmd_args, text);
-			Q_strncpyz (cmd_args, text, sizeof(cmd_args));
+			Q_strncpyz(cmd_args, text, sizeof(cmd_args));
 			cmd_args[sizeof(cmd_args) - 1] = 0; 
 
 			// strip off any trailing whitespace
@@ -670,7 +670,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 		{
 			cmd_argv[cmd_argc] = Z_Malloc (strlen(com_token)+1);
 		//	strncpy (cmd_argv[cmd_argc], com_token);
-			Q_strncpyz (cmd_argv[cmd_argc], com_token, strlen(com_token)+1);
+			Q_strncpyz(cmd_argv[cmd_argc], com_token, strlen(com_token)+1);
 			cmd_argc++;
 		}
 	}
@@ -690,7 +690,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 // fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
-		Com_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
+		Com_Printf("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
 	
@@ -699,7 +699,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	{
 		if (!strcmp (cmd_name, cmd->name))
 		{
-			Com_Printf ("Cmd_AddCommand: %s already defined\n", cmd_name);
+			Com_Printf("Cmd_AddCommand: %s already defined\n", cmd_name);
 			return;
 		}
 	}
@@ -725,14 +725,14 @@ void Cmd_RemoveCommand(char *cmd_name)
 
 		if (!cmd)
 		{
-			Com_Printf ("Cmd_RemoveCommand: %s not added\n", cmd_name);
+			Com_Printf("Cmd_RemoveCommand: %s not added\n", cmd_name);
 			return;
 		}
 
 		if (!strcmp (cmd_name, cmd->name))
 		{
 			*back = cmd->next;
-			Z_Free (cmd);
+			Z_Free(cmd);
 			return;
 		}
 
@@ -961,7 +961,7 @@ void Cmd_ExecuteString (char *text)
 		{
 			if (++alias_count == ALIAS_LOOP_COUNT)
 			{
-				Com_Printf ("ALIAS_LOOP_COUNT\n");
+				Com_Printf("ALIAS_LOOP_COUNT\n");
 				return;
 			}
 
@@ -987,8 +987,8 @@ void Cmd_List_f (void)
 {
 	int i = 0;
 	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next, i++)
-		Com_Printf ("%s\n", cmd->name);
-	Com_Printf ("%i commands\n", i);
+		Com_Printf("%s\n", cmd->name);
+	Com_Printf("%i commands\n", i);
 }
 
 /*

@@ -494,7 +494,7 @@ void CL_ParseMuzzleFlash2 (void)
 	origin[2] = cl_entities[ent].current.origin[2] + forward[2] * monster_flash_offset[flash_number][0] + right[2] * monster_flash_offset[flash_number][1] + monster_flash_offset[flash_number][2];
 
 	cdlight_t *dl = CL_AllocDlight(ent);
-	VectorCopy (origin,  dl->origin);
+	VectorCopy(origin,  dl->origin);
 	dl->radius = 200 + (rand() & 31);
 	dl->minlight = 32;
 	dl->die = cl.time;	// + 0.1;

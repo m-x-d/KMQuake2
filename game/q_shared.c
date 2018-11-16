@@ -723,7 +723,7 @@ void _VectorAdd (vec3_t veca, vec3_t vecb, vec3_t out)
 		out[c] = veca[c] + vecb[c];
 }
 
-void _VectorCopy (vec3_t in, vec3_t out)
+void _VectorCopy(vec3_t in, vec3_t out)
 {
 	for (int c = 0; c < 3; c++)
 		out[c] = in[c];
@@ -1458,7 +1458,7 @@ Com_PageInMemory
 */
 int	paged_total;
 
-void Com_PageInMemory (byte *buffer, int size)
+void Com_PageInMemory(byte *buffer, int size)
 {
 	for (int i = size - 1; i > 0; i -= 4096)
 		paged_total += buffer[i];
@@ -1556,7 +1556,7 @@ Q_strncpyz
 Safe strncpy that ensures a trailing zero
 =================
 */
-void Q_strncpyz (char *dst, const char *src, int dstSize)
+void Q_strncpyz(char *dst, const char *src, int dstSize)
 {
 	if (!src || !dst || dstSize < 1) 
 		return;

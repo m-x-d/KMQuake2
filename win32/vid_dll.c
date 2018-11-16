@@ -128,7 +128,7 @@ void VID_Printf(int print_level, char *fmt, ...)
 
 	if (print_level == PRINT_ALL)
 	{
-		Com_Printf ("%s", msg);
+		Com_Printf("%s", msg);
 	}
 	else if ( print_level == PRINT_DEVELOPER )
 	{

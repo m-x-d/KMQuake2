@@ -1477,7 +1477,7 @@ void CL_AddBeams (void)
 		// if coming from the player, update the start position
 		if (firstperson)	// entity 0 is the world
 		{
-			VectorCopy (cl.refdef.vieworg, b->start);
+			VectorCopy(cl.refdef.vieworg, b->start);
 			b->start[2] -= 22;	// adjust for view height
 		}
 		else if (chasecam)
@@ -1509,7 +1509,7 @@ void CL_AddBeams (void)
 		}
 
 		if (chasecam)
-			VectorCopy (b->start, org);
+			VectorCopy(b->start, org);
 		else
 			VectorAdd (b->start, b->offset, org);
 
@@ -1547,7 +1547,7 @@ void CL_AddBeams (void)
 	// add new entities for the beams
 		float d = VectorNormalize(dist);
 
-		memset (&ent, 0, sizeof(ent));
+		memset(&ent, 0, sizeof(ent));
 		if (b->model == clMedia.mod_lightning)
 		{
 			model_length = 35.0;
@@ -1565,7 +1565,7 @@ void CL_AddBeams (void)
 		// This prevents the model from going through the tesla mine (instead it goes through the target)
 		if (b->model == clMedia.mod_lightning && d <= model_length)
 		{
-			VectorCopy (b->end, ent.origin);
+			VectorCopy(b->end, ent.origin);
 
 			ent.model = b->model;
 			ent.flags |= RF_FULLBRIGHT;
@@ -1580,7 +1580,7 @@ void CL_AddBeams (void)
 
 		while (d > 0)
 		{
-			VectorCopy (org, ent.origin);
+			VectorCopy(org, ent.origin);
 			ent.model = b->model;
 
 			if (b->model == clMedia.mod_lightning)

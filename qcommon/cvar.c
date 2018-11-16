@@ -276,13 +276,13 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	{
 		if (var->flags & CVAR_NOSET)
 		{
-			Com_Printf ("%s is write protected.\n", var_name);
+			Com_Printf("%s is write protected.\n", var_name);
 			return var;
 		}
 
 		if ((var->flags & CVAR_CHEAT) && !cvar_allowCheats)
 		{
-			Com_Printf ("%s is cheat protected.\n", var_name);
+			Com_Printf("%s is cheat protected.\n", var_name);
 			return var;
 		}
 
@@ -292,7 +292,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 			{
 				if (strcmp(value, var->latched_string) == 0)
 					return var;
-				Z_Free (var->latched_string);
+				Z_Free(var->latched_string);
 			}
 			else
 			{
@@ -302,7 +302,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 
 			if (Com_ServerState())
 			{
-				Com_Printf ("%s will be changed for next game.\n", var_name);
+				Com_Printf("%s will be changed for next game.\n", var_name);
 				var->latched_string = CopyString(value);
 			}
 			else
@@ -323,7 +323,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	{
 		if (var->latched_string)
 		{
-			Z_Free (var->latched_string);
+			Z_Free(var->latched_string);
 			var->latched_string = NULL;
 		}
 	}
@@ -336,7 +336,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	if (var->flags & CVAR_USERINFO)
 		userinfo_modified = true;	// transmit at next oportunity
 	
-	Z_Free (var->string);	// free the old value string
+	Z_Free(var->string);	// free the old value string
 	
 	var->string = CopyString(value);
 	var->value = atof (var->string);
@@ -398,7 +398,7 @@ cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
 	if (var->flags & CVAR_USERINFO)
 		userinfo_modified = true;	// transmit at next oportunity
 	
-	Z_Free (var->string);	// free the old value string
+	Z_Free(var->string);	// free the old value string
 	
 	var->string = CopyString(value);
 	var->value = atof (var->string);
@@ -455,7 +455,7 @@ void Cvar_GetLatchedVars (void)
 	{
 		if (!var->latched_string)
 			continue;
-		Z_Free (var->string);
+		Z_Free(var->string);
 		var->string = var->latched_string;
 		var->latched_string = NULL;
 		var->value = atof(var->string);
@@ -521,9 +521,9 @@ qboolean Cvar_Command (void)
 	if (Cmd_Argc() == 1)
 	{	// Knightmare- show latched value if applicable
 		if ((v->flags & CVAR_LATCH) && v->latched_string)
-			Com_Printf ("\"%s\" is \"%s\" : default is \"%s\" : latched to \"%s\"\n", v->name, v->string, v->default_string, v->latched_string);
+			Com_Printf("\"%s\" is \"%s\" : default is \"%s\" : latched to \"%s\"\n", v->name, v->string, v->default_string, v->latched_string);
 		else
-			Com_Printf ("\"%s\" is \"%s\" : default is \"%s\"\n", v->name, v->string, v->default_string);
+			Com_Printf("\"%s\" is \"%s\" : default is \"%s\"\n", v->name, v->string, v->default_string);
 
 		return true;
 	}
@@ -548,7 +548,7 @@ void Cvar_Set_f (void)
 	c = Cmd_Argc();
 	if (c != 3 && c != 4)
 	{
-		Com_Printf ("usage: set <variable> <value> [u / s]\n");
+		Com_Printf("usage: set <variable> <value> [u / s]\n");
 		return;
 	}
 
@@ -560,7 +560,7 @@ void Cvar_Set_f (void)
 			flags = CVAR_SERVERINFO;
 		else
 		{
-			Com_Printf ("flags can only be 'u' or 's'\n");
+			Com_Printf("flags can only be 'u' or 's'\n");
 			return;
 		}
 		Cvar_FullSet (Cmd_Argv(1), Cmd_Argv(2), flags);
@@ -665,7 +665,7 @@ void Cvar_List_f (void)
 
 	if (c != 1 && c!= 2)
 	{
-		Com_Printf ("usage: cvarlist [wildcard]\n");
+		Com_Printf("usage: cvarlist [wildcard]\n");
 		return;
 	}
 
@@ -683,26 +683,26 @@ void Cvar_List_f (void)
 		{
 			j++;
 			if (var->flags & CVAR_ARCHIVE)
-				Com_Printf ("A");
+				Com_Printf("A");
 			else
-				Com_Printf (" ");
+				Com_Printf(" ");
 
 			if (var->flags & CVAR_USERINFO)
-				Com_Printf ("U");
+				Com_Printf("U");
 			else
-				Com_Printf (" ");
+				Com_Printf(" ");
 
 			if (var->flags & CVAR_SERVERINFO)
-				Com_Printf ("S");
+				Com_Printf("S");
 			else
-				Com_Printf (" ");
+				Com_Printf(" ");
 
 			if (var->flags & CVAR_NOSET)
-				Com_Printf ("-");
+				Com_Printf("-");
 			else if (var->flags & CVAR_LATCH)
-				Com_Printf ("L");
+				Com_Printf("L");
 			else
-				Com_Printf (" ");
+				Com_Printf(" ");
 
 			if (var->flags & CVAR_CHEAT)
 				Com_Printf("C");
@@ -711,12 +711,12 @@ void Cvar_List_f (void)
 
 			// show latched value if applicable
 			if ((var->flags & CVAR_LATCH) && var->latched_string)
-				Com_Printf (" %s \"%s\" - default: \"%s\" - latched: \"%s\"\n", var->name, var->string, var->default_string, var->latched_string);
+				Com_Printf(" %s \"%s\" - default: \"%s\" - latched: \"%s\"\n", var->name, var->string, var->default_string, var->latched_string);
 			else
-				Com_Printf (" %s \"%s\" - default: \"%s\"\n", var->name, var->string, var->default_string);
+				Com_Printf(" %s \"%s\" - default: \"%s\"\n", var->name, var->string, var->default_string);
 		}
 	}
-	Com_Printf (" %i cvars, %i matching\n", i, j);
+	Com_Printf(" %i cvars, %i matching\n", i, j);
 }
 
 

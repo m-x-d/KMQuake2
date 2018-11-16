@@ -620,7 +620,7 @@ void SCR_CenterPrint (char *str)
 		line[i] = '\n';
 		line[i+1] = 0;
 
-		Com_Printf ("%s", line);
+		Com_Printf("%s", line);
 
 		while (*s && *s != '\n')
 			s++;

@@ -270,7 +270,7 @@ void CL_BaseMove (usercmd_t *cmd)
 	
 	memset(cmd, 0, sizeof(*cmd));
 	
-	VectorCopy (cl.viewangles, cmd->angles);
+	VectorCopy(cl.viewangles, cmd->angles);
 	if (in_strafe.state & 1)
 	{
 		cmd->sidemove += cl_sidespeed->value * CL_KeyState(&in_right);
@@ -731,7 +731,7 @@ void CL_SendCmd (void)
 	// if the last packet was dropped, it can be recovered
 	cmdindex = (cls.netchan.outgoing_sequence-2) & (CMD_BACKUP - 1);
 	cmd = &cl.cmds[cmdindex];
-	memset (&nullcmd, 0, sizeof(nullcmd));
+	memset(&nullcmd, 0, sizeof(nullcmd));
 	MSG_WriteDeltaUsercmd(&buf, &nullcmd, cmd);
 	usercmd_t *oldcmd = cmd;
 

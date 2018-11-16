@@ -45,11 +45,11 @@ int SV_FindIndex (char *name, int start, int max)
 	if (index == max)
 	{
 		if (start == CS_MODELS)
-			Com_Printf (S_COLOR_YELLOW"Warning: Index overflow for models\n");
+			Com_Printf(S_COLOR_YELLOW"Warning: Index overflow for models\n");
 		else if (start == CS_SOUNDS)
-			Com_Printf (S_COLOR_YELLOW"Warning: Index overflow for sounds\n");
+			Com_Printf(S_COLOR_YELLOW"Warning: Index overflow for sounds\n");
 		else if (start == CS_IMAGES)
-			Com_Printf (S_COLOR_YELLOW"Warning: Index overflow for images\n");
+			Com_Printf(S_COLOR_YELLOW"Warning: Index overflow for images\n");
 
 		return max - 1; // return the last possible index
 	}
@@ -187,7 +187,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.attractloop = attractloop;
 
 	// save name for levels that don't set message
-	Q_strncpyz (sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[CS_NAME]));
+	Q_strncpyz(sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[CS_NAME]));
 	if (Cvar_VariableValue("deathmatch"))
 	{
 		Com_sprintf(sv.configstrings[CS_AIRACCEL], sizeof(sv.configstrings[CS_AIRACCEL]), "%g", sv_airaccelerate->value);

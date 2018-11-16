@@ -1409,7 +1409,7 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 	{
 		char s[MAX_QPATH];
 		const int len = strlen(name);
-		Q_strncpyz (s, name, sizeof(s));
+		Q_strncpyz(s, name, sizeof(s));
 
 		s[len - 3] = 'r';
 		s[len - 2] = 'o';

@@ -2092,7 +2092,7 @@ image_t	*R_FindImage (char *name, imagetype_t type)
 		{
 			// fall back to jpg
 			R_AddToFailedImgList(name);
-			Q_strncpyz (s, name, sizeof(s));
+			Q_strncpyz(s, name, sizeof(s));
 			s[len - 3] = 'j';
 			s[len - 2] = 'p';
 			s[len - 1] = 'g';

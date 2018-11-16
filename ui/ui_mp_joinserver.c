@@ -195,7 +195,7 @@ void SearchLocalGames( void )
 	m_num_servers = 0;
 	for (i=0 ; i<MAX_LOCAL_SERVERS ; i++)
 	//	strncpy (local_server_names[i], NO_SERVER_STRING);
-		Q_strncpyz (local_server_names[i], NO_SERVER_STRING, sizeof(local_server_names[i]));
+		Q_strncpyz(local_server_names[i], NO_SERVER_STRING, sizeof(local_server_names[i]));
 
 	Menu_DrawTextBox (168, 192, 36, 3);
 	SCR_DrawString (188, 192+MENU_FONT_SIZE, ALIGN_CENTER, S_COLOR_ALT"Searching for local servers, this", 255);
@@ -273,7 +273,7 @@ void JoinServer_MenuInit( void )
 	{
 		s_joinserver_server_actions[i].generic.type	= MTYPE_ACTION;
 	//	strncpy (local_server_names[i], NO_SERVER_STRING);
-		Q_strncpyz (local_server_names[i], NO_SERVER_STRING, sizeof(local_server_names[i]));
+		Q_strncpyz(local_server_names[i], NO_SERVER_STRING, sizeof(local_server_names[i]));
 		s_joinserver_server_actions[i].generic.name	= local_server_names[i];
 		s_joinserver_server_actions[i].generic.flags	= QMF_LEFT_JUSTIFY;
 		s_joinserver_server_actions[i].generic.x		= 0;

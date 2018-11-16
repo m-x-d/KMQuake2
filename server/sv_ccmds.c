@@ -111,7 +111,7 @@ qboolean SV_SetPlayer (void)
 		sv_player = sv_client->edict;
 		if (!sv_client->state)
 		{
-			Com_Printf ("Client %i is not active\n", idnum);
+			Com_Printf("Client %i is not active\n", idnum);
 			return false;
 		}
 
@@ -587,7 +587,7 @@ void SV_Map_f (void)
 {
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("Usage: map <mapname>\n");
+		Com_Printf("Usage: map <mapname>\n");
 		return;
 	}
 
@@ -630,11 +630,11 @@ void SV_Loadgame_f (void)
 {
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("Usage: loadgame <directory>\n");
+		Com_Printf("Usage: loadgame <directory>\n");
 		return;
 	}
 
-	Com_Printf ("Loading game...\n");
+	Com_Printf("Loading game...\n");
 
 	char *dir = Cmd_Argv(1);
 	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\") )
@@ -825,7 +825,7 @@ void SV_Status_f (void)
 		Com_Printf("%7i ", svs.realtime - cl->lastmessage);
 
 		char *s = NET_AdrToString(cl->netchan.remote_address);
-		Com_Printf ("%s", s);
+		Com_Printf("%s", s);
 		len = 22 - strlen(s);
 		for (int j = 0; j < len; j++)
 			Com_Printf(" ");
@@ -907,7 +907,7 @@ void SV_DumpUser_f (void)
 {
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("Usage: info <userid>\n");
+		Com_Printf("Usage: info <userid>\n");
 		return;
 	}
 
@@ -984,7 +984,7 @@ void SV_ServerRecord_f (void)
 
 	if (sv.state != ss_game)
 	{
-		Com_Printf ("You must be in a level to record.\n");
+		Com_Printf("You must be in a level to record.\n");
 		return;
 	}
 
@@ -1056,12 +1056,12 @@ void SV_ServerStop_f (void)
 {
 	if (!svs.demofile)
 	{
-		Com_Printf ("Not doing a serverrecord.\n");
+		Com_Printf("Not doing a serverrecord.\n");
 		return;
 	}
 	fclose (svs.demofile);
 	svs.demofile = NULL;
-	Com_Printf ("Recording completed.\n");
+	Com_Printf("Recording completed.\n");
 }
 
 
@@ -1093,7 +1093,7 @@ void SV_ServerCommand_f (void)
 {
 	if (!ge)
 	{
-		Com_Printf ("No game loaded.\n");
+		Com_Printf("No game loaded.\n");
 		return;
 	}
 

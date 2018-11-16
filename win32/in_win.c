@@ -602,14 +602,14 @@ void IN_StartupJoystick (void)
 	numdevs = joyGetNumDevs();
 	if (numdevs == 0)
 	{
-//		Com_Printf ("\njoystick not found -- driver not present\n\n");
+//		Com_Printf("\njoystick not found -- driver not present\n\n");
 		return;
 	}
 
 	// cycle through the joystick ids for the first valid one
 	for (joy_id=0 ; joy_id<numdevs ; joy_id++)
 	{
-		memset (&ji, 0, sizeof(ji));
+		memset(&ji, 0, sizeof(ji));
 		ji.dwSize = sizeof(ji);
 		ji.dwFlags = JOY_RETURNCENTERED;
 
@@ -621,17 +621,17 @@ void IN_StartupJoystick (void)
 	// abort startup if we didn't find a valid joystick
 	if (mmr != JOYERR_NOERROR)
 	{
-		Com_Printf ("\njoystick not found -- no valid joysticks (%x)\n\n", mmr);
+		Com_Printf("\njoystick not found -- no valid joysticks (%x)\n\n", mmr);
 		return;
 	}
 
 	// get the capabilities of the selected joystick
 	// abort startup if command fails
-	memset (&jc, 0, sizeof(jc));
+	memset(&jc, 0, sizeof(jc));
 	mmr = joyGetDevCaps(joy_id, &jc, sizeof(jc));
 	if (mmr != JOYERR_NOERROR)
 	{
-		Com_Printf ("\njoystick not found -- invalid joystick capabilities (%x)\n\n", mmr); 
+		Com_Printf("\njoystick not found -- invalid joystick capabilities (%x)\n\n", mmr); 
 		return;
 	}
 
@@ -648,7 +648,7 @@ void IN_StartupJoystick (void)
 	joy_avail = true; 
 	joy_advancedinit = false;
 
-	Com_Printf ("\njoystick detected\n\n"); 
+	Com_Printf("\njoystick detected\n\n"); 
 }
 
 
@@ -714,7 +714,7 @@ void Joy_AdvancedUpdate_f (void)
 		if (strcmp (joy_name->string, "joystick") != 0)
 		{
 			// notify user of advanced controller
-			Com_Printf ("\n%s configured\n\n", joy_name->string);
+			Com_Printf("\n%s configured\n\n", joy_name->string);
 		}
 
 		// advanced initialization here
@@ -829,7 +829,7 @@ IN_ReadJoystick
 qboolean IN_ReadJoystick (void)
 {
 
-	memset (&ji, 0, sizeof(ji));
+	memset(&ji, 0, sizeof(ji));
 	ji.dwSize = sizeof(ji);
 	ji.dwFlags = joy_flags;
 
@@ -842,7 +842,7 @@ qboolean IN_ReadJoystick (void)
 		// read error occurred
 		// turning off the joystick seems too harsh for 1 read error,\
 		// but what should be done?
-		// Com_Printf ("IN_ReadJoystick: no response\n");
+		// Com_Printf("IN_ReadJoystick: no response\n");
 		// joy_avail = false;
 		return false;
 	}

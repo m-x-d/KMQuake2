@@ -86,7 +86,7 @@ void Load_Savestrings (qboolean update)
 		if (!fp) {
 		//	Com_Printf("Save file %s not found.\n", name);
 		//	strncpy (m_savestrings[i], "<EMPTY>");
-			Q_strncpyz (m_savestrings[i], "<EMPTY>", sizeof(m_savestrings[i]));
+			Q_strncpyz(m_savestrings[i], "<EMPTY>", sizeof(m_savestrings[i]));
 			m_savevalid[i] = false;
 			m_savetimestamps[i] = 0;
 		}
@@ -99,7 +99,7 @@ void Load_Savestrings (qboolean update)
 			{
 				//Com_Printf("Save file %s not found.\n", name);
 			//	strncpy (m_savestrings[i], "<EMPTY>");
-				Q_strncpyz (m_savestrings[i], "<EMPTY>", sizeof(m_savestrings[i]));
+				Q_strncpyz(m_savestrings[i], "<EMPTY>", sizeof(m_savestrings[i]));
 				m_savevalid[i] = false;
 				m_savetimestamps[i] = 0;
 			}

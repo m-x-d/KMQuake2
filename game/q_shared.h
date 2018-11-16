@@ -338,7 +338,7 @@ void VectorMA (vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 vec_t _DotProduct (vec3_t v1, vec3_t v2);
 void _VectorSubtract (vec3_t veca, vec3_t vecb, vec3_t out);
 void _VectorAdd (vec3_t veca, vec3_t vecb, vec3_t out);
-void _VectorCopy (vec3_t in, vec3_t out);
+void _VectorCopy(vec3_t in, vec3_t out);
 
 void ClearBounds (vec3_t mins, vec3_t maxs);
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
@@ -409,7 +409,7 @@ char *COM_ParseExt (char **data_p, qboolean allowNewLines);
 void Com_sprintf(char *dest, int size, char *fmt, ...);
 long Com_HashFileName (const char *fname, int hashSize, qboolean sized);
 
-void Com_PageInMemory (byte *buffer, int size);
+void Com_PageInMemory(byte *buffer, int size);
 
 //=============================================
 
@@ -453,7 +453,7 @@ int Q_strncasecmp (char *s1, char *s2, int n);
 //mxd. Portable case insensitive strstr
 char *Q_strcasestr(const char *haystack, const char *needle);
 
-void Q_strncpyz (char *dst, const char *src, int dstSize);
+void Q_strncpyz(char *dst, const char *src, int dstSize);
 void Q_strncatz (char *dst, const char *src, int dstSize);
 void Q_snprintfz (char *dst, int dstSize, const char *fmt, ...);
 char *Q_strlwr (char *string);
@@ -526,7 +526,7 @@ unsigned	Sys_TickCount (void);
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 void Sys_Error (char *error, ...);
-void Com_Printf (char *msg, ...);
+void Com_Printf(char *msg, ...);
 
 
 /*

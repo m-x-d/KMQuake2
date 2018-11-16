@@ -49,7 +49,7 @@ void *Hunk_Begin (int maxsize)
 	membase = VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
 #else
 	membase = malloc (maxsize);
-	memset (membase, 0, maxsize);
+	memset(membase, 0, maxsize);
 #endif
 	if (!membase)
 		Sys_Error ("VirtualAlloc reserve failed");
@@ -94,7 +94,7 @@ int Hunk_End (void)
 #endif
 
 	hunkcount++;
-//Com_Printf ("hunkcount: %i\n", hunkcount);
+//Com_Printf("hunkcount: %i\n", hunkcount);
 	return cursize;
 }
 

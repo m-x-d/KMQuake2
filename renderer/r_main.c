@@ -333,7 +333,7 @@ void R_SetupFrame (void)
 			// look down a bit
 			vec3_t	temp;
 
-			VectorCopy (r_origin, temp);
+			VectorCopy(r_origin, temp);
 			temp[2] -= 16;
 			leaf = Mod_PointInLeaf(temp, r_worldmodel);
 			if (!(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
@@ -344,7 +344,7 @@ void R_SetupFrame (void)
 			// look up a bit
 			vec3_t	temp;
 
-			VectorCopy (r_origin, temp);
+			VectorCopy(r_origin, temp);
 			temp[2] += 16;
 			leaf = Mod_PointInLeaf(temp, r_worldmodel);
 			if (!(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
@@ -1797,6 +1797,7 @@ void GL_Strings_f (void)
 		char *extTok = COM_Parse(&extString);
 		if (!extTok[0])
 			break;
+
 		line++;
 		if ((line % 2) == 0)
 			VID_Printf(PRINT_ALL, "%s\n", extTok);

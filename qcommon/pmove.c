@@ -234,15 +234,15 @@ void PM_StepSlideMove(void)
 	vec3_t down_o, down_v;
 	vec3_t up, down;
 
-	VectorCopy (pml.origin, start_o);
-	VectorCopy (pml.velocity, start_v);
+	VectorCopy(pml.origin, start_o);
+	VectorCopy(pml.velocity, start_v);
 
 	PM_StepSlideMove_();
 
 	VectorCopy(pml.origin, down_o);
 	VectorCopy(pml.velocity, down_v);
 
-	VectorCopy (start_o, up);
+	VectorCopy(start_o, up);
 	up[2] += STEPSIZE;
 
 	trace_t trace = pm->trace(up, pm->mins, pm->maxs, up);
@@ -273,8 +273,8 @@ void PM_StepSlideMove(void)
 
 	if (down_dist > up_dist || trace.plane.normal[2] < MIN_STEP_NORMAL)
 	{
-		VectorCopy (down_o, pml.origin);
-		VectorCopy (down_v, pml.velocity);
+		VectorCopy(down_o, pml.origin);
+		VectorCopy(down_v, pml.velocity);
 
 		return;
 	}

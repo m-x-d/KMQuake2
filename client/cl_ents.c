@@ -566,7 +566,7 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 		// parse the pmove_state_t
 		//
 		if (flags & PS_M_TYPE)
-			state->pmove.pm_type = MSG_ReadByte (&net_message);
+			state->pmove.pm_type = MSG_ReadByte(&net_message);
 
 		if (flags & PS_M_ORIGIN)
 		{
@@ -981,8 +981,8 @@ void CL_AddPacketEntities(frame_t *frame)
 		if (renderfx & (RF_FRAMELERP | RF_BEAM)) //TODO: (mxd) check beam interpolation
 		{
 			// step origin discretely, because the frames do the animation properly
-			VectorCopy (cent->current.origin, ent.origin);
-			VectorCopy (cent->current.old_origin, ent.oldorigin);
+			VectorCopy(cent->current.origin, ent.origin);
+			VectorCopy(cent->current.old_origin, ent.oldorigin);
 		}
 		else
 		{
@@ -2001,7 +2001,7 @@ CL_GetEntitySoundOrigin
 Called to get the sound spatialization origin
 ===============
 */
-void CL_GetEntitySoundOrigin (int ent, vec3_t org)
+void CL_GetEntitySoundOrigin(int ent, vec3_t org)
 {
 	if (ent < 0 || ent >= MAX_EDICTS)
 		Com_Error(ERR_DROP, "CL_GetEntitySoundOrigin: bad ent");

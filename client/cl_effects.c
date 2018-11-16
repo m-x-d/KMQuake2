@@ -2124,7 +2124,7 @@ void CL_RailSprial (vec3_t start, vec3_t end, qboolean isRed)
 	}
 	else
 	{
-		VectorCopy (start, move);
+		VectorCopy(start, move);
 		VectorSubtract (end, start, vec);
 	}
 
@@ -2800,8 +2800,8 @@ void CL_TrapParticles (entity_t *ent)
 	vec3_t start, end;
 
 	ent->origin[2] -= 14;
-	VectorCopy (ent->origin, start);
-	VectorCopy (ent->origin, end);
+	VectorCopy(ent->origin, start);
+	VectorCopy(ent->origin, end);
 	end[2] += 64;
 
 	VectorCopy(start, move);
@@ -2947,7 +2947,7 @@ CL_ColorFlash - flash of light
 void CL_ColorFlash (vec3_t pos, int ent, int intensity, float r, float g, float b)
 {
 	cdlight_t *dl = CL_AllocDlight (ent);
-	VectorCopy (pos,  dl->origin);
+	VectorCopy(pos,  dl->origin);
 	dl->radius = intensity;
 	dl->minlight = 250;
 	dl->die = cl.time + 100;
@@ -3702,7 +3702,7 @@ void CL_Tracker_Explode (vec3_t	origin)
 		VectorSet(dir, crand(), crand(), crand()); //mxd
 		VectorNormalize(dir);
 
-		VectorCopy (origin, p->org); //Knightmare- start at center, not edge
+		VectorCopy(origin, p->org); //Knightmare- start at center, not edge
 		VectorScale(dir, crand() * 128, p->vel); //was backdir, 64
 	}
 	
@@ -3897,7 +3897,7 @@ void CL_SmokeTrail (vec3_t start, vec3_t end, int colorStart, int colorRun, int 
 	int			j;
 	cparticle_t	*p;
 
-	VectorCopy (start, move);
+	VectorCopy(start, move);
 	VectorSubtract (end, start, vec);
 	len = VectorNormalize (vec);
 
@@ -4033,7 +4033,7 @@ void CL_GenericParticleEffect (vec3_t org, vec3_t dir, int color, int count, int
 
 		p->accel[0] = p->accel[1] = 0;
 		p->accel[2] = -PARTICLE_GRAVITY;
-//		VectorCopy (accel, p->accel);
+//		VectorCopy(accel, p->accel);
 		p->alpha = 1.0;
 
 		p->alphavel = -1.0 / (0.5 + frand()*alphavel);

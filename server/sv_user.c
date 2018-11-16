@@ -230,7 +230,7 @@ void SV_Baselines_f (void)
 	int start = atoi(Cmd_Argv(2));
 	if (start < 0) // r1ch's fix for negative index
 	{
-		Com_Printf ("Illegal baselines request (negative index) from %s[%s], dropping client\n", sv_client->name, NET_AdrToString(sv_client->netchan.remote_address));
+		Com_Printf("Illegal baselines request (negative index) from %s[%s], dropping client\n", sv_client->name, NET_AdrToString(sv_client->netchan.remote_address));
 		SV_DropClient (sv_client);
 
 		return;

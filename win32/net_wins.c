@@ -54,7 +54,7 @@ char *NET_ErrorString (void);
 
 void NetadrToSockadr (netadr_t *a, struct sockaddr *s)
 {
-	memset (s, 0, sizeof(*s));
+	memset(s, 0, sizeof(*s));
 
 	if (a->type == NA_BROADCAST)
 	{
@@ -209,7 +209,7 @@ qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
 	int		val;
 	char	copy[128];
 	
-	memset (sadr, 0, sizeof(*sadr));
+	memset(sadr, 0, sizeof(*sadr));
 
 	if ((strlen(s) >= 23) && (s[8] == ':') && (s[21] == ':'))	// check for an IPX address
 	{
@@ -235,7 +235,7 @@ qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
 		((struct sockaddr_in *)sadr)->sin_port = 0;
 
 	//	strncpy (copy, s);
-		Q_strncpyz (copy, s, sizeof(copy));
+		Q_strncpyz(copy, s, sizeof(copy));
 		// strip off a trailing :port if present
 		for (colon = copy ; *colon ; colon++)
 			if (*colon == ':')
@@ -278,7 +278,7 @@ qboolean	NET_StringToAdr (char *s, netadr_t *a)
 	
 	if (!strcmp (s, "localhost"))
 	{
-		memset (a, 0, sizeof(*a));
+		memset(a, 0, sizeof(*a));
 		a->type = NA_LOOPBACK;
 		return true;
 	}
@@ -323,7 +323,7 @@ qboolean	NET_GetLoopPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_me
 
 	memcpy (net_message->data, loop->msgs[i].data, loop->msgs[i].datalen);
 	net_message->cursize = loop->msgs[i].datalen;
-	memset (net_from, 0, sizeof(*net_from));
+	memset(net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
 	return true;
 
@@ -383,14 +383,14 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 				continue;
 			if (err == WSAEMSGSIZE)
 			{
-				Com_Printf (S_COLOR_YELLOW"Warning:  Oversize packet from %s\n",
+				Com_Printf(S_COLOR_YELLOW"Warning:  Oversize packet from %s\n",
 						NET_AdrToString(*net_from));
 				continue;
 			}
 			// Knightmare- added Jitspoe's fix for WSAECONNRESET bomb-out
 			if (err == WSAECONNRESET)
 			{
-				Com_Printf ("NET_GetPacket: %s from %s\n", NET_ErrorString(),
+				Com_Printf("NET_GetPacket: %s from %s\n", NET_ErrorString(),
 					NET_AdrToString(*net_from));
 				// drop this client to not flood the console with above message
 				SV_DropClientFromAdr (*net_from);
@@ -398,7 +398,7 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 			}
 			//if (dedicated->value)	// let dedicated servers continue after errors
 			// let servers continue after errors
-				Com_Printf ("NET_GetPacket: %s from %s\n", NET_ErrorString(),
+				Com_Printf("NET_GetPacket: %s from %s\n", NET_ErrorString(),
 					NET_AdrToString(*net_from));
 			//else
 			//	Com_Error (ERR_DROP, "NET_GetPacket: %s from %s", 
@@ -408,7 +408,7 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 
 		if (ret == net_message->maxsize)
 		{
-			Com_Printf ("Oversize packet from %s\n", NET_AdrToString(*net_from));
+			Com_Printf("Oversize packet from %s\n", NET_AdrToString(*net_from));
 			continue;
 		}
 
@@ -481,7 +481,7 @@ void NET_SendPacket (netsrc_t sock, int length, void *data, netadr_t to)
 
 		if (dedicated->value)	// let dedicated servers continue after errors
 		{
-			Com_Printf ("NET_SendPacket ERROR: %s to %s\n", NET_ErrorString(),
+			Com_Printf("NET_SendPacket ERROR: %s to %s\n", NET_ErrorString(),
 				NET_AdrToString(to));
 		}
 		else
@@ -521,21 +521,21 @@ int NET_IPSocket (char *net_interface, int port)
 	{
 		err = WSAGetLastError();
 		if (err != WSAEAFNOSUPPORT)
-			Com_Printf (S_COLOR_YELLOW"WARNING: UDP_OpenSocket: socket: %s", NET_ErrorString());
+			Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: socket: %s", NET_ErrorString());
 		return 0;
 	}
 
 	// make it non-blocking
 	if (ioctlsocket (newsocket, FIONBIO, &_true) == -1)
 	{
-		Com_Printf (S_COLOR_YELLOW"WARNING: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
+		Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
 		return 0;
 	}
 
 	// make it broadcast capable
 	if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&i, sizeof(i)) == -1)
 	{
-		Com_Printf (S_COLOR_YELLOW"WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
+		Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
 		return 0;
 	}
 
@@ -553,7 +553,7 @@ int NET_IPSocket (char *net_interface, int port)
 
 	if( bind (newsocket, (void *)&address, sizeof(address)) == -1)
 	{
-		Com_Printf (S_COLOR_YELLOW"WARNING: UDP_OpenSocket: bind: %s\n", NET_ErrorString());
+		Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: bind: %s\n", NET_ErrorString());
 		closesocket (newsocket);
 		return 0;
 	}
@@ -630,27 +630,27 @@ int NET_IPXSocket (int port)
 	{
 		err = WSAGetLastError();
 		if (err != WSAEAFNOSUPPORT)
-			Com_Printf (S_COLOR_YELLOW"WARNING: IPX_Socket: socket: %s\n", NET_ErrorString());
+			Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: socket: %s\n", NET_ErrorString());
 		return 0;
 	}
 
 	// make it non-blocking
 	if (ioctlsocket (newsocket, FIONBIO, &_true) == -1)
 	{
-		Com_Printf (S_COLOR_YELLOW"WARNING: IPX_Socket: ioctl FIONBIO: %s\n", NET_ErrorString());
+		Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: ioctl FIONBIO: %s\n", NET_ErrorString());
 		return 0;
 	}
 
 	// make it broadcast capable
 	if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&_true, sizeof(_true)) == -1)
 	{
-		Com_Printf (S_COLOR_YELLOW"WARNING: IPX_Socket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
+		Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
 		return 0;
 	}
 
 	address.sa_family = AF_IPX;
-	memset (address.sa_netnum, 0, 4);
-	memset (address.sa_nodenum, 0, 6);
+	memset(address.sa_netnum, 0, 4);
+	memset(address.sa_nodenum, 0, 6);
 	if (port == PORT_ANY)
 		address.sa_socket = 0;
 	else
@@ -658,7 +658,7 @@ int NET_IPXSocket (int port)
 
 	if( bind (newsocket, (void *)&address, sizeof(address)) == -1)
 	{
-		Com_Printf (S_COLOR_YELLOW"WARNING: IPX_Socket: bind: %s\n", NET_ErrorString());
+		Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: bind: %s\n", NET_ErrorString());
 		closesocket (newsocket);
 		return 0;
 	}

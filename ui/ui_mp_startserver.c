@@ -101,11 +101,11 @@ qboolean UI_ParseArenaFromFile (char *filename, char *shortname, char *longname,
 
 	len = FS_FOpenFile (filename, &f, FS_READ);
 	if (!f) {
-		Com_Printf (S_COLOR_RED "UI_ParseArenaFromFile: file not found: %s\n", filename);
+		Com_Printf(S_COLOR_RED "UI_ParseArenaFromFile: file not found: %s\n", filename);
 		return false;
 	}
 	if (len >= MAX_ARENAS_TEXT) {
-		Com_Printf (S_COLOR_RED "UI_ParseArenaFromFile: file too large: %s is %i, max allowed is %i", filename, len, MAX_ARENAS_TEXT);
+		Com_Printf(S_COLOR_RED "UI_ParseArenaFromFile: file too large: %s is %i, max allowed is %i", filename, len, MAX_ARENAS_TEXT);
 		FS_FCloseFile (f);
 		return false;
 	}
@@ -118,11 +118,11 @@ qboolean UI_ParseArenaFromFile (char *filename, char *shortname, char *longname,
 	// get the opening curly brace
 	token = COM_Parse (&s);
 	if (!token) {
-		Com_Printf ("UI_ParseArenaFromFile: unexpected EOF\n");
+		Com_Printf("UI_ParseArenaFromFile: unexpected EOF\n");
 		return false;
 	}
 	if (token[0] != '{') {
-		Com_Printf ("UI_ParseArenaFromFile: found %s when expecting {\n", token);
+		Com_Printf("UI_ParseArenaFromFile: found %s when expecting {\n", token);
 		return false;
 	}
 
@@ -133,7 +133,7 @@ qboolean UI_ParseArenaFromFile (char *filename, char *shortname, char *longname,
 		token = COM_Parse (&s);
 		if (token && (token[0] == '}')) break;
 		if (!token || !s) {
-			Com_Printf ("UI_ParseArenaFromFile: EOF without closing brace\n");
+			Com_Printf("UI_ParseArenaFromFile: EOF without closing brace\n");
 			break;
 		}
 
@@ -147,15 +147,15 @@ qboolean UI_ParseArenaFromFile (char *filename, char *shortname, char *longname,
 		{
 			token = COM_Parse (&s);
 			if (!token) {
-				Com_Printf ("UI_ParseArenaFromFile: unexpected EOF\n");
+				Com_Printf("UI_ParseArenaFromFile: unexpected EOF\n");
 				return false;
 			}
 			if (token[0] == '}') {
-				Com_Printf ("UI_ParseArenaFromFile: closing brace without data\n");
+				Com_Printf("UI_ParseArenaFromFile: closing brace without data\n");
 				break;
 			}
 			if (!s) {
-				Com_Printf ("UI_ParseArenaFromFile: EOF without closing brace\n");
+				Com_Printf("UI_ParseArenaFromFile: EOF without closing brace\n");
 				break;
 			}
 		//	strncpy( dest, token );
@@ -163,7 +163,7 @@ qboolean UI_ParseArenaFromFile (char *filename, char *shortname, char *longname,
 		}
 	}
 	if (!shortname || !strlen(shortname)) {
-		Com_Printf (S_COLOR_RED "UI_ParseArenaFromFile: %s: map field not found\n", filename);
+		Com_Printf(S_COLOR_RED "UI_ParseArenaFromFile: %s: map field not found\n", filename);
 		return false;
 	}
 	if (!strlen(longname))
@@ -290,7 +290,7 @@ void UI_LoadArenas (void)
 							ui_svr_arena_nummaps[j]++;
 						}
 
-					//Com_Printf ("UI_LoadArenas: successfully loaded arena file %s: mapname: %s levelname: %s gametypes: %s\n", p, shortname, longname, gametypes);
+					//Com_Printf("UI_LoadArenas: successfully loaded arena file %s: mapname: %s levelname: %s gametypes: %s\n", p, shortname, longname, gametypes);
 					narenanames++;
 					FS_InsertInList(tmplist, strdup(p), narenanames, 0); // add to list
 				}
@@ -306,9 +306,9 @@ void UI_LoadArenas (void)
 	for (i=0; i<NUM_MAPTYPES; i++)
 		UI_SortArenas (ui_svr_arena_mapnames[i], ui_svr_arena_nummaps[i]);
 
-//	Com_Printf ("UI_LoadArenas: loaded %i arena file(s)\n", narenanames);
+//	Com_Printf("UI_LoadArenas: loaded %i arena file(s)\n", narenanames);
 //	for (i=0; i<NUM_MAPTYPES; i++)
-//		Com_Printf ("%s: %i arena file(s)\n", gametype_names[i].tokens, ui_svr_arena_nummaps[i]);
+//		Com_Printf("%s: %i arena file(s)\n", gametype_names[i].tokens, ui_svr_arena_nummaps[i]);
 }
 
 

@@ -604,7 +604,7 @@ void CL_ParseStartSoundPacket(void)
 void SHOWNET(char *s)
 {
 	if (cl_shownet->value >= 2)
-		Com_Printf ("%3i:%s\n", net_message.readcount - 1, s);
+		Com_Printf("%3i:%s\n", net_message.readcount - 1, s);
 }
 
 
@@ -620,7 +620,7 @@ CL_ParseFog
 // gi.WriteByte (fog_model); // 0, 1, or 2
 // gi.WriteByte (fog_density); // 1-100
 // gi.WriteShort (fog_near); // >0, <fog_far
-// gi.WriteShort (fog_far); // >fog_near-64, <5000
+// gi.WriteShort (fog_far); // >fog_near-64, <10000
 // gi.WriteByte (fog_red); // 0-255
 // gi.WriteByte (fog_green); // 0-255
 // gi.WriteByte (fog_blue); // 0-255
@@ -633,9 +633,9 @@ void CL_ParseFog (void)
 	const int density = MSG_ReadByte(&net_message);
 	const int start = MSG_ReadShort(&net_message);
 	const int end = MSG_ReadShort(&net_message);
-	const int red = MSG_ReadByte (&net_message);
-	const int green = MSG_ReadByte (&net_message);
-	const int blue = MSG_ReadByte (&net_message);
+	const int red = MSG_ReadByte(&net_message);
+	const int green = MSG_ReadByte(&net_message);
+	const int blue = MSG_ReadByte(&net_message);
 
 	R_SetFogVars(fogenable, model, density, start, end, red, green, blue);
 }
@@ -650,9 +650,9 @@ void CL_ParseServerMessage (void)
 {
 	// if recording demos, copy the message out
 	if (cl_shownet->value == 1)
-		Com_Printf ("%i ", net_message.cursize);
+		Com_Printf("%i ", net_message.cursize);
 	else if (cl_shownet->value >= 2)
-		Com_Printf ("------------------\n");
+		Com_Printf("------------------\n");
 
 	// parse the message
 	while (true)

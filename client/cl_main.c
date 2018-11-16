@@ -499,7 +499,7 @@ void CL_SendConnectPacket (void)
 
 	if (!NET_StringToAdr(cls.servername, &adr))
 	{
-		Com_Printf ("Bad server address\n");
+		Com_Printf("Bad server address\n");
 		cls.connect_time = 0;
 		return;
 	}
@@ -934,7 +934,7 @@ void CL_PingServers_f (void)
 		if (!adrstring || !adrstring[0])
 			continue;
 
-		Com_Printf ("pinging %s...\n", adrstring);
+		Com_Printf("pinging %s...\n", adrstring);
 		if (!NET_StringToAdr(adrstring, &adr))
 		{
 			Com_Printf("Bad address: %s\n", adrstring);
@@ -986,7 +986,7 @@ void CL_PingServers_f (void)
 	NET_Config (true);		// allow remote
 
 	// send a broadcast packet
-	Com_Printf ("pinging broadcast...\n");
+	Com_Printf("pinging broadcast...\n");
 
 	noudp = Cvar_Get("noudp", "0", CVAR_NOSET);
 	if (!noudp->value)
@@ -1022,10 +1022,10 @@ void CL_PingServers_f (void)
 		if (!adrstring || !adrstring[0])
 			continue;
 
-		Com_Printf ("pinging %s...\n", adrstring);
+		Com_Printf("pinging %s...\n", adrstring);
 		if (!NET_StringToAdr (adrstring, &adr))
 		{
-			Com_Printf ("Bad address: %s\n", adrstring);
+			Com_Printf("Bad address: %s\n", adrstring);
 			continue;
 		}
 		if (!adr.port)
@@ -1123,7 +1123,7 @@ void CL_ConnectionlessPacket (void)
 				if (cls.downloadServer[0])
 					Com_Printf("HTTP downloading enabled, URL: %s\n", cls.downloadServer);
 #else
-				Com_Printf ("HTTP downloading supported by server but this client was built without USE_CURL, too bad.\n");
+				Com_Printf("HTTP downloading supported by server but this client was built without USE_CURL, too bad.\n");
 #endif	// USE_CURL
 			}
 		}

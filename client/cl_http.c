@@ -108,7 +108,7 @@ static int /*EXPORT*/ CL_HTTP_Progress (void *clientp, double dltotal, double dl
 	// don't care which download shows as long as something does :)
 	if (!abortDownloads)
 	{
-		Q_strncpyz (cls.downloadname, dl->queueEntry->quakePath, sizeof(cls.downloadname));
+		Q_strncpyz(cls.downloadname, dl->queueEntry->quakePath, sizeof(cls.downloadname));
 		cls.downloadposition = dl->position;
 
 		if (dltotal) {
@@ -140,14 +140,14 @@ static size_t /*EXPORT*/ CL_HTTP_Header (void *ptr, size_t size, size_t nmemb, v
 	if (bytes <= 16)
 		return bytes;
 
-	//memset (headerBuff, 0, sizeof(headerBuff));
+	//memset(headerBuff, 0, sizeof(headerBuff));
 	//memcpy (headerBuff, ptr, min(bytes, sizeof(headerBuff)-1));
 	if (bytes < sizeof(headerBuff)-1)
 		len = bytes;
 	else
 		len = sizeof(headerBuff)-1;
 
-	Q_strncpyz (headerBuff, ptr, len);
+	Q_strncpyz(headerBuff, ptr, len);
 
 	if (!Q_strncasecmp (headerBuff, "Content-Length: ", 16))
 	{
@@ -247,7 +247,7 @@ static size_t /*EXPORT*/ CL_HTTP_Recv (void *ptr, size_t size, size_t nmemb, voi
 	//	dl->tempBuffer = Z_TagMalloc ((int)(dl->fileSize*2), TAGMALLOC_CLIENT_DOWNLOAD);
 		dl->tempBuffer = Z_TagMalloc ((int)(dl->fileSize*2), 0);
 		memcpy (dl->tempBuffer, tmp, dl->fileSize);
-		Z_Free (tmp);
+		Z_Free(tmp);
 		dl->fileSize *= 2;
 	}
 
@@ -265,8 +265,8 @@ int /*EXPORT*/ CL_CURL_Debug (CURL *c, curl_infotype type, char *data, size_t si
 		char	buff[4096];
 		if (size > sizeof(buff)-1)
 			size = sizeof(buff)-1;
-		Q_strncpyz (buff, data, size);
-		Com_Printf ("DEBUG: %s\n", buff);
+		Q_strncpyz(buff, data, size);
+		Com_Printf("DEBUG: %s\n", buff);
 	}
 
 	return 0;
@@ -312,7 +312,7 @@ static void CL_StartHTTPDownload (dlqueue_t *entry, dlhandle_t *dl)
 		dl->file = fopen (dl->filePath, "wb");
 		if (!dl->file)
 		{
-			Com_Printf ("CL_StartHTTPDownload: Couldn't open %s for writing.\n", dl->filePath);
+			Com_Printf("CL_StartHTTPDownload: Couldn't open %s for writing.\n", dl->filePath);
 			entry->state = DLQ_STATE_DONE;
 			pendingCount--;	// Knightmare- fix for curl_update limbo from [HCI]Maraa'kate
 			//CL_RemoveHTTPDownload (entry->quakePath);
@@ -358,13 +358,13 @@ static void CL_StartHTTPDownload (dlqueue_t *entry, dlhandle_t *dl)
 
 	if (curl_multi_add_handle (multi, dl->curl) != CURLM_OK)
 	{
-		Com_Printf ("curl_multi_add_handle: error\n");
+		Com_Printf("curl_multi_add_handle: error\n");
 		dl->queueEntry->state = DLQ_STATE_DONE;
 		return;
 	}
 
 	handleCount++;
-	//Com_Printf ("started dl: hc = %d\n", LOG_GENERAL, handleCount);
+	//Com_Printf("started dl: hc = %d\n", LOG_GENERAL, handleCount);
 	Com_DPrintf  ("CL_StartHTTPDownload: Fetching %s...\n", dl->URL);
 	dl->queueEntry->state = DLQ_STATE_RUNNING;
 }
@@ -379,7 +379,7 @@ Init libcurl and multi handle.
 void CL_InitHTTPDownloads (void)
 {
 	curl_global_init (CURL_GLOBAL_NOTHING);
-	//Com_Printf ("%s initialized.\n", LOG_CLIENT, curl_version());
+	//Com_Printf("%s initialized.\n", LOG_CLIENT, curl_version());
 }
 
 /*
@@ -404,20 +404,20 @@ void CL_SetHTTPServer (const char *URL)
 		q = q->next;
 
 		if (last)
-			Z_Free (last);
+			Z_Free(last);
 
 		last = q;
 	}
 
 	if (last)
-		Z_Free (last);
+		Z_Free(last);
 
 	if (multi)
 		Com_Error (ERR_DROP, "CL_SetHTTPServer: Still have old handle");
 
 	multi = curl_multi_init ();
 	
-	memset (&cls.downloadQueue, 0, sizeof(cls.downloadQueue));
+	memset(&cls.downloadQueue, 0, sizeof(cls.downloadQueue));
 
 	abortDownloads = HTTPDL_ABORT_NONE;
 	handleCount = pendingCount = 0;
@@ -503,7 +503,7 @@ qboolean CL_QueueHTTPDownload (const char *quakePath)
 
 	q->next = NULL;
 	q->state = DLQ_STATE_NOT_STARTED;
-	Q_strncpyz (q->quakePath, quakePath, sizeof(q->quakePath)-1);
+	Q_strncpyz(q->quakePath, quakePath, sizeof(q->quakePath)-1);
 
 	if (needList)
 	{
@@ -609,7 +609,7 @@ static void CL_CheckAndQueueDownload (char *path)
 
 	if ( !strcmp (ext, "pak") || !strcmp (ext, "pk3") )
 	{
-		Com_Printf ("NOTICE: Filelist is requesting a .pak file (%s)\n", path);
+		Com_Printf("NOTICE: Filelist is requesting a .pak file (%s)\n", path);
 		pak = true;
 	}
 	else
@@ -620,7 +620,7 @@ static void CL_CheckAndQueueDownload (char *path)
 		strcmp (ext, "bsp") && strcmp (ext, "ent") && strcmp (ext, "txt") && strcmp (ext, "dm2") &&
 		strcmp (ext, "loc"))
 	{
-		Com_Printf ("WARNING: Illegal file type '%s' in filelist.\n", MakePrintable(path, length));
+		Com_Printf("WARNING: Illegal file type '%s' in filelist.\n", MakePrintable(path, length));
 		return;
 	}
 
@@ -628,7 +628,7 @@ static void CL_CheckAndQueueDownload (char *path)
 	{
 		if (pak)
 		{
-			Com_Printf ("WARNING: @ prefix used on a pak file (%s) in filelist.\n", MakePrintable(path, length));
+			Com_Printf("WARNING: @ prefix used on a pak file (%s) in filelist.\n", MakePrintable(path, length));
 			return;
 		}
 		gameLocal = true;
@@ -641,7 +641,7 @@ static void CL_CheckAndQueueDownload (char *path)
 	if (strstr (path, "..") || !IsValidChar (path[0]) || !IsValidChar (path[length-1]) || strstr(path, "//") ||
 		strchr (path, '\\') || (!pak && !strchr (path, '/')) || (pak && strchr(path, '/')))
 	{
-		Com_Printf ("WARNING: Illegal path '%s' in filelist.\n", MakePrintable(path, length));
+		Com_Printf("WARNING: Illegal path '%s' in filelist.\n", MakePrintable(path, length));
 		return;
 	}
 
@@ -739,7 +739,7 @@ static void CL_ParseFileList (dlhandle_t *dl)
 		}
 	}
 
-	Z_Free (dl->tempBuffer);
+	Z_Free(dl->tempBuffer);
 	dl->tempBuffer = NULL;
 }
 
@@ -800,7 +800,7 @@ void CL_HTTP_Cleanup (qboolean fullShutdown)
 
 		if (dl->tempBuffer)
 		{
-			Z_Free (dl->tempBuffer);
+			Z_Free(dl->tempBuffer);
 			dl->tempBuffer = NULL;
 		}
 
@@ -869,13 +869,13 @@ static void CL_FinishHTTPDownload (void)
 
 		if (!msg)
 		{
-			Com_Printf ("CL_FinishHTTPDownload: Odd, no message for us...\n");
+			Com_Printf("CL_FinishHTTPDownload: Odd, no message for us...\n");
 			return;
 		}
 
 		if (msg->msg != CURLMSG_DONE)
 		{
-			Com_Printf ("CL_FinishHTTPDownload: Got some weird message...\n");
+			Com_Printf("CL_FinishHTTPDownload: Got some weird message...\n");
 			continue;
 		}
 
@@ -914,7 +914,7 @@ static void CL_FinishHTTPDownload (void)
 		if (pendingCount)
 			pendingCount--;
 		handleCount--;
-		//Com_Printf ("finished dl: hc = %d\n", LOG_GENERAL, handleCount);
+		//Com_Printf("finished dl: hc = %d\n", LOG_GENERAL, handleCount);
 		cls.downloadname[0] = 0;
 		cls.downloadposition = 0;
 
@@ -936,14 +936,14 @@ static void CL_FinishHTTPDownload (void)
 
 					if (isFile)
 						remove (dl->filePath);
-					Com_Printf ("HTTP(%s): 404 File Not Found [%d remaining files]\n", dl->queueEntry->quakePath, pendingCount);
+					Com_Printf("HTTP(%s): 404 File Not Found [%d remaining files]\n", dl->queueEntry->quakePath, pendingCount);
 					curl_easy_getinfo (curl, CURLINFO_SIZE_DOWNLOAD, &fileSize);
 					if (fileSize > 512)
 					{
 						// ick
 						isFile = false;
 						result = CURLE_FILESIZE_EXCEEDED;
-						Com_Printf ("Oversized 404 body received (%d bytes), aborting HTTP downloading.\n", (int)fileSize);
+						Com_Printf("Oversized 404 body received (%d bytes), aborting HTTP downloading.\n", (int)fileSize);
 					}
 					else
 					{
@@ -951,7 +951,7 @@ static void CL_FinishHTTPDownload (void)
 						// Knightmare- fall back to UDP download for this map if failure on .bsp
 						if ( !strncmp(dl->queueEntry->quakePath, "maps/", 5) && !strcmp(dl->queueEntry->quakePath + i - 4, ".bsp") )
 						{
-							Com_Printf ("HTTP: failed to download %s, falling back to UDP until next map.\n", dl->queueEntry->quakePath);
+							Com_Printf("HTTP: failed to download %s, falling back to UDP until next map.\n", dl->queueEntry->quakePath);
 							thisMapAbort = true;
 							CL_CancelHTTPDownloads (false);
 							CL_ResetPrecacheCheck ();
@@ -968,7 +968,7 @@ static void CL_FinishHTTPDownload (void)
 				}
 
 				//every other code is treated as fatal, fallthrough here
-				Com_Printf ("Bad HTTP response code %d for %s, aborting HTTP downloading.\n", responseCode, dl->queueEntry->quakePath);
+				Com_Printf("Bad HTTP response code %d for %s, aborting HTTP downloading.\n", responseCode, dl->queueEntry->quakePath);
 
 			//fatal error, disable http
 			case CURLE_COULDNT_RESOLVE_HOST:
@@ -976,8 +976,8 @@ static void CL_FinishHTTPDownload (void)
 			case CURLE_COULDNT_RESOLVE_PROXY:
 				if (isFile)
 					remove (dl->filePath);
-			//	Com_Printf ("Fatal HTTP error: %s\n", curl_easy_strerror (result));
-				Com_Printf ("Fatal HTTP error: %s\n", CURL_ERROR(result));
+			//	Com_Printf("Fatal HTTP error: %s\n", curl_easy_strerror (result));
+				Com_Printf("Fatal HTTP error: %s\n", CURL_ERROR(result));
 				curl_multi_remove_handle (multi, dl->curl);
 				if (abortDownloads)
 					continue;
@@ -991,7 +991,7 @@ static void CL_FinishHTTPDownload (void)
 					downloading_pak = false;
 				if (isFile)
 					remove(dl->filePath);
-				//	Com_Printf ("HTTP download failed: %s\n", curl_easy_strerror (result));
+				//	Com_Printf("HTTP download failed: %s\n", curl_easy_strerror (result));
 				Com_Printf("HTTP download failed: %s\n", CURL_ERROR(result));
 				curl_multi_remove_handle(multi, dl->curl);
 				continue;
@@ -1004,7 +1004,7 @@ static void CL_FinishHTTPDownload (void)
 			Com_sprintf(tempName, sizeof(tempName), "%s/%s", FS_Gamedir(), dl->queueEntry->quakePath);
 
 			if (rename (dl->filePath, tempName))
-				Com_Printf ("Failed to rename %s for some odd reason...", dl->filePath);
+				Com_Printf("Failed to rename %s for some odd reason...", dl->filePath);
 
 			//a pak file is very special...
 			const size_t i = strlen (tempName);
@@ -1034,7 +1034,7 @@ static void CL_FinishHTTPDownload (void)
 		//out why, please let me know.
 		curl_multi_remove_handle (multi, dl->curl);
 
-		Com_Printf ("HTTP(%s): %.f bytes, %.2fkB/sec [%d remaining files]\n", dl->queueEntry->quakePath, fileSize, (fileSize / 1024.0) / timeTaken, pendingCount);
+		Com_Printf("HTTP(%s): %.f bytes, %.2fkB/sec [%d remaining files]\n", dl->queueEntry->quakePath, fileSize, (fileSize / 1024.0) / timeTaken, pendingCount);
 	} while (msgs_in_queue > 0);
 
 //	FS_FlushCache ();
@@ -1133,7 +1133,7 @@ void CL_RunHTTPDownloads (void)
 	if (!cls.downloadServer[0])
 		return;
 
-	//Com_Printf ("handle %d, pending %d\n", LOG_GENERAL, handleCount, pendingCount);
+	//Com_Printf("handle %d, pending %d\n", LOG_GENERAL, handleCount, pendingCount);
 
 	//not enough downloads running, queue some more!
 	if (pendingCount && abortDownloads == HTTPDL_ABORT_NONE &&
@@ -1145,7 +1145,7 @@ void CL_RunHTTPDownloads (void)
 		ret = curl_multi_perform (multi, &newHandleCount);
 		if (newHandleCount < handleCount)
 		{
-			//Com_Printf ("runnd dl: hc = %d, nc = %d\n", LOG_GENERAL, handleCount, newHandleCount);
+			//Com_Printf("runnd dl: hc = %d, nc = %d\n", LOG_GENERAL, handleCount, newHandleCount);
 			//hmm, something either finished or errored out.
 			CL_FinishHTTPDownload ();
 			handleCount = newHandleCount;
@@ -1155,7 +1155,7 @@ void CL_RunHTTPDownloads (void)
 
 	if (ret != CURLM_OK)
 	{
-		Com_Printf ("curl_multi_perform error. Aborting HTTP downloads.\n");
+		Com_Printf("curl_multi_perform error. Aborting HTTP downloads.\n");
 		CL_CancelHTTPDownloads (true);
 	}
 

@@ -188,7 +188,7 @@ wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength);
 
 void S_InitScaletable (void);
 
-sfxcache_t *S_LoadSound (sfx_t *s);
+sfxcache_t *S_LoadSound(sfx_t *s);
 
 void S_IssuePlaysound (playsound_t *ps);
 

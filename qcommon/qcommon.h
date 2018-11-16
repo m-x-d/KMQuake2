@@ -442,7 +442,7 @@ int Cmd_Argc(void);
 char *Cmd_Argv(int arg);
 char *Cmd_Args(void);
 // The functions that execute commands get their parameters with these functions.
-// Cmd_Argv () will return an empty string, not a NULL if arg > argc, so string operations are always safe.
+// Cmd_Argv() will return an empty string, not a NULL if arg > argc, so string operations are always safe.
 
 void Cmd_TokenizeString(char *text, qboolean macroExpand);
 // Takes a null terminated string. Does not need to be /n terminated. Breaks the string up into arg tokens.

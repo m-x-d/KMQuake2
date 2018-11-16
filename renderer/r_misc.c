@@ -66,7 +66,7 @@ byte nulltexturecolors[4][4] = //mxd
 image_t * R_CreateNullTexture (void)
 {
 	byte nulltex[NULLTEX_SIZE][NULLTEX_SIZE][4];
-	memset (nulltex, 32, sizeof(nulltex));
+	memset(nulltex, 32, sizeof(nulltex));
 
 	for (int x = 0; x < NULLTEX_SIZE; x++) //mxd
 		for (int y = 0; y < NULLTEX_SIZE; y++)
@@ -230,7 +230,7 @@ void R_InitMedia (void)
 	R_InitParticleTexture(); //mxd
 	glMedia.notexture = R_CreateNullTexture (); // Generate null texture
 
-	memset (whitetex, 255, sizeof(whitetex));
+	memset(whitetex, 255, sizeof(whitetex));
 	glMedia.whitetexture = R_LoadPic ("***whitetexture***", (byte *)whitetex, NULLTEX_SIZE, NULLTEX_SIZE, it_wall, 32);
 
 #ifdef ROQ_SUPPORT

@@ -614,7 +614,7 @@ void Key_Unbind_f (void)
 {
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("unbind <key> : remove commands from a key\n");
+		Com_Printf("unbind <key> : remove commands from a key\n");
 		return;
 	}
 

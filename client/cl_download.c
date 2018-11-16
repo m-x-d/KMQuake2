@@ -882,7 +882,7 @@ void CL_ParseDownload (void)
 		if (!cls.download)
 		{
 			net_message.readcount += size;
-			Com_Printf ("Failed to open %s\n", cls.downloadtempname);
+			Com_Printf("Failed to open %s\n", cls.downloadtempname);
 			CL_RequestNextDownload();
 
 			return;

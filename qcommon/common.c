@@ -106,7 +106,7 @@ Com_Printf
 Both client and server can use this, and it will output to the apropriate place.
 =============
 */
-void Com_Printf (char *fmt, ...)
+void Com_Printf(char *fmt, ...)
 {
 	va_list	argptr;
 	char	msg[MAXPRINTMSG];
@@ -835,7 +835,7 @@ int MSG_ReadChar (sizebuf_t *msg_read)
 	return c;
 }
 
-int MSG_ReadByte (sizebuf_t *msg_read)
+int MSG_ReadByte(sizebuf_t *msg_read)
 {
 	int	c;
 	
@@ -1290,7 +1290,7 @@ int		z_count, z_bytes;
 Z_Free
 ========================
 */
-void Z_Free (void *ptr)
+void Z_Free(void *ptr)
 {
 	zhead_t *z = (zhead_t *)ptr - 1;
 
@@ -1666,7 +1666,7 @@ void Qcommon_Frame (int msec)
 		extern int c_traces, c_brush_traces;
 		extern int c_pointcontents;
 
-		Com_Printf ("%4i traces  %4i points\n", c_traces, c_pointcontents);
+		Com_Printf("%4i traces  %4i points\n", c_traces, c_pointcontents);
 		c_traces = 0;
 		c_brush_traces = 0;
 		c_pointcontents = 0;

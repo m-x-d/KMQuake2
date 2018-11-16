@@ -1401,12 +1401,12 @@ qboolean SurfInFront (msurface_t *surf1, msurface_t *surf2)
 	if (surf1->entity)
 		VectorSubtract(r_newrefdef.vieworg, surf1->entity->origin, org1);
 	else
-		VectorCopy (r_newrefdef.vieworg, org1);
+		VectorCopy(r_newrefdef.vieworg, org1);
 
 	if (surf2->entity)
 		VectorSubtract(r_newrefdef.vieworg, surf2->entity->origin, org2);
 	else
-		VectorCopy (r_newrefdef.vieworg, org2);
+		VectorCopy(r_newrefdef.vieworg, org2);
 
 	dist1 = DotProduct(org1, surf1->plane->normal) - surf1->plane->dist;
 	dist2 = DotProduct(org2, surf2->plane->normal) - surf2->plane->dist;

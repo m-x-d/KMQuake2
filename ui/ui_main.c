@@ -207,7 +207,7 @@ void M_Main_Draw (void)
 
 //	strncpy (litname, main_names[m_main_cursor]);
 //	strncat (litname, "_sel");
-	Q_strncpyz (litname, main_names[m_main_cursor], sizeof(litname));
+	Q_strncpyz(litname, main_names[m_main_cursor], sizeof(litname));
 	Q_strncatz (litname, "_sel", sizeof(litname));
 	R_DrawGetPicSize (&w, &h, litname);
 	SCR_DrawPic (xoffset - 1, (ystart + m_main_cursor * 40 + 2), w + 2, h + 2, ALIGN_CENTER, litname, 1.0);
