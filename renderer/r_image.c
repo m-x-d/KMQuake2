@@ -157,7 +157,7 @@ void GL_TextureMode(char *string)
 
 	if (mode == NUM_GL_MODES)
 	{
-		VID_Printf(PRINT_ALL, "bad filter name\n");
+		VID_Printf(PRINT_ALL, "bad texture filtering mode name: '%s'\n", string);
 		return;
 	}
 
@@ -207,7 +207,7 @@ void GL_TextureMode(char *string)
 GL_TextureAlphaMode
 ===============
 */
-void GL_TextureAlphaMode( char *string )
+void GL_TextureAlphaMode(char *string)
 {
 	unsigned mode;
 
@@ -219,7 +219,7 @@ void GL_TextureAlphaMode( char *string )
 
 	if (mode == NUM_GL_ALPHA_MODES)
 	{
-		VID_Printf(PRINT_ALL, "bad alpha texture mode name\n");
+		VID_Printf(PRINT_ALL, "bad alpha texture mode name: '%s'\n", string);
 		return;
 	}
 
@@ -231,7 +231,7 @@ void GL_TextureAlphaMode( char *string )
 GL_TextureSolidMode
 ===============
 */
-void GL_TextureSolidMode( char *string )
+void GL_TextureSolidMode(char *string)
 {
 	unsigned mode;
 
@@ -243,7 +243,7 @@ void GL_TextureSolidMode( char *string )
 
 	if (mode == NUM_GL_SOLID_MODES)
 	{
-		VID_Printf(PRINT_ALL, "bad solid texture mode name\n");
+		VID_Printf(PRINT_ALL, "bad solid texture mode name: '%s'\n", string);
 		return;
 	}
 
@@ -296,7 +296,7 @@ void R_ImageList_f (void)
 			break;
 		}
 
-		VID_Printf(PRINT_ALL,  " %3i %3i %s: %s\n",
+		VID_Printf(PRINT_ALL, " %3i %3i %s: %s\n",
 			image->upload_width, image->upload_height, palstrings[image->paletted], image->name);
 	}
 

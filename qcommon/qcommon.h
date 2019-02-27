@@ -823,6 +823,7 @@ void FS_FreeFile(void *buffer);
 void Com_BeginRedirect(int target, char *buffer, int buffersize, void(*flush));
 void Com_EndRedirect(void);
 void Com_DPrintf(char *fmt, ...);
+void Com_CPrintf(char *fmt, ...); //mxd
 void Com_Error(int code, char *fmt, ...);
 void Com_Quit(void);
 

@@ -55,7 +55,7 @@ cvar_t *sv_engine_version;
 
 FILE	*logfile;
 
-int			server_state;
+int		server_state;
 
 // host_speeds times
 int		time_before_game;
@@ -127,7 +127,7 @@ void Com_Printf(char *fmt, ...)
 		return;
 	}
 
-	Con_Print (msg);
+	Con_Print(msg);
 		
 	// also echo to debugging console
 	if (msg[strlen(msg) - 1] != '\r') // skip overwritten outputs
@@ -178,6 +178,29 @@ void Com_DPrintf (char *fmt, ...)
 	Com_Printf("%s", msg);
 }
 
+
+/*
+================
+Com_CPrintf
+
+mxd. A Com_Printf that only prints to VS console in DEBUG build
+================
+*/
+void Com_CPrintf (char *fmt, ...)
+{
+#ifndef _DEBUG
+	return;
+#endif
+	
+	va_list	argptr;
+	char	msg[MAXPRINTMSG];
+
+	va_start(argptr, fmt);
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr); // fix for nVidia 191.xx crash
+	va_end(argptr);
+
+	OutputDebugString(msg);
+}
 
 /*
 =============

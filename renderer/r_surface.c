@@ -565,7 +565,7 @@ void R_BlendLightmaps (void)
 			if (currentmodel == r_worldmodel)
 				c_visible_lightmaps++;
 
-			GL_Bind( glState.lightmap_textures + i);
+			GL_Bind(glState.lightmap_textures + i);
 
 			for (msurface_t *surf = gl_lms.lightmap_surfaces[i]; surf != 0; surf = surf->lightmapchain)
 			{
@@ -2305,13 +2305,15 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 		s = DotProduct(vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
 		s -= fa->texturemins[0];
 		s += fa->light_s * lmscale; //mxd. 16 -> lmscale
-		s += lmscale * 0.5f; //mxd. Was 8
+		if(lmscale > 1) //mxd. Don't add half-pixel offset when using per-pixel lightmaps
+			s += lmscale * 0.5f; //mxd. Was 8
 		s /= LM_BLOCK_WIDTH * lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->width;
 
 		t = DotProduct(vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
 		t -= fa->texturemins[1];
 		t += fa->light_t * lmscale; //mxd. 16 -> lmscale
-		t += lmscale * 0.5f; //mxd. Was 8
+		if (lmscale > 1) //mxd. Don't add half-pixel offset when using per-pixel lightmaps
+			t += lmscale * 0.5f; //mxd. Was 8
 		t /= LM_BLOCK_HEIGHT * lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->height;
 
 		poly->verts[i][5] = s;

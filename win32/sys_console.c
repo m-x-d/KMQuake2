@@ -263,10 +263,14 @@ static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 				SendMessage(sys_console.hWndOutput, WM_CLEAR, 0, 0);
 			}
 			else if ((HWND)lParam == sys_console.hWndQuit)
+			{
 				Sys_Quit();
+			}
 		}
 		else if (HIWORD(wParam) == EN_VSCROLL)
+		{
 			InvalidateRect(sys_console.hWndOutput, NULL, TRUE);
+		}
 
 		break;
 	case WM_CTLCOLOREDIT:
@@ -326,9 +330,9 @@ static LONG WINAPI Sys_ConsoleEditProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		{
 			if (wParam == VK_RETURN)
 			{
-				if (GetWindowText(sys_console.hWndInput, sys_console.cmdBuffer, sizeof(sys_console.cmdBuffer))){
+				if (GetWindowText(sys_console.hWndInput, sys_console.cmdBuffer, sizeof(sys_console.cmdBuffer)))
+				{
 					SetWindowText(sys_console.hWndInput, "");
-
 					Com_Printf("]%s\n", sys_console.cmdBuffer);
 				}
 
@@ -336,7 +340,9 @@ static LONG WINAPI Sys_ConsoleEditProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 			}
 		}
 		else if (hWnd == sys_console.hWndOutput)
+		{
 			return 0;	// Read only
+		}
 
 		break;
 	case WM_VSCROLL:
@@ -348,7 +354,7 @@ static LONG WINAPI Sys_ConsoleEditProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 
 	if (hWnd == sys_console.hWndOutput)
 		return CallWindowProc(sys_console.defOutputProc, hWnd, uMsg, wParam, lParam);
-	else if (hWnd == sys_console.hWndInput)
+	if (hWnd == sys_console.hWndInput)
 		return CallWindowProc(sys_console.defInputProc, hWnd, uMsg, wParam, lParam);
 	return 0;
 }

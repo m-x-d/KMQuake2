@@ -1126,7 +1126,7 @@ void CL_AddPacketEntities(frame_t *frame)
 			{
 				const float a1 = cent->current.angles[i];
 				const float a2 = cent->prev.angles[i];
-				ent.angles[i] = LerpAngle(a2, a1, cl.lerpfrac); //TODO: mxd. func_rotating at low speeds looks jerky
+				ent.angles[i] = LerpAngle(a2, a1, cl.lerpfrac);
 			}
 		}
 

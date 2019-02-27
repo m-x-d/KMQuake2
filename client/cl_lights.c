@@ -208,7 +208,7 @@ void CL_RunDLights (void)
 		if (dl->die < cl.time)
 		{
 			dl->radius = 0;
-			return;
+			continue; //mxd. Was return;
 		}
 
 		dl->radius -= cls.renderFrameTime * dl->decay;

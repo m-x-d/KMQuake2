@@ -710,7 +710,7 @@ void CL_AddParticles (void)
 
 		if (p->thinknext && p->think)
 		{
-			p->thinknext=false;
+			p->thinknext = false;
 			p->think(p, org, angle, &alpha, &size, &image, &time);
 		}
 
