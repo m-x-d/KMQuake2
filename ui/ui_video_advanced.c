@@ -46,6 +46,7 @@ static menulist_s  		s_rgbscale_box;
 static menulist_s  		s_trans_lighting_box;
 static menulist_s  		s_warp_lighting_box;
 static menuslider_s		s_lightcutoff_slider;
+static menulist_s		s_dlight_shadowmap_quality; //mxd
 static menulist_s  		s_solidalpha_box;
 static menulist_s  		s_texshader_warp_box;
 static menuslider_s  	s_waterwave_slider;
@@ -88,6 +89,13 @@ static void Video_Advanced_MenuSetValues ( void )
 
 	Cvar_SetValue( "r_lightcutoff", ClampCvar( 0, 64, Cvar_VariableValue("r_lightcutoff") ) );
 	s_lightcutoff_slider.curvalue = Cvar_VariableValue("r_lightcutoff") / 8.0f;
+
+	Cvar_SetValue("r_dlightshadowmapscale", ClampCvar(0, 5, Cvar_VariableValue("r_dlightshadowmapscale"))); //mxd
+	const int dlightshadowmapscale = Cvar_VariableValue("r_dlightshadowmapscale");
+	if (dlightshadowmapscale == 0)
+		s_dlight_shadowmap_quality.curvalue = 0;
+	else
+		s_dlight_shadowmap_quality.curvalue = 6 - dlightshadowmapscale;
 
 	Cvar_SetValue( "r_glass_envmaps", ClampCvar( 0, 1, Cvar_VariableValue("r_glass_envmaps") ) );
 	s_glass_envmap_box.curvalue	= Cvar_VariableValue("r_glass_envmaps");
@@ -171,6 +179,14 @@ static void WarpLightingCallback ( void *unused )
 static void LightCutoffCallback( void *unused )
 {
 	Cvar_SetValue( "r_lightcutoff", s_lightcutoff_slider.curvalue * 8.0f);
+}
+
+static void DlightShadowmapScaleCallback( void *unused ) //mxd
+{
+	if(s_dlight_shadowmap_quality.curvalue == 0)
+		Cvar_SetValue("r_dlightshadowmapscale", 0);
+	else
+		Cvar_SetValue("r_dlightshadowmapscale", 6 - s_dlight_shadowmap_quality.curvalue);
 }
 
 static void GlassEnvmapCallback ( void *unused )
@@ -337,6 +353,16 @@ void Menu_Video_Advanced_Init (void)
 		"TGA",
 		0
 	};
+	static const char *dlight_shadowmap_quality_names[] = //mxd
+	{
+		"Disabled",
+		"Very low",
+		"Low",
+		"Medium",
+		"High",
+		"Very high",
+		0
+	};
 
 	int y = 0;
 	r_intensity = Cvar_Get("r_intensity", "1", 0);
@@ -347,12 +373,12 @@ void Menu_Video_Advanced_Init (void)
 
 	s_options_advanced_header.generic.type		= MTYPE_SEPARATOR;
 	s_options_advanced_header.generic.name		= "Advanced Options";
-	s_options_advanced_header.generic.x			= MENU_FONT_SIZE/2 * strlen(s_options_advanced_header.generic.name);
+	s_options_advanced_header.generic.x			= MENU_FONT_SIZE / 2 * strlen(s_options_advanced_header.generic.name);
 	s_options_advanced_header.generic.y			= y;
 
 	s_lightmapscale_slider.generic.type			= MTYPE_SLIDER;
 	s_lightmapscale_slider.generic.x			= 0;
-	s_lightmapscale_slider.generic.y			= y += 2*MENU_LINE_SIZE;
+	s_lightmapscale_slider.generic.y			= y += 2 * MENU_LINE_SIZE;
 	s_lightmapscale_slider.generic.name			= "lightmap scale";
 	s_lightmapscale_slider.generic.callback		= LightMapScaleCallback;
 	s_lightmapscale_slider.minvalue				= 0;
@@ -400,6 +426,15 @@ void Menu_Video_Advanced_Init (void)
 	s_lightcutoff_slider.minvalue			= 0;
 	s_lightcutoff_slider.maxvalue			= 8;
 	s_lightcutoff_slider.generic.statusbar	= "lower = smoother blend, higher = faster";
+
+	//mxd
+	s_dlight_shadowmap_quality.generic.type		 = MTYPE_SPINCONTROL;
+	s_dlight_shadowmap_quality.generic.x		 = 0;
+	s_dlight_shadowmap_quality.generic.y		 = y += MENU_LINE_SIZE;
+	s_dlight_shadowmap_quality.generic.name		 = "dynamic light shadowmap quality";
+	s_dlight_shadowmap_quality.generic.callback  = DlightShadowmapScaleCallback;
+	s_dlight_shadowmap_quality.itemnames		 = dlight_shadowmap_quality_names;
+	s_dlight_shadowmap_quality.generic.statusbar = "Dynamic light shadowmap quality. Depends on lightmap resolution.";
 
 	s_glass_envmap_box.generic.type			= MTYPE_SPINCONTROL;
 	s_glass_envmap_box.generic.x			= 0;
@@ -509,7 +544,7 @@ void Menu_Video_Advanced_Init (void)
 
 	s_screenshotformat_box.generic.type			= MTYPE_SPINCONTROL;
 	s_screenshotformat_box.generic.x			= 0;
-	s_screenshotformat_box.generic.y			= y += 2*MENU_LINE_SIZE;
+	s_screenshotformat_box.generic.y			= y += 2 * MENU_LINE_SIZE;
 	s_screenshotformat_box.generic.name			= "screenshot format";
 	s_screenshotformat_box.generic.callback		= ScreenshotFormatCallback;
 	s_screenshotformat_box.itemnames			= screenshotformat_names;
@@ -535,13 +570,13 @@ void Menu_Video_Advanced_Init (void)
 	s_advanced_apply_action.generic.type		= MTYPE_ACTION;
 	s_advanced_apply_action.generic.name		= "apply changes";
 	s_advanced_apply_action.generic.x			= 0;
-	s_advanced_apply_action.generic.y			= y += 2*MENU_LINE_SIZE;
+	s_advanced_apply_action.generic.y			= y += 2 * MENU_LINE_SIZE;
 	s_advanced_apply_action.generic.callback	= AdvancedMenuApplyChanges;
 
 	s_back_action.generic.type = MTYPE_ACTION;
 	s_back_action.generic.name = "back";
 	s_back_action.generic.x    = 0;
-	s_back_action.generic.y    = y += 2*MENU_LINE_SIZE;
+	s_back_action.generic.y    = y += 2 * MENU_LINE_SIZE;
 	s_back_action.generic.callback = UI_BackMenu;
 
 	Video_Advanced_MenuSetValues();
@@ -553,6 +588,7 @@ void Menu_Video_Advanced_Init (void)
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_trans_lighting_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_warp_lighting_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_lightcutoff_slider );
+	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_dlight_shadowmap_quality ); //mxd
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_glass_envmap_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_solidalpha_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_texshader_warp_box );

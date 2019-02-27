@@ -51,7 +51,7 @@ void R_AddDlight (dlight_t *light)
 	VectorSubtract(light->origin, r_origin, v);
 
 	for (int i = 0; i < 3; i++)
-		v[i] = light->origin[i] - vpn[i]*rad;
+		v[i] = light->origin[i] - vpn[i] * rad;
 
 	if (RB_CheckArrayOverflow(DLIGHT_RADIUS + 1, DLIGHT_RADIUS * 3)) 
 		RB_RenderMeshGeneric(true);
@@ -607,7 +607,74 @@ void R_ShadowLight (vec3_t pos, vec3_t lightAdd)
 
 //===================================================================
 
+//mxd
+void Matrix4Invert(float m[16])
+{
+	float inv[16];
+
+	inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
+		   + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+	inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
+		    - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+	inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
+		   + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+	inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
+		    - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+	inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
+		    - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+	inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
+		   + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+	inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
+		    - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+	inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
+		    + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+	inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
+		   + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+	inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
+			- m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+	inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
+			+ m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+	inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
+			 - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+	inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
+			- m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+	inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
+		   + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+	inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
+			 - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+	inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
+			+ m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+	double det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+	if (det == 0)
+		return;
+
+	det = 1.0f / det;
+
+	for (int i = 0; i < 16; i++)
+		m[i] = inv[i] * det;
+}
+
+//mxd
+void Matrix4Multiply(const float m[16], const float v[4], float result[4])
+{
+	memset(result, 0, sizeof(result[0]) * 4);
+	for (int i = 0; i < 4; i++) // for each row
+		for (int j = 0; j < 4; j++) // for each col
+			result[i] += m[j * 4 + i] * v[j];
+}
+
+
 static float s_blocklights[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * 4]; //mxd. Was [128*128*4] //Knightmare-  was [34*34*3], supports max chop size of 2048?
+
+//mxd
+inline void GetWorldPos(float texSpaceToWorld[16], float texpos[4], vec3_t worldpos)
+{
+	float worldpos4[4];
+	Matrix4Multiply(texSpaceToWorld, texpos, worldpos4);
+	VectorSet(worldpos, worldpos4[0], worldpos4[1], worldpos4[2]);
+}
+
 /*
 ===============
 R_AddDynamicLights
@@ -615,17 +682,69 @@ R_AddDynamicLights
 */
 void R_AddDynamicLights (msurface_t *surf)
 {
+	static byte s_castedrays[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT]; //mxd. 0 - not yet cast, 1 - not blocked, 2 - blocked
+	
 	vec3_t		impact, local, dlorigin, entOrigin, entAngles;
 	qboolean	rotated = false;
 	vec3_t		forward, right, up;
 	const int	lmscale = 1 << gl_lms.lmshift; //mxd
-
+	
 	const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 	const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 	mtexinfo_t *tex = surf->texinfo;
 
+	//mxd. Setup shadowmapping vars...
+	vec3_t facenormal, worldpos;
+	float texSpaceToWorld[16];
+	float dlscale, dlscaler = 0.0f;
+	qboolean skiplastrowandcolumn = false;
+	int numrays = 0;
+
+	if (r_dlightshadowmapscale->integer)
+	{
+		const int smscale = (int)pow(2, clamp(r_dlightshadowmapscale->integer, 0, 5) - 1); // Convert [0, 1, 2, 3, 4, 5] to [0, 1, 2, 4, 8, 16]
+		dlscale = max(lmscale, smscale); // Can't have dynamic light scaled lower than lightmap scale
+		dlscaler = lmscale / dlscale; // Ratio between ligthmap scale and dynamic light raycasting scale. Expected to be in (0 .. 1] range.
+		skiplastrowandcolumn = (lmscale == 1 && lmscale == dlscaler); // Skip processing last row and column of the shadowmap when lmscale == 1, because it's shifted to match texture pixels in R_BuildPolygonFromSurface
+
+		if (dlscaler > 0 && dlscaler < 1)
+			numrays = ceilf(smax * dlscaler) * ceilf(tmax * dlscaler);
+		
+		VectorCopy(surf->plane->normal, facenormal);
+		float facedist = -surf->plane->dist;
+		
+		if (surf->flags & SURF_PLANEBACK)
+		{
+			VectorScale(facenormal, -1, facenormal);
+			facedist *= -1;
+		}
+		
+		texSpaceToWorld[0] = tex->vecs[0][0];
+		texSpaceToWorld[1] = tex->vecs[1][0];
+		texSpaceToWorld[2] = facenormal[0];
+		texSpaceToWorld[3] = 0;
+
+		texSpaceToWorld[4] = tex->vecs[0][1];
+		texSpaceToWorld[5] = tex->vecs[1][1];
+		texSpaceToWorld[6] = facenormal[1];
+		texSpaceToWorld[7] = 0;
+
+		texSpaceToWorld[8] = tex->vecs[0][2];
+		texSpaceToWorld[9] = tex->vecs[1][2];
+		texSpaceToWorld[10] = facenormal[2];
+		texSpaceToWorld[11] = 0;
+
+		texSpaceToWorld[12] = tex->vecs[0][3];
+		texSpaceToWorld[13] = tex->vecs[1][3];
+		texSpaceToWorld[14] = facedist;
+		texSpaceToWorld[15] = 1;
+
+		Matrix4Invert(texSpaceToWorld);
+	}
+	//mxd. Shadowmapping vars setup end
+
 	// currententity is not valid for trans surfaces
-	if (tex->flags & (SURF_TRANS33|SURF_TRANS66))
+	if (tex->flags & (SURF_TRANS33 | SURF_TRANS66))
 	{
 		if (surf->entity)
 		{
@@ -647,7 +766,7 @@ void R_AddDynamicLights (msurface_t *surf)
 	if (entAngles[0] || entAngles[1] || entAngles[2])
 	{
 		rotated = true;
-		AngleVectors (entAngles, forward, right, up);
+		AngleVectors(entAngles, forward, right, up);
 	}
 
 	for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++)
@@ -690,15 +809,40 @@ void R_AddDynamicLights (msurface_t *surf)
 		local[0] = DotProduct(impact, tex->vecs[0]) + tex->vecs[0][3] - surf->texturemins[0];
 		local[1] = DotProduct(impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
 
+		//mxd. Skip shadowcasting when a light is too far away from camera...
+		qboolean castshadows = (r_dlightshadowmapscale->integer ? true : false);
+		if (castshadows)
+		{
+			vec3_t v;
+			VectorSubtract(dlorigin, r_origin, v);
+			const float dist = VectorLength(v);
+
+			castshadows = (dist < r_shadowrange->integer);
+
+			if (castshadows && numrays > 0)
+				memset(s_castedrays, 0, numrays);
+		}
+
 		float *pfBL = s_blocklights;
 		for (int t = 0; t < tmax; t++)
 		{
+			//mxd
+			if (skiplastrowandcolumn && t == tmax - 1)
+				break;
+			
 			int td = local[1] - t * lmscale;
 			if (td < 0)
 				td = -td;
 
 			for (int s = 0; s < smax; s++, pfBL += 3)
 			{
+				//mxd
+				if (skiplastrowandcolumn && s == smax - 1)
+				{
+					pfBL += 3;
+					break;
+				}
+				
 				int sd = local[0] - s * lmscale; //mxd. Was Q_ftol(local[0] - fsacc); Why Q_ftol?
 
 				if (sd < 0)
@@ -711,7 +855,62 @@ void R_AddDynamicLights (msurface_t *surf)
 
 				if (fdist < fminlight)
 				{
-					for(int c = 0; c < 3; c++)
+					//mxd. Software-based shadowmapping... Kills performance when both lmscale and r_dlightshadowmapscale is 1...
+					if (castshadows)
+					{
+						float texpos[4] = { surf->texturemins[0] + s * lmscale, surf->texturemins[1] + t * lmscale, 1.0f, 1.0f }; // One "unit" in front of surface
+
+						// Offset first/last columns and rows towards the center, so texpos isn't at the surface edge
+						if(lmscale > 1)
+						{
+							if (s == 0)
+								texpos[0] += lmscale * 0.25f;
+							else if(s == smax - 1)
+								texpos[0] -= lmscale * 0.25f;
+
+							if (t == 0)
+								texpos[1] += lmscale * 0.25f;
+							else if (t == tmax - 1)
+								texpos[1] -= lmscale * 0.25f;
+						}
+						else // lmscale == 1
+						{
+							// Pixel shift, so texpos is at the center of r_dlightshadowmapscale x r_dlightshadowmapscale lightmap texels
+							// (special handling because of special handling in R_BuildPolygonFromSurface)
+							texpos[0] += dlscale * 0.5f;
+							texpos[1] += dlscale * 0.5f;
+						}
+
+						if (numrays > 0) // 1 ray per r_dlightshadowmapscale x r_dlightshadowmapscale texels
+						{
+							const int rayindex = (int)(t * dlscaler) * (int)ceilf(smax * dlscaler) + (int)(s * dlscaler);
+							byte *castedray = &s_castedrays[rayindex];
+
+							if (*castedray == 2) // 2 - blocked
+								continue;
+							
+							if (*castedray == 0) // 0 - not yet cast
+							{
+								GetWorldPos(texSpaceToWorld, texpos, worldpos);
+								const trace_t tr = CM_BoxTrace(dlorigin, worldpos, vec3_origin, vec3_origin, 0, CONTENTS_SOLID);
+
+								*castedray = (tr.fraction < 1.0f ? 2 : 1);
+
+								if (tr.fraction < 1.0f)
+									continue;
+							}
+						}
+						else
+						{
+							GetWorldPos(texSpaceToWorld, texpos, worldpos);
+							const trace_t tr = CM_BoxTrace(dlorigin, worldpos, vec3_origin, vec3_origin, 0, CONTENTS_SOLID);
+
+							if (tr.fraction < 1.0f)
+								continue;
+						}
+					}
+
+					for (int c = 0; c < 3; c++)
 						pfBL[c] += (frad - fdist) * dl->color[c];
 				}
 			}

@@ -267,6 +267,8 @@ extern	cvar_t	*r_shelltype; // entity shells: 0 = solid, 1 = warp, 2 = spheremap
 extern	cvar_t	*r_ext_texture_compression; // Heffo - ARB Texture Compression
 extern	cvar_t	*r_lightcutoff;	//** DMP - allow dynamic light cutoff to be user-settable
 
+extern	cvar_t	*r_dlightshadowmapscale; //mxd
+
 extern	cvar_t	*r_screenshot_format;		// determines screenshot format
 //extern	cvar_t	*r_screenshot_jpeg;			// Heffo - JPEG Screenshots
 extern	cvar_t	*r_screenshot_jpeg_quality;	// Heffo - JPEG Screenshots

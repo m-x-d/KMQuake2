@@ -137,6 +137,8 @@ cvar_t	*r_screenshot_jpeg_quality;	// Heffo - JPEG Screenshots
 //cvar_t	*r_motionblur;				// motionblur
 cvar_t	*r_lightcutoff;	//** DMP - allow dynamic light cutoff to be user-settable
 
+cvar_t	*r_dlightshadowmapscale; //mxd. 0 - disabled, 1 - 1 ray per 1 lightmap pixel, 2 - 1 ray per 2x2 lightmap pixels, 4 - 1 ray per 4x4 lightmap pixels etc.
+
 cvar_t	*r_log;
 cvar_t	*r_bitdepth;
 cvar_t	*r_drawbuffer;
@@ -950,6 +952,8 @@ void R_Register (void)
 	r_skydistance = Cvar_Get("r_skydistance", "10000", CVAR_ARCHIVE); // variable sky range
 	r_saturation = Cvar_Get("r_saturation", "1.0", CVAR_ARCHIVE);	  //** DMP saturation setting (.89 good for nvidia)
 	r_lightcutoff = Cvar_Get("r_lightcutoff", "0", CVAR_ARCHIVE);	  //** DMP dynamic light cutoffnow variable
+
+	r_dlightshadowmapscale = Cvar_Get("r_dlightshadowmapscale", "1", CVAR_ARCHIVE); //mxd
 
 	Cmd_AddCommand("imagelist", R_ImageList_f);
 	Cmd_AddCommand("screenshot", R_ScreenShot_f);
