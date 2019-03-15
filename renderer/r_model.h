@@ -88,6 +88,7 @@ typedef struct mtexinfo_s
 	struct mtexinfo_s	*next;		// animation chain
 	image_t		*image;
 	image_t		*glow;		// glow overlay
+	float		*nmapvectors; //mxd. texWidth * texHeight of float[3] normalmap vectors, in [-1 .. 1] range
 } mtexinfo_t;
 
 /*
@@ -136,15 +137,18 @@ typedef struct msurface_s
 	int			light_smax, light_tmax;
 	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
+	float		*lightmap_points; //mxd. Centers of lightmap texels, in world space, size is light_smax * light_tmax
+	float		*normalmap_normals; //mxd. Normalmap vectors, relative to surface normal, used only when lmscale is 1
+
 	glpoly_t	*polys;				// multiple if warped
 	struct	msurface_s	*texturechain;
-	struct  msurface_s	*lightmapchain;
+	struct	msurface_s	*lightmapchain;
 
 	mtexinfo_t	*texinfo;
 	
 // lighting info
 	int			dlightframe;
-	int			dlightbits[(MAX_DLIGHTS+31)>>5];	// derived from MAX_DLIGHTS
+	int			dlightbits[(MAX_DLIGHTS + 31) >> 5];	// derived from MAX_DLIGHTS
 	qboolean	cached_dlight;
 
 	int			lightmaptexturenum;

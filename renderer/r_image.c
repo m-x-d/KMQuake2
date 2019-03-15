@@ -1745,16 +1745,14 @@ Nexus  - changes for hires-textures
 */
 image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits)
 {
-	image_t		*image;
-	int			i;
-	char s[128]; 
+	image_t	*image;
+	int		i;
+	char	s[128]; 
 
 	// find a free image_t
 	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
-	{
 		if (!image->texnum)
 			break;
-	}
 
 	if (i == numgltextures)
 	{
@@ -1785,11 +1783,12 @@ image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t ty
 // TODO: replace this with shaders as soon as they are supported
 	const int len = strlen(name); 
 	Q_strncpyz(s, name, sizeof(s));
+
 	// check if we have a tga/jpg pic
 #ifdef PNG_SUPPORT
 	if (type == it_pic && (!strcmp(s + len - 4, ".tga") || !strcmp(s + len - 4, ".png") || !strcmp(s + len - 4, ".jpg")) )
 #else	// PNG_SUPPORT
-	if ((type == it_pic) && (!strcmp(s+len-4, ".tga") || !strcmp(s+len-4, ".jpg")) )
+	if (type == it_pic && (!strcmp(s + len - 4, ".tga") || !strcmp(s + len - 4, ".jpg")) )
 #endif	// PNG_SUPPORT
 	{ 
 		byte	*pcx, *palette;
@@ -1807,7 +1806,7 @@ image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t ty
 
 		if (pcx) free(pcx);
 		if (palette) free(palette);
-	}	
+	}
 
 	// load little pics into the scrap
 	if (image->type == it_pic && bits == 8 && image->width < 64 && image->height < 64)
@@ -2317,4 +2316,62 @@ void R_ShutdownImages (void)
 		qglDeleteTextures(1, &image->texnum);
 		memset(image, 0, sizeof(*image));
 	}
+}
+
+
+/*
+=================
+R_LoadNormalmap (mxd)
+=================
+*/
+void R_LoadNormalmap(const char *texture, mtexinfo_t *tex)
+{
+	// Try to load image...
+	char name[MAX_QPATH];
+	byte *pic = NULL; // Stores RGBA image data
+	int	width, height;
+
+	Com_sprintf(name, sizeof(name), "textures/%s_normal.tga", texture);
+	R_LoadTGA(name, &pic, &width, &height);
+
+#ifdef PNG_SUPPORT
+	if(!pic)
+	{
+		Com_sprintf(name, sizeof(name), "textures/%s_normal.png", texture);
+		R_LoadPNG(name, &pic, &width, &height);
+	}
+#endif
+
+	if(!pic)
+	{
+		Com_sprintf(name, sizeof(name), "textures/%s_normal.jpg", texture);
+		R_LoadJPG(name, &pic, &width, &height);
+	}
+
+	// No dice...
+	if(!pic)
+		return;
+
+	// Dimensions must match...
+	if(tex->image->width != width || tex->image->height != height)
+	{
+		VID_Printf(PRINT_ALL, "R_LoadNormalmap: '%s' normalmap dimensions (%i x %i) don't match '%s' texture dimensions (%i x %i)\n", name, texture, width, height, tex->image->width, tex->image->height);
+		return;
+	}
+
+	// Load nmap vectors...
+	const int numvectors = width * height;
+	tex->nmapvectors = malloc(sizeof(float) * 3 * numvectors);
+
+	int n = 0;
+	for (int i = 0; i < numvectors; i++)
+	{
+		for (int c = 0; c < 3; c++)
+			tex->nmapvectors[i * 3 + c] = roundf((pic[n++] * 0.0078125f - 1.0f) * 10) / 10; // Convert from [0..255] to [-1..1] range. 0.0078125f == 1 / 128
+		
+		n++; // Skip alpha value...
+	}
+
+	// Free the resource...
+	free(pic);
 }

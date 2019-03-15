@@ -673,6 +673,9 @@ void Mod_LoadTexinfo (lump_t *l)
 		out->glow = Mod_FindTexture(name, it_skin); // was R_FindImage
 		if (!out->glow)
 			out->glow = glMedia.notexture;
+
+		//mxd. Load normalmaps...
+		R_LoadNormalmap(in->texture, out);
 		
 		// Q2E HACK: find .wal dimensions for texture coord generation
 		// NOTE: Once Q3 map support is added, be sure to disable this
@@ -742,20 +745,19 @@ void CalcSurfaceExtents (msurface_t *s)
 		}
 	}
 
-	const int lmscale = 1 << gl_lms.lmshift; //mxd
-
 	for (int i = 0; i < 2; i++)
 	{	
-		const int bmins = floorf(mins[i] / lmscale); //mxd. 16 -> lmscale
-		const int bmaxs =  ceilf(maxs[i] / lmscale);
+		const int bmins = floorf(mins[i] / gl_lms.lmscale); //mxd. 16 -> lmscale
+		const int bmaxs =  ceilf(maxs[i] / gl_lms.lmscale);
 
-		s->texturemins[i] = bmins * lmscale;
-		s->extents[i] = (bmaxs - bmins) * lmscale;
+		s->texturemins[i] = bmins * gl_lms.lmscale;
+		s->extents[i] = (bmaxs - bmins) * gl_lms.lmscale;
 	}
 }
 
 void R_BuildPolygonFromSurface (msurface_t *fa);
 void R_CreateSurfaceLightmap (msurface_t *surf);
+void R_SetupLightmapPoints (msurface_t *surf); //mxd
 void R_EndBuildingLightmaps (void);
 void R_BeginBuildingLightmaps (model_t *m);
 
@@ -829,11 +831,9 @@ void Mod_LoadFaces (lump_t *l)
 		}
 
 	// create lightmaps and polygons
-		if (!(out->texinfo->flags & (SURF_SKY | SURF_WARP)))
-			R_CreateSurfaceLightmap(out);
-
-		if (!(out->texinfo->flags & SURF_WARP))
-			R_BuildPolygonFromSurface(out);
+		R_CreateSurfaceLightmap(out);
+		R_SetupLightmapPoints(out); //mxd
+		R_BuildPolygonFromSurface(out);
 	}
 
 	R_EndBuildingLightmaps();
@@ -1262,6 +1262,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		}
 	}
 	gl_lms.lmshift = lmshift;
+	gl_lms.lmscale = 1 << lmshift;
 
 	// load into heap
 	Mod_LoadVertexes(&header->lumps[LUMP_VERTEXES]);

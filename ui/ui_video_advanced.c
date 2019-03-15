@@ -39,14 +39,15 @@ ADVANCED VIDEO MENU
 =======================================================================
 */
 static menuframework_s	s_video_advanced_menu;
-static menuseparator_s	s_options_advanced_header;	
+static menuseparator_s	s_options_advanced_header;
 static menuslider_s		s_lightmapscale_slider;
 static menuslider_s		s_textureintensity_slider;
 static menulist_s  		s_rgbscale_box;
 static menulist_s  		s_trans_lighting_box;
 static menulist_s  		s_warp_lighting_box;
 static menuslider_s		s_lightcutoff_slider;
-static menulist_s		s_dlight_shadowmap_quality; //mxd
+static menulist_s		s_dlight_shadowmap_quality_slider; //mxd
+static menulist_s		s_dlight_normalmapping_box; //mxd
 static menulist_s  		s_solidalpha_box;
 static menulist_s  		s_texshader_warp_box;
 static menuslider_s  	s_waterwave_slider;
@@ -93,9 +94,12 @@ static void Video_Advanced_MenuSetValues ( void )
 	Cvar_SetValue("r_dlightshadowmapscale", ClampCvar(0, 5, Cvar_VariableValue("r_dlightshadowmapscale"))); //mxd
 	const int dlightshadowmapscale = Cvar_VariableValue("r_dlightshadowmapscale");
 	if (dlightshadowmapscale == 0)
-		s_dlight_shadowmap_quality.curvalue = 0;
+		s_dlight_shadowmap_quality_slider.curvalue = 0;
 	else
-		s_dlight_shadowmap_quality.curvalue = 6 - dlightshadowmapscale;
+		s_dlight_shadowmap_quality_slider.curvalue = 6 - dlightshadowmapscale;
+
+	Cvar_SetValue("r_dlightnormalmapping", ClampCvar(0, 1, Cvar_VariableValue("r_dlightnormalmapping"))); //mxd
+	s_dlight_normalmapping_box.curvalue = Cvar_VariableValue("r_dlightnormalmapping");
 
 	Cvar_SetValue( "r_glass_envmaps", ClampCvar( 0, 1, Cvar_VariableValue("r_glass_envmaps") ) );
 	s_glass_envmap_box.curvalue	= Cvar_VariableValue("r_glass_envmaps");
@@ -183,10 +187,15 @@ static void LightCutoffCallback( void *unused )
 
 static void DlightShadowmapScaleCallback( void *unused ) //mxd
 {
-	if(s_dlight_shadowmap_quality.curvalue == 0)
+	if(s_dlight_shadowmap_quality_slider.curvalue == 0)
 		Cvar_SetValue("r_dlightshadowmapscale", 0);
 	else
-		Cvar_SetValue("r_dlightshadowmapscale", 6 - s_dlight_shadowmap_quality.curvalue);
+		Cvar_SetValue("r_dlightshadowmapscale", 6 - s_dlight_shadowmap_quality_slider.curvalue);
+}
+
+static void DlightNormalmappingCallback( void *unused ) //mxd
+{
+	Cvar_SetValue("r_dlightnormalmapping", s_dlight_normalmapping_box.curvalue);
 }
 
 static void GlassEnvmapCallback ( void *unused )
@@ -428,13 +437,22 @@ void Menu_Video_Advanced_Init (void)
 	s_lightcutoff_slider.generic.statusbar	= "lower = smoother blend, higher = faster";
 
 	//mxd
-	s_dlight_shadowmap_quality.generic.type		 = MTYPE_SPINCONTROL;
-	s_dlight_shadowmap_quality.generic.x		 = 0;
-	s_dlight_shadowmap_quality.generic.y		 = y += MENU_LINE_SIZE;
-	s_dlight_shadowmap_quality.generic.name		 = "dynamic light shadowmap quality";
-	s_dlight_shadowmap_quality.generic.callback  = DlightShadowmapScaleCallback;
-	s_dlight_shadowmap_quality.itemnames		 = dlight_shadowmap_quality_names;
-	s_dlight_shadowmap_quality.generic.statusbar = "Dynamic light shadowmap quality. Depends on lightmap resolution.";
+	s_dlight_shadowmap_quality_slider.generic.type		= MTYPE_SPINCONTROL;
+	s_dlight_shadowmap_quality_slider.generic.x			= 0;
+	s_dlight_shadowmap_quality_slider.generic.y			= y += MENU_LINE_SIZE;
+	s_dlight_shadowmap_quality_slider.generic.name		= "dynamic light shadowmap quality";
+	s_dlight_shadowmap_quality_slider.generic.callback  = DlightShadowmapScaleCallback;
+	s_dlight_shadowmap_quality_slider.itemnames			= dlight_shadowmap_quality_names;
+	s_dlight_shadowmap_quality_slider.generic.statusbar = "Maximum quality depends on lightmap resolution.";
+
+	//mxd
+	s_dlight_normalmapping_box.generic.type		 = MTYPE_SPINCONTROL;
+	s_dlight_normalmapping_box.generic.x		 = 0;
+	s_dlight_normalmapping_box.generic.y		 = y += MENU_LINE_SIZE;
+	s_dlight_normalmapping_box.generic.name		 = "dynamic light normalmapping";
+	s_dlight_normalmapping_box.generic.callback  = DlightNormalmappingCallback;
+	s_dlight_normalmapping_box.itemnames		 = yesno_names;
+	s_dlight_normalmapping_box.generic.statusbar = "Requires maps built with per-pixel lightmap resolution and normalmap textures.";
 
 	s_glass_envmap_box.generic.type			= MTYPE_SPINCONTROL;
 	s_glass_envmap_box.generic.x			= 0;
@@ -588,7 +606,8 @@ void Menu_Video_Advanced_Init (void)
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_trans_lighting_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_warp_lighting_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_lightcutoff_slider );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_dlight_shadowmap_quality ); //mxd
+	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_dlight_shadowmap_quality_slider ); //mxd
+	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_dlight_normalmapping_box); //mxd
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_glass_envmap_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_solidalpha_box );
 	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_texshader_warp_box );

@@ -372,7 +372,7 @@ void R_DrawGLPoly (msurface_t *surf, qboolean render)
 			indexArray[rb_index++] = rb_vertex + i + 2;
 		}
 
-		for (int i = 0; i < nv; i++, v+= VERTEXSIZE)
+		for (int i = 0; i < nv; i++, v += VERTEXSIZE)
 		{
 			if (light && p->vertexlight && p->vertexlightset)
 				VA_SetElem4(colorArray[rb_vertex],
@@ -589,10 +589,7 @@ void R_BlendLightmaps (void)
 
 		for (msurface_t *surf = gl_lms.lightmap_surfaces[0]; surf != 0; surf = surf->lightmapchain)
 		{
-			const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
-			const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
-
-			if (LM_AllocBlock(smax, tmax, &surf->dlight_s, &surf->dlight_t))
+			if (LM_AllocBlock(surf->light_smax, surf->light_tmax, &surf->dlight_s, &surf->dlight_t))
 			{
 				unsigned *base = gl_lms.lightmap_buffer;
 				base += (surf->dlight_t * LM_BLOCK_WIDTH + surf->dlight_s);		// * LIGHTMAP_BYTES
@@ -620,8 +617,8 @@ void R_BlendLightmaps (void)
 				LM_InitBlock();
 
 				// try uploading the block now
-				if (!LM_AllocBlock(smax, tmax, &surf->dlight_s, &surf->dlight_t))
-					VID_Error(ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d,%d) failed (dynamic)\n", smax, tmax );
+				if (!LM_AllocBlock(surf->light_smax, surf->light_tmax, &surf->dlight_s, &surf->dlight_t))
+					VID_Error(ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d, %d) failed (dynamic)\n", surf->light_smax, surf->light_tmax);
 
 				unsigned *base = gl_lms.lightmap_buffer;
 				base += (surf->dlight_t * LM_BLOCK_WIDTH + surf->dlight_s);		// * LIGHTMAP_BYTES
@@ -678,19 +675,16 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		if ( (fa->styles[maps] >= 32 || fa->styles[maps] == 0) && fa->dlightframe != r_framecount )
 		{
-			const int smax = (fa->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
-			const int tmax = (fa->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+			unsigned *temp = malloc(fa->light_smax * fa->light_tmax); //mxd. Was 34 * 34
 
-			unsigned *temp = malloc(smax * tmax); //mxd. Was 34 * 34
-
-			R_BuildLightMap(fa, (void *)temp, smax * 4);
+			R_BuildLightMap(fa, (void *)temp, fa->light_smax * 4);
 			R_SetCacheState(fa);
 
 			GL_Bind(glState.lightmap_textures + fa->lightmaptexturenum);
 
 			qglTexSubImage2D( GL_TEXTURE_2D, 0,
 							  fa->light_s, fa->light_t, 
-							  smax, tmax, 
+							  fa->light_smax, fa->light_tmax,
 			//				  GL_LIGHTMAP_FORMAT, GL_UNSIGNED_BYTE,
 							  gl_lms.format, gl_lms.type,
 							  temp);
@@ -1091,7 +1085,7 @@ static void RB_DrawTexGlow (image_t *glowImage)
 	GL_BlendFunc(GL_ONE, GL_ONE);
 
 	if (!glState.blend)
-		GL_Enable (GL_BLEND);
+		GL_Enable(GL_BLEND);
 	else
 		previousBlend = true;
 
@@ -1197,7 +1191,7 @@ static void RB_RenderLightmappedSurface (msurface_t *surf)
 	image_t *image = R_TextureAnimation(surf);
 	image_t *glow = R_TextureAnimationGlow(surf);
 	const float	alpha = colorArray[0][3];
-	unsigned lmtex = surf->lightmaptexturenum;
+	const unsigned lmtex = surf->lightmaptexturenum;
 
 	const qboolean glowLayer = (r_glows->value && (glow != glMedia.notexture) && glConfig.max_texunits > 2);
 	const qboolean glowPass =  (r_glows->value && (glow != glMedia.notexture) && !glowLayer);
@@ -2240,10 +2234,12 @@ R_BuildPolygonFromSurface
 */
 void R_BuildPolygonFromSurface (msurface_t *fa)
 {
+	if (fa->texinfo->flags & SURF_WARP) //mxd
+		return;
+	
 	// reconstruct the polygon
 	medge_t *pedges = currentmodel->edges;
 	const int lnumverts = fa->numedges;
-	const int lmscale = (1 << gl_lms.lmshift); //mxd
 
 	//
 	// draw texture
@@ -2304,17 +2300,17 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 		//
 		s = DotProduct(vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
 		s -= fa->texturemins[0];
-		s += fa->light_s * lmscale; //mxd. 16 -> lmscale
-		if(lmscale > 1) //mxd. Don't add half-pixel offset when using per-pixel lightmaps
-			s += lmscale * 0.5f; //mxd. Was 8
-		s /= LM_BLOCK_WIDTH * lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->width;
+		s += fa->light_s * gl_lms.lmscale; //mxd. 16 -> lmscale
+		if(gl_lms.lmscale > 1) //mxd. Don't add half-pixel offset when using per-pixel lightmaps
+			s += gl_lms.lmscale * 0.5f; //mxd. Was 8
+		s /= LM_BLOCK_WIDTH * gl_lms.lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->width;
 
 		t = DotProduct(vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
 		t -= fa->texturemins[1];
-		t += fa->light_t * lmscale; //mxd. 16 -> lmscale
-		if (lmscale > 1) //mxd. Don't add half-pixel offset when using per-pixel lightmaps
-			t += lmscale * 0.5f; //mxd. Was 8
-		t /= LM_BLOCK_HEIGHT * lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->height;
+		t += fa->light_t * gl_lms.lmscale; //mxd. 16 -> lmscale
+		if (gl_lms.lmscale > 1) //mxd. Don't add half-pixel offset when using per-pixel lightmaps
+			t += gl_lms.lmscale * 0.5f; //mxd. Was 8
+		t /= LM_BLOCK_HEIGHT * gl_lms.lmscale; //mxd. 16 -> lmscale //fa->texinfo->texture->height;
 
 		poly->verts[i][5] = s;
 		poly->verts[i][6] = t;
@@ -2322,6 +2318,116 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 	VectorScale(total, 1.0 / (float)lnumverts, poly->center); // for vertex lighting
 
 	poly->numverts = lnumverts;
+}
+
+
+/*
+========================
+R_SetupLightmapPoints (mxd)
+========================
+*/
+static int fix_coord(int in, const int width)
+{
+	in %= width;
+	return (in < 0 ? in + width : in);
+}
+
+void R_SetupLightmapPoints(msurface_t *surf)
+{
+	// Setup world matrix
+	vec3_t facenormal;
+	VectorCopy(surf->plane->normal, facenormal);
+	float facedist = -surf->plane->dist;
+
+	if (surf->flags & SURF_PLANEBACK)
+	{
+		VectorScale(facenormal, -1, facenormal);
+		facedist *= -1;
+	}
+
+	mtexinfo_t *tex = surf->texinfo;
+	float texSpaceToWorld[16] = 
+	{
+		tex->vecs[0][0], tex->vecs[1][0], facenormal[0], 0,
+		tex->vecs[0][1], tex->vecs[1][1], facenormal[1], 0,
+		tex->vecs[0][2], tex->vecs[1][2], facenormal[2], 0,
+		tex->vecs[0][3], tex->vecs[1][3], facedist, 1
+	};
+
+	Matrix4Invert(texSpaceToWorld);
+
+	// Setup tanget-bitanget-normal matrix...
+	const qboolean calculatenormalmap = (gl_lms.lmscale == 1 && tex->nmapvectors);
+	float tbn[9] =
+	{
+		tex->vecs[0][0], tex->vecs[0][1], tex->vecs[0][2], // snormal
+		tex->vecs[1][0], tex->vecs[1][1], tex->vecs[1][2], // tnormal
+		facenormal[0], facenormal[1], facenormal[2] // face normal
+	};
+
+	// Calculate lightmap/normalmap points
+	const int smscale = (int)pow(2, clamp(r_dlightshadowmapscale->integer, 0, 5) - 1); // Convert [0, 1, 2, 3, 4, 5] to [0, 1, 2, 4, 8, 16]
+	const float dlscale = max(gl_lms.lmscale, smscale); // Can't have dynamic light scaled lower than lightmap scale
+
+	const int lmapsize = surf->light_smax * surf->light_tmax;
+	const int pointssize = sizeof(float) * 3 * lmapsize;
+
+	surf->lightmap_points = malloc(pointssize);
+	surf->normalmap_normals = (calculatenormalmap ? malloc(pointssize) : NULL);
+
+	float *lightmap_point = surf->lightmap_points;
+	float *normalmap_point = surf->normalmap_normals;
+
+	for (int t = 0; t < surf->light_tmax; t++)
+	{
+		for (int s = 0; s < surf->light_smax; s++, lightmap_point += 3)
+		{
+			const int ss = surf->texturemins[0] + s * gl_lms.lmscale;
+			const int st = surf->texturemins[1] + t * gl_lms.lmscale;
+
+			float texpos[4] = { ss, st, 1.0f, 1.0f }; // One "unit" in front of surface
+
+			// Offset first/last columns and rows towards the center, so texpos isn't at the surface edge
+			if (gl_lms.lmscale > 1)
+			{
+				if (s == 0)
+					texpos[0] += gl_lms.lmscale * 0.25f;
+				else if (s == surf->light_smax - 1)
+					texpos[0] -= gl_lms.lmscale * 0.25f;
+
+				if (t == 0)
+					texpos[1] += gl_lms.lmscale * 0.25f;
+				else if (t == surf->light_tmax - 1)
+					texpos[1] -= gl_lms.lmscale * 0.25f;
+			}
+			else // lmscale == 1
+			{
+				// Pixel shift, so texpos is at the center of r_dlightshadowmapscale x r_dlightshadowmapscale lightmap texels
+				// (special handling because of special handling in R_BuildPolygonFromSurface)
+				texpos[0] += dlscale * 0.5f; //TODO: this needs to be updated when r_dlightshadowmapscale is changed
+				texpos[1] += dlscale * 0.5f;
+			}
+
+			// Store world position
+			float worldpos4[4];
+			Matrix4Multiply(texSpaceToWorld, texpos, worldpos4);
+			VectorSet(lightmap_point, worldpos4[0], worldpos4[1], worldpos4[2]);
+
+			// Store normalmap position?
+			if(calculatenormalmap)
+			{
+				const int x = fix_coord(ss, tex->image->width);
+				const int y = fix_coord(st, tex->image->height);
+
+				float *normal = &tex->nmapvectors[((tex->image->width * y) + x) * 3];
+
+				Matrix3Multiply(tbn, normal, normalmap_point);
+				VectorNormalize(normalmap_point);
+
+				normalmap_point += 3;
+			}
+		}
+	}
 }
 
 
@@ -2339,22 +2445,19 @@ void R_CreateSurfaceLightmap (msurface_t *surf)
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		return;
 
-	const int smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
-	const int tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+	// Store extents
+	surf->light_smax = (surf->extents[0] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
+	surf->light_tmax = (surf->extents[1] >> gl_lms.lmshift) + 1; //mxd. 4 -> lmshift
 
-	if (!LM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
+	if (!LM_AllocBlock(surf->light_smax, surf->light_tmax, &surf->light_s, &surf->light_t))
 	{
 		LM_UploadBlock(false);
 		LM_InitBlock();
-		if (!LM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
-			VID_Error(ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d, %d) failed\n", smax, tmax);
+		if (!LM_AllocBlock(surf->light_smax, surf->light_tmax, &surf->light_s, &surf->light_t))
+			VID_Error(ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d, %d) failed\n", surf->light_smax, surf->light_tmax);
 	}
 
 	surf->lightmaptexturenum = gl_lms.current_lightmap_texture;
-
-	// copy extents
-	surf->light_smax = smax;
-	surf->light_tmax = tmax;
 
 	unsigned *base;
 #ifdef BATCH_LM_UPDATES

@@ -354,6 +354,11 @@ void VectorScale (vec3_t in, vec_t scale, vec3_t out);
 int Q_log2(int val);
 float Q_rsqrt (float in);	// From Q2E
 
+//mxd. Matrix ops
+void Matrix4Invert(float m[16]);
+void Matrix4Multiply(const float m[16], const float v[4], float result[4]);
+void Matrix3Multiply(const float m[9], const float v[3], float result[3]);
+
 // From Q2E
 void VectorRotate (const vec3_t v, const vec3_t matrix[3], vec3_t out);
 void AnglesToAxis (const vec3_t angles, vec3_t axis[3]);

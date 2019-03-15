@@ -670,7 +670,7 @@ vec_t VectorNormalize (vec3_t v)
 		const float ilength = 1 / length;
 		VectorScale(v, ilength, v);
 	}
-		
+
 	return length;
 }
 
@@ -769,11 +769,93 @@ void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 
 /*
 =================
+VectorRotate
+From Q2E
+=================
+*/
+void VectorRotate(const vec3_t v, const vec3_t matrix[3], vec3_t out)
+{
+	for (int c = 0; c < 3; c++)
+		out[c] = v[0] * matrix[c][0] + v[1] * matrix[c][1] + v[2] * matrix[c][2];
+}
+
+
+/*
+=================
+Matrix operations (mxd)
+=================
+*/
+void Matrix4Invert(float m[16])
+{
+	float inv[16];
+
+	inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
+		+ m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+	inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
+		- m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+	inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
+		+ m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+	inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
+		- m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+	inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
+		- m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+	inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
+		+ m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+	inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
+		- m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+	inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
+		+ m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+	inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
+		+ m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+	inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
+		- m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+	inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
+		+ m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+	inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
+		- m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+	inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
+		- m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+	inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
+		+ m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+	inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
+		- m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+	inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
+		+ m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+	double det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+	if (det == 0)
+		return;
+
+	det = 1.0f / det;
+
+	for (int i = 0; i < 16; i++)
+		m[i] = inv[i] * det;
+}
+
+void Matrix4Multiply(const float m[16], const float v[4], float result[4])
+{
+	memset(result, 0, sizeof(result[0]) * 4);
+	for (int i = 0; i < 4; i++) // for each row
+		for (int j = 0; j < 4; j++) // for each col
+			result[i] += m[j * 4 + i] * v[j];
+}
+
+void Matrix3Multiply(const float m[9], const float v[3], float result[3])
+{
+	memset(result, 0, sizeof(result[0]) * 3);
+	for (int i = 0; i < 3; i++) // for each row
+		for (int j = 0; j < 3; j++) // for each col
+			result[i] += m[j * 3 + i] * v[j];
+}
+
+
+/*
+=================
 Q_rsqrt
 From Q2E
 =================
 */
-float Q_rsqrt (float in)
+float Q_rsqrt(float in)
 {
 	const float x = in * 0.5f;
 	int i = *(int *)&in;
@@ -791,18 +873,6 @@ int Q_log2(int val)
 		answer++;
 
 	return answer;
-}
-
-/*
-=================
-VectorRotate
-From Q2E
-=================
-*/
-void VectorRotate(const vec3_t v, const vec3_t matrix[3], vec3_t out)
-{
-	for (int c = 0; c < 3; c++)
-		out[c] = v[0] * matrix[c][0] + v[1] * matrix[c][1] + v[2] * matrix[c][2];
 }
 
 /*

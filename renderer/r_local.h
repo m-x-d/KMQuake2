@@ -268,6 +268,8 @@ extern	cvar_t	*r_ext_texture_compression; // Heffo - ARB Texture Compression
 extern	cvar_t	*r_lightcutoff;	//** DMP - allow dynamic light cutoff to be user-settable
 
 extern	cvar_t	*r_dlightshadowmapscale; //mxd
+extern	cvar_t	*r_dlightshadowrange; //mxd
+extern	cvar_t	*r_dlightnormalmapping; //mxd
 
 extern	cvar_t	*r_screenshot_format;		// determines screenshot format
 //extern	cvar_t	*r_screenshot_jpeg;			// Heffo - JPEG Screenshots
@@ -414,6 +416,7 @@ typedef struct
 	int			type;
 	int			current_lightmap_texture;
 	int			lmshift; //mxd
+	int			lmscale; //mxd
 
 	msurface_t	*lightmap_surfaces[MAX_LIGHTMAPS];
 
@@ -655,6 +658,7 @@ void R_InitFailedImgList();
 void R_InitImages();
 void R_ShutdownImages();
 void R_FreeUnusedImages();
+void R_LoadNormalmap(const char *texture, mtexinfo_t *tex); //mxd
 void GL_TextureAlphaMode(char *string);
 void GL_TextureSolidMode(char *string);
 
