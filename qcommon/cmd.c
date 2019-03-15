@@ -934,7 +934,7 @@ FIXME: lookupnoadd the token to speed search?
 */
 void Cmd_ExecuteString (char *text)
 {
-	Cmd_TokenizeString (text, true);
+	Cmd_TokenizeString(text, true);
 			
 	// execute the command line
 	if (!Cmd_Argc())
@@ -943,12 +943,12 @@ void Cmd_ExecuteString (char *text)
 	// check functions
 	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
 	{
-		if (!Q_strcasecmp (cmd_argv[0],cmd->name))
+		if (!Q_strcasecmp(cmd_argv[0], cmd->name))
 		{
 			if (!cmd->function)
-				Cmd_ExecuteString (va("cmd %s", text)); // forward to server command
+				Cmd_ExecuteString(va("cmd %s", text)); // forward to server command
 			else
-				cmd->function ();
+				cmd->function();
 
 			return;
 		}
@@ -957,7 +957,7 @@ void Cmd_ExecuteString (char *text)
 	// check alias
 	for (cmdalias_t *a = cmd_alias; a; a = a->next)
 	{
-		if (!Q_strcasecmp (cmd_argv[0], a->name))
+		if (!Q_strcasecmp(cmd_argv[0], a->name))
 		{
 			if (++alias_count == ALIAS_LOOP_COUNT)
 			{
@@ -965,17 +965,17 @@ void Cmd_ExecuteString (char *text)
 				return;
 			}
 
-			Cbuf_InsertText (a->value);
+			Cbuf_InsertText(a->value);
 			return;
 		}
 	}
 	
 	// check cvars
-	if (Cvar_Command ())
+	if (Cvar_Command())
 		return;
 
 	// send it as a server command if we are connected
-	Cmd_ForwardToServer ();
+	Cmd_ForwardToServer();
 }
 
 /*
@@ -1001,10 +1001,10 @@ void Cmd_Init (void)
 //
 // register our commands
 //
-	Cmd_AddCommand ("cmdlist",Cmd_List_f);
-	Cmd_AddCommand ("exec",Cmd_Exec_f);
-	Cmd_AddCommand ("echo",Cmd_Echo_f);
-	Cmd_AddCommand ("alias",Cmd_Alias_f);
-	Cmd_AddCommand ("wait", Cmd_Wait_f);
+	Cmd_AddCommand("cmdlist", Cmd_List_f);
+	Cmd_AddCommand("exec", Cmd_Exec_f);
+	Cmd_AddCommand("echo", Cmd_Echo_f);
+	Cmd_AddCommand("alias", Cmd_Alias_f);
+	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
 

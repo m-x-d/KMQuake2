@@ -264,7 +264,7 @@ static void R_RecursiveMarkFragments (const vec3_t origin, const vec3_t normal, 
 		if (surf->checkCount == cm_markCheckCount)
 			continue; // Already checked this surface in another node
 
-		if (surf->texinfo->flags & (SURF_SKY|SURF_WARP))
+		if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 			continue;
 
 		surf->checkCount = cm_markCheckCount;

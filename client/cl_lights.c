@@ -180,16 +180,16 @@ cdlight_t *CL_AllocDlight (int key)
 
 /*
 ===============
-CL_NewDlight
+CL_NewDlight //mxd. Never used
 ===============
 */
-void CL_NewDlight (int key, float x, float y, float z, float radius, float time)
+/*void CL_NewDlight (int key, float x, float y, float z, float radius, float time)
 {
 	cdlight_t *dl = CL_AllocDlight(key);
 	VectorSet(dl->origin, x, y, z);
 	dl->radius = radius;
 	dl->die = cl.time + time;
-}
+}*/
 
 
 /*

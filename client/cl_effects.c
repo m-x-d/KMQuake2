@@ -2946,8 +2946,8 @@ CL_ColorFlash - flash of light
 */
 void CL_ColorFlash (vec3_t pos, int ent, int intensity, float r, float g, float b)
 {
-	cdlight_t *dl = CL_AllocDlight (ent);
-	VectorCopy(pos,  dl->origin);
+	cdlight_t *dl = CL_AllocDlight(ent);
+	VectorCopy(pos, dl->origin);
 	dl->radius = intensity;
 	dl->minlight = 250;
 	dl->die = cl.time + 100;
