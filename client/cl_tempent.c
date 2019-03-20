@@ -825,7 +825,7 @@ void CL_ParseTEnt (void)
 			// Impact sound
 			const int cnt = rand() & 15;
 			if (cnt > 0 && cnt < 4) //mxd
-				S_StartSound(pos, 0, 0, clMedia.sfx_ric[cnt], 1, ATTN_NORM, 0);
+				S_StartSound(pos, 0, 0, clMedia.sfx_ric[cnt - 1], 1, ATTN_NORM, 0);
 		}
 	}
 	break;
