@@ -317,6 +317,7 @@ extern long Q_ftol( float f );
 #define VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
 #define VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))
 #define VectorSetAll(v, x)		(v[0]=(x), v[1]=(x), v[2]=(x)) //mxd
+#define VectorLengthSquared(v)	(v[0]*v[0]+v[1]*v[1]+v[2]*v[2])//mxd
 
 #define Vector2Subtract(a,b,c)		(c[0]=a[0]-b[0],c[1]=a[1]-b[1])
 #define Vector2Add(a,b,c)			(c[0]=a[0]+b[0],c[1]=a[1]+b[1])
@@ -344,7 +345,6 @@ void ClearBounds (vec3_t mins, vec3_t maxs);
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
 int VectorCompare (vec3_t v1, vec3_t v2);
 vec_t VectorLength (vec3_t v);
-vec_t VectorLengthSquared(vec3_t v); //mxd
 void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross);
 vec_t VectorNormalize (vec3_t v);		// returns vector length
 vec_t VectorNormalize2 (vec3_t v, vec3_t out);

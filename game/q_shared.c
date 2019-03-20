@@ -745,16 +745,6 @@ vec_t VectorLength(vec3_t v)
 	return sqrtf(length); // FIXME
 }
 
-//mxd
-vec_t VectorLengthSquared(vec3_t v)
-{
-	float length = 0;
-	for (int i = 0; i < 3; i++)
-		length += v[i] * v[i];
-
-	return length;
-}
-
 void VectorInverse(vec3_t v)
 {
 	for (int c = 0; c < 3; c++)
