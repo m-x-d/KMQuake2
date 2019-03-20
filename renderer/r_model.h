@@ -137,8 +137,8 @@ typedef struct msurface_s
 	int			light_smax, light_tmax;
 	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
-	float		*lightmap_points; //mxd. Centers of lightmap texels, in world space, size is light_smax * light_tmax
-	float		*normalmap_normals; //mxd. Normalmap vectors, relative to surface normal, used only when lmscale is 1
+	vec3_t		*lightmap_points; //mxd. Centers of lightmap texels, in world space, size is light_smax * light_tmax
+	vec3_t		*normalmap_normals; //mxd. Normalmap vectors, relative to surface normal, used only when lmscale is 1
 
 	glpoly_t	*polys;				// multiple if warped
 	struct	msurface_s	*texturechain;

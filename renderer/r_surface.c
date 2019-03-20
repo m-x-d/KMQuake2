@@ -2375,12 +2375,13 @@ void R_SetupLightmapPoints(msurface_t *surf)
 	surf->lightmap_points = malloc(pointssize);
 	surf->normalmap_normals = (calculatenormalmap ? malloc(pointssize) : NULL);
 
-	float *lightmap_point = surf->lightmap_points;
-	float *normalmap_point = surf->normalmap_normals;
+	vec3_t *lightmap_points = surf->lightmap_points;
+	vec3_t *normalmap_points = surf->normalmap_normals;
 
+	int index = 0;
 	for (int t = 0; t < surf->light_tmax; t++)
 	{
-		for (int s = 0; s < surf->light_smax; s++, lightmap_point += 3)
+		for (int s = 0; s < surf->light_smax; s++, index++)
 		{
 			const int ss = surf->texturemins[0] + s * gl_lms.lmscale;
 			const int st = surf->texturemins[1] + t * gl_lms.lmscale;
@@ -2411,7 +2412,7 @@ void R_SetupLightmapPoints(msurface_t *surf)
 			// Store world position
 			float worldpos4[4];
 			Matrix4Multiply(texSpaceToWorld, texpos, worldpos4);
-			VectorSet(lightmap_point, worldpos4[0], worldpos4[1], worldpos4[2]);
+			VectorSet(lightmap_points[index], worldpos4[0], worldpos4[1], worldpos4[2]);
 
 			// Store normalmap position?
 			if(calculatenormalmap)
@@ -2421,10 +2422,8 @@ void R_SetupLightmapPoints(msurface_t *surf)
 
 				float *normal = &tex->nmapvectors[((tex->image->width * y) + x) * 3];
 
-				Matrix3Multiply(tbn, normal, normalmap_point);
-				VectorNormalize(normalmap_point);
-
-				normalmap_point += 3;
+				Matrix3Multiply(tbn, normal, normalmap_points[index]);
+				VectorNormalize(normalmap_points[index]);
 			}
 		}
 	}

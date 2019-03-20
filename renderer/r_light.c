@@ -619,7 +619,7 @@ void R_AddDynamicLights (msurface_t *surf)
 {
 	static byte s_castedrays[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT]; //mxd. 0 - not yet cast, 1 - not blocked, 2 - blocked
 	
-	vec3_t		impact, local, dlorigin, entOrigin, entAngles;
+	vec3_t		dlorigin, entOrigin, entAngles;
 	qboolean	rotated = false;
 	vec3_t		forward, right, up;
 	mtexinfo_t	*tex = surf->texinfo;
@@ -678,8 +678,6 @@ void R_AddDynamicLights (msurface_t *surf)
 		if (dl->spotlight) //spotlights
 			continue;
 
-		float frad = dl->intensity;
-
 		VectorCopy(dl->origin, dlorigin);
 		VectorSubtract(dlorigin, entOrigin, dlorigin);
 
@@ -692,80 +690,66 @@ void R_AddDynamicLights (msurface_t *surf)
 			dlorigin[2] = DotProduct(temp, up);
 		}
 
-		float fdist = DotProduct(dlorigin, surf->plane->normal) - surf->plane->dist;
-		frad -= fabsf(fdist);
-		// rad is now the highest intensity on the plane
-
-		float fminlight = r_lightcutoff->value; 	//** DMP var dynalight cutoff
-		if (frad < fminlight)
-			continue;
-
-		fminlight = frad - fminlight;
-
-		for (int i = 0; i < 3; i++)
-			impact[i] = dlorigin[i] - surf->plane->normal[i] * fdist;
-
-		local[0] = DotProduct(impact, tex->vecs[0]) + tex->vecs[0][3] - surf->texturemins[0];
-		local[1] = DotProduct(impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
-
 		//mxd. Skip shadowcasting when a light is too far away from camera...
 		if (castshadows)
 		{
 			vec3_t v;
 			VectorSubtract(dlorigin, r_origin, v);
-			const float distsq = VectorLengthSquared(v);
+			const float dist_sq = VectorLengthSquared(v);
 
-			castshadows = (distsq < r_dlightshadowrange->integer * r_dlightshadowrange->integer);
+			castshadows = (dist_sq < r_dlightshadowrange->integer * r_dlightshadowrange->integer);
 
 			if (castshadows && numrays > 0)
 				memset(s_castedrays, 0, numrays);
 		}
 
+		//mxd. Get distance from the surface plane...
+		float dl_planedist_sq = DotProduct(dlorigin, surf->plane->normal) - surf->plane->dist;
+		dl_planedist_sq *= dl_planedist_sq;
+
+		const float dl_intensity_sq = dl->intensity * dl->intensity;
+		const float dl_intensity_inv_sq = (1.0f / dl_intensity_sq) * 255.0f;
+
+		const float dl_minlight_sq = r_lightcutoff->value * r_lightcutoff->value; //** DMP var dynalight cutoff
+		if (dl_intensity_sq < dl_minlight_sq || dl_planedist_sq > dl_intensity_sq)
+			continue;
+
+		// Setup pointers
 		float *pfBL = s_blocklights;
-		float *lightmap_point = surf->lightmap_points; //mxd
-		float *normalmap_normal = surf->normalmap_normals; //mxd
+		vec3_t *lightmap_point = surf->lightmap_points; //mxd
+		vec3_t *normalmap_normal = surf->normalmap_normals; //mxd
 
-		for (int t = 0; t < surf->light_tmax; t++)
+		const int smax = surf->light_smax;
+		const int tmax = (skiplastrowandcolumn ? surf->light_tmax - 1 : surf->light_tmax);
+		int index = 0;
+
+		for (int t = 0; t < tmax; t++)
 		{
-			//mxd
-			if (skiplastrowandcolumn && t == surf->light_tmax - 1)
-				break;
-			
-			int td = local[1] - t * gl_lms.lmscale;
-			if (td < 0)
-				td = -td;
-
-			for (int s = 0; s < surf->light_smax; s++, pfBL += 3, lightmap_point += 3)
+			for (int s = 0; s < smax; s++, index++)
 			{
 				//mxd
-				if (skiplastrowandcolumn && s == surf->light_smax - 1)
+				if (skiplastrowandcolumn && s == smax - 1)
 				{
-					pfBL += 3;
-					lightmap_point += 3;
-					if (normalmap_normal)
-						normalmap_normal += 3;
+					index++;
 					break;
 				}
-				
-				int sd = local[0] - s * gl_lms.lmscale; //mxd. Was Q_ftol(local[0] - fsacc); Why Q_ftol?
 
-				if (sd < 0)
-					sd = -sd;
+				//mxd. Check distance between light and lightmap coord
+				vec3_t v;
+				VectorSubtract(dlorigin, lightmap_point[index], v);
+				const float dist_sq = VectorLengthSquared(v);
 
-				if (sd > td)
-					fdist = sd + (td >> 1);
-				else
-					fdist = td + (sd >> 1);
-
-				if (fdist < fminlight)
+				if (dist_sq < dl_intensity_sq)
 				{
+					float light_scaler = (dl_intensity_sq - dist_sq) * dl_intensity_inv_sq;
+					
 					//mxd. Software-based shadowmapping... Kills performance when both lmscale and r_dlightshadowmapscale is 1...
 					qboolean isshaded = false;
 					if (castshadows)
 					{
 						if (numrays > 0) // 1 ray per r_dlightshadowmapscale x r_dlightshadowmapscale texels
 						{
-							const int rayindex = (int)(t * dlscaler) * (int)ceilf(surf->light_smax * dlscaler) + (int)(s * dlscaler);
+							const int rayindex = (int)(t * dlscaler) * (int)ceilf(smax * dlscaler) + (int)(s * dlscaler);
 							byte *castedray = &s_castedrays[rayindex];
 
 							if (*castedray == 2) // 2 - blocked
@@ -774,39 +758,38 @@ void R_AddDynamicLights (msurface_t *surf)
 							}
 							else if (*castedray == 0) // 0 - not yet cast
 							{
-								const trace_t tr = CM_BoxTrace(dlorigin, lightmap_point, vec3_origin, vec3_origin, 0, CONTENTS_SOLID);
+								const trace_t tr = CM_BoxTrace(dlorigin, lightmap_point[index], vec3_origin, vec3_origin, 0, CONTENTS_SOLID);
 								*castedray = (tr.fraction < 1.0f ? 2 : 1);
 								isshaded = (tr.fraction < 1.0f);
 							}
 						}
 						else
 						{
-							const trace_t tr = CM_BoxTrace(dlorigin, lightmap_point, vec3_origin, vec3_origin, 0, CONTENTS_SOLID);
+							const trace_t tr = CM_BoxTrace(dlorigin, lightmap_point[index], vec3_origin, vec3_origin, 0, CONTENTS_SOLID);
 							isshaded = (tr.fraction < 1.0f);
 						}
 					}
 
 					//mxd. Apply normalmapping?
-					float nmapscaler = 1.0f;
 					if(!isshaded && r_dlightnormalmapping->integer && normalmap_normal)
 					{
 						// Calculate direction from texel to light
 						vec3_t lightdir;
-						VectorSubtract(dlorigin, lightmap_point, lightdir);
+						VectorSubtract(dlorigin, lightmap_point[index], lightdir);
 						VectorNormalizeFast(lightdir);
 
-						nmapscaler = DotProduct(lightdir, normalmap_normal);
-						isshaded = (nmapscaler <= 0);
+						const float nmapscaler = DotProduct(lightdir, normalmap_normal[index]);
+
+						if (nmapscaler > 0)
+							light_scaler *= nmapscaler;
+						else
+							isshaded = true;
 					}
 
 					if(!isshaded)
 						for (int c = 0; c < 3; c++)
-							pfBL[c] += (frad - fdist) * (dl->color[c] * nmapscaler);
+							pfBL[index * 3 + c] += dl->color[c] * light_scaler;
 				}
-
-				//mxd
-				if (normalmap_normal)
-					normalmap_normal += 3;
 			}
 		}
 	}
@@ -839,137 +822,172 @@ Combine and scale multiple lightmaps into the floating format in blocklights
 */
 void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 {
-	int			r, g, b, a, max;
-	float		scale[4];
-	int			nummaps;
-	float		*bl;
-
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		VID_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
 
-	const int size = surf->light_smax * surf->light_tmax;
-
+	int size = surf->light_smax * surf->light_tmax;
+	
 	// FIXME- can this limit be directly increased?		Yep - Knightmare
 	if (size > sizeof(s_blocklights) >> gl_lms.lmshift) //mxd. 4 -> lmshift
 		VID_Error(ERR_DROP, "Bad s_blocklights size: %d", size);
 
-	// set to full bright if no light data
-	if (!surf->samples)
+	qboolean copysamples = false; //mxd
+	size *= 3; //mxd
+
+	if (surf->samples)
 	{
-		for (int i = 0; i < size * 3; i++)
-			s_blocklights[i] = 255;
+		// Count the # of maps
+		int nummaps = 0;
+		while (nummaps < MAXLIGHTMAPS && surf->styles[nummaps] != 255)
+			nummaps++;
 
-		goto store;
-	}
+		float scale[3];
+		byte *lightmap = surf->samples;
 
-	// count the # of maps
-	for (nummaps = 0; nummaps < MAXLIGHTMAPS && surf->styles[nummaps] != 255; nummaps++)
-		;
-
-	byte *lightmap = surf->samples;
-
-	// add all the lightmaps
-	if(nummaps != 1) //mxd
-		memset(s_blocklights, 0, sizeof(s_blocklights[0]) * size * 3);
-
-	for (int maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
-	{
-		bl = s_blocklights;
-
-		for (int i = 0; i < 3; i++)
-			scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
-
-		for (int i = 0; i < size; i++, bl += 3) //mxd
+		// Add all the lightmaps
+		if (nummaps == 1)
 		{
-			if (nummaps == 1)
-				VectorClear(bl);
-			
-			for (int c = 0; c < 3; c++)
-				bl[c] += lightmap[i * 3 + c] * scale[c];
+			// Single lightstyle...
+			for (int i = 0; i < 3; i++)
+				scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[0]].rgb[i];
+
+			if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f)
+			{
+				copysamples = (surf->dlightframe != r_framecount); //mxd
+				if (!copysamples) //mxd. Skip if surf->samples can be copied directly to dest... 
+					for (int i = 0; i < size; i++)
+						s_blocklights[i] = lightmap[i];
+			}
+			else
+			{
+				for (int i = 0; i < size; i += 3)
+					for (int c = 0; c < 3; c++)
+						s_blocklights[i + c] = lightmap[i + c] * scale[c];
+			}
+		}
+		else
+		{
+			// Multiple lightstyles...
+			memset(s_blocklights, 0, sizeof(s_blocklights[0]) * size);
+
+			for (int maps = 0; maps < nummaps; maps++)
+			{
+				for (int i = 0; i < 3; i++)
+					scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+
+				if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f)
+				{
+					for (int i = 0; i < size; i ++)
+						s_blocklights[i] += lightmap[i];
+				}
+				else
+				{
+					for (int i = 0; i < size; i += 3)
+						for (int c = 0; c < 3; c++)
+							s_blocklights[i + c] += lightmap[i + c] * scale[c];
+				}
+
+				lightmap += size; // skip to next lightmap
+			}
 		}
 
-		lightmap += size * 3; // skip to next lightmap
+		// Add all the dynamic lights
+		if (surf->dlightframe == r_framecount)
+			R_AddDynamicLights(surf);
+	}
+	else
+	{
+		// Set to full bright if no light data
+		memset(s_blocklights, 255, sizeof(s_blocklights[0]) * size); //mxd
 	}
 
-	// add all the dynamic lights
-	if (surf->dlightframe == r_framecount)
-		R_AddDynamicLights(surf);
-
-	// put into texture format
-store:
+	// Put into texture format
 	stride -= surf->light_smax << 2;
-	bl = s_blocklights;
+	float *bl = s_blocklights;
 
 	const int monolightmap = r_monolightmap->string[0]; //mxd. //TODO: get rid of this. Nobody cares about PowerVR anymore
 
-	if ( monolightmap == '0' )
+	if (monolightmap == '0')
 	{
-		for (int i = 0; i < surf->light_tmax; i++, dest += stride)
+		int li = 0; //mxd. lightmap index
+		int di = 0; //mxd. dest index
+
+		if(copysamples) //mxd. Copy surf->samples to dest
 		{
-			for (int j = 0; j < surf->light_smax; j++)
+			byte *lightmap = surf->samples;
+
+			for (int i = 0; i < surf->light_tmax; i++, di += stride)
 			{
-				
-				r = Q_ftol( bl[0] );
-				g = Q_ftol( bl[1] );
-				b = Q_ftol( bl[2] );
+				for (int j = 0; j < surf->light_smax; j++, li += 3, di += 4)
+				{
+					if (gl_lms.format == GL_BGRA)
+					{
+						dest[di + 0] = lightmap[li + 2]; //b
+						dest[di + 1] = lightmap[li + 1]; //g
+						dest[di + 2] = lightmap[li + 0]; //r
+					}
+					else
+					{
+						dest[di + 0] = lightmap[li + 0]; //r
+						dest[di + 1] = lightmap[li + 1]; //g
+						dest[di + 2] = lightmap[li + 2]; //b
+					}
 
-				// catch negative lights
-				if (r < 0)
-					r = 0;
-				if (g < 0)
-					g = 0;
-				if (b < 0)
-					b = 0;
+					dest[di + 3] = 255; //a
+				}
+			}
 
-				//
-				// determine the brightest of the three color components
-				//
+			return;
+		}
+
+		for (int i = 0; i < surf->light_tmax; i++, di += stride)
+		{
+			for (int j = 0; j < surf->light_smax; j++, li += 3, di += 4)
+			{
+				int r = (int)bl[li + 0]; //Q_ftol( bl[0] ); //mxd. Direct cast is actually faster...
+				int g = (int)bl[li + 1]; //Q_ftol( bl[1] );
+				int b = (int)bl[li + 2]; //Q_ftol( bl[2] );
+
+				// Catch negative lights
+				if (r < 0) r = 0;
+				if (g < 0) g = 0;
+				if (b < 0) b = 0;
+
+				// Determine the brightest of the three color components
+				int max;
 				if (r > g)
 					max = r;
 				else
 					max = g;
+
 				if (b > max)
 					max = b;
 
-				//
-				// alpha is ONLY used for the mono lightmap case.  For this reason
-				// we set it to the brightest of the color components so that 
-				// things don't get too dim.
-				//
-				//a = max;
-
-				//
-				// rescale all the color components if the intensity of the greatest
-				// channel exceeds 1.0
-				//
+				// Rescale all the color components if the intensity of the greatest channel exceeds 1.0
 				if (max > 255)
 				{
-					float t = 255.0F / max;
+					const float t = 255.0f / max;
 
-					r = r*t;
-					g = g*t;
-					b = b*t;
-					//a = a*t;
+					r *= t;
+					g *= t;
+					b *= t;
 				}
-				a = 255;	// fix for alpha test
 
+				// Store
 				if (gl_lms.format == GL_BGRA)
 				{
-					dest[0] = b;
-					dest[1] = g;
-					dest[2] = r;
-					dest[3] = a;
+					dest[di + 0] = b; //b
+					dest[di + 1] = g; //g
+					dest[di + 2] = r; //b
 				}
 				else
 				{
-					dest[0] = r;
-					dest[1] = g;
-					dest[2] = b;
-					dest[3] = a;
+					dest[di + 0] = r; //r
+					dest[di + 1] = g; //g
+					dest[di + 2] = b; //b
 				}
 
-				bl += 3;
-				dest += 4;
+				dest[di + 3] = 255; //a
 			}
 		}
 	}
@@ -980,54 +998,42 @@ store:
 			for (int j = 0; j < surf->light_smax; j++)
 			{
 				
-				r = Q_ftol( bl[0] );
-				g = Q_ftol( bl[1] );
-				b = Q_ftol( bl[2] );
+				int r = Q_ftol( bl[0] );
+				int g = Q_ftol( bl[1] );
+				int b = Q_ftol( bl[2] );
 
-				// catch negative lights
-				if (r < 0)
-					r = 0;
-				if (g < 0)
-					g = 0;
-				if (b < 0)
-					b = 0;
+				// Catch negative lights
+				if (r < 0) r = 0;
+				if (g < 0) g = 0;
+				if (b < 0) b = 0;
 
-				//
-				// determine the brightest of the three color components
-				//
+				// Determine the brightest of the three color components
+				int max;
 				if (r > g)
 					max = r;
 				else
 					max = g;
+
 				if (b > max)
 					max = b;
 
-				//
-				// alpha is ONLY used for the mono lightmap case.  For this reason
-				// we set it to the brightest of the color components so that 
-				// things don't get too dim.
-				//
-				a = max;
+				// Alpha is ONLY used for the mono lightmap case.  For this reason
+				// we set it to the brightest of the color components so that things don't get too dim.
+				int a = max;
 
-				//
-				// rescale all the color components if the intensity of the greatest
-				// channel exceeds 1.0
-				//
+				// Rescale all the color components if the intensity of the greatest channel exceeds 1.0
 				if (max > 255)
 				{
-					float t = 255.0F / max;
+					const float t = 255.0f / max;
 
-					r = r*t;
-					g = g*t;
-					b = b*t;
-					a = a*t;
+					r *= t;
+					g *= t;
+					b *= t;
+					a *= t;
 				}
 
-				//
-				// So if we are doing alpha lightmaps we need to set the R, G, and B
-				// components to 0 and we need to set alpha to 1-alpha.
-				//
-				switch ( monolightmap )
+				// So if we are doing alpha lightmaps we need to set the R, G, and B components to 0 and we need to set alpha to 1-alpha.
+				switch (monolightmap)
 				{
 				case 'L':
 				case 'I':
@@ -1037,10 +1043,10 @@ store:
 					break;
 				case 'C':
 					// try faking colored lighting
-					a = 255 - ((r+g+b)/3); //Knightmare changed
-					r *= a*0.003921568627450980392156862745098; // /255.0;
-					g *= a*0.003921568627450980392156862745098; // /255.0;
-					b *= a*0.003921568627450980392156862745098; // /255.0;
+					a = 255 - ((r + g + b) / 3); //Knightmare changed
+					r *= a * 0.003921568627450980392156862745098; // /255.0;
+					g *= a * 0.003921568627450980392156862745098; // /255.0;
+					b *= a * 0.003921568627450980392156862745098; // /255.0;
 					a = 255;	// fix for alpha test
 					break;
 				case 'A':
@@ -1059,15 +1065,15 @@ store:
 					dest[0] = b;
 					dest[1] = g;
 					dest[2] = r;
-					dest[3] = a;
 				}
 				else
 				{
 					dest[0] = r;
 					dest[1] = g;
 					dest[2] = b;
-					dest[3] = a;
 				}
+
+				dest[3] = a;
 
 				bl += 3;
 				dest += 4;
