@@ -718,6 +718,7 @@ void R_AddDynamicLights (msurface_t *surf)
 		float *pfBL = s_blocklights;
 		vec3_t *lightmap_point = surf->lightmap_points; //mxd
 		vec3_t *normalmap_normal = surf->normalmap_normals; //mxd
+		const qboolean usenormalmapping = (r_dlightnormalmapping->integer && normalmap_normal); //mxd
 
 		int smax, tmax;
 		if(skiplastrowandcolumn)
@@ -738,9 +739,9 @@ void R_AddDynamicLights (msurface_t *surf)
 			for (int s = 0; s < smax; s++, index++)
 			{
 				//mxd. Check distance between light and lightmap coord
-				vec3_t v;
-				VectorSubtract(dlorigin, lightmap_point[index], v);
-				const float dist_sq = VectorLengthSquared(v);
+				vec3_t lightdir;
+				VectorSubtract(dlorigin, lightmap_point[index], lightdir);
+				const float dist_sq = VectorLengthSquared(lightdir);
 
 				if (dist_sq < dl_intensity_sq)
 				{
@@ -774,14 +775,16 @@ void R_AddDynamicLights (msurface_t *surf)
 					}
 
 					//mxd. Apply normalmapping?
-					if(!isshaded && r_dlightnormalmapping->integer && normalmap_normal)
+					if(!isshaded && usenormalmapping)
 					{
-						// Calculate direction from texel to light
-						vec3_t lightdir;
-						VectorSubtract(dlorigin, lightmap_point[index], lightdir);
-						VectorNormalizeFast(lightdir);
+						//VectorNormalizeFast(lightdir);
+						//const float nmapscaler = DotProduct(lightdir, normalmap_normal[index]);
 
-						const float nmapscaler = DotProduct(lightdir, normalmap_normal[index]);
+						// Somewhat faster version of the above code...
+						const float ilength = Q_rsqrt(dist_sq);
+						const float nmapscaler = lightdir[0] * ilength * normalmap_normal[index][0]
+											   + lightdir[1] * ilength * normalmap_normal[index][1]
+											   + lightdir[2] * ilength * normalmap_normal[index][2];
 
 						if (nmapscaler > 0)
 							light_scaler *= nmapscaler;

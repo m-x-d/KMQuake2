@@ -696,7 +696,9 @@ From Q2E
 void VectorNormalizeFast (vec3_t v)
 {
 	const float ilength = Q_rsqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-	VectorScale(v, ilength, v);
+	v[0] *= ilength;
+	v[1] *= ilength;
+	v[2] *= ilength;
 }
 
 void VectorMA (vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
