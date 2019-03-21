@@ -35,8 +35,6 @@ typedef struct
 
 	HINSTANCE hinstOpenGL;	// HINSTANCE for the OpenGL library
 
-	qboolean minidriver;
-	qboolean allowdisplaydepthchange; //TODO: remove this (we no longer care about Win95)
 	qboolean mcd_accelerated;
 
 	FILE *log_fp;
