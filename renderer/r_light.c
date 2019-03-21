@@ -719,21 +719,24 @@ void R_AddDynamicLights (msurface_t *surf)
 		vec3_t *lightmap_point = surf->lightmap_points; //mxd
 		vec3_t *normalmap_normal = surf->normalmap_normals; //mxd
 
-		const int smax = surf->light_smax;
-		const int tmax = (skiplastrowandcolumn ? surf->light_tmax - 1 : surf->light_tmax);
+		int smax, tmax;
+		if(skiplastrowandcolumn)
+		{
+			smax = surf->light_smax - 1;
+			tmax = surf->light_tmax - 1;
+		}
+		else
+		{
+			smax = surf->light_smax;
+			tmax = surf->light_tmax;
+		}
+
 		int index = 0;
 
 		for (int t = 0; t < tmax; t++)
 		{
 			for (int s = 0; s < smax; s++, index++)
 			{
-				//mxd
-				if (skiplastrowandcolumn && s == smax - 1)
-				{
-					index++;
-					break;
-				}
-
 				//mxd. Check distance between light and lightmap coord
 				vec3_t v;
 				VectorSubtract(dlorigin, lightmap_point[index], v);
@@ -791,6 +794,9 @@ void R_AddDynamicLights (msurface_t *surf)
 							pfBL[index * 3 + c] += dl->color[c] * light_scaler;
 				}
 			}
+
+			if (skiplastrowandcolumn) //mxd
+				index++;
 		}
 	}
 }
@@ -825,7 +831,9 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		VID_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
 
-	int size = surf->light_smax * surf->light_tmax;
+	const int smax = surf->light_smax;
+	const int tmax = surf->light_tmax;
+	int size = smax * tmax;
 	
 	// FIXME- can this limit be directly increased?		Yep - Knightmare
 	if (size > sizeof(s_blocklights) >> gl_lms.lmshift) //mxd. 4 -> lmshift
@@ -902,12 +910,12 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	}
 
 	// Put into texture format
-	stride -= surf->light_smax << 2;
+	stride -= smax << 2;
 	float *bl = s_blocklights;
 
 	const int monolightmap = r_monolightmap->string[0]; //mxd. //TODO: get rid of this. Nobody cares about PowerVR anymore
 
-	if (monolightmap == '0')
+	if (monolightmap == '0') // Modern lightmap format
 	{
 		int li = 0; //mxd. lightmap index
 		int di = 0; //mxd. dest index
@@ -916,9 +924,9 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 		{
 			byte *lightmap = surf->samples;
 
-			for (int i = 0; i < surf->light_tmax; i++, di += stride)
+			for (int i = 0; i < tmax; i++, di += stride)
 			{
-				for (int j = 0; j < surf->light_smax; j++, li += 3, di += 4)
+				for (int j = 0; j < smax; j++, li += 3, di += 4)
 				{
 					if (gl_lms.format == GL_BGRA)
 					{
@@ -940,9 +948,9 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 			return;
 		}
 
-		for (int i = 0; i < surf->light_tmax; i++, di += stride)
+		for (int i = 0; i < tmax; i++, di += stride)
 		{
-			for (int j = 0; j < surf->light_smax; j++, li += 3, di += 4)
+			for (int j = 0; j < smax; j++, li += 3, di += 4)
 			{
 				int r = (int)bl[li + 0]; //Q_ftol( bl[0] ); //mxd. Direct cast is actually faster...
 				int g = (int)bl[li + 1]; //Q_ftol( bl[1] );
@@ -954,23 +962,22 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 				if (b < 0) b = 0;
 
 				// Determine the brightest of the three color components
-				int max;
-				if (r > g)
-					max = r;
-				else
-					max = g;
-
-				if (b > max)
-					max = b;
-
-				// Rescale all the color components if the intensity of the greatest channel exceeds 1.0
-				if (max > 255)
+				if(r > 255 || g > 255 || b > 255)
 				{
-					const float t = 255.0f / max;
+					int max = 255;
+					if (r > max) max = r;
+					if (g > max) max = g;
+					if (b > max) max = b;
 
-					r *= t;
-					g *= t;
-					b *= t;
+					// Rescale all the color components if the intensity of the greatest channel exceeds 1.0
+					if (max > 255)
+					{
+						const float t = 255.0f / max;
+
+						r *= t;
+						g *= t;
+						b *= t;
+					}
 				}
 
 				// Store
@@ -991,11 +998,11 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 			}
 		}
 	}
-	else
+	else // Legacy lightmap formats
 	{
-		for (int i = 0; i < surf->light_tmax; i++, dest += stride)
+		for (int i = 0; i < tmax; i++, dest += stride)
 		{
-			for (int j = 0; j < surf->light_smax; j++)
+			for (int j = 0; j < smax; j++)
 			{
 				
 				int r = Q_ftol( bl[0] );
