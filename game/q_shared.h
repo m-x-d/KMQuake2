@@ -487,10 +487,10 @@ char	*va(char *format, ...);
 #define	MAX_INFO_VALUE		64
 #define	MAX_INFO_STRING		512
 
-char *Info_ValueForKey (char *s, char *key);
-void Info_RemoveKey (char *s, char *key);
-void Info_SetValueForKey (char *s, char *key, char *value);
-qboolean Info_Validate (char *s);
+char *Info_ValueForKey(char *s, char *key);
+void Info_RemoveKey(char *s, char *key);
+void Info_SetValueForKey(char *s, char *key, char *value);
+qboolean Info_Validate(char *s);
 
 /*
 ==============================================================
@@ -500,11 +500,11 @@ SYSTEM SPECIFIC
 ==============================================================
 */
 
-extern	int	curtime;		// time returned by last Sys_Milliseconds
+extern int curtime; // time returned by last Sys_Milliseconds
 
-int		Sys_Milliseconds (void);
-void	Sys_Mkdir (char *path);
-void	Sys_Rmdir (char *path);
+int Sys_Milliseconds(void);
+void Sys_Mkdir(char *path);
+void Sys_Rmdir(char *path);
 
 // large block stack allocation routines
 /*void	*Hunk_Begin (int maxsize);
@@ -522,15 +522,19 @@ int		Hunk_End (void);*/
 /*
 ** pass in an attribute mask of things you wish to REJECT
 */
-char	*Sys_FindFirst (char *path, unsigned musthave, unsigned canthave );
-char	*Sys_FindNext ( unsigned musthave, unsigned canthave );
-void	Sys_FindClose (void);
+char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave);
+char *Sys_FindNext(unsigned musthave, unsigned canthave);
+void Sys_FindClose(void);
 
-void	Sys_Sleep (int msec);
-unsigned	Sys_TickCount (void);
+void Sys_Sleep(int msec);
+unsigned Sys_TickCount(void);
+
+//mxd. High-precision timers
+void Sys_TimerStart(int timerindex);
+double Sys_TimerGetElapsed(int timerindex);
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
-void Sys_Error (char *error, ...);
+void Sys_Error(char *error, ...);
 void Com_Printf(char *msg, ...);
 
 
@@ -662,15 +666,15 @@ COLLISION DETECTION
 //end Knightmare
 
 // content masks
-#define	MASK_ALL				(-1)
-#define	MASK_SOLID				(CONTENTS_SOLID|CONTENTS_WINDOW)
-#define	MASK_PLAYERSOLID		(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
-#define	MASK_DEADSOLID			(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW)
-#define	MASK_MONSTERSOLID		(CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
-#define	MASK_WATER				(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
-#define	MASK_OPAQUE				(CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA)
-#define	MASK_SHOT				(CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER)
-#define MASK_CURRENT			(CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN)
+#define	MASK_ALL			(-1)
+#define	MASK_SOLID			(CONTENTS_SOLID | CONTENTS_WINDOW)
+#define	MASK_PLAYERSOLID	(CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_WINDOW | CONTENTS_MONSTER)
+#define	MASK_DEADSOLID		(CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_WINDOW)
+#define	MASK_MONSTERSOLID	(CONTENTS_SOLID | CONTENTS_MONSTERCLIP | CONTENTS_WINDOW | CONTENTS_MONSTER)
+#define	MASK_WATER			(CONTENTS_WATER | CONTENTS_LAVA | CONTENTS_SLIME)
+#define	MASK_OPAQUE			(CONTENTS_SOLID | CONTENTS_SLIME | CONTENTS_LAVA)
+#define	MASK_SHOT			(CONTENTS_SOLID | CONTENTS_MONSTER | CONTENTS_WINDOW | CONTENTS_DEADMONSTER)
+#define MASK_CURRENT		(CONTENTS_CURRENT_0 | CONTENTS_CURRENT_90 | CONTENTS_CURRENT_180 | CONTENTS_CURRENT_270 | CONTENTS_CURRENT_UP | CONTENTS_CURRENT_DOWN)
 
 
 // gi.BoxEdicts() can return a list of either solid or trigger entities
@@ -691,14 +695,14 @@ typedef struct cplane_s
 } cplane_t;
 
 // structure offset for asm code
-#define CPLANE_NORMAL_X			0
-#define CPLANE_NORMAL_Y			4
-#define CPLANE_NORMAL_Z			8
-#define CPLANE_DIST				12
-#define CPLANE_TYPE				16
-#define CPLANE_SIGNBITS			17
-#define CPLANE_PAD0				18
-#define CPLANE_PAD1				19
+#define CPLANE_NORMAL_X		0
+#define CPLANE_NORMAL_Y		4
+#define CPLANE_NORMAL_Z		8
+#define CPLANE_DIST			12
+#define CPLANE_TYPE			16
+#define CPLANE_SIGNBITS		17
+#define CPLANE_PAD0			18
+#define CPLANE_PAD1			19
 
 typedef struct cmodel_s
 {
@@ -734,7 +738,6 @@ typedef struct
 } trace_t;
 
 
-
 // pmove_state_t is the information necessary for client side movement
 // prediction
 typedef enum 
@@ -757,11 +760,9 @@ typedef enum
 #define	PMF_TIME_TELEPORT	32	// pm_time is non-moving time
 #define PMF_NO_PREDICTION	64	// temporarily disables prediction (used for grappling hook)
 
-// this structure needs to be communicated bit-accurate
-// from the server to the client to guarantee that
-// prediction stays in sync, so no floats are used.
-// if any part of the game code modifies this struct, it
-// will result in a prediction error of some degree.
+// This structure needs to be communicated bit-accurate from the server to the client 
+// to guarantee that prediction stays in sync, so no floats are used.
+// If any part of the game code modifies this struct, it will result in a prediction error of some degree.
 typedef struct
 {
 	pmtype_t	pm_type;
@@ -785,8 +786,8 @@ typedef struct
 //
 #define	BUTTON_ATTACK		1
 #define	BUTTON_USE			2
-#define BUTTON_ATTACK2      4
-#define BUTTONS_ATTACK (BUTTON_ATTACK | BUTTON_ATTACK2)
+#define BUTTON_ATTACK2		4
+#define BUTTONS_ATTACK		(BUTTON_ATTACK | BUTTON_ATTACK2)
 #define	BUTTON_ANY			128			// any key whatsoever
 
 
@@ -904,7 +905,7 @@ typedef struct
 #define RF_NOSHADOW			0x00080000 // Knightmare- no shadow flag
 #define RF_NOSCALE			0x00160000 //mxd. Used in R_DrawSpriteModel
 
-#define RF_MASK_SHELL		(RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE|RF_SHELL_DOUBLE|RF_SHELL_HALF_DAM)
+#define RF_MASK_SHELL		(RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM)
 
 #define	RF2_NOSHADOW		0x00000001		//no shadow..
 #define RF2_FORCE_SHADOW	0x00000002		//forced shadow...
