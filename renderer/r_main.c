@@ -89,7 +89,6 @@ cvar_t	*r_novis;
 cvar_t	*r_nocull;
 cvar_t	*r_lerpmodels;
 cvar_t	*r_ignorehwgamma; // hardware gamma
-cvar_t	*r_displayrefresh; // refresh rate control
 cvar_t	*r_lefthand;
 cvar_t	*r_waterwave;	// water waves
 cvar_t  *r_caustics;	// Barnes water caustics
@@ -104,7 +103,6 @@ cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light level
 
 cvar_t	*r_rgbscale; // Vic's RGB brightening
 
-cvar_t	*r_nosubimage;
 cvar_t	*r_vertex_arrays;
 
 cvar_t	*r_ext_swapinterval;
@@ -113,7 +111,6 @@ cvar_t	*r_ext_draw_range_elements;
 cvar_t	*r_ext_compiled_vertex_array;
 cvar_t	*r_arb_texturenonpoweroftwo;	// Knightmare- non-power-of-two texture support
 cvar_t	*r_nonpoweroftwo_mipmaps;		// Knightmare- non-power-of-two texture support
-cvar_t	*r_newlightmapformat;			// Knightmare- whether to use new lightmap format
 cvar_t	*r_ext_mtexcombine; // Vic's RGB brightening
 cvar_t	*r_stencilTwoSide; // Echon's two-sided stenciling
 cvar_t	*r_arb_fragment_program;
@@ -142,7 +139,6 @@ cvar_t	*r_dlightshadowrange;   //mxd. Dynamic lights don't cast shadows when dis
 cvar_t	*r_dlightnormalmapping; //mxd. Dynamic lights use normalmaps (1) or not (0).
 
 cvar_t	*r_log;
-cvar_t	*r_bitdepth;
 cvar_t	*r_drawbuffer;
 cvar_t	*r_lightmap;
 cvar_t	*r_shadows;
@@ -161,7 +157,6 @@ cvar_t	*r_particle_overdraw;
 
 cvar_t	*r_mode;
 cvar_t	*r_dynamic;
-cvar_t  *r_monolightmap; // TODO: get rid of this. Nobody cares about PowerVR anymore
 
 cvar_t	*r_modulate;
 cvar_t	*r_nobind;
@@ -184,8 +179,6 @@ cvar_t	*r_texturesolidmode;
 cvar_t	*r_anisotropic;
 cvar_t	*r_anisotropic_avail;
 cvar_t	*r_lockpvs;
-
-cvar_t	*r_3dlabs_broken; //TODO: remove this
 
 cvar_t	*vid_fullscreen;
 cvar_t	*vid_gamma;
@@ -288,16 +281,16 @@ int SignbitsForPlane (cplane_t *out)
 void R_SetFrustum (void)
 {
 	// rotate VPN right by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[0].normal, vup, vpn, -(90 - r_newrefdef.fov_x / 2 ) );
+	RotatePointAroundVector(frustum[0].normal, vup, vpn, -(90 - r_newrefdef.fov_x / 2 ));
 	
 	// rotate VPN left by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[1].normal, vup, vpn, 90 - r_newrefdef.fov_x / 2 );
+	RotatePointAroundVector(frustum[1].normal, vup, vpn, 90 - r_newrefdef.fov_x / 2);
 	
 	// rotate VPN up by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90 - r_newrefdef.fov_y / 2 );
+	RotatePointAroundVector(frustum[2].normal, vright, vpn, 90 - r_newrefdef.fov_y / 2);
 	
 	// rotate VPN down by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[3].normal, vright, vpn, -(90 - r_newrefdef.fov_y / 2) );
+	RotatePointAroundVector(frustum[3].normal, vright, vpn, -(90 - r_newrefdef.fov_y / 2));
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -616,7 +609,7 @@ void R_RenderView (refdef_t *fd)
 	R_PushDlights();
 
 	if (r_finish->value)
-		qglFinish ();
+		qglFinish();
 
 	R_SetupFrame();
 	R_SetFrustum();
@@ -693,9 +686,9 @@ void R_RenderView (refdef_t *fd)
 R_SetGL2D
 ================
 */
-void	Con_DrawString(int x, int y, char *string, int alpha);
-float	SCR_ScaledVideo(float param);
-#define	FONT_SIZE		SCR_ScaledVideo(con_font_size->value)
+void Con_DrawString(int x, int y, char *string, int alpha);
+float SCR_ScaledVideo(float param);
+#define	FONT_SIZE SCR_ScaledVideo(con_font_size->value)
 
 void R_SetGL2D (void)
 {
@@ -813,7 +806,6 @@ void R_Register (void)
 	scr_netgraph_pos = Cvar_Get("netgraph_pos", "0", CVAR_ARCHIVE);
 
 	gl_driver = Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
-	gl_allow_software = Cvar_Get("gl_allow_software", "0", 0);
 	gl_clear = Cvar_Get("gl_clear", "0", 0);
 
 	r_lefthand = Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
@@ -826,8 +818,6 @@ void R_Register (void)
 	r_lerpmodels = Cvar_Get("r_lerpmodels", "1", 0);
 	r_speeds = Cvar_Get("r_speeds", "0", 0);
 	r_ignorehwgamma = Cvar_Get("r_ignorehwgamma", "0", CVAR_ARCHIVE);	// hardware gamma
-	r_displayrefresh = Cvar_Get("r_displayrefresh", "0", CVAR_ARCHIVE); // refresh rate control
-	AssertCvarRange(r_displayrefresh, 0, 150, true);
 
 	// lerped dlights on models
 	r_dlights_normal = Cvar_Get("r_dlights_normal", "1", CVAR_ARCHIVE);
@@ -842,7 +832,6 @@ void R_Register (void)
 	r_caustics = Cvar_Get("r_caustics", "1", CVAR_ARCHIVE);
 	r_glows = Cvar_Get("r_glows", "1", CVAR_ARCHIVE);
 	r_saveshotsize = Cvar_Get("r_saveshotsize", "1", CVAR_ARCHIVE);
-	r_nosubimage = Cvar_Get("r_nosubimage", "0", 0);
 
 	// correct trasparent sorting
 	r_transrendersort = Cvar_Get("r_transrendersort", "1", CVAR_ARCHIVE);
@@ -855,7 +844,6 @@ void R_Register (void)
 
 	r_modulate = Cvar_Get("r_modulate", "1", CVAR_ARCHIVE);
 	r_log = Cvar_Get("r_log", "0", 0);
-	r_bitdepth = Cvar_Get("r_bitdepth", "0", 0);
 	r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = Cvar_Get("r_lightmap", "0", 0);
 	r_shadows = Cvar_Get("r_shadows", "1", CVAR_ARCHIVE); //mxd. Was 0
@@ -877,12 +865,10 @@ void R_Register (void)
 	r_polyblend = Cvar_Get("r_polyblend", "1", 0);
 	r_flashblend = Cvar_Get("r_flashblend", "0", 0);
 	r_playermip = Cvar_Get("r_playermip", "0", 0);
-	r_monolightmap = Cvar_Get("r_monolightmap", "0", 0);
-	// changed default texture mode to bilinear
-	r_texturemode = Cvar_Get("r_texturemode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE);
+	r_texturemode = Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_LINEAR", CVAR_ARCHIVE); //mxd. Was GL_LINEAR_MIPMAP_NEAREST
 	r_texturealphamode = Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
 	r_texturesolidmode = Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
-	r_anisotropic = Cvar_Get("r_anisotropic", "0", CVAR_ARCHIVE);
+	r_anisotropic = Cvar_Get("r_anisotropic", "16", CVAR_ARCHIVE); //mxd. Was 0
 	r_anisotropic_avail = Cvar_Get("r_anisotropic_avail", "0", 0);
 	r_lockpvs = Cvar_Get("r_lockpvs", "0", 0);
 
@@ -895,10 +881,7 @@ void R_Register (void)
 	r_arb_texturenonpoweroftwo = Cvar_Get("r_arb_texturenonpoweroftwo", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 	r_nonpoweroftwo_mipmaps = Cvar_Get("r_nonpoweroftwo_mipmaps", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 
-	r_newlightmapformat = Cvar_Get("r_newlightmapformat", "1", CVAR_ARCHIVE);	// whether to use new lightmap format
-
-																				// added Vic's RGB brightening
-	r_ext_mtexcombine = Cvar_Get("r_ext_mtexcombine", "1", CVAR_ARCHIVE);
+	r_ext_mtexcombine = Cvar_Get("r_ext_mtexcombine", "1", CVAR_ARCHIVE); // added Vic's RGB brightening
 
 	// Echon's two-sided stenciling
 	r_stencilTwoSide = Cvar_Get("r_stencilTwoSide", "0", CVAR_ARCHIVE);
@@ -943,8 +926,6 @@ void R_Register (void)
 
 	r_saturatelighting = Cvar_Get("r_saturatelighting", "0", 0);
 
-	r_3dlabs_broken = Cvar_Get("r_3dlabs_broken", "1", CVAR_ARCHIVE);
-
 	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE);
 	vid_gamma = Cvar_Get("vid_gamma", "0.8", CVAR_ARCHIVE); // was 1.0
 	vid_ref = Cvar_Get("vid_ref", "gl", CVAR_ARCHIVE);
@@ -978,13 +959,6 @@ R_SetMode
 */
 qboolean R_SetMode (void)
 {
-	if (vid_fullscreen->modified && !glConfig.allowCDS) //TODO: remove this
-	{
-		VID_Printf(PRINT_ALL, "R_SetMode() - CDS not allowed with this driver\n" );
-		Cvar_SetValue("vid_fullscreen", !vid_fullscreen->value);
-		vid_fullscreen->modified = false;
-	}
-
 	const qboolean fullscreen = vid_fullscreen->value;
 	r_skydistance->modified = true; // skybox size variable
 
@@ -1078,31 +1052,26 @@ R_CheckGLExtensions
 Grabs GL extensions
 ===============
 */
-qboolean R_CheckGLExtensions (char *reason)
+qboolean R_CheckGLExtensions()
 {
 	// OpenGL multitexture on GL 1.2.1 or later or GL_ARB_multitexture
 	glConfig.multitexture = false;
 	glConfig.max_texunits = 1;
 
-	if (   (glConfig.version_major >= 2) 
-		|| (glConfig.version_major >= 1 && glConfig.version_minor > 2)
-		|| (glConfig.version_major >= 1 && glConfig.version_minor >= 2 && glConfig.version_release >= 1))
-	{
-		qglMultiTexCoord2fARB = (void *)qwglGetProcAddress("glMultiTexCoord2f");
-		qglActiveTextureARB = (void *)qwglGetProcAddress("glActiveTexture");
-		qglClientActiveTextureARB = (void *)qwglGetProcAddress("glClientActiveTexture");
+	qglMultiTexCoord2fARB = (void *)qwglGetProcAddress("glMultiTexCoord2f");
+	qglActiveTextureARB = (void *)qwglGetProcAddress("glActiveTexture");
+	qglClientActiveTextureARB = (void *)qwglGetProcAddress("glClientActiveTexture");
 
-		if (!qglMultiTexCoord2fARB || !qglActiveTextureARB || !qglClientActiveTextureARB)
-		{
-			VID_Printf(PRINT_ALL, "...OpenGL multitexture not found, checking for GL_ARB_multitexture\n");
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...using OpenGL multitexture\n");
-			qglGetIntegerv(GL_MAX_TEXTURE_UNITS, &glConfig.max_texunits);
-			VID_Printf(PRINT_ALL, "...GL_MAX_TEXTURE_UNITS: %i\n", glConfig.max_texunits);
-			glConfig.multitexture = true;
-		}
+	if (!qglMultiTexCoord2fARB || !qglActiveTextureARB || !qglClientActiveTextureARB)
+	{
+		VID_Printf(PRINT_ALL, "...OpenGL multitexture not found, checking for GL_ARB_multitexture\n");
+	}
+	else
+	{
+		VID_Printf(PRINT_ALL, "...using OpenGL multitexture\n");
+		qglGetIntegerv(GL_MAX_TEXTURE_UNITS, &glConfig.max_texunits);
+		VID_Printf(PRINT_ALL, "...GL_MAX_TEXTURE_UNITS: %i\n", glConfig.max_texunits);
+		glConfig.multitexture = true;
 	}
 
 	if (!glConfig.multitexture && StringContainsToken(glConfig.extensions_string, "GL_ARB_multitexture"))
@@ -1255,31 +1224,6 @@ qboolean R_CheckGLExtensions (char *reason)
 	}
 #endif
 
-#if 0
-	// GL_ARB_vertex_buffer_object
-	glConfig.vertexBufferObject = false;
-	if ( StringContainsToken( glConfig.extensions_string, "GL_ARB_vertex_buffer_object" ) )
-	{
-		/*if (r_arb_vertex_buffer_object->value)
-		{
-			VID_Printf(PRINT_ALL, "...using GL_ARB_vertex_buffer_object\n" );
-			glConfig.vertexBufferObject = true;
-
-			qglBindBufferARB = (void *) qwglGetProcAddress( "glBindBufferARB" );
-			qglDeleteBuffersARB = (void *) qwglGetProcAddress( "glDeleteBuffersARB" );
-			qglGenBuffersARB = (void *) qwglGetProcAddress( "glGenBuffersARB" );
-			qglBufferDataARB = (void *) qwglGetProcAddress( "glBufferDataARB" );
-			qglBufferSubDataARB = (void *) qwglGetProcAddress( "glBufferSubDataARB" );
-			qglMapBufferARB = (void *) qwglGetProcAddress( "glMapBufferARB" );
-			qglUnmapBufferARB = (void *) qwglGetProcAddress( "glUnmapBufferARB" );
-		}
-		else*/
-			VID_Printf(PRINT_ALL, "...ignoring GL_ARB_vertex_buffer_object\n");
-	}
-	else
-		VID_Printf(PRINT_ALL, "...GL_ARB_vertex_buffer_object not found\n" );
-#endif
-
 	// GL_ARB_texture_env_combine - Vic
 	glConfig.mtexcombine = false;
 	if (StringContainsToken(glConfig.extensions_string, "GL_ARB_texture_env_combine"))
@@ -1298,25 +1242,6 @@ qboolean R_CheckGLExtensions (char *reason)
 	{
 		VID_Printf(PRINT_ALL, "...GL_ARB_texture_env_combine not found\n");
 	}
-
-#if 0
-	// GL_EXT_texture_env_combine - Vic
-	if (!glConfig.mtexcombine)
-	{
-		if (StringContainsToken(glConfig.extensions_string, "GL_EXT_texture_env_combine"))
-		{
-			if (r_ext_mtexcombine->value)
-			{
-				VID_Printf(PRINT_ALL, "..using GL_EXT_texture_env_combine\n");
-				glConfig.mtexcombine = true;
-			}
-			else
-				VID_Printf(PRINT_ALL, "...ignoring GL_EXT_texture_env_combine\n");
-		}
-		else
-			VID_Printf(PRINT_ALL, "...GL_EXT_texture_env_combine not found\n");
-	}
-#endif
 
 	// GL_EXT_stencil_wrap
 	glConfig.extStencilWrap = false;
@@ -1552,9 +1477,6 @@ R_Init
 */
 qboolean R_Init (void *hinstance, void *hWnd, char *reason)
 {	
-	char renderer_buffer[1000];
-	char vendor_buffer[1000];
-	int	err;
 	extern float r_turbsin[256];
 
 	for (int j = 0; j < 256; j++)
@@ -1616,12 +1538,28 @@ qboolean R_Init (void *hinstance, void *hWnd, char *reason)
 	sscanf(glConfig.version_string, "%d.%d.%d", &glConfig.version_major, &glConfig.version_minor, &glConfig.version_release);
 	VID_Printf(PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string);
 
+	//mxd. We need a GPU
+	if (!strcmp(glConfig.renderer_string, "gdi generic"))
+	{
+		QGL_Shutdown();
+		memcpy(reason, "No hardware acceleration detected.\nPlease install drivers provided by your video card/GPU vendor.\0", 98);
+		return false;
+	}
+
+	//mxd. We need at least OpenGL 1.4
+	if(glConfig.version_major == 1 && glConfig.version_minor < 4)
+	{
+		QGL_Shutdown();
+		memcpy(reason, "Support for OpenGL 1.4 is not available!\0", 41);
+		return false;
+	}
+
 	// Knighmare- added max texture size
 	qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glConfig.max_texsize);
 	VID_Printf(PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %i\n", glConfig.max_texsize);
 
 	glConfig.extensions_string = qglGetString(GL_EXTENSIONS);
-//	VID_Printf(PRINT_DEVELOPER, "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
+	
 	if (developer->value > 0)	// print extensions 2 to a line
 	{
 		unsigned line = 0;
@@ -1645,114 +1583,26 @@ qboolean R_Init (void *hinstance, void *hWnd, char *reason)
 			VID_Printf(PRINT_DEVELOPER, "\n");
 	}
 
-	Q_strncpyz(renderer_buffer, glConfig.renderer_string, sizeof(renderer_buffer));
-	strlwr(renderer_buffer);
-
-//	strncpy( vendor_buffer, glConfig.vendor_string );
-	Q_strncpyz( vendor_buffer, glConfig.vendor_string, sizeof(vendor_buffer) );
-	strlwr( vendor_buffer );
-
-	// find out the renderer model
-	if (strstr(vendor_buffer, "nvidia"))
-	{
-		glConfig.rendType = GLREND_NVIDIA;
-		if (strstr(renderer_buffer, "geforce"))	
-			glConfig.rendType |= GLREND_GEFORCE;
-	}
-	else if (strstr(vendor_buffer, "ati"))
-	{
-		glConfig.rendType = GLREND_ATI;
-		if (strstr(vendor_buffer, "radeon"))
-			glConfig.rendType |= GLREND_RADEON;
-	}
-	else if (strstr(vendor_buffer, "matrox"))		glConfig.rendType = GLREND_MATROX;
-	else if (strstr(vendor_buffer, "intel"))		glConfig.rendType = GLREND_INTEL;
-	else if (strstr	(vendor_buffer, "sgi"))			glConfig.rendType = GLREND_SGI;
-	else if (strstr	(renderer_buffer, "permedia"))	glConfig.rendType = GLREND_PERMEDIA2;
-	else if (strstr	(renderer_buffer, "glint"))		glConfig.rendType = GLREND_GLINT_MX;
-	else if (strstr	(renderer_buffer, "glzicd"))	glConfig.rendType = GLREND_REALIZM;
-	else if (strstr	(renderer_buffer, "pcx1"))		glConfig.rendType = GLREND_PCX1;
-	else if (strstr	(renderer_buffer, "pcx2"))		glConfig.rendType = GLREND_PCX2;
-	else if (strstr	(renderer_buffer, "pmx"))		glConfig.rendType = GLREND_PMX;
-	else if (strstr	(renderer_buffer, "verite"))	glConfig.rendType = GLREND_RENDITION;
-	else if (strstr	(vendor_buffer, "sis"))			glConfig.rendType = GLREND_SIS;
-	else if (strstr (renderer_buffer, "voodoo"))	glConfig.rendType = GLREND_VOODOO;
-	else if (strstr	(renderer_buffer, "gdi generic")) glConfig.rendType = GLREND_MCD;
-	else											glConfig.rendType = GLREND_DEFAULT;
-
-	if ( toupper( r_monolightmap->string[1] ) != 'F' )
-	{
-		if (glConfig.rendType == GLREND_PERMEDIA2)
-		{
-			Cvar_Set( "r_monolightmap", "A" );
-			VID_Printf(PRINT_ALL, "...using r_monolightmap 'a'\n" );
-		}
-		else
-			Cvar_Set( "r_monolightmap", "0" );
-	}
-
 	Cvar_Set("scr_drawall", "0");
 
 #ifdef __linux__
-	Cvar_SetValue( "r_finish", 1 );
+	Cvar_SetValue("r_finish", 1);
 #else
 	Cvar_SetValue("r_finish", 0);
 #endif
-	r_swapinterval->modified = true;	// force swapinterval update
 
-	// MCD has buffering issues
-	if (glConfig.rendType == GLREND_MCD)
-		Cvar_SetValue("r_finish", 1);
-
-	if (glConfig.rendType & GLREND_3DLABS)
-	{
-		if (r_3dlabs_broken->value)
-			glConfig.allowCDS = false;
-		else
-			glConfig.allowCDS = true;
-	}
-	else
-		glConfig.allowCDS = true;
-
-	if (glConfig.allowCDS)
-		VID_Printf(PRINT_ALL, "...allowing CDS\n" );
-	else
-		VID_Printf(PRINT_ALL, "...disabling CDS\n" );
-
-	// If using one of the mini-drivers, a Voodoo w/ WickedGL, or pre-1.2 driver,
-	// use the texture formats determined by gl_texturesolidmode and gl_texturealphamode.
-	if (Q_stricmp(gl_driver->string, "opengl32") || glConfig.rendType == GLREND_VOODOO
-		|| (glConfig.version_major < 2 && glConfig.version_minor < 2)
-		|| (!r_newlightmapformat || !r_newlightmapformat->value) )
-	{
-		VID_Printf(PRINT_ALL, "...using legacy lightmap format\n" );
-		glConfig.newLMFormat = false;
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...using new lightmap format\n" );
-		glConfig.newLMFormat = true;
-	}
+	r_swapinterval->modified = true; // force swapinterval update
 
 	//
 	// grab extensions
 	//
-	if (!R_CheckGLExtensions(reason))
+	if (!R_CheckGLExtensions())
+	{
+		QGL_Shutdown(); //mxd
 		return false;
-
-/*
-	Com_Printf( "Size of dlights: %i\n", sizeof (dlight_t)*MAX_DLIGHTS );
-	Com_Printf( "Size of entities: %i\n", sizeof (entity_t)*MAX_ENTITIES );
-	Com_Printf( "Size of particles: %i\n", sizeof (particle_t)*MAX_PARTICLES );
-	Com_Printf( "Size of decals: %i\n", sizeof (particle_t)*MAX_DECAL_FRAGS );
-*/
+	}
 
 	GL_SetDefaultState();
-
-	// draw our stereo patterns
-#if 0 // commented out until H3D pays us the money they owe us
-	GL_DrawStereoPattern();
-#endif
 
 	R_InitImages();
 	Mod_Init();
@@ -1763,7 +1613,7 @@ qboolean R_Init (void *hinstance, void *hWnd, char *reason)
 	R_InitFogVars(); // reset fog variables
 	VLight_Init(); // Vic's bmodel lights
 
-	err = qglGetError();
+	const int err = qglGetError();
 	if (err != GL_NO_ERROR)
 		VID_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
 
@@ -1879,9 +1729,7 @@ void R_BeginFrame(float camera_separation)
 	}
 	// end Knightmare
 
-	//
-	// change modes if necessary
-	//
+	// Change modes if necessary
 	if (r_mode->modified || vid_fullscreen->modified)
 	{
 		// FIXME: only restart if CDS is required
@@ -1898,39 +1746,22 @@ void R_BeginFrame(float camera_separation)
 	if (r_log->value)
 		GLimp_LogNewFrame();
 
-	//
-	// update 3Dfx gamma -- it is expected that a user will do a vid_restart
-	// after tweaking this value
-	//
+	// Update gamma
 	if (vid_gamma->modified)
 	{
 		vid_gamma->modified = false;
-
-		if (glConfig.rendType == GLREND_VOODOO)
-		{
-			char envbuffer[1024];
-			float g;
-
-			g = 2.00 * ( 0.8 - ( vid_gamma->value - 0.5 ) ) + 1.0F;
-			Com_sprintf( envbuffer, sizeof(envbuffer), "SSTV2_GAMMA=%f", g );
-			putenv( envbuffer );
-			Com_sprintf( envbuffer, sizeof(envbuffer), "SST_GAMMA=%f", g );
-			putenv( envbuffer );
-		}
 		UpdateGammaRamp();
 	}
 
 	GLimp_BeginFrame(camera_separation);
 
-	//
-	// go into 2D mode
-	//
+	// Go into 2D mode
 	qglViewport(0, 0, vid.width, vid.height);
 	qglMatrixMode(GL_PROJECTION);
-    qglLoadIdentity();
+	qglLoadIdentity();
 	qglOrtho(0, vid.width, vid.height, 0, -99999, 99999);
 	qglMatrixMode(GL_MODELVIEW);
-    qglLoadIdentity();
+	qglLoadIdentity();
 
 	GL_Disable(GL_DEPTH_TEST);
 	GL_Disable(GL_CULL_FACE);
@@ -1938,9 +1769,7 @@ void R_BeginFrame(float camera_separation)
 	GL_Enable(GL_ALPHA_TEST);
 	qglColor4f(1, 1, 1, 1);
 
-	//
-	// draw buffer stuff
-	//
+	// Draw buffer stuff
 	if (r_drawbuffer->modified)
 	{
 		r_drawbuffer->modified = false;
@@ -1954,9 +1783,7 @@ void R_BeginFrame(float camera_separation)
 		}
 	}
 
-	//
-	// texturemode stuff
-	//
+	// Texturemode stuff
 	if (r_texturemode->modified || (glConfig.anisotropic && r_anisotropic->modified)) //mxd. https://github.com/yquake2/yquake2/blob/1e3135d4fc306b6085d607afdf766a9514235b0b/src/client/refresh/gl1/gl1_main.c#L1705
 	{
 		GL_TextureMode(r_texturemode->string);
@@ -1976,14 +1803,10 @@ void R_BeginFrame(float camera_separation)
 		r_texturesolidmode->modified = false;
 	}
 
-	//
-	// swapinterval stuff
-	//
+	// Swapinterval stuff
 	GL_UpdateSwapInterval();
 
-	//
-	// clear screen if desired
-	//
+	// Clear screen if desired
 	R_Clear();
 }
 
@@ -2018,7 +1841,6 @@ void R_SetPalette (const unsigned char *palette)
 			rp[i * 4 + 3] = 0xff;
 		}
 	}
-	//GL_SetTexturePalette(r_rawpalette);
 
 	qglClearColor(0, 0, 0, 0);
 	qglClear(GL_COLOR_BUFFER_BIT);

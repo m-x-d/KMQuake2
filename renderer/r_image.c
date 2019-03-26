@@ -2241,9 +2241,7 @@ void R_InitImages (void)
 			VID_Error(ERR_FATAL, "Couldn't load pics/16to8.pcx");
 	}
 
-	float g = vid_gamma->value;
-	if (glConfig.rendType == GLREND_VOODOO) //TODO: get rid
-		g = 1.0f;
+	const float g = vid_gamma->value;
 
 	for (int i = 0; i < 256; i++)
 	{

@@ -35,8 +35,6 @@ typedef struct
 
 	HINSTANCE hinstOpenGL;	// HINSTANCE for the OpenGL library
 
-	qboolean mcd_accelerated;
-
 	FILE *log_fp;
 } glwstate_t;
 

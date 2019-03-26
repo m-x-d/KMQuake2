@@ -221,7 +221,6 @@ extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
 extern	cvar_t	*r_ignorehwgamma; // Knightmare- hardware gamma
-extern	cvar_t	*r_displayrefresh; // Knightmare- refresh rate control
 
 extern	cvar_t	*r_waterwave;	// Knightmare- water waves
 extern	cvar_t  *r_caustics;	// Barnes water caustics
@@ -275,8 +274,6 @@ extern	cvar_t	*r_screenshot_format;		// determines screenshot format
 //extern	cvar_t	*r_screenshot_jpeg;			// Heffo - JPEG Screenshots
 extern	cvar_t	*r_screenshot_jpeg_quality;	// Heffo - JPEG Screenshots
 
-extern	cvar_t	*r_nosubimage;
-extern	cvar_t	*r_bitdepth;
 extern	cvar_t	*r_mode;
 extern	cvar_t	*r_log;
 extern	cvar_t	*r_lightmap;
@@ -293,7 +290,6 @@ extern	cvar_t	*r_particle_mode; //mxd
 extern	cvar_t	*r_particledistance;
 
 extern	cvar_t	*r_dynamic;
-extern  cvar_t  *r_monolightmap;
 extern	cvar_t	*r_nobind;
 extern	cvar_t	*r_round_down;
 extern	cvar_t	*r_picmip;
@@ -309,7 +305,6 @@ extern	cvar_t	*r_flashblend;
 extern	cvar_t	*r_lightmaptype;
 extern	cvar_t	*r_modulate;
 extern	cvar_t	*r_drawbuffer;
-extern	cvar_t	*r_3dlabs_broken;
 extern	cvar_t	*r_swapinterval;
 extern	cvar_t	*r_anisotropic;
 extern	cvar_t	*r_anisotropic_avail;
@@ -352,7 +347,6 @@ struct sortedelement_s //mxd. Removed typedef. Fixes C4091: 'typedef ': ignored 
 //
 // r_image.c
 //
-//void R_TranslatePlayerSkin (int playernum); //mxd. Undefined and unused
 
 // Knightmare- added some of Psychospaz's shortcuts
 void ElementAddNode(sortedelement_t *base, sortedelement_t *thisElement);
@@ -376,11 +370,9 @@ void R_DrawSolidEntities();
 // r_particle.c
 //
 extern	sortedelement_t *parts_prerender;
-//void R_BuildParticleList (void);
 void R_SortParticlesOnList();
 void R_DrawParticles(sortedelement_t *list);
 void R_DrawAllParticles();
-//void R_DrawDecals (void);
 void R_DrawAllDecals(void);
 
 //
@@ -450,9 +442,6 @@ extern	float		d_8to24tablef[256][3]; //Knightmare added
 
 extern	int			registration_sequence;
 
-
-//void V_AddBlend (float r, float g, float b, float a, float *v_blend);
-
 //
 // r_main.c
 //
@@ -461,7 +450,6 @@ void R_ClearState();
 void R_Shutdown();
 void R_RenderView(refdef_t *fd);
 void R_BeginFrame(float camera_separation);
-//void R_SwapBuffers( int );
 void R_SetPalette(const unsigned char *palette);
 
 //
@@ -492,7 +480,6 @@ void R_DrawWorld();
 void R_RenderDlights();
 void R_DrawAlphaSurfaces();
 void R_RenderBrushPoly(msurface_t *fa);
-//void R_InitMedia (void); //mxd. Redundant declaration
 void R_DrawInitLocal();
 void R_SubdivideSurface(msurface_t *fa);
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
@@ -503,7 +490,7 @@ void R_MarkLeaves();
 //
 // r_alias_misc.c
 //
-#define NUMVERTEXNORMALS	162
+#define NUMVERTEXNORMALS 162
 extern	float	r_avertexnormals[NUMVERTEXNORMALS][3];
 
 // precalculated dot products for quantized angles
@@ -523,7 +510,6 @@ extern	float	shellFlowH, shellFlowV;
 void R_SetShellBlend(qboolean toggle);
 void R_SetVertexRGBScale(qboolean toggle);
 qboolean FlowingShell();
-//float	R_CalcEntAlpha (float alpha, vec3_t point);
 float R_CalcShadowAlpha(entity_t *e);
 void R_ShadowBlend(float alpha);
 void R_FlipModel(qboolean on, qboolean cullOnly);
@@ -565,7 +551,6 @@ qboolean RB_CheckArrayOverflow (int numVerts, int numIndex);
 void RB_RenderMeshGeneric (qboolean drawTris);
 void RB_DrawArrays();
 void RB_DrawMeshTris();
-
 
 //
 // r_arb_program.c
@@ -645,15 +630,10 @@ void GL_ResampleTexture(void *indata, int inwidth, int inheight, void *outdata, 
 struct image_s *R_RegisterSkin(char *name);
 
 void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height);
-//Knightmare added
-//void LoadTGA (char *name, byte **pic, int *width, int *height);
-//void LoadJPG (char *filename, byte **pic, int *width, int *height);
-
 image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits);
 image_t	*R_FindImage (char *name, imagetype_t type);
-void	GL_TextureMode( char *string );
-void	R_ImageList_f(void);
-//void	GL_SetTexturePalette( unsigned palette[256] );
+void GL_TextureMode(char *string);
+void R_ImageList_f(void);
 void R_InitFailedImgList();
 void R_InitImages();
 void R_ShutdownImages();
@@ -662,10 +642,6 @@ void R_LoadNormalmap(const char *texture, mtexinfo_t *tex); //mxd
 void GL_TextureAlphaMode(char *string);
 void GL_TextureSolidMode(char *string);
 
-/*
-** GL extension emulation functions
-*/
-//void GL_DrawParticles(int num_particles);
 
 //
 // r_fog.c
@@ -678,49 +654,18 @@ void R_SetFogVars(qboolean enable, int model, int density, int start, int end, i
 ** GL config stuff
 */
 
-enum
-{
-	GLREND_DEFAULT		= 1 << 0,
-
-	GLREND_MCD			= 1 << 1,
-	GLREND_3DLABS		= 1 << 2,
-	GLREND_GLINT_MX		= 1 << 3,
-	GLREND_PCX1			= 1 << 4,
-	GLREND_PCX2			= 1 << 5,
-	GLREND_PERMEDIA2	= 1 << 6,
-	GLREND_PMX			= 1 << 7,
-	GLREND_POWERVR		= 1 << 8,
-	GLREND_REALIZM		= 1 << 9,
-	GLREND_RENDITION	= 1 << 10,
-	GLREND_SGI			= 1 << 11,
-	GLREND_SIS			= 1 << 12,
-	GLREND_VOODOO		= 1 << 13,
-
-	GLREND_NVIDIA		= 1 << 14,
-	GLREND_GEFORCE		= 1 << 15,
-
-	GLREND_ATI			= 1 << 16,
-	GLREND_RADEON		= 1 << 17,
-
-	GLREND_MATROX		= 1 << 18,
-	GLREND_INTEL		= 1 << 19
-};
-
-
 typedef struct
 {
-	int         rendType;
 	const char	*renderer_string;
 	const char	*vendor_string;
 	const char	*version_string;
 	const char	*extensions_string;
 
-	// for parsing newer OpenGL versions
+	// for parsing OpenGL version
 	int			version_major;
 	int			version_minor;
 	int			version_release;
 
-	qboolean	allowCDS; //TODO: remove this
 	// max texture size
 	int			max_texsize;
 	int			max_texunits;
@@ -747,8 +692,6 @@ typedef struct
 	// anisotropic filtering
 	qboolean	anisotropic;
 	float		max_anisotropy;
-
-	qboolean	newLMFormat;	// whether to use GL_BGRA lightmaps //TODO: mxd. use newLMFormat only, remove newLMFormat var
 } glconfig_t;
 
 
@@ -825,30 +768,30 @@ extern glstate_t   glState;
 //
 // r_glstate.c
 //
-void	GL_Stencil(qboolean enable, qboolean shell);
-void	R_ParticleStencil(int passnum);
+void GL_Stencil(qboolean enable, qboolean shell);
+void R_ParticleStencil(int passnum);
 qboolean GL_HasStencil();
 
-void	GL_Enable(GLenum cap);
-void	GL_Disable(GLenum cap);
-void	GL_ShadeModel(GLenum mode);
-void	GL_TexEnv(GLenum value);
-void	GL_CullFace(GLenum mode);
-void	GL_PolygonOffset(GLfloat factor, GLfloat units);
-void	GL_AlphaFunc(GLenum func, GLclampf ref);
-void	GL_BlendFunc(GLenum src, GLenum dst);
-void	GL_DepthFunc(GLenum func);
-void	GL_DepthMask(GLboolean mask);
-void	GL_DepthRange(GLfloat rMin, GLfloat rMax);
-void	GL_LockArrays(int numVerts);
-void	GL_UnlockArrays();
-void	GL_EnableTexture(unsigned tmu);
-void	GL_DisableTexture(unsigned tmu);
-void	GL_EnableMultitexture(qboolean enable);
-void	GL_SelectTexture(unsigned tmu);
-void	GL_Bind(int texnum);
-void	GL_MBind(unsigned tmu, int texnum);
-void	GL_SetDefaultState();
+void GL_Enable(GLenum cap);
+void GL_Disable(GLenum cap);
+void GL_ShadeModel(GLenum mode);
+void GL_TexEnv(GLenum value);
+void GL_CullFace(GLenum mode);
+void GL_PolygonOffset(GLfloat factor, GLfloat units);
+void GL_AlphaFunc(GLenum func, GLclampf ref);
+void GL_BlendFunc(GLenum src, GLenum dst);
+void GL_DepthFunc(GLenum func);
+void GL_DepthMask(GLboolean mask);
+void GL_DepthRange(GLfloat rMin, GLfloat rMax);
+void GL_LockArrays(int numVerts);
+void GL_UnlockArrays();
+void GL_EnableTexture(unsigned tmu);
+void GL_DisableTexture(unsigned tmu);
+void GL_EnableMultitexture(qboolean enable);
+void GL_SelectTexture(unsigned tmu);
+void GL_Bind(int texnum);
+void GL_MBind(unsigned tmu, int texnum);
+void GL_SetDefaultState();
 
 /*
 ====================================================================
@@ -869,18 +812,15 @@ void		TextColor (int colornum, int *red, int *green, int *blue);
 
 /*
 ====================================================================
-
-IMPLEMENTATION SPECIFIC FUNCTIONS
-
+IMPLEMENTATION-SPECIFIC FUNCTIONS
 ====================================================================
 */
 
-void		GLimp_BeginFrame(float camera_separation);
-void		GLimp_EndFrame();
-qboolean 	GLimp_Init(void *hinstance, void *wndproc); //mxd. int -> qboolean
-void		GLimp_Shutdown();
-rserr_t     GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen); //mxd. int -> rserr_t
-void		GLimp_AppActivate(qboolean active);
-void		GLimp_EnableLogging(qboolean enable);
-void		GLimp_LogNewFrame();
-
+void GLimp_BeginFrame(float camera_separation);
+void GLimp_EndFrame();
+qboolean GLimp_Init(void *hinstance, void *wndproc); //mxd. int -> qboolean
+void GLimp_Shutdown();
+rserr_t GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen); //mxd. int -> rserr_t
+void GLimp_AppActivate(qboolean active);
+void GLimp_EnableLogging(qboolean enable);
+void GLimp_LogNewFrame();

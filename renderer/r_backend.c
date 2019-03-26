@@ -49,12 +49,9 @@ RB_BuildTables
 */
 static void RB_BuildTables (void)
 {
-	int		i;
-	float	f;
-
-	for (i = 0; i < TABLE_SIZE; i++)
+	for (int i = 0; i < TABLE_SIZE; i++)
 	{
-		f = (float)i / (float)TABLE_SIZE;
+		const float f = (float)i / (float)TABLE_SIZE;
 
 		rb_sinTable[i] = sin(f * M_PI2);
 
@@ -71,9 +68,7 @@ static void RB_BuildTables (void)
 			rb_squareTable[i] = -1.0;
 
 		rb_sawtoothTable[i] = f;
-
 		rb_inverseSawtoothTable[i] = 1.0 - f;
-
 		rb_noiseTable[i] = crand();
 	}
 }
@@ -100,7 +95,8 @@ static float *RB_TableForFunc (const waveFunc_t *func)
 	case WAVEFORM_NOISE:
 		return rb_noiseTable;
 	}
-	VID_Error (ERR_DROP, "RB_TableForFunc: unknown waveform type %i", func->type);
+
+	VID_Error(ERR_DROP, "RB_TableForFunc: unknown waveform type %i", func->type);
 	return rb_sinTable;
 }
 
@@ -120,17 +116,18 @@ void RB_InitBackend (void)
 RB_CalcGlowColor
 =================
 */
-float RB_CalcGlowColor (renderparms_t parms)
+float RB_CalcGlowColor(renderparms_t parms)
 {
-	float	*table, rad, out=1.0f;
+	float out = 1.0f;
 
 	if (parms.glow.type > -1)
 	{
-		table = RB_TableForFunc(&parms.glow);
-		rad = parms.glow.params[2] + parms.glow.params[3] * r_newrefdef.time;
+		float* table = RB_TableForFunc(&parms.glow);
+		const float rad = parms.glow.params[2] + parms.glow.params[3] * r_newrefdef.time;
 		out = table[((int)(rad * TABLE_SIZE)) & TABLE_MASK] * parms.glow.params[1] + parms.glow.params[0];
-		out = max(min(out, 1.0f), 0.0f); // clamp
+		out = clamp(out, 0.0f, 1.0f);
 	}
+
 	return out;
 }
 
@@ -140,26 +137,28 @@ RB_ModifyTextureCoords
 borrowed from EGL & Q2E
 =================
 */
-void RB_ModifyTextureCoords (float *inArray, float *inVerts, int numVerts, renderparms_t parms)
+void RB_ModifyTextureCoords(float *inArray, float *inVerts, int numVerts, renderparms_t parms)
 {
 	int		i;
-	float	t1, t2, sint, cost, rad;
+	float	t1, t2, rad;
 	float	*tcArray, *vertArray, *table;
 
 	if (parms.translate_x != 0.0f)
-		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2)
+		for (tcArray = inArray, i = 0; i < numVerts; i++, tcArray += 2)
 			tcArray[0] += parms.translate_x;
+
 	if (parms.translate_y != 0.0f)
-		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2)
+		for (tcArray = inArray, i = 0; i < numVerts; i++, tcArray += 2)
 			tcArray[1] += parms.translate_y;
 
 	if (parms.rotate != 0.0f)
 	{
 		rad = -DEG2RAD(parms.rotate * r_newrefdef.time);
-		sint = sinf(rad);
-		cost = cosf(rad);
+		const float sint = sinf(rad);
+		const float cost = cosf(rad);
 
-		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2) {
+		for (tcArray = inArray, i = 0; i < numVerts; i++, tcArray += 2)
+		{
 			t1 = tcArray[0];
 			t2 = tcArray[1];
 			tcArray[0] = cost * (t1 - 0.5) - sint * (t2 - 0.5) + 0.5;
@@ -173,10 +172,11 @@ void RB_ModifyTextureCoords (float *inArray, float *inVerts, int numVerts, rende
 		rad = parms.stretch.params[2] + parms.stretch.params[3] * r_newrefdef.time;
 		t1 = table[((int)(rad * TABLE_SIZE)) & TABLE_MASK] * parms.stretch.params[1] + parms.stretch.params[0];
 		
-		t1 = (t1) ? 1.0 / t1 : 1.0;
+		t1 = t1 ? 1.0 / t1 : 1.0;
 		t2 = 0.5 - 0.5 * t1;
 
-		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2) {
+		for (tcArray = inArray, i = 0; i < numVerts; i++, tcArray += 2)
+		{
 			tcArray[0] = tcArray[0] * t1 + t2;
 			tcArray[1] = tcArray[1] * t1 + t2;
 		}
@@ -185,6 +185,7 @@ void RB_ModifyTextureCoords (float *inArray, float *inVerts, int numVerts, rende
 	if (parms.scale_x != 1.0f)
 		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2)
 			tcArray[0] = tcArray[0] / parms.scale_x;
+
 	if (parms.scale_y != 1.0f)
 		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2)
 			tcArray[1] = tcArray[1] / parms.scale_y;
@@ -194,18 +195,19 @@ void RB_ModifyTextureCoords (float *inArray, float *inVerts, int numVerts, rende
 		table = RB_TableForFunc(&parms.turb);
 		t1 = parms.turb.params[2] + parms.turb.params[3] * r_newrefdef.time;
 
-		for (tcArray=inArray, vertArray=inVerts, i=0; i<numVerts; i++, tcArray+=2, vertArray+=3) {
+		for (tcArray = inArray, vertArray = inVerts, i = 0; i < numVerts; i++, tcArray += 2, vertArray += 3)
+		{
 			tcArray[0] += (table[((int)(((vertArray[0] + vertArray[2]) * 1.0/128 * 0.125 + t1) * TABLE_SIZE)) & TABLE_MASK] * parms.turb.params[1] + parms.turb.params[0]);
 			tcArray[1] += (table[((int)(((vertArray[1]) * 1.0/128 * 0.125 + t1) * TABLE_SIZE)) & TABLE_MASK] * parms.turb.params[1] + parms.turb.params[0]);
 		}
-
 	}
 
 	if (parms.scroll_x != 0.0f)
-		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2)
+		for (tcArray = inArray, i = 0; i < numVerts; i++, tcArray += 2)
 			tcArray[0] += r_newrefdef.time * parms.scroll_x;
+
 	if (parms.scroll_y != 0.0f)
-		for (tcArray=inArray, i=0; i<numVerts; i++, tcArray+=2)
+		for (tcArray = inArray, i = 0; i < numVerts; i++, tcArray += 2)
 			tcArray[1] += r_newrefdef.time * parms.scroll_y;
 }
 
@@ -214,9 +216,10 @@ void RB_ModifyTextureCoords (float *inArray, float *inVerts, int numVerts, rende
 RB_CheckArrayOverflow
 =================
 */
-qboolean RB_CheckArrayOverflow (int numVerts, int numIndex)
+qboolean RB_CheckArrayOverflow(int numVerts, int numIndex)
 {
-	if (rb_vertex == 0 || rb_index == 0)	return false;  // nothing to purge
+	if (rb_vertex == 0 || rb_index == 0)
+		return false; // nothing to purge
 
 	if (numVerts > MAX_VERTICES || numIndex > MAX_INDICES)
 		Com_Error(ERR_DROP, "RB_CheckArrayOverflow: %i > MAX_VERTICES or %i > MAX_INDICES", numVerts, numIndex);
@@ -234,17 +237,19 @@ qboolean RB_CheckArrayOverflow (int numVerts, int numIndex)
 RB_DrawArrays
 =================
 */
-void RB_DrawArrays (void)
+void RB_DrawArrays(void)
 {
 	if (rb_vertex == 0 || rb_index == 0) // nothing to render
 		return;
 
-	GL_LockArrays (rb_vertex);
+	GL_LockArrays(rb_vertex);
+
 	if (glConfig.drawRangeElements)
 		qglDrawRangeElementsEXT(GL_TRIANGLES, 0, rb_vertex, rb_index, GL_UNSIGNED_INT, indexArray);
 	else
 		qglDrawElements(GL_TRIANGLES, rb_index, GL_UNSIGNED_INT, indexArray);
-	GL_UnlockArrays ();
+
+	GL_UnlockArrays();
 }
 
 /*
@@ -253,9 +258,9 @@ RB_DrawMeshTris
 Re-draws a mesh in outline mode
 =============
 */
-void RB_DrawMeshTris (void)
+void RB_DrawMeshTris(void)
 {
-	int i, numTMUs = 0;
+	int numTMUs = 0;
 
 	if (!r_showtris->value)
 		return;
@@ -263,19 +268,24 @@ void RB_DrawMeshTris (void)
 	if (r_showtris->value == 1)
 		GL_Disable(GL_DEPTH_TEST);
 
-	qglPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
-	for (i=0; i<glConfig.max_texunits; i++)
+	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	for (int i = 0; i < glConfig.max_texunits; i++)
+	{
 		if (glState.activetmu[i])
-		{	numTMUs++;		GL_DisableTexture (i);	}
-	qglDisableClientState (GL_COLOR_ARRAY);
+		{
+			numTMUs++;
+			GL_DisableTexture(i);
+		}
+	}
+	qglDisableClientState(GL_COLOR_ARRAY);
 	qglColor4f(1.0, 1.0, 1.0, 1.0);
 
-	RB_DrawArrays ();
+	RB_DrawArrays();
 
-	qglEnableClientState (GL_COLOR_ARRAY);
-	for (i=0; i<numTMUs; i++)
+	qglEnableClientState(GL_COLOR_ARRAY);
+	for (int i = 0; i < numTMUs; i++)
 		GL_EnableTexture(i);
-	qglPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	if (r_showtris->value == 1)
 		GL_Enable(GL_DEPTH_TEST);
@@ -286,10 +296,13 @@ void RB_DrawMeshTris (void)
 RB_RenderMeshGeneric
 =================
 */
-void RB_RenderMeshGeneric (qboolean drawTris)
+void RB_RenderMeshGeneric(qboolean drawTris)
 {
-	RB_DrawArrays ();
+	RB_DrawArrays();
+
 	if (drawTris)
-		RB_DrawMeshTris ();
-	rb_vertex = rb_index = 0;
+		RB_DrawMeshTris();
+
+	rb_vertex = 0;
+	rb_index = 0;
 }

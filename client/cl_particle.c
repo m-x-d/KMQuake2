@@ -798,7 +798,7 @@ void CL_ReclipDecals (void)
 		if (p->flags & PART_DECAL)
 		{
 			vec3_t dir;
-			AngleVectors (p->angle, dir, NULL, NULL);
+			AngleVectors(p->angle, dir, NULL, NULL);
 			VectorNegate(dir, dir);
 			CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);
 

@@ -551,7 +551,7 @@ void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baseli
 R_ShadowLight
 ===============
 */
-void R_ShadowLight (vec3_t pos, vec3_t lightAdd)
+void R_ShadowLight(vec3_t pos, vec3_t lightAdd)
 {
 	vec3_t dist;
 
@@ -615,7 +615,7 @@ static float s_blocklights[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * 4]; //mxd. Was [12
 R_AddDynamicLights
 ===============
 */
-void R_AddDynamicLights (msurface_t *surf)
+void R_AddDynamicLights(msurface_t *surf)
 {
 	static byte s_castedrays[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT]; //mxd. 0 - not yet cast, 1 - not blocked, 2 - blocked
 	
@@ -810,7 +810,7 @@ void R_AddDynamicLights (msurface_t *surf)
 R_SetCacheState
 ===============
 */
-void R_SetCacheState (msurface_t *surf)
+void R_SetCacheState(msurface_t *surf)
 {
 	for (int maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
 		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
@@ -829,7 +829,7 @@ R_BuildLightMap
 Combine and scale multiple lightmaps into the floating format in blocklights
 ===============
 */
-void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
+void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 {
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
 		VID_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
@@ -916,120 +916,57 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	stride -= smax << 2;
 	float *bl = s_blocklights;
 
-	const int monolightmap = r_monolightmap->string[0]; //mxd. //TODO: get rid of this. Nobody cares about PowerVR anymore
+	int li = 0; //mxd. lightmap index
+	int di = 0; //mxd. dest index
 
-	if (monolightmap == '0') // Modern lightmap format
+	if(copysamples) //mxd. Copy surf->samples to dest
 	{
-		int li = 0; //mxd. lightmap index
-		int di = 0; //mxd. dest index
-
-		if(copysamples) //mxd. Copy surf->samples to dest
-		{
-			byte *lightmap = surf->samples;
-
-			for (int i = 0; i < tmax; i++, di += stride)
-			{
-				for (int j = 0; j < smax; j++, li += 3, di += 4)
-				{
-					if (gl_lms.format == GL_BGRA)
-					{
-						dest[di + 0] = lightmap[li + 2]; //b
-						dest[di + 1] = lightmap[li + 1]; //g
-						dest[di + 2] = lightmap[li + 0]; //r
-					}
-					else
-					{
-						dest[di + 0] = lightmap[li + 0]; //r
-						dest[di + 1] = lightmap[li + 1]; //g
-						dest[di + 2] = lightmap[li + 2]; //b
-					}
-
-					dest[di + 3] = 255; //a
-				}
-			}
-
-			return;
-		}
+		byte *lightmap = surf->samples;
 
 		for (int i = 0; i < tmax; i++, di += stride)
 		{
 			for (int j = 0; j < smax; j++, li += 3, di += 4)
 			{
-				int r = (int)bl[li + 0]; //Q_ftol( bl[0] ); //mxd. Direct cast is actually faster...
-				int g = (int)bl[li + 1]; //Q_ftol( bl[1] );
-				int b = (int)bl[li + 2]; //Q_ftol( bl[2] );
-
-				// Catch negative lights
-				if (r < 0) r = 0;
-				if (g < 0) g = 0;
-				if (b < 0) b = 0;
-
-				// Determine the brightest of the three color components
-				if(r > 255 || g > 255 || b > 255)
-				{
-					int max = 255;
-					if (r > max) max = r;
-					if (g > max) max = g;
-					if (b > max) max = b;
-
-					// Rescale all the color components if the intensity of the greatest channel exceeds 1.0
-					if (max > 255)
-					{
-						const float t = 255.0f / max;
-
-						r *= t;
-						g *= t;
-						b *= t;
-					}
-				}
-
-				// Store
 				if (gl_lms.format == GL_BGRA)
 				{
-					dest[di + 0] = b; //b
-					dest[di + 1] = g; //g
-					dest[di + 2] = r; //b
+					dest[di + 0] = lightmap[li + 2]; //b
+					dest[di + 1] = lightmap[li + 1]; //g
+					dest[di + 2] = lightmap[li + 0]; //r
 				}
 				else
 				{
-					dest[di + 0] = r; //r
-					dest[di + 1] = g; //g
-					dest[di + 2] = b; //b
+					dest[di + 0] = lightmap[li + 0]; //r
+					dest[di + 1] = lightmap[li + 1]; //g
+					dest[di + 2] = lightmap[li + 2]; //b
 				}
 
 				dest[di + 3] = 255; //a
 			}
 		}
+
+		return;
 	}
-	else // Legacy lightmap formats
+
+	for (int i = 0; i < tmax; i++, di += stride)
 	{
-		for (int i = 0; i < tmax; i++, dest += stride)
+		for (int j = 0; j < smax; j++, li += 3, di += 4)
 		{
-			for (int j = 0; j < smax; j++)
+			int r = (int)bl[li + 0]; //Q_ftol( bl[0] ); //mxd. Direct cast is actually faster...
+			int g = (int)bl[li + 1]; //Q_ftol( bl[1] );
+			int b = (int)bl[li + 2]; //Q_ftol( bl[2] );
+
+			// Catch negative lights
+			if (r < 0) r = 0;
+			if (g < 0) g = 0;
+			if (b < 0) b = 0;
+
+			// Determine the brightest of the three color components
+			if(r > 255 || g > 255 || b > 255)
 			{
-				
-				int r = Q_ftol( bl[0] );
-				int g = Q_ftol( bl[1] );
-				int b = Q_ftol( bl[2] );
-
-				// Catch negative lights
-				if (r < 0) r = 0;
-				if (g < 0) g = 0;
-				if (b < 0) b = 0;
-
-				// Determine the brightest of the three color components
-				int max;
-				if (r > g)
-					max = r;
-				else
-					max = g;
-
-				if (b > max)
-					max = b;
-
-				// Alpha is ONLY used for the mono lightmap case.  For this reason
-				// we set it to the brightest of the color components so that things don't get too dim.
-				int a = max;
+				int max = 255;
+				if (r > max) max = r;
+				if (g > max) max = g;
+				if (b > max) max = b;
 
 				// Rescale all the color components if the intensity of the greatest channel exceeds 1.0
 				if (max > 255)
@@ -1039,55 +976,24 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 					r *= t;
 					g *= t;
 					b *= t;
-					a *= t;
 				}
-
-				// So if we are doing alpha lightmaps we need to set the R, G, and B components to 0 and we need to set alpha to 1-alpha.
-				switch (monolightmap)
-				{
-				case 'L':
-				case 'I':
-					r = a;
-					g = b = 0;
-					a = 255;	// fix for alpha test
-					break;
-				case 'C':
-					// try faking colored lighting
-					a = 255 - ((r + g + b) / 3); //Knightmare changed
-					r *= a * 0.003921568627450980392156862745098; // /255.0;
-					g *= a * 0.003921568627450980392156862745098; // /255.0;
-					b *= a * 0.003921568627450980392156862745098; // /255.0;
-					a = 255;	// fix for alpha test
-					break;
-				case 'A':
-				//	r = g = b = 0;
-					a = 255 - a;
-					r = g = b = a;
-					break;
-				default:
-					r = g = b = a;
-					a = 255;	// fix for alpha test
-					break;
-				}
-
-				if (gl_lms.format == GL_BGRA)
-				{
-					dest[0] = b;
-					dest[1] = g;
-					dest[2] = r;
-				}
-				else
-				{
-					dest[0] = r;
-					dest[1] = g;
-					dest[2] = b;
-				}
-
-				dest[3] = a;
-
-				bl += 3;
-				dest += 4;
 			}
+
+			// Store
+			if (gl_lms.format == GL_BGRA)
+			{
+				dest[di + 0] = b; //b
+				dest[di + 1] = g; //g
+				dest[di + 2] = r; //b
+			}
+			else
+			{
+				dest[di + 0] = r; //r
+				dest[di + 1] = g; //g
+				dest[di + 2] = b; //b
+			}
+
+			dest[di + 3] = 255; //a
 		}
 	}
 }

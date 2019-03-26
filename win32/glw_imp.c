@@ -95,20 +95,8 @@ void ToggleGammaRamp (qboolean enable)
 }
 // end Vic's hardware gammaramp
 
-static qboolean VerifyDriver( void )
-{
-	char buffer[1024];
 
-	Q_strncpyz(buffer, qglGetString(GL_RENDERER), sizeof(buffer));
-	strlwr(buffer);
-
-	if (strcmp(buffer, "gdi generic") == 0 && !glw_state.mcd_accelerated)
-		return false;
-
-	return true;
-}
-
-qboolean modType (char *name);
+qboolean modType(char *name);
 
 /*
 ** VID_CreateWindow
@@ -183,7 +171,7 @@ qboolean VID_CreateWindow (int width, int height, qboolean fullscreen)
 		y = vid_ypos->integer;
 	}
 
-	glw_state.hWnd = CreateWindowEx (
+	glw_state.hWnd = CreateWindowEx(
 		 exstyle, 
 		 WINDOW_CLASS_NAME,
 		 "KMQuake 2 SBE",		//Knightmare changed
@@ -234,14 +222,14 @@ rserr_t GLimp_SetMode (int *pwidth, int *pheight, int mode, qboolean fullscreen)
 		return rserr_invalid_mode;
 	}
 
-	VID_Printf(PRINT_ALL, " %dx%d %s\n", width, height, win_fs[fullscreen] );
+	VID_Printf(PRINT_ALL, " %dx%d %s\n", width, height, win_fs[fullscreen]);
 
 	// destroy the existing window
 	if (glw_state.hWnd)
 		GLimp_Shutdown();
 
 	// do a CDS if needed
-	if (fullscreen)
+	if (fullscreen) //TODO: mxd. ditch fullscreen, use borderless window
 	{
 		DEVMODE dm;
 
@@ -255,30 +243,6 @@ rserr_t GLimp_SetMode (int *pwidth, int *pheight, int mode, qboolean fullscreen)
 		dm.dmPelsHeight = height;
 		dm.dmFields	 = DM_PELSWIDTH | DM_PELSHEIGHT;
 
-		// Added refresh rate control
-		if (r_displayrefresh->value != 0)
-		{
-			dm.dmDisplayFrequency = r_displayrefresh->integer;
-			dm.dmFields |= DM_DISPLAYFREQUENCY;
-			VID_Printf(PRINT_ALL, "...using r_displayrefresh of %d\n", (int)r_displayrefresh->value);
-		}
-
-		if (r_bitdepth->value != 0)
-		{
-			dm.dmBitsPerPel = r_bitdepth->value;
-			dm.dmFields |= DM_BITSPERPEL;
-			VID_Printf(PRINT_ALL, "...using r_bitdepth of %d\n", ( int ) r_bitdepth->value);
-		}
-		else
-		{
-			HDC hdc = GetDC(NULL);
-			const int bitspixel = GetDeviceCaps(hdc, BITSPIXEL);
-
-			VID_Printf(PRINT_ALL, "...using desktop display depth of %d\n", bitspixel);
-
-			ReleaseDC(0, hdc);
-		}
-
 		VID_Printf(PRINT_ALL, "...calling CDS: ");
 		if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
 		{
@@ -287,9 +251,9 @@ rserr_t GLimp_SetMode (int *pwidth, int *pheight, int mode, qboolean fullscreen)
 
 			glState.fullscreen = true;
 
-			VID_Printf(PRINT_ALL, "ok\n" );
+			VID_Printf(PRINT_ALL, "ok\n");
 
-			if (!VID_CreateWindow (width, height, true))
+			if (!VID_CreateWindow(width, height, true))
 				return rserr_invalid_mode;
 
 			return rserr_ok;
@@ -306,21 +270,15 @@ rserr_t GLimp_SetMode (int *pwidth, int *pheight, int mode, qboolean fullscreen)
 			dm.dmPelsHeight = height;
 			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
 
-			if (r_bitdepth->value != 0)
-			{
-				dm.dmBitsPerPel = r_bitdepth->value;
-				dm.dmFields |= DM_BITSPERPEL;
-			}
-
 			/*
 			** our first CDS failed, so maybe we're running on some weird dual monitor system 
 			*/
-			if (ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) != DISP_CHANGE_SUCCESSFUL)
+			if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN ) != DISP_CHANGE_SUCCESSFUL)
 			{
 				VID_Printf(PRINT_ALL, " failed\n");
 				VID_Printf(PRINT_ALL, "...setting windowed mode\n");
 
-				ChangeDisplaySettings( 0, 0 );
+				ChangeDisplaySettings(0, 0);
 
 				*pwidth = width;
 				*pheight = height;
@@ -351,6 +309,7 @@ rserr_t GLimp_SetMode (int *pwidth, int *pheight, int mode, qboolean fullscreen)
 		*pwidth = width;
 		*pheight = height;
 		glState.fullscreen = false;
+
 		if (!VID_CreateWindow(width, height, false))
 			return rserr_invalid_mode;
 	}
@@ -473,7 +432,8 @@ qboolean GLimp_InitGL (void)
 	if (glw_state.hDC != NULL)
 		VID_Printf(PRINT_ALL, "GLimp_Init() - non-NULL DC exists\n");
 
-	if ((glw_state.hDC = GetDC(glw_state.hWnd)) == NULL)
+	glw_state.hDC = GetDC(glw_state.hWnd);
+	if (glw_state.hDC == NULL)
 	{
 		VID_Printf(PRINT_ALL, "GLimp_Init() - GetDC failed\n");
 		return false;
@@ -494,16 +454,6 @@ qboolean GLimp_InitGL (void)
 
 	DescribePixelFormat(glw_state.hDC, pixelformat, sizeof(pfd), &pfd);
 
-	if (!(pfd.dwFlags & PFD_GENERIC_ACCELERATED))
-	{
-		extern cvar_t *gl_allow_software;
-		glw_state.mcd_accelerated = (gl_allow_software->integer != 0);
-	}
-	else
-	{
-		glw_state.mcd_accelerated = true;
-	}
-
 	/*
 	** report if stereo is desired but unavailable
 	*/
@@ -515,26 +465,17 @@ qboolean GLimp_InitGL (void)
 	}
 
 	/*
-	** startup the OpenGL subsystem by creating a context and making
-	** it current
+	** startup the OpenGL subsystem by creating a context and making it current
 	*/
 	if ((glw_state.hGLRC = qwglCreateContext(glw_state.hDC)) == 0)
 	{
 		VID_Printf(PRINT_ALL, "GLimp_Init() - qwglCreateContext failed\n");
-
 		goto fail;
 	}
 
 	if (!qwglMakeCurrent(glw_state.hDC, glw_state.hGLRC))
 	{
 		VID_Printf(PRINT_ALL, "GLimp_Init() - qwglMakeCurrent failed\n");
-
-		goto fail;
-	}
-
-	if (!VerifyDriver())
-	{
-		VID_Printf(PRINT_ALL, "GLimp_Init() - no hardware acceleration detected.\nPlease install drivers provided by your video card/GPU vendor.\n");
 		goto fail;
 	}
 
@@ -636,7 +577,7 @@ void GLimp_AppActivate(qboolean active)
 		ShowWindow(glw_state.hWnd, SW_RESTORE);
 
 		// Knightmare- restore desktop settings on alt-tabbing from fullscreen
-		if (vid_fullscreen->value && desktop_restored && glw_state.hGLRC != NULL)
+		if (vid_fullscreen->value && desktop_restored && glw_state.hGLRC != NULL) //TODO: mxd. not needed?
 		{
 			int		width, height;
 			DEVMODE	dm;
@@ -653,27 +594,6 @@ void GLimp_AppActivate(qboolean active)
 			dm.dmPelsHeight = height;
 			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
 
-			if (r_displayrefresh->integer)
-			{
-				dm.dmDisplayFrequency = r_displayrefresh->integer;
-				dm.dmFields |= DM_DISPLAYFREQUENCY;
-			//	VID_Printf( PRINT_ALL, "...using r_displayrefresh of %d\n", (int)r_displayrefresh->value );
-			}
-
-			if (r_bitdepth->integer)
-			{
-				dm.dmBitsPerPel = r_bitdepth->value;
-				dm.dmFields |= DM_BITSPERPEL;
-			//	VID_Printf( PRINT_ALL, "...using r_bitdepth of %d\n", (int)r_bitdepth->value );
-			}
-			/*else
-			{
-				HDC hdc = GetDC( NULL );
-				int bitspixel = GetDeviceCaps( hdc, BITSPIXEL );
-			//	VID_Printf( PRINT_ALL, "...using desktop display depth of %d\n", bitspixel );
-				ReleaseDC( 0, hdc );
-			}*/
-
 			VID_Printf(PRINT_ALL, "...calling CDS: ");
 			if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
 			{
@@ -688,12 +608,6 @@ void GLimp_AppActivate(qboolean active)
 				dm.dmPelsWidth = width * 2;
 				dm.dmPelsHeight = height;
 				dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-				if (r_bitdepth->value != 0)
-				{
-					dm.dmBitsPerPel = r_bitdepth->value;
-					dm.dmFields |= DM_BITSPERPEL;
-				}
 
 				if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
 					VID_Printf(PRINT_ALL, "ok\n");

@@ -96,7 +96,7 @@ R_ShadowBlend
 Draws projection shadow(s) from stenciled volume
 ==============
 */
-void R_ShadowBlend (float shadowalpha)
+void R_ShadowBlend(float shadowalpha)
 {
 	if (r_shadows->value != 3)
 		return;
@@ -161,7 +161,7 @@ void R_ShadowBlend (float shadowalpha)
 capColorVec
 =================
 */
-void capColorVec (vec3_t color)
+void capColorVec(vec3_t color)
 {
 	for (int i = 0; i < 3; i++)
 		color[i] = clamp(color[i], 0.0f, 1.0f);
@@ -172,7 +172,7 @@ void capColorVec (vec3_t color)
 R_SetVertexRGBScale
 =================
 */
-void R_SetVertexRGBScale (qboolean toggle)
+void R_SetVertexRGBScale(qboolean toggle)
 {
 	if (!r_rgbscale->value || !glConfig.mtexcombine)
 		return;
@@ -199,7 +199,7 @@ void R_SetVertexRGBScale (qboolean toggle)
 EnvMapShell
 =================
 */
-qboolean EnvMapShell (void)
+qboolean EnvMapShell(void)
 {
 	return (r_shelltype->value == 2 || (r_shelltype->value == 1 && currententity->alpha == 1.0f));
 }
@@ -210,7 +210,7 @@ qboolean EnvMapShell (void)
 FlowingShell
 =================
 */
-qboolean FlowingShell (void)
+qboolean FlowingShell(void)
 {
 	return (r_shelltype->value == 1 && currententity->alpha != 1.0f);
 }
@@ -221,10 +221,10 @@ qboolean FlowingShell (void)
 R_SetShellBlend
 =================
 */
-void R_SetShellBlend (qboolean toggle)
+void R_SetShellBlend(qboolean toggle)
 {
 	// shells only
-	if ( !(currententity->flags & RF_MASK_SHELL) )
+	if (!(currententity->flags & RF_MASK_SHELL))
 		return;
 
 	if (toggle) //turn on
@@ -262,11 +262,7 @@ void R_SetShellBlend (qboolean toggle)
 			qglDisable(GL_TEXTURE_GEN_S);
 			qglDisable(GL_TEXTURE_GEN_T);
 		}
-		else if (FlowingShell())
-		{
-			/*nothing*/
-		}
-		else
+		else if (!FlowingShell())
 		{
 			GL_EnableTexture(0);
 		}
@@ -280,7 +276,7 @@ void R_SetShellBlend (qboolean toggle)
 R_FlipModel
 =================
 */
-void R_FlipModel (qboolean on, qboolean cullOnly)
+void R_FlipModel(qboolean on, qboolean cullOnly)
 {
 	extern void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar);
 
@@ -316,7 +312,7 @@ void R_FlipModel (qboolean on, qboolean cullOnly)
 R_SetBlendModeOn
 =================
 */
-void R_SetBlendModeOn (image_t *skin)
+void R_SetBlendModeOn(image_t *skin)
 {
 	GL_TexEnv(GL_MODULATE);
 
@@ -349,7 +345,7 @@ void R_SetBlendModeOn (image_t *skin)
 R_SetBlendModeOff
 =================
 */
-void R_SetBlendModeOff (void)
+void R_SetBlendModeOff(void)
 {
 	if (currententity->flags & RF_TRANSLUCENT)
 	{
@@ -364,7 +360,7 @@ void R_SetBlendModeOff (void)
 R_SetShadeLight
 =================
 */
-void R_SetShadeLight (void)
+void R_SetShadeLight(void)
 {
 	if (currententity->flags & RF_MASK_SHELL)
 	{
@@ -416,12 +412,6 @@ void R_SetShadeLight (void)
 			// pick the greatest component, which should be the same as the mono value returned by software
 			r_lightlevel->value = 150 * max(shadelight[0], max(shadelight[1], shadelight[2])); //mxd
 		}
-		
-		if (r_monolightmap->string[0] != '0')
-		{
-			const float s = max(shadelight[0], max(shadelight[1], shadelight[2])); //mxd
-			VectorSetAll(shadelight, s); //mxd
-		}
 	}
 
 	if (currententity->flags & RF_MINLIGHT)
@@ -458,7 +448,7 @@ void R_SetShadeLight (void)
 R_DrawAliasModelBBox
 =================
 */
-void R_DrawAliasModelBBox (vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha)
+void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha)
 {
 	if (!r_showbbox->value)
 		return;

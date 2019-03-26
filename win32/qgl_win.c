@@ -48,15 +48,11 @@ BOOL  ( WINAPI * qwglMakeCurrent)(HDC, HGLRC);
 BOOL  ( WINAPI * qwglShareLists)(HGLRC, HGLRC);
 BOOL  ( WINAPI * qwglUseFontBitmaps)(HDC, DWORD, DWORD, DWORD);
 
-BOOL  ( WINAPI * qwglUseFontOutlines)(HDC, DWORD, DWORD, DWORD, FLOAT,
-                                           FLOAT, int, LPGLYPHMETRICSFLOAT);
+BOOL  ( WINAPI * qwglUseFontOutlines)(HDC, DWORD, DWORD, DWORD, FLOAT, FLOAT, int, LPGLYPHMETRICSFLOAT);
 
-BOOL ( WINAPI * qwglDescribeLayerPlane)(HDC, int, int, UINT,
-                                            LPLAYERPLANEDESCRIPTOR);
-int  ( WINAPI * qwglSetLayerPaletteEntries)(HDC, int, int, int,
-                                                CONST COLORREF *);
-int  ( WINAPI * qwglGetLayerPaletteEntries)(HDC, int, int, int,
-                                                COLORREF *);
+BOOL ( WINAPI * qwglDescribeLayerPlane)(HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR);
+int  ( WINAPI * qwglSetLayerPaletteEntries)(HDC, int, int, int, CONST COLORREF *);
+int  ( WINAPI * qwglGetLayerPaletteEntries)(HDC, int, int, int, COLORREF *);
 BOOL ( WINAPI * qwglRealizeLayerPalette)(HDC, int, BOOL);
 BOOL ( WINAPI * qwglSwapLayerBuffers)(HDC, UINT);
 
@@ -793,214 +789,214 @@ static void ( APIENTRY * dllViewport )(GLint x, GLint y, GLsizei width, GLsizei 
 
 static void APIENTRY logAccum(GLenum op, GLfloat value)
 {
-	fprintf( glw_state.log_fp, "glAccum\n" );
-	dllAccum( op, value );
+	fprintf(glw_state.log_fp, "glAccum\n");
+	dllAccum(op, value);
 }
 
 static void APIENTRY logAlphaFunc(GLenum func, GLclampf ref)
 {
-	fprintf( glw_state.log_fp, "glAlphaFunc( 0x%x, %f )\n", func, ref );
-	dllAlphaFunc( func, ref );
+	fprintf(glw_state.log_fp, "glAlphaFunc(0x%x, %f)\n", func, ref);
+	dllAlphaFunc(func, ref);
 }
 
 static GLboolean APIENTRY logAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *residences)
 {
-	fprintf( glw_state.log_fp, "glAreTexturesResident\n" );
-	return dllAreTexturesResident( n, textures, residences );
+	fprintf(glw_state.log_fp, "glAreTexturesResident\n");
+	return dllAreTexturesResident(n, textures, residences);
 }
 
 static void APIENTRY logArrayElement(GLint i)
 {
-	fprintf( glw_state.log_fp, "glArrayElement\n" );
-	dllArrayElement( i );
+	fprintf(glw_state.log_fp, "glArrayElement\n");
+	dllArrayElement(i);
 }
 
 static void APIENTRY logBegin(GLenum mode)
 {
-	fprintf( glw_state.log_fp, "glBegin( 0x%x )\n", mode );
-	dllBegin( mode );
+	fprintf(glw_state.log_fp, "glBegin(0x%x)\n", mode);
+	dllBegin(mode);
 }
 
 static void APIENTRY logBindTexture(GLenum target, GLuint texture)
 {
-	fprintf( glw_state.log_fp, "glBindTexture( 0x%x, %u )\n", target, texture );
-	dllBindTexture( target, texture );
+	fprintf(glw_state.log_fp, "glBindTexture( 0x%x, %u )\n", target, texture);
+	dllBindTexture(target, texture);
 }
 
 static void APIENTRY logBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap)
 {
-	fprintf( glw_state.log_fp, "glBitmap\n" );
-	dllBitmap( width, height, xorig, yorig, xmove, ymove, bitmap );
+	fprintf(glw_state.log_fp, "glBitmap\n");
+	dllBitmap(width, height, xorig, yorig, xmove, ymove, bitmap);
 }
 
 static void APIENTRY logBlendFunc(GLenum sfactor, GLenum dfactor)
 {
-	fprintf( glw_state.log_fp, "glBlendFunc( 0x%x, 0x%x )\n", sfactor, dfactor );
-	dllBlendFunc( sfactor, dfactor );
+	fprintf(glw_state.log_fp, "glBlendFunc(0x%x, 0x%x)\n", sfactor, dfactor);
+	dllBlendFunc(sfactor, dfactor);
 }
 
 static void APIENTRY logCallList(GLuint list)
 {
-	fprintf( glw_state.log_fp, "glCallList( %u )\n", list );
-	dllCallList( list );
+	fprintf(glw_state.log_fp, "glCallList(%u)\n", list);
+	dllCallList(list);
 }
 
 static void APIENTRY logCallLists(GLsizei n, GLenum type, const void *lists)
 {
-	fprintf( glw_state.log_fp, "glCallLists\n" );
-	dllCallLists( n, type, lists );
+	fprintf(glw_state.log_fp, "glCallLists\n");
+	dllCallLists(n, type, lists);
 }
 
 static void APIENTRY logClear(GLbitfield mask)
 {
-	fprintf( glw_state.log_fp, "glClear\n" );
-	dllClear( mask );
+	fprintf(glw_state.log_fp, "glClear\n");
+	dllClear(mask);
 }
 
 static void APIENTRY logClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
-	fprintf( glw_state.log_fp, "glClearAccum\n" );
-	dllClearAccum( red, green, blue, alpha );
+	fprintf(glw_state.log_fp, "glClearAccum\n");
+	dllClearAccum(red, green, blue, alpha);
 }
 
 static void APIENTRY logClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-	fprintf( glw_state.log_fp, "glClearColor\n" );
-	dllClearColor( red, green, blue, alpha );
+	fprintf(glw_state.log_fp, "glClearColor\n");
+	dllClearColor(red, green, blue, alpha);
 }
 
 static void APIENTRY logClearDepth(GLclampd depth)
 {
-	fprintf( glw_state.log_fp, "glClearDepth\n" );
-	dllClearDepth( depth );
+	fprintf(glw_state.log_fp, "glClearDepth\n");
+	dllClearDepth(depth);
 }
 
 static void APIENTRY logClearIndex(GLfloat c)
 {
-	fprintf( glw_state.log_fp, "glClearIndex\n" );
-	dllClearIndex( c );
+	fprintf(glw_state.log_fp, "glClearIndex\n");
+	dllClearIndex(c);
 }
 
 static void APIENTRY logClearStencil(GLint s)
 {
-	fprintf( glw_state.log_fp, "glClearStencil\n" );
-	dllClearStencil( s );
+	fprintf(glw_state.log_fp, "glClearStencil\n");
+	dllClearStencil(s);
 }
 
 static void APIENTRY logClipPlane(GLenum plane, const GLdouble *equation)
 {
-	fprintf( glw_state.log_fp, "glClipPlane\n" );
-	dllClipPlane( plane, equation );
+	fprintf(glw_state.log_fp, "glClipPlane\n");
+	dllClipPlane(plane, equation);
 }
 
 static void APIENTRY logColor3b(GLbyte red, GLbyte green, GLbyte blue)
 {
-	fprintf( glw_state.log_fp, "glColor3b\n" );
-	dllColor3b( red, green, blue );
+	fprintf(glw_state.log_fp, "glColor3b\n");
+	dllColor3b(red, green, blue);
 }
 
 static void APIENTRY logColor3bv(const GLbyte *v)
 {
-	fprintf( glw_state.log_fp, "glColor3bv\n" );
-	dllColor3bv( v );
+	fprintf(glw_state.log_fp, "glColor3bv\n");
+	dllColor3bv(v);
 }
 
 static void APIENTRY logColor3d(GLdouble red, GLdouble green, GLdouble blue)
 {
-	fprintf( glw_state.log_fp, "glColor3d\n" );
-	dllColor3d( red, green, blue );
+	fprintf(glw_state.log_fp, "glColor3d\n");
+	dllColor3d(red, green, blue);
 }
 
 static void APIENTRY logColor3dv(const GLdouble *v)
 {
-	fprintf( glw_state.log_fp, "glColor3dv\n" );
-	dllColor3dv( v );
+	fprintf(glw_state.log_fp, "glColor3dv\n");
+	dllColor3dv(v);
 }
 
 static void APIENTRY logColor3f(GLfloat red, GLfloat green, GLfloat blue)
 {
-	fprintf( glw_state.log_fp, "glColor3f\n" );
-	dllColor3f( red, green, blue );
+	fprintf(glw_state.log_fp, "glColor3f\n");
+	dllColor3f(red, green, blue);
 }
 
 static void APIENTRY logColor3fv(const GLfloat *v)
 {
-	fprintf( glw_state.log_fp, "glColor3fv\n" );
-	dllColor3fv( v );
+	fprintf(glw_state.log_fp, "glColor3fv\n");
+	dllColor3fv(v);
 }
 
 static void APIENTRY logColor3i(GLint red, GLint green, GLint blue)
 {
-	fprintf( glw_state.log_fp, "glColor3i\n" );
-	dllColor3i( red, green, blue );
+	fprintf(glw_state.log_fp, "glColor3i\n");
+	dllColor3i(red, green, blue);
 }
 
 static void APIENTRY logColor3iv(const GLint *v)
 {
-	fprintf( glw_state.log_fp, "glColor3iv\n" );
-	dllColor3iv( v );
+	fprintf(glw_state.log_fp, "glColor3iv\n");
+	dllColor3iv(v);
 }
 
 static void APIENTRY logColor3s(GLshort red, GLshort green, GLshort blue)
 {
-	fprintf( glw_state.log_fp, "glColor3s\n" );
-	dllColor3s( red, green, blue );
+	fprintf(glw_state.log_fp, "glColor3s\n");
+	dllColor3s(red, green, blue);
 }
 
 static void APIENTRY logColor3sv(const GLshort *v)
 {
-	fprintf( glw_state.log_fp, "glColor3sv\n" );
-	dllColor3sv( v );
+	fprintf(glw_state.log_fp, "glColor3sv\n");
+	dllColor3sv(v);
 }
 
 static void APIENTRY logColor3ub(GLubyte red, GLubyte green, GLubyte blue)
 {
-	fprintf( glw_state.log_fp, "glColor3ub\n" );
-	dllColor3ub( red, green, blue );
+	fprintf(glw_state.log_fp, "glColor3ub\n");
+	dllColor3ub(red, green, blue);
 }
 
 static void APIENTRY logColor3ubv(const GLubyte *v)
 {
-	fprintf( glw_state.log_fp, "glColor3ubv\n" );
-	dllColor3ubv( v );
+	fprintf(glw_state.log_fp, "glColor3ubv\n");
+	dllColor3ubv(v);
 }
 
-#define SIG( x ) fprintf( glw_state.log_fp, x "\n" )
+#define SIG(x) fprintf(glw_state.log_fp, x "\n")
 
 static void APIENTRY logColor3ui(GLuint red, GLuint green, GLuint blue)
 {
-	SIG( "glColor3ui" );
-	dllColor3ui( red, green, blue );
+	SIG("glColor3ui");
+	dllColor3ui(red, green, blue);
 }
 
 static void APIENTRY logColor3uiv(const GLuint *v)
 {
-	SIG( "glColor3uiv" );
-	dllColor3uiv( v );
+	SIG("glColor3uiv");
+	dllColor3uiv(v);
 }
 
 static void APIENTRY logColor3us(GLushort red, GLushort green, GLushort blue)
 {
-	SIG( "glColor3us" );
-	dllColor3us( red, green, blue );
+	SIG("glColor3us");
+	dllColor3us(red, green, blue);
 }
 
 static void APIENTRY logColor3usv(const GLushort *v)
 {
-	SIG( "glColor3usv" );
-	dllColor3usv( v );
+	SIG("glColor3usv");
+	dllColor3usv(v);
 }
 
 static void APIENTRY logColor4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha)
 {
-	SIG( "glColor4b" );
-	dllColor4b( red, green, blue, alpha );
+	SIG("glColor4b");
+	dllColor4b(red, green, blue, alpha);
 }
 
 static void APIENTRY logColor4bv(const GLbyte *v)
 {
-	SIG( "glColor4bv" );
-	dllColor4bv( v );
+	SIG("glColor4bv");
+	dllColor4bv(v);
 }
 
 static void APIENTRY logColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha)
@@ -1010,1672 +1006,1672 @@ static void APIENTRY logColor4d(GLdouble red, GLdouble green, GLdouble blue, GLd
 }
 static void APIENTRY logColor4dv(const GLdouble *v)
 {
-	SIG( "glColor4dv" );
-	dllColor4dv( v );
+	SIG("glColor4dv");
+	dllColor4dv(v);
 }
 static void APIENTRY logColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
-	fprintf( glw_state.log_fp, "glColor4f( %f,%f,%f,%f )\n", red, green, blue, alpha );
-	dllColor4f( red, green, blue, alpha );
+	fprintf(glw_state.log_fp, "glColor4f( %f,%f,%f,%f )\n", red, green, blue, alpha);
+	dllColor4f(red, green, blue, alpha);
 }
 static void APIENTRY logColor4fv(const GLfloat *v)
 {
-	fprintf( glw_state.log_fp, "glColor4fv( %f,%f,%f,%f )\n", v[0], v[1], v[2], v[3] );
-	dllColor4fv( v );
+	fprintf(glw_state.log_fp, "glColor4fv( %f,%f,%f,%f )\n", v[0], v[1], v[2], v[3]);
+	dllColor4fv(v);
 }
 static void APIENTRY logColor4i(GLint red, GLint green, GLint blue, GLint alpha)
 {
-	SIG( "glColor4i" );
-	dllColor4i( red, green, blue, alpha );
+	SIG("glColor4i");
+	dllColor4i(red, green, blue, alpha);
 }
 static void APIENTRY logColor4iv(const GLint *v)
 {
-	SIG( "glColor4iv" );
-	dllColor4iv( v );
+	SIG("glColor4iv");
+	dllColor4iv(v);
 }
 static void APIENTRY logColor4s(GLshort red, GLshort green, GLshort blue, GLshort alpha)
 {
-	SIG( "glColor4s" );
-	dllColor4s( red, green, blue, alpha );
+	SIG("glColor4s");
+	dllColor4s(red, green, blue, alpha);
 }
 static void APIENTRY logColor4sv(const GLshort *v)
 {
-	SIG( "glColor4sv" );
-	dllColor4sv( v );
+	SIG("glColor4sv");
+	dllColor4sv(v);
 }
 static void APIENTRY logColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
 {
-	SIG( "glColor4b" );
-	dllColor4b( red, green, blue, alpha );
+	SIG("glColor4b");
+	dllColor4b(red, green, blue, alpha);
 }
 static void APIENTRY logColor4ubv(const GLubyte *v)
 {
-	SIG( "glColor4ubv" );
-	dllColor4ubv( v );
+	SIG("glColor4ubv");
+	dllColor4ubv(v);
 }
 static void APIENTRY logColor4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha)
 {
-	SIG( "glColor4ui" );
-	dllColor4ui( red, green, blue, alpha );
+	SIG("glColor4ui");
+	dllColor4ui(red, green, blue, alpha);
 }
 static void APIENTRY logColor4uiv(const GLuint *v)
 {
-	SIG( "glColor4uiv" );
-	dllColor4uiv( v );
+	SIG("glColor4uiv");
+	dllColor4uiv(v);
 }
 static void APIENTRY logColor4us(GLushort red, GLushort green, GLushort blue, GLushort alpha)
 {
-	SIG( "glColor4us" );
-	dllColor4us( red, green, blue, alpha );
+	SIG("glColor4us");
+	dllColor4us(red, green, blue, alpha);
 }
 static void APIENTRY logColor4usv(const GLushort *v)
 {
-	SIG( "glColor4usv" );
-	dllColor4usv( v );
+	SIG("glColor4usv");
+	dllColor4usv(v);
 }
 static void APIENTRY logColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
-	SIG( "glColorMask" );
-	dllColorMask( red, green, blue, alpha );
+	SIG("glColorMask");
+	dllColorMask(red, green, blue, alpha);
 }
 static void APIENTRY logColorMaterial(GLenum face, GLenum mode)
 {
-	SIG( "glColorMaterial" );
-	dllColorMaterial( face, mode );
+	SIG("glColorMaterial");
+	dllColorMaterial(face, mode);
 }
 
 static void APIENTRY logColorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer)
 {
-	SIG( "glColorPointer" );
-	dllColorPointer( size, type, stride, pointer );
+	SIG("glColorPointer");
+	dllColorPointer(size, type, stride, pointer);
 }
 
 static void APIENTRY logCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
 {
-	SIG( "glCopyPixels" );
-	dllCopyPixels( x, y, width, height, type );
+	SIG("glCopyPixels");
+	dllCopyPixels(x, y, width, height, type);
 }
 
 static void APIENTRY logCopyTexImage1D(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLint border)
 {
-	SIG( "glCopyTexImage1D" );
-	dllCopyTexImage1D( target, level, internalFormat, x, y, width, border );
+	SIG("glCopyTexImage1D");
+	dllCopyTexImage1D(target, level, internalFormat, x, y, width, border);
 }
 
 static void APIENTRY logCopyTexImage2D(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
-	SIG( "glCopyTexImage2D" );
-	dllCopyTexImage2D( target, level, internalFormat, x, y, width, height, border );
+	SIG("glCopyTexImage2D");
+	dllCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 }
 
 static void APIENTRY logCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
 {
-	SIG( "glCopyTexSubImage1D" );
-	dllCopyTexSubImage1D( target, level, xoffset, x, y, width );
+	SIG("glCopyTexSubImage1D");
+	dllCopyTexSubImage1D(target, level, xoffset, x, y, width);
 }
 
 static void APIENTRY logCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
-	SIG( "glCopyTexSubImage2D" );
-	dllCopyTexSubImage2D( target, level, xoffset, yoffset, x, y, width, height );
+	SIG("glCopyTexSubImage2D");
+	dllCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
 }
 
 static void APIENTRY logCullFace(GLenum mode)
 {
-	SIG( "glCullFace" );
-	dllCullFace( mode );
+	SIG("glCullFace");
+	dllCullFace(mode);
 }
 
 static void APIENTRY logDeleteLists(GLuint list, GLsizei range)
 {
-	SIG( "glDeleteLists" );
-	dllDeleteLists( list, range );
+	SIG("glDeleteLists");
+	dllDeleteLists(list, range);
 }
 
 static void APIENTRY logDeleteTextures(GLsizei n, const GLuint *textures)
 {
-	SIG( "glDeleteTextures" );
-	dllDeleteTextures( n, textures );
+	SIG("glDeleteTextures");
+	dllDeleteTextures(n, textures);
 }
 
 static void APIENTRY logDepthFunc(GLenum func)
 {
-	SIG( "glDepthFunc" );
-	dllDepthFunc( func );
+	SIG("glDepthFunc");
+	dllDepthFunc(func);
 }
 
 static void APIENTRY logDepthMask(GLboolean flag)
 {
-	SIG( "glDepthMask" );
-	dllDepthMask( flag );
+	SIG("glDepthMask");
+	dllDepthMask(flag);
 }
 
 static void APIENTRY logDepthRange(GLclampd zNear, GLclampd zFar)
 {
-	SIG( "glDepthRange" );
-	dllDepthRange( zNear, zFar );
+	SIG("glDepthRange");
+	dllDepthRange(zNear, zFar);
 }
 
 static void APIENTRY logDisable(GLenum cap)
 {
-	fprintf( glw_state.log_fp, "glDisable( 0x%x )\n", cap );
-	dllDisable( cap );
+	fprintf(glw_state.log_fp, "glDisable( 0x%x )\n", cap);
+	dllDisable(cap);
 }
 
 static void APIENTRY logDisableClientState(GLenum array)
 {
-	SIG( "glDisableClientState" );
-	dllDisableClientState( array );
+	SIG("glDisableClientState");
+	dllDisableClientState(array);
 }
 
 static void APIENTRY logDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
-	SIG( "glDrawArrays" );
-	dllDrawArrays( mode, first, count );
+	SIG("glDrawArrays");
+	dllDrawArrays(mode, first, count);
 }
 
 static void APIENTRY logDrawBuffer(GLenum mode)
 {
-	SIG( "glDrawBuffer" );
-	dllDrawBuffer( mode );
+	SIG("glDrawBuffer");
+	dllDrawBuffer(mode);
 }
 
 static void APIENTRY logDrawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
-	SIG( "glDrawElements" );
-	dllDrawElements( mode, count, type, indices );
+	SIG("glDrawElements");
+	dllDrawElements(mode, count, type, indices);
 }
 
 static void APIENTRY logDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels)
 {
-	SIG( "glDrawPixels" );
-	dllDrawPixels( width, height, format, type, pixels );
+	SIG("glDrawPixels");
+	dllDrawPixels(width, height, format, type, pixels);
 }
 
 static void APIENTRY logEdgeFlag(GLboolean flag)
 {
-	SIG( "glEdgeFlag" );
-	dllEdgeFlag( flag );
+	SIG("glEdgeFlag");
+	dllEdgeFlag(flag);
 }
 
 static void APIENTRY logEdgeFlagPointer(GLsizei stride, const void *pointer)
 {
-	SIG( "glEdgeFlagPointer" );
-	dllEdgeFlagPointer( stride, pointer );
+	SIG("glEdgeFlagPointer");
+	dllEdgeFlagPointer(stride, pointer);
 }
 
 static void APIENTRY logEdgeFlagv(const GLboolean *flag)
 {
-	SIG( "glEdgeFlagv" );
-	dllEdgeFlagv( flag );
+	SIG("glEdgeFlagv");
+	dllEdgeFlagv(flag);
 }
 
 static void APIENTRY logEnable(GLenum cap)
 {
-	fprintf( glw_state.log_fp, "glEnable( 0x%x )\n", cap );
-	dllEnable( cap );
+	fprintf(glw_state.log_fp, "glEnable( 0x%x )\n", cap);
+	dllEnable(cap);
 }
 
 static void APIENTRY logEnableClientState(GLenum array)
 {
-	SIG( "glEnableClientState" );
-	dllEnableClientState( array );
+	SIG("glEnableClientState");
+	dllEnableClientState(array);
 }
 
 static void APIENTRY logEnd(void)
 {
-	SIG( "glEnd" );
+	SIG("glEnd");
 	dllEnd();
 }
 
 static void APIENTRY logEndList(void)
 {
-	SIG( "glEndList" );
+	SIG("glEndList");
 	dllEndList();
 }
 
 static void APIENTRY logEvalCoord1d(GLdouble u)
 {
-	SIG( "glEvalCoord1d" );
-	dllEvalCoord1d( u );
+	SIG("glEvalCoord1d");
+	dllEvalCoord1d(u);
 }
 
 static void APIENTRY logEvalCoord1dv(const GLdouble *u)
 {
-	SIG( "glEvalCoord1dv" );
-	dllEvalCoord1dv( u );
+	SIG("glEvalCoord1dv");
+	dllEvalCoord1dv(u);
 }
 
 static void APIENTRY logEvalCoord1f(GLfloat u)
 {
-	SIG( "glEvalCoord1f" );
-	dllEvalCoord1f( u );
+	SIG("glEvalCoord1f");
+	dllEvalCoord1f(u);
 }
 
 static void APIENTRY logEvalCoord1fv(const GLfloat *u)
 {
-	SIG( "glEvalCoord1fv" );
-	dllEvalCoord1fv( u );
+	SIG("glEvalCoord1fv");
+	dllEvalCoord1fv(u);
 }
 static void APIENTRY logEvalCoord2d(GLdouble u, GLdouble v)
 {
-	SIG( "glEvalCoord2d" );
-	dllEvalCoord2d( u, v );
+	SIG("glEvalCoord2d");
+	dllEvalCoord2d(u, v);
 }
 static void APIENTRY logEvalCoord2dv(const GLdouble *u)
 {
-	SIG( "glEvalCoord2dv" );
-	dllEvalCoord2dv( u );
+	SIG("glEvalCoord2dv");
+	dllEvalCoord2dv(u);
 }
 static void APIENTRY logEvalCoord2f(GLfloat u, GLfloat v)
 {
-	SIG( "glEvalCoord2f" );
-	dllEvalCoord2f( u, v );
+	SIG("glEvalCoord2f");
+	dllEvalCoord2f(u, v);
 }
 static void APIENTRY logEvalCoord2fv(const GLfloat *u)
 {
-	SIG( "glEvalCoord2fv" );
-	dllEvalCoord2fv( u );
+	SIG("glEvalCoord2fv");
+	dllEvalCoord2fv(u);
 }
 
 static void APIENTRY logEvalMesh1(GLenum mode, GLint i1, GLint i2)
 {
-	SIG( "glEvalMesh1" );
-	dllEvalMesh1( mode, i1, i2 );
+	SIG("glEvalMesh1");
+	dllEvalMesh1(mode, i1, i2);
 }
 static void APIENTRY logEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
 {
-	SIG( "glEvalMesh2" );
-	dllEvalMesh2( mode, i1, i2, j1, j2 );
+	SIG("glEvalMesh2");
+	dllEvalMesh2(mode, i1, i2, j1, j2);
 }
 static void APIENTRY logEvalPoint1(GLint i)
 {
-	SIG( "glEvalPoint1" );
-	dllEvalPoint1( i );
+	SIG("glEvalPoint1");
+	dllEvalPoint1(i);
 }
 static void APIENTRY logEvalPoint2(GLint i, GLint j)
 {
-	SIG( "glEvalPoint2" );
-	dllEvalPoint2( i, j );
+	SIG("glEvalPoint2");
+	dllEvalPoint2(i, j);
 }
 
 static void APIENTRY logFeedbackBuffer(GLsizei size, GLenum type, GLfloat *buffer)
 {
-	SIG( "glFeedbackBuffer" );
-	dllFeedbackBuffer( size, type, buffer );
+	SIG("glFeedbackBuffer");
+	dllFeedbackBuffer(size, type, buffer);
 }
 
 static void APIENTRY logFinish(void)
 {
-	SIG( "glFinish" );
+	SIG("glFinish");
 	dllFinish();
 }
 
 static void APIENTRY logFlush(void)
 {
-	SIG( "glFlush" );
+	SIG("glFlush");
 	dllFlush();
 }
 
 static void APIENTRY logFogf(GLenum pname, GLfloat param)
 {
-	SIG( "glFogf" );
-	dllFogf( pname, param );
+	SIG("glFogf");
+	dllFogf(pname, param);
 }
 
 static void APIENTRY logFogfv(GLenum pname, const GLfloat *params)
 {
-	SIG( "glFogfv" );
-	dllFogfv( pname, params );
+	SIG("glFogfv");
+	dllFogfv(pname, params);
 }
 
 static void APIENTRY logFogi(GLenum pname, GLint param)
 {
-	SIG( "glFogi" );
-	dllFogi( pname, param );
+	SIG("glFogi");
+	dllFogi(pname, param);
 }
 
 static void APIENTRY logFogiv(GLenum pname, const GLint *params)
 {
-	SIG( "glFogiv" );
-	dllFogiv( pname, params );
+	SIG("glFogiv");
+	dllFogiv(pname, params);
 }
 
 static void APIENTRY logFrontFace(GLenum mode)
 {
-	SIG( "glFrontFace" );
-	dllFrontFace( mode );
+	SIG("glFrontFace");
+	dllFrontFace(mode);
 }
 
 static void APIENTRY logFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
-	SIG( "glFrustum" );
-	dllFrustum( left, right, bottom, top, zNear, zFar );
+	SIG("glFrustum");
+	dllFrustum(left, right, bottom, top, zNear, zFar);
 }
 
 static GLuint APIENTRY logGenLists(GLsizei range)
 {
-	SIG( "glGenLists" );
-	return dllGenLists( range );
+	SIG("glGenLists");
+	return dllGenLists(range);
 }
 
 static void APIENTRY logGenTextures(GLsizei n, GLuint *textures)
 {
-	SIG( "glGenTextures" );
-	dllGenTextures( n, textures );
+	SIG("glGenTextures");
+	dllGenTextures(n, textures);
 }
 
 static void APIENTRY logGetBooleanv(GLenum pname, GLboolean *params)
 {
-	SIG( "glGetBooleanv" );
-	dllGetBooleanv( pname, params );
+	SIG("glGetBooleanv");
+	dllGetBooleanv(pname, params);
 }
 
 static void APIENTRY logGetClipPlane(GLenum plane, GLdouble *equation)
 {
-	SIG( "glGetClipPlane" );
-	dllGetClipPlane( plane, equation );
+	SIG("glGetClipPlane");
+	dllGetClipPlane(plane, equation);
 }
 
 static void APIENTRY logGetDoublev(GLenum pname, GLdouble *params)
 {
-	SIG( "glGetDoublev" );
-	dllGetDoublev( pname, params );
+	SIG("glGetDoublev");
+	dllGetDoublev(pname, params);
 }
 
 static GLenum APIENTRY logGetError(void)
 {
-	SIG( "glGetError" );
+	SIG("glGetError");
 	return dllGetError();
 }
 
 static void APIENTRY logGetFloatv(GLenum pname, GLfloat *params)
 {
-	SIG( "glGetFloatv" );
-	dllGetFloatv( pname, params );
+	SIG("glGetFloatv");
+	dllGetFloatv(pname, params);
 }
 
 static void APIENTRY logGetIntegerv(GLenum pname, GLint *params)
 {
-	SIG( "glGetIntegerv" );
-	dllGetIntegerv( pname, params );
+	SIG("glGetIntegerv");
+	dllGetIntegerv(pname, params);
 }
 
 static void APIENTRY logGetLightfv(GLenum light, GLenum pname, GLfloat *params)
 {
-	SIG( "glGetLightfv" );
-	dllGetLightfv( light, pname, params );
+	SIG("glGetLightfv");
+	dllGetLightfv(light, pname, params);
 }
 
 static void APIENTRY logGetLightiv(GLenum light, GLenum pname, GLint *params)
 {
-	SIG( "glGetLightiv" );
-	dllGetLightiv( light, pname, params );
+	SIG("glGetLightiv");
+	dllGetLightiv(light, pname, params);
 }
 
 static void APIENTRY logGetMapdv(GLenum target, GLenum query, GLdouble *v)
 {
-	SIG( "glGetMapdv" );
-	dllGetMapdv( target, query, v );
+	SIG("glGetMapdv");
+	dllGetMapdv(target, query, v);
 }
 
 static void APIENTRY logGetMapfv(GLenum target, GLenum query, GLfloat *v)
 {
-	SIG( "glGetMapfv" );
-	dllGetMapfv( target, query, v );
+	SIG("glGetMapfv");
+	dllGetMapfv(target, query, v);
 }
 
 static void APIENTRY logGetMapiv(GLenum target, GLenum query, GLint *v)
 {
-	SIG( "glGetMapiv" );
-	dllGetMapiv( target, query, v );
+	SIG("glGetMapiv");
+	dllGetMapiv(target, query, v);
 }
 
 static void APIENTRY logGetMaterialfv(GLenum face, GLenum pname, GLfloat *params)
 {
-	SIG( "glGetMaterialfv" );
-	dllGetMaterialfv( face, pname, params );
+	SIG("glGetMaterialfv");
+	dllGetMaterialfv(face, pname, params);
 }
 
 static void APIENTRY logGetMaterialiv(GLenum face, GLenum pname, GLint *params)
 {
-	SIG( "glGetMaterialiv" );
-	dllGetMaterialiv( face, pname, params );
+	SIG("glGetMaterialiv");
+	dllGetMaterialiv(face, pname, params);
 }
 
 static void APIENTRY logGetPixelMapfv(GLenum map, GLfloat *values)
 {
-	SIG( "glGetPixelMapfv" );
-	dllGetPixelMapfv( map, values );
+	SIG("glGetPixelMapfv");
+	dllGetPixelMapfv(map, values);
 }
 
 static void APIENTRY logGetPixelMapuiv(GLenum map, GLuint *values)
 {
-	SIG( "glGetPixelMapuiv" );
-	dllGetPixelMapuiv( map, values );
+	SIG("glGetPixelMapuiv");
+	dllGetPixelMapuiv(map, values);
 }
 
 static void APIENTRY logGetPixelMapusv(GLenum map, GLushort *values)
 {
-	SIG( "glGetPixelMapusv" );
-	dllGetPixelMapusv( map, values );
+	SIG("glGetPixelMapusv");
+	dllGetPixelMapusv(map, values);
 }
 
 static void APIENTRY logGetPointerv(GLenum pname, GLvoid* *params)
 {
-	SIG( "glGetPointerv" );
-	dllGetPointerv( pname, params );
+	SIG("glGetPointerv");
+	dllGetPointerv(pname, params);
 }
 
 static void APIENTRY logGetPolygonStipple(GLubyte *mask)
 {
-	SIG( "glGetPolygonStipple" );
-	dllGetPolygonStipple( mask );
+	SIG("glGetPolygonStipple");
+	dllGetPolygonStipple(mask);
 }
 
 static const GLubyte * APIENTRY logGetString(GLenum name)
 {
-	SIG( "glGetString" );
-	return dllGetString( name );
+	SIG("glGetString");
+	return dllGetString(name);
 }
 
 static void APIENTRY logGetTexEnvfv(GLenum target, GLenum pname, GLfloat *params)
 {
-	SIG( "glGetTexEnvfv" );
-	dllGetTexEnvfv( target, pname, params );
+	SIG("glGetTexEnvfv");
+	dllGetTexEnvfv(target, pname, params);
 }
 
 static void APIENTRY logGetTexEnviv(GLenum target, GLenum pname, GLint *params)
 {
-	SIG( "glGetTexEnviv" );
-	dllGetTexEnviv( target, pname, params );
+	SIG("glGetTexEnviv");
+	dllGetTexEnviv(target, pname, params);
 }
 
 static void APIENTRY logGetTexGendv(GLenum coord, GLenum pname, GLdouble *params)
 {
-	SIG( "glGetTexGendv" );
-	dllGetTexGendv( coord, pname, params );
+	SIG("glGetTexGendv");
+	dllGetTexGendv(coord, pname, params);
 }
 
 static void APIENTRY logGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
 {
-	SIG( "glGetTexGenfv" );
-	dllGetTexGenfv( coord, pname, params );
+	SIG("glGetTexGenfv");
+	dllGetTexGenfv(coord, pname, params);
 }
 
 static void APIENTRY logGetTexGeniv(GLenum coord, GLenum pname, GLint *params)
 {
-	SIG( "glGetTexGeniv" );
-	dllGetTexGeniv( coord, pname, params );
+	SIG("glGetTexGeniv");
+	dllGetTexGeniv(coord, pname, params);
 }
 
 static void APIENTRY logGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, void *pixels)
 {
-	SIG( "glGetTexImage" );
-	dllGetTexImage( target, level, format, type, pixels );
+	SIG("glGetTexImage");
+	dllGetTexImage(target, level, format, type, pixels);
 }
-static void APIENTRY logGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params )
+static void APIENTRY logGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params)
 {
-	SIG( "glGetTexLevelParameterfv" );
-	dllGetTexLevelParameterfv( target, level, pname, params );
+	SIG("glGetTexLevelParameterfv");
+	dllGetTexLevelParameterfv(target, level, pname, params);
 }
 
 static void APIENTRY logGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
 {
-	SIG( "glGetTexLevelParameteriv" );
-	dllGetTexLevelParameteriv( target, level, pname, params );
+	SIG("glGetTexLevelParameteriv");
+	dllGetTexLevelParameteriv(target, level, pname, params);
 }
 
 static void APIENTRY logGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
-	SIG( "glGetTexParameterfv" );
-	dllGetTexParameterfv( target, pname, params );
+	SIG("glGetTexParameterfv");
+	dllGetTexParameterfv(target, pname, params);
 }
 
 static void APIENTRY logGetTexParameteriv(GLenum target, GLenum pname, GLint *params)
 {
-	SIG( "glGetTexParameteriv" );
-	dllGetTexParameteriv( target, pname, params );
+	SIG("glGetTexParameteriv");
+	dllGetTexParameteriv(target, pname, params);
 }
 
 static void APIENTRY logHint(GLenum target, GLenum mode)
 {
-	fprintf( glw_state.log_fp, "glHint( 0x%x, 0x%x )\n", target, mode );
-	dllHint( target, mode );
+	fprintf(glw_state.log_fp, "glHint( 0x%x, 0x%x )\n", target, mode);
+	dllHint(target, mode);
 }
 
 static void APIENTRY logIndexMask(GLuint mask)
 {
-	SIG( "glIndexMask" );
-	dllIndexMask( mask );
+	SIG("glIndexMask");
+	dllIndexMask(mask);
 }
 
 static void APIENTRY logIndexPointer(GLenum type, GLsizei stride, const void *pointer)
 {
-	SIG( "glIndexPointer" );
-	dllIndexPointer( type, stride, pointer );
+	SIG("glIndexPointer");
+	dllIndexPointer(type, stride, pointer);
 }
 
 static void APIENTRY logIndexd(GLdouble c)
 {
-	SIG( "glIndexd" );
-	dllIndexd( c );
+	SIG("glIndexd");
+	dllIndexd(c);
 }
 
 static void APIENTRY logIndexdv(const GLdouble *c)
 {
-	SIG( "glIndexdv" );
-	dllIndexdv( c );
+	SIG("glIndexdv");
+	dllIndexdv(c);
 }
 
 static void APIENTRY logIndexf(GLfloat c)
 {
-	SIG( "glIndexf" );
-	dllIndexf( c );
+	SIG("glIndexf");
+	dllIndexf(c);
 }
 
 static void APIENTRY logIndexfv(const GLfloat *c)
 {
-	SIG( "glIndexfv" );
-	dllIndexfv( c );
+	SIG("glIndexfv");
+	dllIndexfv(c);
 }
 
 static void APIENTRY logIndexi(GLint c)
 {
-	SIG( "glIndexi" );
-	dllIndexi( c );
+	SIG("glIndexi");
+	dllIndexi(c);
 }
 
 static void APIENTRY logIndexiv(const GLint *c)
 {
-	SIG( "glIndexiv" );
-	dllIndexiv( c );
+	SIG("glIndexiv");
+	dllIndexiv(c);
 }
 
 static void APIENTRY logIndexs(GLshort c)
 {
-	SIG( "glIndexs" );
-	dllIndexs( c );
+	SIG("glIndexs");
+	dllIndexs(c);
 }
 
 static void APIENTRY logIndexsv(const GLshort *c)
 {
-	SIG( "glIndexsv" );
-	dllIndexsv( c );
+	SIG("glIndexsv");
+	dllIndexsv(c);
 }
 
 static void APIENTRY logIndexub(GLubyte c)
 {
-	SIG( "glIndexub" );
-	dllIndexub( c );
+	SIG("glIndexub");
+	dllIndexub(c);
 }
 
 static void APIENTRY logIndexubv(const GLubyte *c)
 {
-	SIG( "glIndexubv" );
-	dllIndexubv( c );
+	SIG("glIndexubv");
+	dllIndexubv(c);
 }
 
 static void APIENTRY logInitNames(void)
 {
-	SIG( "glInitNames" );
+	SIG("glInitNames");
 	dllInitNames();
 }
 
 static void APIENTRY logInterleavedArrays(GLenum format, GLsizei stride, const void *pointer)
 {
-	SIG( "glInterleavedArrays" );
-	dllInterleavedArrays( format, stride, pointer );
+	SIG("glInterleavedArrays");
+	dllInterleavedArrays(format, stride, pointer);
 }
 
 static GLboolean APIENTRY logIsEnabled(GLenum cap)
 {
-	SIG( "glIsEnabled" );
-	return dllIsEnabled( cap );
+	SIG("glIsEnabled");
+	return dllIsEnabled(cap);
 }
 static GLboolean APIENTRY logIsList(GLuint list)
 {
-	SIG( "glIsList" );
-	return dllIsList( list );
+	SIG("glIsList");
+	return dllIsList(list);
 }
 static GLboolean APIENTRY logIsTexture(GLuint texture)
 {
-	SIG( "glIsTexture" );
-	return dllIsTexture( texture );
+	SIG("glIsTexture");
+	return dllIsTexture(texture);
 }
 
 static void APIENTRY logLightModelf(GLenum pname, GLfloat param)
 {
-	SIG( "glLightModelf" );
-	dllLightModelf( pname, param );
+	SIG("glLightModelf");
+	dllLightModelf(pname, param);
 }
 
 static void APIENTRY logLightModelfv(GLenum pname, const GLfloat *params)
 {
-	SIG( "glLightModelfv" );
-	dllLightModelfv( pname, params );
+	SIG("glLightModelfv");
+	dllLightModelfv(pname, params);
 }
 
 static void APIENTRY logLightModeli(GLenum pname, GLint param)
 {
-	SIG( "glLightModeli" );
-	dllLightModeli( pname, param );
+	SIG("glLightModeli");
+	dllLightModeli(pname, param);
 
 }
 
 static void APIENTRY logLightModeliv(GLenum pname, const GLint *params)
 {
-	SIG( "glLightModeliv" );
-	dllLightModeliv( pname, params );
+	SIG("glLightModeliv");
+	dllLightModeliv(pname, params);
 }
 
 static void APIENTRY logLightf(GLenum light, GLenum pname, GLfloat param)
 {
-	SIG( "glLightf" );
-	dllLightf( light, pname, param );
+	SIG("glLightf");
+	dllLightf(light, pname, param);
 }
 
 static void APIENTRY logLightfv(GLenum light, GLenum pname, const GLfloat *params)
 {
-	SIG( "glLightfv" );
-	dllLightfv( light, pname, params );
+	SIG("glLightfv");
+	dllLightfv(light, pname, params);
 }
 
 static void APIENTRY logLighti(GLenum light, GLenum pname, GLint param)
 {
-	SIG( "glLighti" );
-	dllLighti( light, pname, param );
+	SIG("glLighti");
+	dllLighti(light, pname, param);
 }
 
 static void APIENTRY logLightiv(GLenum light, GLenum pname, const GLint *params)
 {
-	SIG( "glLightiv" );
-	dllLightiv( light, pname, params );
+	SIG("glLightiv");
+	dllLightiv(light, pname, params);
 }
 
 static void APIENTRY logLineStipple(GLint factor, GLushort pattern)
 {
-	SIG( "glLineStipple" );
-	dllLineStipple( factor, pattern );
+	SIG("glLineStipple");
+	dllLineStipple(factor, pattern);
 }
 
 static void APIENTRY logLineWidth(GLfloat width)
 {
-	SIG( "glLineWidth" );
-	dllLineWidth( width );
+	SIG("glLineWidth");
+	dllLineWidth(width);
 }
 
 static void APIENTRY logListBase(GLuint base)
 {
-	SIG( "glListBase" );
-	dllListBase( base );
+	SIG("glListBase");
+	dllListBase(base);
 }
 
 static void APIENTRY logLoadIdentity(void)
 {
-	SIG( "glLoadIdentity" );
+	SIG("glLoadIdentity");
 	dllLoadIdentity();
 }
 
 static void APIENTRY logLoadMatrixd(const GLdouble *m)
 {
-	SIG( "glLoadMatrixd" );
-	dllLoadMatrixd( m );
+	SIG("glLoadMatrixd");
+	dllLoadMatrixd(m);
 }
 
 static void APIENTRY logLoadMatrixf(const GLfloat *m)
 {
-	SIG( "glLoadMatrixf" );
-	dllLoadMatrixf( m );
+	SIG("glLoadMatrixf");
+	dllLoadMatrixf(m);
 }
 
 static void APIENTRY logLoadName(GLuint name)
 {
-	SIG( "glLoadName" );
-	dllLoadName( name );
+	SIG("glLoadName");
+	dllLoadName(name);
 }
 
 static void APIENTRY logLogicOp(GLenum opcode)
 {
-	SIG( "glLogicOp" );
-	dllLogicOp( opcode );
+	SIG("glLogicOp");
+	dllLogicOp(opcode);
 }
 
 static void APIENTRY logMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points)
 {
-	SIG( "glMap1d" );
-	dllMap1d( target, u1, u2, stride, order, points );
+	SIG("glMap1d");
+	dllMap1d(target, u1, u2, stride, order, points);
 }
 
 static void APIENTRY logMap1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points)
 {
-	SIG( "glMap1f" );
-	dllMap1f( target, u1, u2, stride, order, points );
+	SIG("glMap1f");
+	dllMap1f(target, u1, u2, stride, order, points);
 }
 
 static void APIENTRY logMap2d(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points)
 {
-	SIG( "glMap2d" );
-	dllMap2d( target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points );
+	SIG("glMap2d");
+	dllMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points);
 }
 
 static void APIENTRY logMap2f(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points)
 {
-	SIG( "glMap2f" );
-	dllMap2f( target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points );
+	SIG("glMap2f");
+	dllMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points);
 }
 
 static void APIENTRY logMapGrid1d(GLint un, GLdouble u1, GLdouble u2)
 {
-	SIG( "glMapGrid1d" );
-	dllMapGrid1d( un, u1, u2 );
+	SIG("glMapGrid1d");
+	dllMapGrid1d(un, u1, u2);
 }
 
 static void APIENTRY logMapGrid1f(GLint un, GLfloat u1, GLfloat u2)
 {
-	SIG( "glMapGrid1f" );
-	dllMapGrid1f( un, u1, u2 );
+	SIG("glMapGrid1f");
+	dllMapGrid1f(un, u1, u2);
 }
 
 static void APIENTRY logMapGrid2d(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2)
 {
-	SIG( "glMapGrid2d" );
-	dllMapGrid2d( un, u1, u2, vn, v1, v2 );
+	SIG("glMapGrid2d");
+	dllMapGrid2d(un, u1, u2, vn, v1, v2);
 }
 static void APIENTRY logMapGrid2f(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2)
 {
-	SIG( "glMapGrid2f" );
-	dllMapGrid2f( un, u1, u2, vn, v1, v2 );
+	SIG("glMapGrid2f");
+	dllMapGrid2f(un, u1, u2, vn, v1, v2);
 }
 static void APIENTRY logMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
-	SIG( "glMaterialf" );
-	dllMaterialf( face, pname, param );
+	SIG("glMaterialf");
+	dllMaterialf(face, pname, param);
 }
 static void APIENTRY logMaterialfv(GLenum face, GLenum pname, const GLfloat *params)
 {
-	SIG( "glMaterialfv" );
-	dllMaterialfv( face, pname, params );
+	SIG("glMaterialfv");
+	dllMaterialfv(face, pname, params);
 }
 
 static void APIENTRY logMateriali(GLenum face, GLenum pname, GLint param)
 {
-	SIG( "glMateriali" );
-	dllMateriali( face, pname, param );
+	SIG("glMateriali");
+	dllMateriali(face, pname, param);
 }
 
 static void APIENTRY logMaterialiv(GLenum face, GLenum pname, const GLint *params)
 {
-	SIG( "glMaterialiv" );
-	dllMaterialiv( face, pname, params );
+	SIG("glMaterialiv");
+	dllMaterialiv(face, pname, params);
 }
 
 static void APIENTRY logMatrixMode(GLenum mode)
 {
-	SIG( "glMatrixMode" );
-	dllMatrixMode( mode );
+	SIG("glMatrixMode");
+	dllMatrixMode(mode);
 }
 
 static void APIENTRY logMultMatrixd(const GLdouble *m)
 {
-	SIG( "glMultMatrixd" );
-	dllMultMatrixd( m );
+	SIG("glMultMatrixd");
+	dllMultMatrixd(m);
 }
 
 static void APIENTRY logMultMatrixf(const GLfloat *m)
 {
-	SIG( "glMultMatrixf" );
-	dllMultMatrixf( m );
+	SIG("glMultMatrixf");
+	dllMultMatrixf(m);
 }
 
 static void APIENTRY logNewList(GLuint list, GLenum mode)
 {
-	SIG( "glNewList" );
-	dllNewList( list, mode );
+	SIG("glNewList");
+	dllNewList(list, mode);
 }
 
 static void APIENTRY logNormal3b(GLbyte nx, GLbyte ny, GLbyte nz)
 {
-	SIG ("glNormal3b" );
-	dllNormal3b( nx, ny, nz );
+	SIG("glNormal3b");
+	dllNormal3b(nx, ny, nz);
 }
 
 static void APIENTRY logNormal3bv(const GLbyte *v)
 {
-	SIG( "glNormal3bv" );
-	dllNormal3bv( v );
+	SIG("glNormal3bv");
+	dllNormal3bv(v);
 }
 
 static void APIENTRY logNormal3d(GLdouble nx, GLdouble ny, GLdouble nz)
 {
-	SIG( "glNormal3d" );
-	dllNormal3d( nx, ny, nz );
+	SIG("glNormal3d");
+	dllNormal3d(nx, ny, nz);
 }
 
 static void APIENTRY logNormal3dv(const GLdouble *v)
 {
-	SIG( "glNormal3dv" );
-	dllNormal3dv( v );
+	SIG("glNormal3dv");
+	dllNormal3dv(v);
 }
 
 static void APIENTRY logNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 {
-	SIG( "glNormal3f" );
-	dllNormal3f( nx, ny, nz );
+	SIG("glNormal3f");
+	dllNormal3f(nx, ny, nz);
 }
 
 static void APIENTRY logNormal3fv(const GLfloat *v)
 {
-	SIG( "glNormal3fv" );
-	dllNormal3fv( v );
+	SIG("glNormal3fv");
+	dllNormal3fv(v);
 }
 static void APIENTRY logNormal3i(GLint nx, GLint ny, GLint nz)
 {
-	SIG( "glNormal3i" );
-	dllNormal3i( nx, ny, nz );
+	SIG("glNormal3i");
+	dllNormal3i(nx, ny, nz);
 }
 static void APIENTRY logNormal3iv(const GLint *v)
 {
-	SIG( "glNormal3iv" );
-	dllNormal3iv( v );
+	SIG("glNormal3iv");
+	dllNormal3iv(v);
 }
 static void APIENTRY logNormal3s(GLshort nx, GLshort ny, GLshort nz)
 {
-	SIG( "glNormal3s" );
-	dllNormal3s( nx, ny, nz );
+	SIG("glNormal3s");
+	dllNormal3s(nx, ny, nz);
 }
 static void APIENTRY logNormal3sv(const GLshort *v)
 {
-	SIG( "glNormal3sv" );
-	dllNormal3sv( v );
+	SIG("glNormal3sv");
+	dllNormal3sv(v);
 }
 static void APIENTRY logNormalPointer(GLenum type, GLsizei stride, const void *pointer)
 {
-	SIG( "glNormalPointer" );
-	dllNormalPointer( type, stride, pointer );
+	SIG("glNormalPointer");
+	dllNormalPointer(type, stride, pointer);
 }
 static void APIENTRY logOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
-	SIG( "glOrtho" );
-	dllOrtho( left, right, bottom, top, zNear, zFar );
+	SIG("glOrtho");
+	dllOrtho(left, right, bottom, top, zNear, zFar);
 }
 
 static void APIENTRY logPassThrough(GLfloat token)
 {
-	SIG( "glPassThrough" );
-	dllPassThrough( token );
+	SIG("glPassThrough");
+	dllPassThrough(token);
 }
 
 static void APIENTRY logPixelMapfv(GLenum map, GLsizei mapsize, const GLfloat *values)
 {
-	SIG( "glPixelMapfv" );
-	dllPixelMapfv( map, mapsize, values );
+	SIG("glPixelMapfv");
+	dllPixelMapfv(map, mapsize, values);
 }
 
 static void APIENTRY logPixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values)
 {
-	SIG( "glPixelMapuiv" );
-	dllPixelMapuiv( map, mapsize, values );
+	SIG("glPixelMapuiv");
+	dllPixelMapuiv(map, mapsize, values);
 }
 
 static void APIENTRY logPixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values)
 {
-	SIG( "glPixelMapusv" );
-	dllPixelMapusv( map, mapsize, values );
+	SIG("glPixelMapusv");
+	dllPixelMapusv(map, mapsize, values);
 }
 static void APIENTRY logPixelStoref(GLenum pname, GLfloat param)
 {
-	SIG( "glPixelStoref" );
-	dllPixelStoref( pname, param );
+	SIG("glPixelStoref");
+	dllPixelStoref(pname, param);
 }
 static void APIENTRY logPixelStorei(GLenum pname, GLint param)
 {
-	SIG( "glPixelStorei" );
-	dllPixelStorei( pname, param );
+	SIG("glPixelStorei");
+	dllPixelStorei(pname, param);
 }
 static void APIENTRY logPixelTransferf(GLenum pname, GLfloat param)
 {
-	SIG( "glPixelTransferf" );
-	dllPixelTransferf( pname, param );
+	SIG("glPixelTransferf");
+	dllPixelTransferf(pname, param);
 }
 
 static void APIENTRY logPixelTransferi(GLenum pname, GLint param)
 {
-	SIG( "glPixelTransferi" );
-	dllPixelTransferi( pname, param );
+	SIG("glPixelTransferi");
+	dllPixelTransferi(pname, param);
 }
 
 static void APIENTRY logPixelZoom(GLfloat xfactor, GLfloat yfactor)
 {
-	SIG( "glPixelZoom" );
-	dllPixelZoom( xfactor, yfactor );
+	SIG("glPixelZoom");
+	dllPixelZoom(xfactor, yfactor);
 }
 
 static void APIENTRY logPointSize(GLfloat size)
 {
-	SIG( "glPointSize" );
-	dllPointSize( size );
+	SIG("glPointSize");
+	dllPointSize(size);
 }
 
 static void APIENTRY logPolygonMode(GLenum face, GLenum mode)
 {
-	fprintf( glw_state.log_fp, "glPolygonMode( 0x%x, 0x%x )\n", face, mode );
-	dllPolygonMode( face, mode );
+	fprintf(glw_state.log_fp, "glPolygonMode( 0x%x, 0x%x )\n", face, mode);
+	dllPolygonMode(face, mode);
 }
 
 static void APIENTRY logPolygonOffset(GLfloat factor, GLfloat units)
 {
-	SIG( "glPolygonOffset" );
-	dllPolygonOffset( factor, units );
+	SIG("glPolygonOffset");
+	dllPolygonOffset(factor, units);
 }
-static void APIENTRY logPolygonStipple(const GLubyte *mask )
+static void APIENTRY logPolygonStipple(const GLubyte *mask)
 {
-	SIG( "glPolygonStipple" );
-	dllPolygonStipple( mask );
+	SIG("glPolygonStipple");
+	dllPolygonStipple(mask);
 }
 static void APIENTRY logPopAttrib(void)
 {
-	SIG( "glPopAttrib" );
+	SIG("glPopAttrib");
 	dllPopAttrib();
 }
 
 static void APIENTRY logPopClientAttrib(void)
 {
-	SIG( "glPopClientAttrib" );
+	SIG("glPopClientAttrib");
 	dllPopClientAttrib();
 }
 
 static void APIENTRY logPopMatrix(void)
 {
-	SIG( "glPopMatrix" );
+	SIG("glPopMatrix");
 	dllPopMatrix();
 }
 
 static void APIENTRY logPopName(void)
 {
-	SIG( "glPopName" );
+	SIG("glPopName");
 	dllPopName();
 }
 
 static void APIENTRY logPrioritizeTextures(GLsizei n, const GLuint *textures, const GLclampf *priorities)
 {
-	SIG( "glPrioritizeTextures" );
-	dllPrioritizeTextures( n, textures, priorities );
+	SIG("glPrioritizeTextures");
+	dllPrioritizeTextures(n, textures, priorities);
 }
 
 static void APIENTRY logPushAttrib(GLbitfield mask)
 {
-	SIG( "glPushAttrib" );
-	dllPushAttrib( mask );
+	SIG("glPushAttrib");
+	dllPushAttrib(mask);
 }
 
 static void APIENTRY logPushClientAttrib(GLbitfield mask)
 {
-	SIG( "glPushClientAttrib" );
-	dllPushClientAttrib( mask );
+	SIG("glPushClientAttrib");
+	dllPushClientAttrib(mask);
 }
 
 static void APIENTRY logPushMatrix(void)
 {
-	SIG( "glPushMatrix" );
+	SIG("glPushMatrix");
 	dllPushMatrix();
 }
 
 static void APIENTRY logPushName(GLuint name)
 {
-	SIG( "glPushName" );
-	dllPushName( name );
+	SIG("glPushName");
+	dllPushName(name);
 }
 
 static void APIENTRY logRasterPos2d(GLdouble x, GLdouble y)
 {
-	SIG ("glRasterPot2d" );
-	dllRasterPos2d( x, y );
+	SIG("glRasterPot2d");
+	dllRasterPos2d(x, y);
 }
 
 static void APIENTRY logRasterPos2dv(const GLdouble *v)
 {
-	SIG( "glRasterPos2dv" );
-	dllRasterPos2dv( v );
+	SIG("glRasterPos2dv");
+	dllRasterPos2dv(v);
 }
 
 static void APIENTRY logRasterPos2f(GLfloat x, GLfloat y)
 {
-	SIG( "glRasterPos2f" );
-	dllRasterPos2f( x, y );
+	SIG("glRasterPos2f");
+	dllRasterPos2f(x, y);
 }
 static void APIENTRY logRasterPos2fv(const GLfloat *v)
 {
-	SIG( "glRasterPos2dv" );
-	dllRasterPos2fv( v );
+	SIG("glRasterPos2dv");
+	dllRasterPos2fv(v);
 }
 static void APIENTRY logRasterPos2i(GLint x, GLint y)
 {
-	SIG( "glRasterPos2if" );
-	dllRasterPos2i( x, y );
+	SIG("glRasterPos2if");
+	dllRasterPos2i(x, y);
 }
 static void APIENTRY logRasterPos2iv(const GLint *v)
 {
-	SIG( "glRasterPos2iv" );
-	dllRasterPos2iv( v );
+	SIG("glRasterPos2iv");
+	dllRasterPos2iv(v);
 }
 static void APIENTRY logRasterPos2s(GLshort x, GLshort y)
 {
-	SIG( "glRasterPos2s" );
-	dllRasterPos2s( x, y );
+	SIG("glRasterPos2s");
+	dllRasterPos2s(x, y);
 }
 static void APIENTRY logRasterPos2sv(const GLshort *v)
 {
-	SIG( "glRasterPos2sv" );
-	dllRasterPos2sv( v );
+	SIG("glRasterPos2sv");
+	dllRasterPos2sv(v);
 }
 static void APIENTRY logRasterPos3d(GLdouble x, GLdouble y, GLdouble z)
 {
-	SIG( "glRasterPos3d" );
-	dllRasterPos3d( x, y, z );
+	SIG("glRasterPos3d");
+	dllRasterPos3d(x, y, z);
 }
 static void APIENTRY logRasterPos3dv(const GLdouble *v)
 {
-	SIG( "glRasterPos3dv" );
-	dllRasterPos3dv( v );
+	SIG("glRasterPos3dv");
+	dllRasterPos3dv(v);
 }
 static void APIENTRY logRasterPos3f(GLfloat x, GLfloat y, GLfloat z)
 {
-	SIG( "glRasterPos3f" );
-	dllRasterPos3f( x, y, z );
+	SIG("glRasterPos3f");
+	dllRasterPos3f(x, y, z);
 }
 static void APIENTRY logRasterPos3fv(const GLfloat *v)
 {
-	SIG( "glRasterPos3fv" );
-	dllRasterPos3fv( v );
+	SIG("glRasterPos3fv");
+	dllRasterPos3fv(v);
 }
 static void APIENTRY logRasterPos3i(GLint x, GLint y, GLint z)
 {
-	SIG( "glRasterPos3i" );
-	dllRasterPos3i( x, y, z );
+	SIG("glRasterPos3i");
+	dllRasterPos3i(x, y, z);
 }
 static void APIENTRY logRasterPos3iv(const GLint *v)
 {
-	SIG( "glRasterPos3iv" );
-	dllRasterPos3iv( v );
+	SIG("glRasterPos3iv");
+	dllRasterPos3iv(v);
 }
 static void APIENTRY logRasterPos3s(GLshort x, GLshort y, GLshort z)
 {
-	SIG( "glRasterPos3s" );
-	dllRasterPos3s( x, y, z );
+	SIG("glRasterPos3s");
+	dllRasterPos3s(x, y, z);
 }
 static void APIENTRY logRasterPos3sv(const GLshort *v)
 {
-	SIG( "glRasterPos3sv" );
-	dllRasterPos3sv( v );
+	SIG("glRasterPos3sv");
+	dllRasterPos3sv(v);
 }
 static void APIENTRY logRasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
-	SIG( "glRasterPos4d" );
-	dllRasterPos4d( x, y, z, w );
+	SIG("glRasterPos4d");
+	dllRasterPos4d(x, y, z, w);
 }
 static void APIENTRY logRasterPos4dv(const GLdouble *v)
 {
-	SIG( "glRasterPos4dv" );
-	dllRasterPos4dv( v );
+	SIG("glRasterPos4dv");
+	dllRasterPos4dv(v);
 }
 static void APIENTRY logRasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-	SIG( "glRasterPos4f" );
-	dllRasterPos4f( x, y, z, w );
+	SIG("glRasterPos4f");
+	dllRasterPos4f(x, y, z, w);
 }
 static void APIENTRY logRasterPos4fv(const GLfloat *v)
 {
-	SIG( "glRasterPos4fv" );
-	dllRasterPos4fv( v );
+	SIG("glRasterPos4fv");
+	dllRasterPos4fv(v);
 }
 static void APIENTRY logRasterPos4i(GLint x, GLint y, GLint z, GLint w)
 {
-	SIG( "glRasterPos4i" );
-	dllRasterPos4i( x, y, z, w );
+	SIG("glRasterPos4i");
+	dllRasterPos4i(x, y, z, w);
 }
 static void APIENTRY logRasterPos4iv(const GLint *v)
 {
-	SIG( "glRasterPos4iv" );
-	dllRasterPos4iv( v );
+	SIG("glRasterPos4iv");
+	dllRasterPos4iv(v);
 }
 static void APIENTRY logRasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w)
 {
-	SIG( "glRasterPos4s" );
-	dllRasterPos4s( x, y, z, w );
+	SIG("glRasterPos4s");
+	dllRasterPos4s(x, y, z, w);
 }
 static void APIENTRY logRasterPos4sv(const GLshort *v)
 {
-	SIG( "glRasterPos4sv" );
-	dllRasterPos4sv( v );
+	SIG("glRasterPos4sv");
+	dllRasterPos4sv(v);
 }
 static void APIENTRY logReadBuffer(GLenum mode)
 {
-	SIG( "glReadBuffer" );
-	dllReadBuffer( mode );
+	SIG("glReadBuffer");
+	dllReadBuffer(mode);
 }
 static void APIENTRY logReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels)
 {
-	SIG( "glReadPixels" );
-	dllReadPixels( x, y, width, height, format, type, pixels );
+	SIG("glReadPixels");
+	dllReadPixels(x, y, width, height, format, type, pixels);
 }
 
 static void APIENTRY logRectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
 {
-	SIG( "glRectd" );
-	dllRectd( x1, y1, x2, y2 );
+	SIG("glRectd");
+	dllRectd(x1, y1, x2, y2);
 }
 
 static void APIENTRY logRectdv(const GLdouble *v1, const GLdouble *v2)
 {
-	SIG( "glRectdv" );
-	dllRectdv( v1, v2 );
+	SIG("glRectdv");
+	dllRectdv(v1, v2);
 }
 
 static void APIENTRY logRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {
-	SIG( "glRectf" );
-	dllRectf( x1, y1, x2, y2 );
+	SIG("glRectf");
+	dllRectf(x1, y1, x2, y2);
 }
 
 static void APIENTRY logRectfv(const GLfloat *v1, const GLfloat *v2)
 {
-	SIG( "glRectfv" );
-	dllRectfv( v1, v2 );
+	SIG("glRectfv");
+	dllRectfv(v1, v2);
 }
 static void APIENTRY logRecti(GLint x1, GLint y1, GLint x2, GLint y2)
 {
-	SIG( "glRecti" );
-	dllRecti( x1, y1, x2, y2 );
+	SIG("glRecti");
+	dllRecti(x1, y1, x2, y2);
 }
 static void APIENTRY logRectiv(const GLint *v1, const GLint *v2)
 {
-	SIG( "glRectiv" );
-	dllRectiv( v1, v2 );
+	SIG("glRectiv");
+	dllRectiv(v1, v2);
 }
 static void APIENTRY logRects(GLshort x1, GLshort y1, GLshort x2, GLshort y2)
 {
-	SIG( "glRects" );
-	dllRects( x1, y1, x2, y2 );
+	SIG("glRects");
+	dllRects(x1, y1, x2, y2);
 }
 static void APIENTRY logRectsv(const GLshort *v1, const GLshort *v2)
 {
-	SIG( "glRectsv" );
-	dllRectsv( v1, v2 );
+	SIG("glRectsv");
+	dllRectsv(v1, v2);
 }
 static GLint APIENTRY logRenderMode(GLenum mode)
 {
-	SIG( "glRenderMode" );
-	return dllRenderMode( mode );
+	SIG("glRenderMode");
+	return dllRenderMode(mode);
 }
 static void APIENTRY logRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
 {
-	SIG( "glRotated" );
-	dllRotated( angle, x, y, z );
+	SIG("glRotated");
+	dllRotated(angle, x, y, z);
 }
 
 static void APIENTRY logRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
-	SIG( "glRotatef" );
-	dllRotatef( angle, x, y, z );
+	SIG("glRotatef");
+	dllRotatef(angle, x, y, z);
 }
 
 static void APIENTRY logScaled(GLdouble x, GLdouble y, GLdouble z)
 {
-	SIG( "glScaled" );
-	dllScaled( x, y, z );
+	SIG("glScaled");
+	dllScaled(x, y, z);
 }
 
 static void APIENTRY logScalef(GLfloat x, GLfloat y, GLfloat z)
 {
-	SIG( "glScalef" );
-	dllScalef( x, y, z );
+	SIG("glScalef");
+	dllScalef(x, y, z);
 }
 
 static void APIENTRY logScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-	SIG( "glScissor" );
-	dllScissor( x, y, width, height );
+	SIG("glScissor");
+	dllScissor(x, y, width, height);
 }
 
 static void APIENTRY logSelectBuffer(GLsizei size, GLuint *buffer)
 {
-	SIG( "glSelectBuffer" );
-	dllSelectBuffer( size, buffer );
+	SIG("glSelectBuffer");
+	dllSelectBuffer(size, buffer);
 }
 
 static void APIENTRY logShadeModel(GLenum mode)
 {
-	SIG( "glShadeModel" );
-	dllShadeModel( mode );
+	SIG("glShadeModel");
+	dllShadeModel(mode);
 }
 
 static void APIENTRY logStencilFunc(GLenum func, GLint ref, GLuint mask)
 {
-	SIG( "glStencilFunc" );
-	dllStencilFunc( func, ref, mask );
+	SIG("glStencilFunc");
+	dllStencilFunc(func, ref, mask);
 }
 
 static void APIENTRY logStencilMask(GLuint mask)
 {
-	SIG( "glStencilMask" );
-	dllStencilMask( mask );
+	SIG("glStencilMask");
+	dllStencilMask(mask);
 }
 
 static void APIENTRY logStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 {
-	SIG( "glStencilOp" );
-	dllStencilOp( fail, zfail, zpass );
+	SIG("glStencilOp");
+	dllStencilOp(fail, zfail, zpass);
 }
 
 static void APIENTRY logTexCoord1d(GLdouble s)
 {
-	SIG( "glTexCoord1d" );
-	dllTexCoord1d( s );
+	SIG("glTexCoord1d");
+	dllTexCoord1d(s);
 }
 
 static void APIENTRY logTexCoord1dv(const GLdouble *v)
 {
-	SIG( "glTexCoord1dv" );
-	dllTexCoord1dv( v );
+	SIG("glTexCoord1dv");
+	dllTexCoord1dv(v);
 }
 
 static void APIENTRY logTexCoord1f(GLfloat s)
 {
-	SIG( "glTexCoord1f" );
-	dllTexCoord1f( s );
+	SIG("glTexCoord1f");
+	dllTexCoord1f(s);
 }
 static void APIENTRY logTexCoord1fv(const GLfloat *v)
 {
-	SIG( "glTexCoord1fv" );
-	dllTexCoord1fv( v );
+	SIG("glTexCoord1fv");
+	dllTexCoord1fv(v);
 }
 static void APIENTRY logTexCoord1i(GLint s)
 {
-	SIG( "glTexCoord1i" );
-	dllTexCoord1i( s );
+	SIG("glTexCoord1i");
+	dllTexCoord1i(s);
 }
 static void APIENTRY logTexCoord1iv(const GLint *v)
 {
-	SIG( "glTexCoord1iv" );
-	dllTexCoord1iv( v );
+	SIG("glTexCoord1iv");
+	dllTexCoord1iv(v);
 }
 static void APIENTRY logTexCoord1s(GLshort s)
 {
-	SIG( "glTexCoord1s" );
-	dllTexCoord1s( s );
+	SIG("glTexCoord1s");
+	dllTexCoord1s(s);
 }
 static void APIENTRY logTexCoord1sv(const GLshort *v)
 {
-	SIG( "glTexCoord1sv" );
-	dllTexCoord1sv( v );
+	SIG("glTexCoord1sv");
+	dllTexCoord1sv(v);
 }
 static void APIENTRY logTexCoord2d(GLdouble s, GLdouble t)
 {
-	SIG( "glTexCoord2d" );
-	dllTexCoord2d( s, t );
+	SIG("glTexCoord2d");
+	dllTexCoord2d(s, t);
 }
 
 static void APIENTRY logTexCoord2dv(const GLdouble *v)
 {
-	SIG( "glTexCoord2dv" );
-	dllTexCoord2dv( v );
+	SIG("glTexCoord2dv");
+	dllTexCoord2dv(v);
 }
 static void APIENTRY logTexCoord2f(GLfloat s, GLfloat t)
 {
-	SIG( "glTexCoord2f" );
-	dllTexCoord2f( s, t );
+	SIG("glTexCoord2f");
+	dllTexCoord2f(s, t);
 }
 static void APIENTRY logTexCoord2fv(const GLfloat *v)
 {
-	SIG( "glTexCoord2fv" );
-	dllTexCoord2fv( v );
+	SIG("glTexCoord2fv");
+	dllTexCoord2fv(v);
 }
 static void APIENTRY logTexCoord2i(GLint s, GLint t)
 {
-	SIG( "glTexCoord2i" );
-	dllTexCoord2i( s, t );
+	SIG("glTexCoord2i");
+	dllTexCoord2i(s, t);
 }
 static void APIENTRY logTexCoord2iv(const GLint *v)
 {
-	SIG( "glTexCoord2iv" );
-	dllTexCoord2iv( v );
+	SIG("glTexCoord2iv");
+	dllTexCoord2iv(v);
 }
 static void APIENTRY logTexCoord2s(GLshort s, GLshort t)
 {
-	SIG( "glTexCoord2s" );
-	dllTexCoord2s( s, t );
+	SIG("glTexCoord2s");
+	dllTexCoord2s(s, t);
 }
 static void APIENTRY logTexCoord2sv(const GLshort *v)
 {
-	SIG( "glTexCoord2sv" );
-	dllTexCoord2sv( v );
+	SIG("glTexCoord2sv");
+	dllTexCoord2sv(v);
 }
 static void APIENTRY logTexCoord3d(GLdouble s, GLdouble t, GLdouble r)
 {
-	SIG( "glTexCoord3d" );
-	dllTexCoord3d( s, t, r );
+	SIG("glTexCoord3d");
+	dllTexCoord3d(s, t, r);
 }
 static void APIENTRY logTexCoord3dv(const GLdouble *v)
 {
-	SIG( "glTexCoord3dv" );
-	dllTexCoord3dv( v );
+	SIG("glTexCoord3dv");
+	dllTexCoord3dv(v);
 }
 static void APIENTRY logTexCoord3f(GLfloat s, GLfloat t, GLfloat r)
 {
-	SIG( "glTexCoord3f" );
-	dllTexCoord3f( s, t, r );
+	SIG("glTexCoord3f");
+	dllTexCoord3f(s, t, r);
 }
 static void APIENTRY logTexCoord3fv(const GLfloat *v)
 {
-	SIG( "glTexCoord3fv" );
-	dllTexCoord3fv( v );
+	SIG("glTexCoord3fv");
+	dllTexCoord3fv(v);
 }
 static void APIENTRY logTexCoord3i(GLint s, GLint t, GLint r)
 {
-	SIG( "glTexCoord3i" );
-	dllTexCoord3i( s, t, r );
+	SIG("glTexCoord3i");
+	dllTexCoord3i(s, t, r);
 }
 static void APIENTRY logTexCoord3iv(const GLint *v)
 {
-	SIG( "glTexCoord3iv" );
-	dllTexCoord3iv( v );
+	SIG("glTexCoord3iv");
+	dllTexCoord3iv(v);
 }
 static void APIENTRY logTexCoord3s(GLshort s, GLshort t, GLshort r)
 {
-	SIG( "glTexCoord3s" );
-	dllTexCoord3s( s, t, r );
+	SIG("glTexCoord3s");
+	dllTexCoord3s(s, t, r);
 }
 static void APIENTRY logTexCoord3sv(const GLshort *v)
 {
-	SIG( "glTexCoord3sv" );
-	dllTexCoord3sv( v );
+	SIG("glTexCoord3sv");
+	dllTexCoord3sv(v);
 }
 static void APIENTRY logTexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q)
 {
-	SIG( "glTexCoord4d" );
-	dllTexCoord4d( s, t, r, q );
+	SIG("glTexCoord4d");
+	dllTexCoord4d(s, t, r, q);
 }
 static void APIENTRY logTexCoord4dv(const GLdouble *v)
 {
-	SIG( "glTexCoord4dv" );
-	dllTexCoord4dv( v );
+	SIG("glTexCoord4dv");
+	dllTexCoord4dv(v);
 }
 static void APIENTRY logTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
 {
-	SIG( "glTexCoord4f" );
-	dllTexCoord4f( s, t, r, q );
+	SIG("glTexCoord4f");
+	dllTexCoord4f(s, t, r, q);
 }
 static void APIENTRY logTexCoord4fv(const GLfloat *v)
 {
-	SIG( "glTexCoord4fv" );
-	dllTexCoord4fv( v );
+	SIG("glTexCoord4fv");
+	dllTexCoord4fv(v);
 }
 static void APIENTRY logTexCoord4i(GLint s, GLint t, GLint r, GLint q)
 {
-	SIG( "glTexCoord4i" );
-	dllTexCoord4i( s, t, r, q );
+	SIG("glTexCoord4i");
+	dllTexCoord4i(s, t, r, q);
 }
 static void APIENTRY logTexCoord4iv(const GLint *v)
 {
-	SIG( "glTexCoord4iv" );
-	dllTexCoord4iv( v );
+	SIG("glTexCoord4iv");
+	dllTexCoord4iv(v);
 }
 static void APIENTRY logTexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q)
 {
-	SIG( "glTexCoord4s" );
-	dllTexCoord4s( s, t, r, q );
+	SIG("glTexCoord4s");
+	dllTexCoord4s(s, t, r, q);
 }
 static void APIENTRY logTexCoord4sv(const GLshort *v)
 {
-	SIG( "glTexCoord4sv" );
-	dllTexCoord4sv( v );
+	SIG("glTexCoord4sv");
+	dllTexCoord4sv(v);
 }
 static void APIENTRY logTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void *pointer)
 {
-	SIG( "glTexCoordPointer" );
-	dllTexCoordPointer( size, type, stride, pointer );
+	SIG("glTexCoordPointer");
+	dllTexCoordPointer(size, type, stride, pointer);
 }
 
 static void APIENTRY logTexEnvf(GLenum target, GLenum pname, GLfloat param)
 {
-	fprintf( glw_state.log_fp, "glTexEnvf( 0x%x, 0x%x, %f )\n", target, pname, param );
-	dllTexEnvf( target, pname, param );
+	fprintf(glw_state.log_fp, "glTexEnvf(0x%x, 0x%x, %f)\n", target, pname, param);
+	dllTexEnvf(target, pname, param);
 }
 
 static void APIENTRY logTexEnvfv(GLenum target, GLenum pname, const GLfloat *params)
 {
-	SIG( "glTexEnvfv" );
-	dllTexEnvfv( target, pname, params );
+	SIG("glTexEnvfv");
+	dllTexEnvfv(target, pname, params);
 }
 
 static void APIENTRY logTexEnvi(GLenum target, GLenum pname, GLint param)
 {
-	fprintf( glw_state.log_fp, "glTexEnvi( 0x%x, 0x%x, 0x%x )\n", target, pname, param );
-	dllTexEnvi( target, pname, param );
+	fprintf(glw_state.log_fp, "glTexEnvi(0x%x, 0x%x, 0x%x)\n", target, pname, param);
+	dllTexEnvi(target, pname, param);
 }
 static void APIENTRY logTexEnviv(GLenum target, GLenum pname, const GLint *params)
 {
-	SIG( "glTexEnviv" );
-	dllTexEnviv( target, pname, params );
+	SIG("glTexEnviv");
+	dllTexEnviv(target, pname, params);
 }
 
 static void APIENTRY logTexGend(GLenum coord, GLenum pname, GLdouble param)
 {
-	SIG( "glTexGend" );
-	dllTexGend( coord, pname, param );
+	SIG("glTexGend");
+	dllTexGend(coord, pname, param);
 }
 
 static void APIENTRY logTexGendv(GLenum coord, GLenum pname, const GLdouble *params)
 {
-	SIG( "glTexGendv" );
-	dllTexGendv( coord, pname, params );
+	SIG("glTexGendv");
+	dllTexGendv(coord, pname, params);
 }
 
 static void APIENTRY logTexGenf(GLenum coord, GLenum pname, GLfloat param)
 {
-	SIG( "glTexGenf" );
-	dllTexGenf( coord, pname, param );
+	SIG("glTexGenf");
+	dllTexGenf(coord, pname, param);
 }
 static void APIENTRY logTexGenfv(GLenum coord, GLenum pname, const GLfloat *params)
 {
-	SIG( "glTexGenfv" );
-	dllTexGenfv( coord, pname, params );
+	SIG("glTexGenfv");
+	dllTexGenfv(coord, pname, params);
 }
 static void APIENTRY logTexGeni(GLenum coord, GLenum pname, GLint param)
 {
-	SIG( "glTexGeni" );
-	dllTexGeni( coord, pname, param );
+	SIG("glTexGeni");
+	dllTexGeni(coord, pname, param);
 }
 static void APIENTRY logTexGeniv(GLenum coord, GLenum pname, const GLint *params)
 {
-	SIG( "glTexGeniv" );
-	dllTexGeniv( coord, pname, params );
+	SIG("glTexGeniv");
+	dllTexGeniv(coord, pname, params);
 }
 static void APIENTRY logTexImage1D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const void *pixels)
 {
-	SIG( "glTexImage1D" );
-	dllTexImage1D( target, level, internalformat, width, border, format, type, pixels );
+	SIG("glTexImage1D");
+	dllTexImage1D(target, level, internalformat, width, border, format, type, pixels);
 }
 static void APIENTRY logTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels)
 {
-	SIG( "glTexImage2D" );
-	dllTexImage2D( target, level, internalformat, width, height, border, format, type, pixels );
+	SIG("glTexImage2D");
+	dllTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
 static void APIENTRY logTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
-	fprintf( glw_state.log_fp, "glTexParameterf( 0x%x, 0x%x, %f )\n", target, pname, param );
-	dllTexParameterf( target, pname, param );
+	fprintf(glw_state.log_fp, "glTexParameterf(0x%x, 0x%x, %f)\n", target, pname, param);
+	dllTexParameterf(target, pname, param);
 }
 
 static void APIENTRY logTexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 {
-	SIG( "glTexParameterfv" );
-	dllTexParameterfv( target, pname, params );
+	SIG("glTexParameterfv");
+	dllTexParameterfv(target, pname, params);
 }
 static void APIENTRY logTexParameteri(GLenum target, GLenum pname, GLint param)
 {
-	fprintf( glw_state.log_fp, "glTexParameteri( 0x%x, 0x%x, 0x%x )\n", target, pname, param );
-	dllTexParameteri( target, pname, param );
+	fprintf(glw_state.log_fp, "glTexParameteri(0x%x, 0x%x, 0x%x)\n", target, pname, param);
+	dllTexParameteri(target, pname, param);
 }
 static void APIENTRY logTexParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
-	SIG( "glTexParameteriv" );
-	dllTexParameteriv( target, pname, params );
+	SIG("glTexParameteriv");
+	dllTexParameteriv(target, pname, params);
 }
 static void APIENTRY logTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void *pixels)
 {
-	SIG( "glTexSubImage1D" );
-	dllTexSubImage1D( target, level, xoffset, width, format, type, pixels );
+	SIG("glTexSubImage1D");
+	dllTexSubImage1D(target, level, xoffset, width, format, type, pixels);
 }
 static void APIENTRY logTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels)
 {
-	SIG( "glTexSubImage2D" );
-	dllTexSubImage2D( target, level, xoffset, yoffset, width, height, format, type, pixels );
+	SIG("glTexSubImage2D");
+	dllTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 }
 static void APIENTRY logTranslated(GLdouble x, GLdouble y, GLdouble z)
 {
-	SIG( "glTranslated" );
-	dllTranslated( x, y, z );
+	SIG("glTranslated");
+	dllTranslated(x, y, z);
 }
 
 static void APIENTRY logTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
-	SIG( "glTranslatef" );
-	dllTranslatef( x, y, z );
+	SIG("glTranslatef");
+	dllTranslatef(x, y, z);
 }
 
 static void APIENTRY logVertex2d(GLdouble x, GLdouble y)
 {
-	SIG( "glVertex2d" );
-	dllVertex2d( x, y );
+	SIG("glVertex2d");
+	dllVertex2d(x, y);
 }
 
 static void APIENTRY logVertex2dv(const GLdouble *v)
 {
-	SIG( "glVertex2dv" );
-	dllVertex2dv( v );
+	SIG("glVertex2dv");
+	dllVertex2dv(v);
 }
 static void APIENTRY logVertex2f(GLfloat x, GLfloat y)
 {
-	SIG( "glVertex2f" );
-	dllVertex2f( x, y );
+	SIG("glVertex2f");
+	dllVertex2f(x, y);
 }
 static void APIENTRY logVertex2fv(const GLfloat *v)
 {
-	SIG( "glVertex2fv" );
-	dllVertex2fv( v );
+	SIG("glVertex2fv");
+	dllVertex2fv(v);
 }
 static void APIENTRY logVertex2i(GLint x, GLint y)
 {
-	SIG( "glVertex2i" );
-	dllVertex2i( x, y );
+	SIG("glVertex2i");
+	dllVertex2i(x, y);
 }
 static void APIENTRY logVertex2iv(const GLint *v)
 {
-	SIG( "glVertex2iv" );
-	dllVertex2iv( v );
+	SIG("glVertex2iv");
+	dllVertex2iv(v);
 }
 static void APIENTRY logVertex2s(GLshort x, GLshort y)
 {
-	SIG( "glVertex2s" );
-	dllVertex2s( x, y );
+	SIG("glVertex2s");
+	dllVertex2s(x, y);
 }
 static void APIENTRY logVertex2sv(const GLshort *v)
 {
-	SIG( "glVertex2sv" );
-	dllVertex2sv( v );
+	SIG("glVertex2sv");
+	dllVertex2sv(v);
 }
 static void APIENTRY logVertex3d(GLdouble x, GLdouble y, GLdouble z)
 {
-	SIG( "glVertex3d" );
-	dllVertex3d( x, y, z );
+	SIG("glVertex3d");
+	dllVertex3d(x, y, z);
 }
 static void APIENTRY logVertex3dv(const GLdouble *v)
 {
-	SIG( "glVertex3dv" );
-	dllVertex3dv( v );
+	SIG("glVertex3dv");
+	dllVertex3dv(v);
 }
 static void APIENTRY logVertex3f(GLfloat x, GLfloat y, GLfloat z)
 {
-	SIG( "glVertex3f" );
-	dllVertex3f( x, y, z );
+	SIG("glVertex3f");
+	dllVertex3f(x, y, z);
 }
 static void APIENTRY logVertex3fv(const GLfloat *v)
 {
-	SIG( "glVertex3fv" );
-	dllVertex3fv( v );
+	SIG("glVertex3fv");
+	dllVertex3fv(v);
 }
 static void APIENTRY logVertex3i(GLint x, GLint y, GLint z)
 {
-	SIG( "glVertex3i" );
-	dllVertex3i( x, y, z );
+	SIG("glVertex3i");
+	dllVertex3i(x, y, z);
 }
 static void APIENTRY logVertex3iv(const GLint *v)
 {
-	SIG( "glVertex3iv" );
-	dllVertex3iv( v );
+	SIG("glVertex3iv");
+	dllVertex3iv(v);
 }
 static void APIENTRY logVertex3s(GLshort x, GLshort y, GLshort z)
 {
-	SIG( "glVertex3s" );
-	dllVertex3s( x, y, z );
+	SIG("glVertex3s");
+	dllVertex3s(x, y, z);
 }
 static void APIENTRY logVertex3sv(const GLshort *v)
 {
-	SIG( "glVertex3sv" );
-	dllVertex3sv( v );
+	SIG("glVertex3sv");
+	dllVertex3sv(v);
 }
 static void APIENTRY logVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
-	SIG( "glVertex4d" );
-	dllVertex4d( x, y, z, w );
+	SIG("glVertex4d");
+	dllVertex4d(x, y, z, w);
 }
 static void APIENTRY logVertex4dv(const GLdouble *v)
 {
-	SIG( "glVertex4dv" );
-	dllVertex4dv( v );
+	SIG("glVertex4dv");
+	dllVertex4dv(v);
 }
 static void APIENTRY logVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-	SIG( "glVertex4f" );
-	dllVertex4f( x, y, z, w );
+	SIG("glVertex4f");
+	dllVertex4f(x, y, z, w);
 }
 static void APIENTRY logVertex4fv(const GLfloat *v)
 {
-	SIG( "glVertex4fv" );
-	dllVertex4fv( v );
+	SIG("glVertex4fv");
+	dllVertex4fv(v);
 }
 static void APIENTRY logVertex4i(GLint x, GLint y, GLint z, GLint w)
 {
-	SIG( "glVertex4i" );
-	dllVertex4i( x, y, z, w );
+	SIG("glVertex4i");
+	dllVertex4i(x, y, z, w);
 }
 static void APIENTRY logVertex4iv(const GLint *v)
 {
-	SIG( "glVertex4iv" );
-	dllVertex4iv( v );
+	SIG("glVertex4iv");
+	dllVertex4iv(v);
 }
 static void APIENTRY logVertex4s(GLshort x, GLshort y, GLshort z, GLshort w)
 {
-	SIG( "glVertex4s" );
-	dllVertex4s( x, y, z, w );
+	SIG("glVertex4s");
+	dllVertex4s(x, y, z, w);
 }
 static void APIENTRY logVertex4sv(const GLshort *v)
 {
-	SIG( "glVertex4sv" );
-	dllVertex4sv( v );
+	SIG("glVertex4sv");
+	dllVertex4sv(v);
 }
 static void APIENTRY logVertexPointer(GLint size, GLenum type, GLsizei stride, const void *pointer)
 {
-	SIG( "glVertexPointer" );
-	dllVertexPointer( size, type, stride, pointer );
+	SIG("glVertexPointer");
+	dllVertexPointer(size, type, stride, pointer);
 }
 static void APIENTRY logViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-	SIG( "glViewport" );
-	dllViewport( x, y, width, height );
+	SIG("glViewport");
+	dllViewport(x, y, width, height);
 }
 
 /*
@@ -2685,9 +2681,9 @@ static void APIENTRY logViewport(GLint x, GLint y, GLsizei width, GLsizei height
 */
 void QGL_Shutdown( void )
 {
-	if ( glw_state.hinstOpenGL )
+	if (glw_state.hinstOpenGL)
 	{
-		FreeLibrary( glw_state.hinstOpenGL );
+		FreeLibrary(glw_state.hinstOpenGL);
 		glw_state.hinstOpenGL = NULL;
 	}
 
@@ -3108,37 +3104,22 @@ void QGL_Shutdown( void )
 /*
 ** QGL_Init
 **
-** This is responsible for binding our qgl function pointers to 
-** the appropriate GL stuff.  In Windows this means doing a 
-** LoadLibrary and a bunch of calls to GetProcAddress.  On other
-** operating systems we need to do the right thing, whatever that
-** might be.
+** This is responsible for binding our qgl function pointers to the appropriate GL stuff.
+** In Windows this means doing a LoadLibrary and a bunch of calls to GetProcAddress.
+** On other operating systems we need to do the right thing, whatever that might be.
 ** 
 */
-qboolean QGL_Init( const char *dllname )
+qboolean QGL_Init(const char *dllname)
 {
-	// update 3Dfx gamma irrespective of underlying DLL
-	{
-		char envbuffer[1024];
-		float g;
-
-		g = 2.00 * ( 0.8 - ( vid_gamma->value - 0.5 ) ) + 1.0F;
-		Com_sprintf( envbuffer, sizeof(envbuffer), "SSTV2_GAMMA=%f", g );
-		putenv( envbuffer );
-		Com_sprintf( envbuffer, sizeof(envbuffer), "SST_GAMMA=%f", g );
-		putenv( envbuffer );
-	}
-
-	if ( ( glw_state.hinstOpenGL = LoadLibrary( dllname ) ) == 0 )
+	glw_state.hinstOpenGL = LoadLibrary(dllname);
+	if (glw_state.hinstOpenGL == 0)
 	{
 		char *buf = NULL;
 
-		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &buf, 0, NULL);
-		VID_Printf( PRINT_ALL, "%s\n", buf );
+		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&buf, 0, NULL);
+		VID_Printf(PRINT_ALL, "%s\n", buf);
 		return false;
 	}
-
-	glConfig.allowCDS = true;
 
 	qglAccum                     = dllAccum = GPA( "glAccum" );
 	qglAlphaFunc                 = dllAlphaFunc = GPA( "glAlphaFunc" );
@@ -3553,25 +3534,23 @@ qboolean QGL_Init( const char *dllname )
 	return true;
 }
 
-void GLimp_EnableLogging( qboolean enable )
+void GLimp_EnableLogging(qboolean enable)
 {
-	if ( enable )
+	if (enable)
 	{
-		if ( !glw_state.log_fp )
+		if (!glw_state.log_fp)
 		{
 			struct tm *newtime;
 			time_t aclock;
 			char buffer[1024];
 
-			time( &aclock );
-			newtime = localtime( &aclock );
+			time(&aclock);
+			newtime = localtime(&aclock);
 
-			//asctime( newtime );
+			Com_sprintf(buffer, sizeof(buffer), "%s/gl.log", FS_Gamedir()); 
+			glw_state.log_fp = fopen(buffer, "wt");
 
-			Com_sprintf( buffer, sizeof(buffer), "%s/gl.log", FS_Gamedir() ); 
-			glw_state.log_fp = fopen( buffer, "wt" );
-
-			fprintf( glw_state.log_fp, "%s\n", asctime( newtime ) );
+			fprintf(glw_state.log_fp, "%s\n", asctime(newtime));
 		}
 
 		qglAccum                     = logAccum;
@@ -4253,12 +4232,9 @@ void GLimp_EnableLogging( qboolean enable )
 }
 
 
-void GLimp_LogNewFrame( void )
+void GLimp_LogNewFrame(void)
 {
-	fprintf( glw_state.log_fp, "*** R_BeginFrame ***\n" );
+	fprintf(glw_state.log_fp, "*** R_BeginFrame ***\n");
 }
 
 #pragma warning (default : 4113 4133 4047 )
-
-
-

@@ -514,44 +514,21 @@ This routine takes all the given light mapped surfaces in the world and blends t
 void R_BlendLightmaps (void)
 {
 	// not used in multitexture mode || fullbright || no lightdata
-	if (glConfig.multitexture || r_fullbright->value || !r_worldmodel->lightdata)
+	if (glConfig.multitexture || r_fullbright->integer || !r_worldmodel->lightdata)
 		return;
 
 	// don't bother writing Z
 	GL_DepthMask(false);
 
 	// set the appropriate blending mode unless we're only looking at the lightmaps.
-	if (!r_lightmap->value)
+	if (!r_lightmap->integer)
 	{
 		GL_Enable(GL_BLEND);
 
-		if (r_saturatelighting->value)
-		{
+		if (r_saturatelighting->integer)
 			GL_BlendFunc(GL_ONE, GL_ONE);
-		}
 		else
-		{
-			if (r_monolightmap->string[0] != '0')
-			{
-				switch (toupper(r_monolightmap->string[0]))
-				{
-				case 'I':
-					GL_BlendFunc(GL_ZERO, GL_SRC_COLOR);
-					break;
-				case 'L':
-					GL_BlendFunc(GL_ZERO, GL_SRC_COLOR);
-					break;
-				case 'A':
-				default:
-					GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					break;
-				}
-			}
-			else
-			{
-				GL_BlendFunc(GL_ZERO, GL_SRC_COLOR);
-			}
-		}
+			GL_BlendFunc(GL_ZERO, GL_SRC_COLOR);
 	}
 
 	if (currentmodel == r_worldmodel)
@@ -576,7 +553,7 @@ void R_BlendLightmaps (void)
 	}
 
 	// render dynamic lightmaps
-	if (r_dynamic->value)
+	if (r_dynamic->integer)
 	{
 		LM_InitBlock();
 
@@ -897,33 +874,19 @@ void R_RebuildLightmaps (void)
 		if (!gl_lms.modified[i])
 			continue;
 
-		if (!glConfig.newLMFormat)
+		if (!storeSet)
 		{
-			GL_MBind(1, glState.lightmap_textures + i);
-			qglTexSubImage2D(GL_TEXTURE_2D, 0,
-					0, gl_lms.lightrect[i].top, 
-					LM_BLOCK_WIDTH, (gl_lms.lightrect[i].bottom - gl_lms.lightrect[i].top), 
-			//		GL_LIGHTMAP_FORMAT, GL_LIGHTMAP_TYPE,
-					gl_lms.format, gl_lms.type,
-					gl_lms.lightmap_update[i] + (gl_lms.lightrect[i].top * LM_BLOCK_WIDTH));
+			qglPixelStorei(GL_UNPACK_ROW_LENGTH, LM_BLOCK_WIDTH);
+			storeSet = true;
 		}
-		else
-		{
-			if (!storeSet)
-			{
-				qglPixelStorei(GL_UNPACK_ROW_LENGTH, LM_BLOCK_WIDTH);
-				storeSet = true;
-			}
 
-			GL_MBind(1, glState.lightmap_textures + i);
-			qglTexSubImage2D(GL_TEXTURE_2D, 0,
-					gl_lms.lightrect[i].left, gl_lms.lightrect[i].top, 
-					(gl_lms.lightrect[i].right - gl_lms.lightrect[i].left), (gl_lms.lightrect[i].bottom - gl_lms.lightrect[i].top), 
-			//		GL_LIGHTMAP_FORMAT, GL_LIGHTMAP_TYPE,
-					gl_lms.format, gl_lms.type,
-					gl_lms.lightmap_update[i] + (gl_lms.lightrect[i].top * LM_BLOCK_WIDTH) + gl_lms.lightrect[i].left);
-			
-		}
+		GL_MBind(1, glState.lightmap_textures + i);
+		qglTexSubImage2D(GL_TEXTURE_2D, 0,
+				gl_lms.lightrect[i].left, gl_lms.lightrect[i].top, 
+				(gl_lms.lightrect[i].right - gl_lms.lightrect[i].left), (gl_lms.lightrect[i].bottom - gl_lms.lightrect[i].top), 
+		//		GL_LIGHTMAP_FORMAT, GL_LIGHTMAP_TYPE,
+				gl_lms.format, gl_lms.type,
+				gl_lms.lightmap_update[i] + (gl_lms.lightrect[i].top * LM_BLOCK_WIDTH) + gl_lms.lightrect[i].left);
 			
 		gl_lms.modified[i] = false;
 		gl_lms.lightrect[i].left = LM_BLOCK_WIDTH;
@@ -2526,61 +2489,9 @@ void R_BeginBuildingLightmaps (model_t *m)
 		gl_lms.lightmap_update[gl_lms.current_lightmap_texture] = Z_Malloc(LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * LIGHTMAP_BYTES);
 #endif	// BATCH_LM_UPDATES
 
-
-	/*
-	** if mono lightmaps are enabled and we want to use alpha
-	** blending (a,1-a) then we're likely running on a 3DLabs
-	** Permedia2.  In a perfect world we'd use a GL_ALPHA lightmap
-	** in order to conserve space and maximize bandwidth, however 
-	** this isn't a perfect world.
-	**
-	** So we have to use alpha lightmaps, but stored in GL_RGBA format,
-	** which means we only get 1/16th the color resolution we should when
-	** using alpha lightmaps.  If we find another board that supports
-	** only alpha lightmaps but that can at least support the GL_ALPHA
-	** format then we should change this code to use real alpha maps.
-	*/
-
-	// Knightmare- old internal formats for compatibility with older GPUs/drivers
-	if (!glConfig.newLMFormat)
-	{
-		if (toupper(r_monolightmap->string[0]) == 'A')
-		{
-			gl_lms.internal_format = gl_tex_alpha_format;
-		}
-		// try to do hacked colored lighting with a blended texture
-		else if (toupper(r_monolightmap->string[0]) == 'C')
-		{
-			gl_lms.internal_format = gl_tex_alpha_format;
-		}
-		else if (toupper(r_monolightmap->string[0]) == 'I')
-		{
-			gl_lms.internal_format = GL_INTENSITY8;
-		}
-		else if (toupper(r_monolightmap->string[0]) == 'L')
-		{
-			gl_lms.internal_format = GL_LUMINANCE8;
-		}
-		else
-		{
-			gl_lms.internal_format = gl_tex_solid_format;
-		}
-
-		gl_lms.format = GL_RGBA;
-		gl_lms.type = GL_UNSIGNED_BYTE;
-	}
-	else
-	{
-		if (toupper(r_monolightmap->string[0]) == 'I')
-			gl_lms.internal_format = GL_INTENSITY8;
-		else if (toupper(r_monolightmap->string[0]) == 'L')
-			gl_lms.internal_format = GL_LUMINANCE8;
-		else
-			gl_lms.internal_format = GL_RGBA8;
-
-		gl_lms.format = GL_BGRA;
-		gl_lms.type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	}
+	gl_lms.internal_format = GL_RGBA8;
+	gl_lms.format = GL_BGRA;
+	gl_lms.type = GL_UNSIGNED_INT_8_8_8_8_REV;
 
 	//mxd
 	const int filter = (gl_lms.lmshift == 0 && !strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR);

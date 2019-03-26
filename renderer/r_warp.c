@@ -356,7 +356,7 @@ Create the texture which warps texture shaders
 */
 void CreateDSTTex_ARB (void)
 {
-	unsigned char	dist[DST_SIZE][DST_SIZE][4];
+	unsigned char dist[DST_SIZE][DST_SIZE][4];
 
 	srand(GetTickCount());
 	for (int x = 0; x < DST_SIZE; x++)
@@ -447,7 +447,7 @@ void RB_RenderWarpSurface (msurface_t *fa)
 		GL_EnableTexture(1);
 		GL_MBind(1, dst_texture_ARB);
 
-		GL_Enable (GL_FRAGMENT_PROGRAM_ARB);
+		GL_Enable(GL_FRAGMENT_PROGRAM_ARB);
 		qglBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragment_programs[F_PROG_WARP]);
 		qglProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, r_rgbscale->value, r_rgbscale->value, r_rgbscale->value, 1.0);
 	}
@@ -471,7 +471,7 @@ void RB_RenderWarpSurface (msurface_t *fa)
 		if (light)
 			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
 
-		GL_Enable (GL_TEXTURE_SHADER_NV);
+		GL_Enable(GL_TEXTURE_SHADER_NV);
 	}
 	else
 	{
