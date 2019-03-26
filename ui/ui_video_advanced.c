@@ -21,9 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // ui_video_advanced.c -- the advanced video menu
  
 #include <ctype.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "../client/client.h"
 #include "ui_local.h"
 
@@ -33,9 +30,7 @@ cvar_t	*r_intensity;
 
 /*
 =======================================================================
-
 ADVANCED VIDEO MENU
-
 =======================================================================
 */
 static menuframework_s	s_video_advanced_menu;
@@ -68,27 +63,27 @@ static menuaction_s		s_advanced_apply_action;
 static menuaction_s		s_back_action;
 
 
-static void Video_Advanced_MenuSetValues ( void )
+static void Video_Advanced_MenuSetValues(void)
 {
-	Cvar_SetValue( "r_modulate", ClampCvar( 1, 2, Cvar_VariableValue("r_modulate") ) );
+	Cvar_SetValue("r_modulate", ClampCvar(1, 2, Cvar_VariableValue("r_modulate")));
 	s_lightmapscale_slider.curvalue = (Cvar_VariableValue("r_modulate") - 1) * 10;
 
-	Cvar_SetValue( "r_intensity", ClampCvar( 1, 2, Cvar_VariableValue("r_intensity") ) );
+	Cvar_SetValue("r_intensity", ClampCvar(1, 2, Cvar_VariableValue("r_intensity")));
 	s_textureintensity_slider.curvalue = (Cvar_VariableValue("r_intensity") - 1) * 10;
 
-	Cvar_SetValue( "r_rgbscale", ClampCvar( 1, 2, Cvar_VariableValue("r_rgbscale") ) );
+	Cvar_SetValue("r_rgbscale", ClampCvar(1, 2, Cvar_VariableValue("r_rgbscale")));
 	if (Cvar_VariableValue("r_rgbscale") == 1)
 		s_rgbscale_box.curvalue = 0;
 	else
 		s_rgbscale_box.curvalue = 1;
 
-	Cvar_SetValue( "r_trans_lighting", ClampCvar( 0, 2, Cvar_VariableValue("r_trans_lighting") ) );
+	Cvar_SetValue("r_trans_lighting", ClampCvar(0, 2, Cvar_VariableValue("r_trans_lighting")));
 	s_trans_lighting_box.curvalue = Cvar_VariableValue("r_trans_lighting");
 
-	Cvar_SetValue( "r_warp_lighting", ClampCvar( 0, 1, Cvar_VariableValue("r_warp_lighting") ) );
+	Cvar_SetValue("r_warp_lighting", ClampCvar(0, 1, Cvar_VariableValue("r_warp_lighting")));
 	s_warp_lighting_box.curvalue = Cvar_VariableValue("r_warp_lighting");
 
-	Cvar_SetValue( "r_lightcutoff", ClampCvar( 0, 64, Cvar_VariableValue("r_lightcutoff") ) );
+	Cvar_SetValue("r_lightcutoff", ClampCvar(0, 64, Cvar_VariableValue("r_lightcutoff")));
 	s_lightcutoff_slider.curvalue = Cvar_VariableValue("r_lightcutoff") / 8.0f;
 
 	Cvar_SetValue("r_dlightshadowmapscale", ClampCvar(0, 5, Cvar_VariableValue("r_dlightshadowmapscale"))); //mxd
@@ -101,126 +96,126 @@ static void Video_Advanced_MenuSetValues ( void )
 	Cvar_SetValue("r_dlightnormalmapping", ClampCvar(0, 1, Cvar_VariableValue("r_dlightnormalmapping"))); //mxd
 	s_dlight_normalmapping_box.curvalue = Cvar_VariableValue("r_dlightnormalmapping");
 
-	Cvar_SetValue( "r_glass_envmaps", ClampCvar( 0, 1, Cvar_VariableValue("r_glass_envmaps") ) );
-	s_glass_envmap_box.curvalue	= Cvar_VariableValue("r_glass_envmaps");
+	Cvar_SetValue("r_glass_envmaps", ClampCvar(0, 1, Cvar_VariableValue("r_glass_envmaps")));
+	s_glass_envmap_box.curvalue = Cvar_VariableValue("r_glass_envmaps");
 
-	Cvar_SetValue( "r_solidalpha", ClampCvar( 0, 1, Cvar_VariableValue("r_solidalpha") ) );
+	Cvar_SetValue("r_solidalpha", ClampCvar(0, 1, Cvar_VariableValue("r_solidalpha")));
 	s_solidalpha_box.curvalue = Cvar_VariableValue("r_solidalpha");
 
-	Cvar_SetValue( "r_pixel_shader_warp", ClampCvar( 0, 1, Cvar_VariableValue("r_pixel_shader_warp") ) );
+	Cvar_SetValue("r_pixel_shader_warp", ClampCvar(0, 1, Cvar_VariableValue("r_pixel_shader_warp")));
 	s_texshader_warp_box.curvalue = Cvar_VariableValue("r_pixel_shader_warp");
 
-	Cvar_SetValue( "r_waterwave", ClampCvar( 0, 24, Cvar_VariableValue("r_waterwave") ) );
+	Cvar_SetValue("r_waterwave", ClampCvar(0, 24, Cvar_VariableValue("r_waterwave")));
 	s_waterwave_slider.curvalue = Cvar_VariableValue("r_waterwave");
 
-	Cvar_SetValue( "r_caustics", ClampCvar( 0, 2, Cvar_VariableValue("r_caustics") ) );
+	Cvar_SetValue("r_caustics", ClampCvar(0, 2, Cvar_VariableValue("r_caustics")));
 	s_caustics_box.curvalue = Cvar_VariableValue("r_caustics");
 
-	Cvar_SetValue("r_particle_mode", ClampCvar( 0, 1, Cvar_VariableValue("r_particle_mode") ) ); //mxd
+	Cvar_SetValue("r_particle_mode", ClampCvar(0, 1, Cvar_VariableValue("r_particle_mode"))); //mxd
 	s_particle_mode_box.curvalue = Cvar_VariableValue("r_particle_mode");
 
-	Cvar_SetValue( "r_particle_overdraw", ClampCvar( 0, 1, Cvar_VariableValue("r_particle_overdraw") ) );
+	Cvar_SetValue("r_particle_overdraw", ClampCvar(0, 1, Cvar_VariableValue("r_particle_overdraw")));
 	s_particle_overdraw_box.curvalue = Cvar_VariableValue("r_particle_overdraw");
 
-	Cvar_SetValue( "r_bloom", ClampCvar( 0, 1, Cvar_VariableValue("r_bloom") ) );
+	Cvar_SetValue("r_bloom", ClampCvar(0, 1, Cvar_VariableValue("r_bloom")));
 	s_lightbloom_box.curvalue = Cvar_VariableValue("r_bloom");
 
-	Cvar_SetValue( "r_model_shading", ClampCvar( 0, 3, Cvar_VariableValue("r_model_shading") ) );
-	s_modelshading_box.curvalue	= Cvar_VariableValue("r_model_shading");
+	Cvar_SetValue("r_model_shading", ClampCvar(0, 3, Cvar_VariableValue("r_model_shading")));
+	s_modelshading_box.curvalue = Cvar_VariableValue("r_model_shading");
 
-	Cvar_SetValue( "r_shadows", ClampCvar( 0, 3, Cvar_VariableValue("r_shadows") ) );
-	s_shadows_box.curvalue	= Cvar_VariableValue("r_shadows");
+	Cvar_SetValue("r_shadows", ClampCvar(0, 3, Cvar_VariableValue("r_shadows")));
+	s_shadows_box.curvalue = Cvar_VariableValue("r_shadows");
 
-	Cvar_SetValue( "r_stencilTwoSide", ClampCvar( 0, 1, Cvar_VariableValue("r_stencilTwoSide") ) );
+	Cvar_SetValue("r_stencilTwoSide", ClampCvar(0, 1, Cvar_VariableValue("r_stencilTwoSide")));
 	s_two_side_stencil_box.curvalue = Cvar_VariableValue("r_stencilTwoSide");
 
-	Cvar_SetValue( "r_shelltype", ClampCvar( 0, 2, Cvar_VariableValue("r_shelltype") ) );
+	Cvar_SetValue("r_shelltype", ClampCvar(0, 2, Cvar_VariableValue("r_shelltype")));
 	s_ent_shell_box.curvalue = Cvar_VariableValue("r_shelltype");
 
-//	Cvar_SetValue( "r_screenshot_jpeg", ClampCvar( 0, 1, Cvar_VariableValue("r_screenshot_jpeg") ) );
-//	s_screenshotjpeg_box.curvalue = Cvar_VariableValue("r_screenshot_jpeg");
+	//	Cvar_SetValue( "r_screenshot_jpeg", ClampCvar( 0, 1, Cvar_VariableValue("r_screenshot_jpeg") ) );
+	//	s_screenshotjpeg_box.curvalue = Cvar_VariableValue("r_screenshot_jpeg");
 
 	char *sshotformat = Cvar_VariableString("r_screenshot_format");
-	if ( !Q_strcasecmp(sshotformat, "jpg") )
+	if (!Q_strcasecmp(sshotformat, "jpg"))
 		s_screenshotformat_box.curvalue = 0;
-	else if ( !Q_strcasecmp(sshotformat, "png") )
+	else if (!Q_strcasecmp(sshotformat, "png"))
 		s_screenshotformat_box.curvalue = 1;
 	else	// tga
 		s_screenshotformat_box.curvalue = 2;
 
-	Cvar_SetValue( "r_screenshot_jpeg_quality", ClampCvar( 50, 100, Cvar_VariableValue("r_screenshot_jpeg_quality") ) );
-	s_screenshotjpegquality_slider.curvalue	= (Cvar_VariableValue("r_screenshot_jpeg_quality") -50) / 5;
+	Cvar_SetValue("r_screenshot_jpeg_quality", ClampCvar(50, 100, Cvar_VariableValue("r_screenshot_jpeg_quality")));
+	s_screenshotjpegquality_slider.curvalue = (Cvar_VariableValue("r_screenshot_jpeg_quality") - 50) / 5;
 
-	Cvar_SetValue( "r_saveshotsize", ClampCvar( 0, 1, Cvar_VariableValue("r_saveshotsize") ) );
-	s_saveshotsize_box.curvalue	= Cvar_VariableValue("r_saveshotsize");
+	Cvar_SetValue("r_saveshotsize", ClampCvar(0, 1, Cvar_VariableValue("r_saveshotsize")));
+	s_saveshotsize_box.curvalue = Cvar_VariableValue("r_saveshotsize");
 }
 
-static void LightMapScaleCallback ( void *unused )
+static void LightMapScaleCallback(void *unused)
 {
-	Cvar_SetValue( "r_modulate", s_lightmapscale_slider.curvalue / 10 + 1);
+	Cvar_SetValue("r_modulate", s_lightmapscale_slider.curvalue / 10 + 1);
 }
 
-static void TextureIntensCallback ( void *unused )
+static void TextureIntensCallback(void *unused)
 {
-	Cvar_SetValue( "r_intensity", s_textureintensity_slider.curvalue / 10 + 1);
+	Cvar_SetValue("r_intensity", s_textureintensity_slider.curvalue / 10 + 1);
 }
 
-static void RGBSCaleCallback ( void *unused )
+static void RGBSCaleCallback(void *unused)
 {
-	Cvar_SetValue( "r_rgbscale", s_rgbscale_box.curvalue + 1);
+	Cvar_SetValue("r_rgbscale", s_rgbscale_box.curvalue + 1);
 }
 
-static void TransLightingCallback ( void *unused )
+static void TransLightingCallback(void *unused)
 {
-	Cvar_SetValue( "r_trans_lighting", s_trans_lighting_box.curvalue);
+	Cvar_SetValue("r_trans_lighting", s_trans_lighting_box.curvalue);
 }
 
-static void WarpLightingCallback ( void *unused )
+static void WarpLightingCallback(void *unused)
 {
-	Cvar_SetValue( "r_warp_lighting", s_warp_lighting_box.curvalue);
+	Cvar_SetValue("r_warp_lighting", s_warp_lighting_box.curvalue);
 }
 
-static void LightCutoffCallback( void *unused )
+static void LightCutoffCallback(void *unused)
 {
-	Cvar_SetValue( "r_lightcutoff", s_lightcutoff_slider.curvalue * 8.0f);
+	Cvar_SetValue("r_lightcutoff", s_lightcutoff_slider.curvalue * 8.0f);
 }
 
-static void DlightShadowmapScaleCallback( void *unused ) //mxd
+static void DlightShadowmapScaleCallback(void *unused) //mxd
 {
-	if(s_dlight_shadowmap_quality_slider.curvalue == 0)
+	if (s_dlight_shadowmap_quality_slider.curvalue == 0)
 		Cvar_SetValue("r_dlightshadowmapscale", 0);
 	else
 		Cvar_SetValue("r_dlightshadowmapscale", 6 - s_dlight_shadowmap_quality_slider.curvalue);
 }
 
-static void DlightNormalmappingCallback( void *unused ) //mxd
+static void DlightNormalmappingCallback(void *unused) //mxd
 {
 	Cvar_SetValue("r_dlightnormalmapping", s_dlight_normalmapping_box.curvalue);
 }
 
-static void GlassEnvmapCallback ( void *unused )
+static void GlassEnvmapCallback(void *unused)
 {
-	Cvar_SetValue( "r_glass_envmaps", s_glass_envmap_box.curvalue);
+	Cvar_SetValue("r_glass_envmaps", s_glass_envmap_box.curvalue);
 }
 
-static void SolidAlphaCallback ( void *unused )
+static void SolidAlphaCallback(void *unused)
 {
-	Cvar_SetValue( "r_solidalpha", s_solidalpha_box.curvalue);
+	Cvar_SetValue("r_solidalpha", s_solidalpha_box.curvalue);
 }
 
-static void TexShaderWarpCallback ( void *unused )
+static void TexShaderWarpCallback(void *unused)
 {
-	Cvar_SetValue( "r_pixel_shader_warp", s_texshader_warp_box.curvalue);
+	Cvar_SetValue("r_pixel_shader_warp", s_texshader_warp_box.curvalue);
 }
 
-static void WaterWaveCallback ( void *unused )
+static void WaterWaveCallback(void *unused)
 {
-	Cvar_SetValue( "r_waterwave", s_waterwave_slider.curvalue);
+	Cvar_SetValue("r_waterwave", s_waterwave_slider.curvalue);
 }
 
-static void CausticsCallback ( void *unused )
+static void CausticsCallback(void *unused)
 {
-	Cvar_SetValue( "r_caustics", s_caustics_box.curvalue);
+	Cvar_SetValue("r_caustics", s_caustics_box.curvalue);
 }
 
 static void ParticleModeCallback(void *unused) //mxd
@@ -228,34 +223,34 @@ static void ParticleModeCallback(void *unused) //mxd
 	Cvar_SetValue("r_particle_mode", s_particle_mode_box.curvalue);
 }
 
-static void ParticleOverdrawCallback( void *unused )
+static void ParticleOverdrawCallback(void *unused)
 {
-	Cvar_SetValue( "r_particle_overdraw", s_particle_overdraw_box.curvalue);
+	Cvar_SetValue("r_particle_overdraw", s_particle_overdraw_box.curvalue);
 }
 
-static void LightBloomCallback( void *unused )
+static void LightBloomCallback(void *unused)
 {
-	Cvar_SetValue( "r_bloom", s_lightbloom_box.curvalue);
+	Cvar_SetValue("r_bloom", s_lightbloom_box.curvalue);
 }
 
-static void ModelShadingCallback ( void *unused )
+static void ModelShadingCallback(void *unused)
 {
-	Cvar_SetValue( "r_model_shading", s_modelshading_box.curvalue);
+	Cvar_SetValue("r_model_shading", s_modelshading_box.curvalue);
 }
 
-static void ShadowsCallback ( void *unused )
+static void ShadowsCallback(void *unused)
 {
-	Cvar_SetValue( "r_shadows", s_shadows_box.curvalue);
+	Cvar_SetValue("r_shadows", s_shadows_box.curvalue);
 }
 
-static void TwoSideStencilCallback ( void *unused )
+static void TwoSideStencilCallback(void *unused)
 {
-	Cvar_SetValue( "r_stencilTwoSide", s_two_side_stencil_box.curvalue);
+	Cvar_SetValue("r_stencilTwoSide", s_two_side_stencil_box.curvalue);
 }
 
-static void EntShellCallback ( void *unused )
+static void EntShellCallback(void *unused)
 {
-	Cvar_SetValue( "r_shelltype", s_ent_shell_box.curvalue);
+	Cvar_SetValue("r_shelltype", s_ent_shell_box.curvalue);
 }
 
 /*
@@ -265,7 +260,7 @@ static void JPEGScreenshotCallback ( void *unused )
 }
 */
 
-static void ScreenshotFormatCallback ( void *unused )
+static void ScreenshotFormatCallback(void *unused)
 {
 	switch (s_screenshotformat_box.curvalue)
 	{
@@ -282,17 +277,17 @@ static void ScreenshotFormatCallback ( void *unused )
 	}
 }
 
-static void JPEGScreenshotQualityCallback ( void *unused )
+static void JPEGScreenshotQualityCallback(void *unused)
 {
-	Cvar_SetValue( "r_screenshot_jpeg_quality", (s_screenshotjpegquality_slider.curvalue * 5 + 50));
+	Cvar_SetValue("r_screenshot_jpeg_quality", (s_screenshotjpegquality_slider.curvalue * 5 + 50));
 }
 
-static void SaveshotSizeCallback ( void *unused )
+static void SaveshotSizeCallback(void *unused)
 {
-	Cvar_SetValue( "r_saveshotsize", s_saveshotsize_box.curvalue);
+	Cvar_SetValue("r_saveshotsize", s_saveshotsize_box.curvalue);
 }
 
-static void AdvancedMenuApplyChanges ( void *unused )
+static void AdvancedMenuApplyChanges(void *unused)
 {
 	// update for modified r_intensity and r_stencilTwoSide
 	if (r_intensity->modified)
@@ -304,7 +299,7 @@ static void AdvancedMenuApplyChanges ( void *unused )
 Menu_Video_Advanced_Init
 ================
 */
-void Menu_Video_Advanced_Init (void)
+void Menu_Video_Advanced_Init(void)
 {
 	static const char *yesno_names[] =
 	{
@@ -599,35 +594,35 @@ void Menu_Video_Advanced_Init (void)
 
 	Video_Advanced_MenuSetValues();
 
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_options_advanced_header );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_lightmapscale_slider );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_textureintensity_slider );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_rgbscale_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_trans_lighting_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_warp_lighting_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_lightcutoff_slider );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_dlight_shadowmap_quality_slider ); //mxd
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_dlight_normalmapping_box); //mxd
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_glass_envmap_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_solidalpha_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_texshader_warp_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_waterwave_slider );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_caustics_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_particle_mode_box ); //mxd
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_particle_overdraw_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_lightbloom_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_modelshading_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_shadows_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_two_side_stencil_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_ent_shell_box );
-//	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_screenshotjpeg_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_screenshotformat_box );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_screenshotjpegquality_slider );
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &	s_saveshotsize_box );
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_options_advanced_header);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_lightmapscale_slider);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_textureintensity_slider);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_rgbscale_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_trans_lighting_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_warp_lighting_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_lightcutoff_slider);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_dlight_shadowmap_quality_slider); //mxd
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_dlight_normalmapping_box); //mxd
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_glass_envmap_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_solidalpha_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_texshader_warp_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_waterwave_slider);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_caustics_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_particle_mode_box); //mxd
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_particle_overdraw_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_lightbloom_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_modelshading_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_shadows_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_two_side_stencil_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_ent_shell_box);
+	//	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_screenshotjpeg_box );
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_screenshotformat_box);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_screenshotjpegquality_slider);
+	Menu_AddItem(&s_video_advanced_menu, (void *)&	s_saveshotsize_box);
 
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_advanced_apply_action );
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_advanced_apply_action);
 
-	Menu_AddItem( &s_video_advanced_menu, ( void * ) &s_back_action );
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_back_action);
 
 //	Menu_Center( &s_video_advanced_menu );
 //	s_video_advanced_menu.x -= MENU_FONT_SIZE;	
@@ -638,16 +633,16 @@ void Menu_Video_Advanced_Init (void)
 Menu_Video_Advanced_Draw
 ================
 */
-void Menu_Video_Advanced_Draw (void)
+void Menu_Video_Advanced_Draw(void)
 {
 	// draw the banner
 	Menu_DrawBanner("m_banner_video");
 
 	// move cursor to a reasonable starting position
-	Menu_AdjustCursor( &s_video_advanced_menu, 1 );
+	Menu_AdjustCursor(&s_video_advanced_menu, 1);
 
 	// draw the menu
-	Menu_Draw( &s_video_advanced_menu );
+	Menu_Draw(&s_video_advanced_menu);
 }
 
 /*
@@ -655,13 +650,13 @@ void Menu_Video_Advanced_Draw (void)
 Video_Advanced_MenuKey
 ================
 */
-const char *Video_Advanced_MenuKey( int key )
+const char *Video_Advanced_MenuKey(int key)
 {
-	return Default_MenuKey( &s_video_advanced_menu, key );
+	return Default_MenuKey(&s_video_advanced_menu, key);
 }
 
-void M_Menu_Video_Advanced_f (void)
+void M_Menu_Video_Advanced_f(void)
 {
 	Menu_Video_Advanced_Init();
-	UI_PushMenu( Menu_Video_Advanced_Draw, Video_Advanced_MenuKey );
+	UI_PushMenu(Menu_Video_Advanced_Draw, Video_Advanced_MenuKey);
 }

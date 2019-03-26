@@ -360,7 +360,7 @@ Adds the current command line as a clc_stringcmd to the client message.
 Things like godmode, noclip, etc, are commands directed to the server, so when they are typed in at the console, they will need to be forwarded.
 ===================
 */
-void Cmd_ForwardToServer (void)
+void Cmd_ForwardToServer(void)
 {
 	char *cmd = Cmd_Argv(0);
 	if (cls.state <= ca_connected || *cmd == '-' || *cmd == '+')
@@ -381,7 +381,7 @@ void Cmd_ForwardToServer (void)
 	cls.forcePacket = true;
 }
 
-void CL_Setenv_f( void )
+void CL_Setenv_f(void)
 {
 	const int argc = Cmd_Argc();
 
@@ -417,7 +417,7 @@ void CL_Setenv_f( void )
 CL_ForwardToServer_f
 ==================
 */
-void CL_ForwardToServer_f (void)
+void CL_ForwardToServer_f(void)
 {
 	if (cls.state != ca_connected && cls.state != ca_active)
 	{
@@ -440,7 +440,7 @@ void CL_ForwardToServer_f (void)
 CL_Pause_f
 ==================
 */
-void CL_Pause_f (void)
+void CL_Pause_f(void)
 {
 	// never pause in multiplayer
 	if (Cvar_VariableValue("maxclients") > 1 || !Com_ServerState())
@@ -457,7 +457,7 @@ void CL_Pause_f (void)
 CL_Quit_f
 ==================
 */
-void CL_Quit_f (void)
+void CL_Quit_f(void)
 {
 	CL_Disconnect();
 	Com_Quit();
@@ -470,19 +470,19 @@ CL_Drop
 Called after an ERR_DROP was thrown
 ================
 */
-void CL_Drop (void)
+void CL_Drop(void)
 {
 	if (cls.state == ca_uninitialized)
 		return;
 
 	// if an error occurs during initial load or during game start, drop loading plaque
 	if (cls.disable_servercount != -1 || cls.key_dest == key_game)
-		SCR_EndLoadingPlaque();	// get rid of loading plaque
+		SCR_EndLoadingPlaque(); // get rid of loading plaque
 
 	if (cls.state == ca_disconnected)
 		return;
 
-	CL_Disconnect ();
+	CL_Disconnect();
 }
 
 
@@ -493,7 +493,7 @@ CL_SendConnectPacket
 We have gotten a challenge from the server, so try and connect.
 ======================
 */
-void CL_SendConnectPacket (void)
+void CL_SendConnectPacket(void)
 {
 	netadr_t adr;
 
@@ -521,7 +521,7 @@ void CL_SendConnectPacket (void)
 CL_ForcePacket
 ==================
 */
-void CL_ForcePacket (void)
+void CL_ForcePacket(void)
 {
 	cls.forcePacket = true;
 }
@@ -534,7 +534,7 @@ CL_CheckForResend
 Resend a connect message if the last one has timed out
 =================
 */
-void CL_CheckForResend (void)
+void CL_CheckForResend(void)
 {
 	// if the local server is running and we aren't, then connect
 	if (cls.state == ca_disconnected && Com_ServerState() )
@@ -579,7 +579,7 @@ CL_Connect_f
 
 ================
 */
-void CL_Connect_f (void)
+void CL_Connect_f(void)
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -602,7 +602,7 @@ void CL_Connect_f (void)
 	CL_Disconnect();
 
 	cls.state = ca_connecting;
-	strncpy (cls.servername, server, sizeof(cls.servername)-1);
+	strncpy(cls.servername, server, sizeof(cls.servername)-1);
 	cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 }
 
@@ -614,7 +614,7 @@ CL_Rcon_f
 Send the rest of the command line over as an unconnected command.
 =====================
 */
-void CL_Rcon_f (void)
+void CL_Rcon_f(void)
 {
 	char message[1024];
 	netadr_t to;
@@ -670,7 +670,7 @@ CL_ClearState
 
 =====================
 */
-void CL_ClearState (void)
+void CL_ClearState(void)
 {
 	S_StopAllSounds();
 	CL_ClearEffects();
@@ -696,8 +696,8 @@ Sends a disconnect message to the server
 This is also called on Com_Error, so it shouldn't cause any errors
 =====================
 */
-extern	char	*currentweaponmodel;
-void CL_Disconnect (void)
+extern char *currentweaponmodel;
+void CL_Disconnect(void)
 {
 	byte final[32];
 
@@ -767,7 +767,7 @@ packet <destination> <contents>
 Contents allows \n escape character
 ====================
 */
-void CL_Packet_f (void)
+void CL_Packet_f(void)
 {
 	char send[2048];
 	netadr_t adr;
@@ -819,7 +819,7 @@ CL_Changing_f
 Just sent as a hint to the client that they should drop to full console
 =================
 */
-void CL_Changing_f (void)
+void CL_Changing_f(void)
 {
 	//ZOID
 	//if we are downloading, we don't change!  This so we don't suddenly stop downloading a map
@@ -847,14 +847,14 @@ CL_Reconnect_f
 The server is changing levels
 =================
 */
-void CL_Reconnect_f (void)
+void CL_Reconnect_f(void)
 {
 	//ZOID
 	//if we are downloading, we don't change!  This so we don't suddenly stop downloading a map
 	if (cls.download)
 		return;
 
-	S_StopAllSounds ();
+	S_StopAllSounds();
 	if (cls.state == ca_connected)
 	{
 		Com_Printf("reconnecting...\n");
@@ -890,7 +890,7 @@ CL_ParseStatusMessage
 Handle a reply from a ping
 =================
 */
-void CL_ParseStatusMessage (void)
+void CL_ParseStatusMessage(void)
 {
 	char *s = MSG_ReadString(&net_message);
 
@@ -911,7 +911,7 @@ extern int      global_ipx_server_time;
 extern int      global_adr_server_time[16];
 extern netadr_t global_adr_server_netadr[16];
 
-void CL_PingServers_f (void)
+void CL_PingServers_f(void)
 {
 	netadr_t adr;
 	char name[32];
@@ -1047,7 +1047,7 @@ CL_Skins_f
 Load or download any custom player skins and models
 =================
 */
-void CL_Skins_f (void)
+void CL_Skins_f(void)
 {
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -1070,7 +1070,7 @@ void CL_Skins_f (void)
 CL_AACSkey_f
 =================
 */
-void CL_AACSkey_f (void)
+void CL_AACSkey_f(void)
 {
 	Com_Printf("AACS processing keys: 09 F9 11 02 9D 74 E3 5B D8 41 56 C5 63 56 88 C0\n");
 	Com_Printf("                      45 5F E1 04 22 CA 29 C4 93 3F 95 05 2B 79 2A B2\n");
@@ -1084,7 +1084,7 @@ CL_ConnectionlessPacket
 Responses to broadcasts, etc
 =================
 */
-void CL_ConnectionlessPacket (void)
+void CL_ConnectionlessPacket(void)
 {
 	MSG_BeginReading(&net_message);
 	MSG_ReadLong(&net_message);	// skip the -1
@@ -1203,7 +1203,7 @@ CL_DumpPackets
 A vain attempt to help bad TCP stacks that cause problems when they overflow
 =================
 */
-void CL_DumpPackets (void)
+void CL_DumpPackets(void)
 {
 	while (NET_GetPacket(NS_CLIENT, &net_from, &net_message))
 		Com_Printf("dumnping a packet\n");
@@ -1214,7 +1214,7 @@ void CL_DumpPackets (void)
 CL_ReadPackets
 =================
 */
-void CL_ReadPackets (void)
+void CL_ReadPackets(void)
 {
 	while (NET_GetPacket(NS_CLIENT, &net_from, &net_message))
 	{
@@ -1310,7 +1310,7 @@ void CL_FixUpGender(void)
 CL_Userinfo_f
 ==============
 */
-void CL_Userinfo_f (void)
+void CL_Userinfo_f(void)
 {
 	Com_Printf("User info settings:\n");
 	Info_Print(Cvar_Userinfo());
@@ -1323,7 +1323,7 @@ CL_Snd_Restart_f
 Restart the sound subsystem so it can pick up new parameters and flush all sounds
 =================
 */
-void CL_Snd_Restart_f (void)
+void CL_Snd_Restart_f(void)
 {
 	S_Shutdown();
 	S_Init();
@@ -1344,7 +1344,7 @@ extern	int	precache_pak;	// Knightmare added
 CL_ResetPrecacheCheck
 =================
 */
-void CL_ResetPrecacheCheck (void)
+void CL_ResetPrecacheCheck(void)
 {
 //	precache_start_time = Sys_Milliseconds();
 
@@ -1363,7 +1363,7 @@ CL_Precache_f
 The server will send this command right before allowing the client into the server
 =================
 */
-void CL_Precache_f (void)
+void CL_Precache_f(void)
 {
 	// Yet another hack to let old demos work the old precache sequence
 	if (Cmd_Argc() < 2)
@@ -1373,6 +1373,7 @@ void CL_Precache_f (void)
 		CM_LoadMap(cl.configstrings[CS_MODELS + 1], true, &map_checksum);
 		CL_RegisterSounds();
 		CL_PrepRefresh();
+
 		return;
 	}
 
@@ -1396,7 +1397,7 @@ void CL_Precache_f (void)
 CL_AddLoc_f
 =================
 */
-void CL_AddLoc_f (void)
+void CL_AddLoc_f(void)
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -1413,7 +1414,7 @@ void CL_AddLoc_f (void)
 CL_DeleteLoc_f
 =================
 */
-void CL_DeleteLoc_f (void)
+void CL_DeleteLoc_f(void)
 {
 	CL_LocDelete();
 }
@@ -1436,7 +1437,7 @@ void CL_SaveLoc_f (void)
 CL_InitLocal
 =================
 */
-void CL_InitLocal (void)
+void CL_InitLocal(void)
 {
 	cls.state = ca_disconnected;
 	cls.realtime = Sys_Milliseconds();
@@ -1674,7 +1675,7 @@ CL_WriteConfiguration
 Writes key bindings and archived cvars to config.cfg
 ===============
 */
-void CL_WriteConfiguration (char *cfgName)
+void CL_WriteConfiguration(char *cfgName)
 {
 	char path[MAX_QPATH];
 
@@ -1706,7 +1707,7 @@ CL_WriteConfig_f
 
 ===============
 */
-void CL_WriteConfig_f (void)
+void CL_WriteConfig_f(void)
 {
 	char cfgName[MAX_QPATH];
 
@@ -1733,7 +1734,7 @@ void CL_WriteConfig_f (void)
 CL_FixCvarCheats
 ==================
 */
-void CL_FixCvarCheats (void)
+void CL_FixCvarCheats(void)
 {
 	// allow cheats in singleplayer, don't allow in multiplayer
 	const qboolean singleplayer = (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1"));
@@ -1747,7 +1748,7 @@ void CL_FixCvarCheats (void)
 CL_RefreshInputs
 ==================
 */
-static void CL_RefreshInputs (void)
+static void CL_RefreshInputs(void)
 {
 	// fetch results from server
 	CL_ReadPackets();
@@ -1779,7 +1780,7 @@ static void CL_RefreshInputs (void)
 CL_SendCommand_Async
 ==================
 */
-static void CL_SendCommand_Async (void)
+static void CL_SendCommand_Async(void)
 {
 	// send intentions now
 	CL_SendCmd_Async();
@@ -1795,7 +1796,7 @@ CL_Frame_Async
 ==================
 */
 #define FRAMETIME_MAX 0.5 // was 0.2
-void CL_Frame_Async (int msec)
+void CL_Frame_Async(int msec)
 {
 	static int	packetDelta = 0;
 	static int	renderDelta = 0;
@@ -1808,11 +1809,12 @@ void CL_Frame_Async (int msec)
 	// Don't allow setting maxfps too low or too high
 	if (net_maxfps->value < 10)
 		Cvar_SetValue("net_maxfps", 10);
-	if (net_maxfps->value > 90)
+	else if (net_maxfps->value > 90)
 		Cvar_SetValue("net_maxfps", 90);
+
 	if (r_maxfps->value < 10)
 		Cvar_SetValue("r_maxfps", 10);
-	if (r_maxfps->value > 1000)
+	else if (r_maxfps->value > 1000)
 		Cvar_SetValue("r_maxfps", 1000);
 
 	packetDelta += msec;
@@ -1856,7 +1858,7 @@ void CL_Frame_Async (int msec)
 			// Pooy's CPU usage fix
 			if (cl_sleep->value)
 			{
-				const int temptime = min( (1000.0 / net_maxfps->value - packetDelta), (1000.0 / r_maxfps->value - renderDelta) );
+				const int temptime = min((1000.0 / net_maxfps->value - packetDelta), (1000.0 / r_maxfps->value - renderDelta));
 				if (temptime > 1)
 					Sys_Sleep(1);
 			} // end CPU usage fix
@@ -1976,25 +1978,25 @@ CL_SendCommand
 
 ==================
 */
-void CL_SendCommand (void)
+void CL_SendCommand(void)
 {
 	// get new key events
-	Sys_SendKeyEvents ();
+	Sys_SendKeyEvents();
 
 	// allow mice or other external controllers to add commands
-	IN_Commands ();
+	IN_Commands();
 
 	// process console commands
-	Cbuf_Execute ();
+	Cbuf_Execute();
 
 	// fix any cheating cvars
-	CL_FixCvarCheats ();
+	CL_FixCvarCheats();
 
 	// send intentions now
-	CL_SendCmd ();
+	CL_SendCmd();
 
 	// resend a connection request if necessary
-	CL_CheckForResend ();
+	CL_CheckForResend();
 }
 
 
@@ -2004,10 +2006,10 @@ CL_Frame
 
 ==================
 */
-void CL_Frame (int msec)
+void CL_Frame(int msec)
 {
-	static int	extratime;
-	static int  lasttimecalled;
+	static int extratime;
+	static int lasttimecalled;
 
 	if (dedicated->value)
 		return;
@@ -2100,7 +2102,7 @@ void CL_Frame (int msec)
 	CL_PredictMovement();
 
 	// allow rendering DLL change
-	VID_CheckChanges ();
+	VID_CheckChanges();
 	if (!cl.refresh_prepped && cls.state == ca_active)
 		CL_PrepRefresh();
 
@@ -2127,11 +2129,11 @@ void CL_Frame (int msec)
 
 	cls.framecount++;
 
-	if ( log_stats->value )
+	if (log_stats->value)
 	{
-		if ( cls.state == ca_active )
+		if (cls.state == ca_active)
 		{
-			if ( !lasttimecalled )
+			if (!lasttimecalled)
 			{
 				lasttimecalled = Sys_Milliseconds();
 				if (log_stats_file)
@@ -2157,7 +2159,7 @@ void CL_Frame (int msec)
 CL_Init
 ====================
 */
-void CL_Init (void)
+void CL_Init(void)
 {
 	if (dedicated->value)
 		return;		// nothing running on the client
@@ -2166,34 +2168,34 @@ void CL_Init (void)
 
 	Con_Init ();	
 #if defined __linux__ || defined __sgi
-	S_Init ();	
-	VID_Init ();
+	S_Init();	
+	VID_Init();
 #else
-	VID_Init ();
-	S_Init ();	// sound must be initialized after window is created
+	VID_Init();
+	S_Init();	// sound must be initialized after window is created
 #endif
 	
-	V_Init ();
+	V_Init();
 	
 	net_message.data = net_message_buffer;
 	net_message.maxsize = sizeof(net_message_buffer);
 
-	UI_Init ();	
+	UI_Init();	
 	
-	SCR_Init ();
+	SCR_Init();
 	cls.disable_screen = true;	// don't draw yet
 
-	CDAudio_Init ();
-	CL_InitLocal ();
-	IN_Init ();
+	CDAudio_Init();
+	CL_InitLocal();
+	IN_Init();
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
-	CL_InitHTTPDownloads ();
+	CL_InitHTTPDownloads();
 #endif	// USE_CURL
 
 	//Cbuf_AddText ("exec autoexec.cfg\n");
-	FS_ExecAutoexec ();
-	Cbuf_Execute ();
+	FS_ExecAutoexec();
+	Cbuf_Execute();
 }
 
 
@@ -2205,7 +2207,7 @@ FIXME: this is a callback from Sys_Quit and Com_Error.  It would be better
 to run quit through here before the final handoff to the sys code.
 ===============
 */
-void CL_Shutdown (void)
+void CL_Shutdown(void)
 {
 	static qboolean isdown = false;
 	int sec, base; 	// zaphster's delay variables
@@ -2218,12 +2220,12 @@ void CL_Shutdown (void)
 	isdown = true;
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
-	CL_HTTP_Cleanup (true);
+	CL_HTTP_Cleanup(true);
 #endif	// USE_CURL
 
-	CL_WriteConfiguration ("kmq2config"); 
+	CL_WriteConfiguration("kmq2config"); 
 
-	CDAudio_Shutdown ();
+	CDAudio_Shutdown();
 
 	// added delay
 	sec = base = Sys_Milliseconds();
@@ -2239,6 +2241,6 @@ void CL_Shutdown (void)
 		sec = Sys_Milliseconds();
 	// end delay
 
-	IN_Shutdown ();
+	IN_Shutdown();
 	VID_Shutdown();
 }
