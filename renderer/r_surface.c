@@ -1087,7 +1087,7 @@ Underwater caustic effect based on code by Kirk Barnes
 extern unsigned int dst_texture_ARB;
 static void RB_DrawCaustics (msurface_t *surf)
 {
-	image_t		*causticpic = RB_CausticForSurface (surf);
+	image_t		*causticpic = RB_CausticForSurface(surf);
 	qboolean	previousBlend = false;
 	const qboolean	fragmentWarp = glConfig.multitexture && glConfig.arb_fragment_program && (r_caustics->value > 1.0);
 	

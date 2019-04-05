@@ -156,25 +156,19 @@ static qboolean IsValidSkin (char **filelist, int numFiles, int index)
 {
 	const int len = strlen(filelist[index]);
 
-	if (	!strcmp (filelist[index] + max(len - 4, 0), ".pcx")
-		||  !strcmp (filelist[index] + max(len - 4, 0), ".tga")
-#ifdef PNG_SUPPORT
-		||  !strcmp (filelist[index] + max(len - 4, 0), ".png")
-#endif // PNG_SUPPORT
-		||	!strcmp (filelist[index] + max(len - 4, 0), ".jpg") )
+	if (   !strcmp(filelist[index] + max(len - 4, 0), ".pcx")
+		|| !strcmp(filelist[index] + max(len - 4, 0), ".tga")
+		|| !strcmp(filelist[index] + max(len - 4, 0), ".png")
+		|| !strcmp(filelist[index] + max(len - 4, 0), ".jpg"))
 	{
 		if (   strcmp(filelist[index] + max(len - 6, 0), "_i.pcx")
 			&& strcmp(filelist[index] + max(len - 6, 0), "_i.tga")
-#ifdef PNG_SUPPORT
 			&& strcmp(filelist[index] + max(len - 6, 0), "_i.png")
-#endif // PNG_SUPPORT
-			&&  strcmp(filelist[index] + max(len - 6, 0), "_i.jpg"))
+			&& strcmp(filelist[index] + max(len - 6, 0), "_i.jpg"))
 		{
 			if (   IconOfSkinExists(filelist[index], filelist, numFiles - 1, "_i.pcx")
 				|| IconOfSkinExists(filelist[index], filelist, numFiles - 1, "_i.tga")
-#ifdef PNG_SUPPORT
 				|| IconOfSkinExists(filelist[index], filelist, numFiles - 1, "_i.png")
-#endif // PNG_SUPPORT
 				|| IconOfSkinExists(filelist[index], filelist, numFiles - 1, "_i.jpg"))
 			{
 				return true;
@@ -205,7 +199,8 @@ static qboolean PlayerConfig_ScanDirectories (void)
 			path = FS_NextPath(path);
 			Com_sprintf(findname, sizeof(findname), "%s/players/*.*", path);
 
-			if ( (dirnames = FS_ListFiles(findname, &ndirs, SFF_SUBDIR, 0)) != 0 )
+			dirnames = FS_ListFiles(findname, &ndirs, SFF_SUBDIR, 0);
+			if (dirnames)
 				break;
 		} while (path);
 
@@ -216,7 +211,7 @@ static qboolean PlayerConfig_ScanDirectories (void)
 		int npms = ndirs;
 		if (npms > MAX_PLAYERMODELS)
 			npms = MAX_PLAYERMODELS;
-		if ( (s_numplayermodels + npms) > MAX_PLAYERMODELS )
+		if (s_numplayermodels + npms > MAX_PLAYERMODELS)
 			npms = MAX_PLAYERMODELS - s_numplayermodels;
 
 		for (int i = 0; i < npms; i++)
@@ -364,7 +359,7 @@ qboolean PlayerConfig_MenuInit (void)
 
 	static const char *handedness[] = { "right", "left", "center", 0 };
 
-	PlayerConfig_ScanDirectories ();
+	PlayerConfig_ScanDirectories();
 
 	if (s_numplayermodels == 0)
 		return false;
@@ -374,15 +369,15 @@ qboolean PlayerConfig_MenuInit (void)
 
 	Q_strncpyz(currentdirectory, skin->string, sizeof(currentdirectory));
 
-	if (strchr( currentdirectory, '/' ))
+	if (strchr(currentdirectory, '/'))
 	{
-		Q_strncpyz(currentskin, strchr( currentdirectory, '/' ) + 1, sizeof(currentskin));
+		Q_strncpyz(currentskin, strchr(currentdirectory, '/' ) + 1, sizeof(currentskin));
 		*strchr(currentdirectory, '/') = 0;
 	}
-	else if (strchr( currentdirectory, '\\' ))
+	else if (strchr(currentdirectory, '\\'))
 	{
-		Q_strncpyz( currentskin, strchr( currentdirectory, '\\' ) + 1, sizeof(currentskin) );
-		*strchr( currentdirectory, '\\' ) = 0;
+		Q_strncpyz(currentskin, strchr(currentdirectory, '\\') + 1, sizeof(currentskin));
+		*strchr(currentdirectory, '\\') = 0;
 	}
 	else
 	{
@@ -579,6 +574,7 @@ qboolean PlayerConfig_CheckIncerement (int dir, float x, float y, float w, float
 
 		if (sound)
 			S_StartLocalSound(sound);
+
 		SkinCallback(NULL);
 
 		return true;
@@ -741,7 +737,7 @@ void PlayerConfig_MenuDraw (void)
 		refdef.num_entities = 0;
 		refdef.entities = entity;
 
-		const int yaw = anglemod(cl.time / 10);
+		const int yaw = anglemod(cl.time / 10.0f);
 
 		VectorSet(modelOrg, 150, -25, 0);
 

@@ -481,7 +481,7 @@ void CL_RequestNextDownload (void)
 		else
 			precache_check = env_cnt + 1;
 
-		CM_LoadMap(cl.configstrings[CS_MODELS+1], true, &map_checksum);
+		CM_LoadMap(cl.configstrings[CS_MODELS + 1], true, &map_checksum);
 
 		if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM]))
 		{
@@ -531,13 +531,12 @@ void CL_RequestNextDownload (void)
 			}
 		}
 
-		//precache_check = texture_cnt+999;
 		precache_check = texture_cnt + 2;
 		precache_tex = 0;
 	}
 
 	// confirm existance of .tga textures, try to download any that don't exist
-	if (precache_check == texture_cnt+2)
+	if (precache_check == texture_cnt + 2)
 	{
 		if (allow_download->value && allow_download_maps->value && allow_download_textures_24bit->value)
 		{
@@ -551,9 +550,8 @@ void CL_RequestNextDownload (void)
 		precache_check = texture_cnt + 3;
 	}
 
-#ifdef PNG_SUPPORT
 	// confirm existance of .png textures, try to download any that don't exist
-	if (precache_check == texture_cnt+3)
+	if (precache_check == texture_cnt + 3)
 	{
 		if (allow_download->value && allow_download_maps->value && allow_download_textures_24bit->value)
 		{
@@ -571,10 +569,6 @@ void CL_RequestNextDownload (void)
 
 	// confirm existance of .jpg textures, try to download any that don't exist
 	if (precache_check == texture_cnt + 4)
-#else	// PNG_SUPPORT
-	// confirm existance of .jpg textures, try to download any that don't exist
-	if (precache_check == texture_cnt + 3)
-#endif	// PNG_SUPPORT
 	{
 		if (allow_download->value && allow_download_maps->value && allow_download_textures_24bit->value)
 		{
@@ -681,15 +675,13 @@ void CL_AddToFailedDownloadList (char *name)
 ===============
 CL_CheckOrDownloadFile
 
-Returns true if the file exists, otherwise it attempts
-to start a download from the server.
+Returns true if the file exists, otherwise it attempts to start a download from the server.
 ===============
 */
 qboolean CL_CheckOrDownloadFile (char *filename)
 {
 	FILE *fp;
 	char name[MAX_OSPATH];
-	int len; // Knightmare added
 	char s[128];
 
 	if (strstr(filename, ".."))
@@ -705,9 +697,8 @@ qboolean CL_CheckOrDownloadFile (char *filename)
 	if (CL_CheckDownloadFailed(filename))
 		return true;
 
-#ifdef PNG_SUPPORT
 	// don't download a .png texture which already has a .tga counterpart
-	len = strlen(filename); 
+	const int len = strlen(filename); 
 	Q_strncpyz(s, filename, sizeof(s));
 	if (strstr(s, "textures/") && !strcmp(s + len - 4, ".png")) // look if we have a .png texture 
 	{
@@ -719,11 +710,8 @@ qboolean CL_CheckOrDownloadFile (char *filename)
 		if (FS_LoadFile(s, NULL) != -1)	// check for .tga counterpart
 			return true;
 	}
-#endif	// PNG_SUPPORT
 
 	// don't download a .jpg texture which already has a .tga counterpart
-	len = strlen(filename);
-	Q_strncpyz(s, filename, sizeof(s));
 	if (strstr(s, "textures/") && !strcmp(s + len - 4, ".jpg")) // look if we have a .jpg texture 
 	{ 
 		// replace extension 
@@ -731,18 +719,16 @@ qboolean CL_CheckOrDownloadFile (char *filename)
 		s[len - 2] = 'g';
 		s[len - 1] = 'a';
 
-		if (FS_LoadFile (s, NULL) != -1)	// check for .tga counterpart
+		if (FS_LoadFile(s, NULL) != -1)	// check for .tga counterpart
 			return true;
 
-#ifdef PNG_SUPPORT
 		// replace extension 
 		s[len - 3] = 'p';
 		s[len - 2] = 'n';
 		s[len - 1] = 'g';
 
-		if (FS_LoadFile (s, NULL) != -1)	// check for .png counterpart
+		if (FS_LoadFile(s, NULL) != -1)	// check for .png counterpart
 			return true;
-#endif	// PNG_SUPPORT
 	}
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2

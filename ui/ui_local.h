@@ -50,8 +50,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define QMF_HIDDEN			0x00000010
 
 //
-#define RCOLUMN_OFFSET  MENU_FONT_SIZE*2	// was 16
-#define LCOLUMN_OFFSET -MENU_FONT_SIZE*2	// was -16
+#define RCOLUMN_OFFSET  (MENU_FONT_SIZE * 2)	// was 16
+#define LCOLUMN_OFFSET (-MENU_FONT_SIZE * 2)	// was -16
 
 #define SLIDER_RANGE 10
 //
