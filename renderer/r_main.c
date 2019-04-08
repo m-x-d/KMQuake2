@@ -116,9 +116,9 @@ cvar_t	*r_stencilTwoSide; // Echon's two-sided stenciling
 cvar_t	*r_arb_fragment_program;
 cvar_t	*r_arb_vertex_program;
 cvar_t	*r_arb_vertex_buffer_object;
-cvar_t	*r_pixel_shader_warp; // allow disabling the nVidia water warp
-cvar_t	*r_trans_lighting; // disabling of lightmaps on trans surfaces
-cvar_t	*r_warp_lighting; // allow disabling of lighting on warp surfaces
+cvar_t	*r_pixel_shader_warp;	// allow disabling the nVidia water warp
+cvar_t	*r_trans_lighting;		// disabling of lightmaps on trans surfaces
+cvar_t	*r_warp_lighting;		// allow disabling of lighting on warp surfaces
 cvar_t	*r_solidalpha;			// allow disabling of trans33+trans66 surface flag combining
 cvar_t	*r_entity_fliproll;		// allow disabling of backwards alias model roll
 cvar_t	*r_old_nullmodel;		// allow selection of nullmodel
@@ -128,7 +128,6 @@ cvar_t	*r_trans_surf_sorting; // trans bmodel sorting
 cvar_t	*r_shelltype; // entity shells: 0 = solid, 1 = warp, 2 = spheremap
 cvar_t	*r_ext_texture_compression; // Heffo - ARB Texture Compression
 cvar_t	*r_screenshot_format;		// determines screenshot format
-//cvar_t	*r_screenshot_jpeg;			// Heffo - JPEG Screenshots
 cvar_t	*r_screenshot_jpeg_quality;	// Heffo - JPEG Screenshots
 
 //cvar_t	*r_motionblur;				// motionblur
@@ -197,7 +196,7 @@ R_CullBox
 Returns true if the box is completely outside the frustom
 =================
 */
-qboolean R_CullBox (vec3_t mins, vec3_t maxs)
+qboolean R_CullBox(vec3_t mins, vec3_t maxs)
 {
 	if (r_nocull->value)
 		return false;
@@ -215,7 +214,7 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 R_PolyBlend
 ============
 */
-void R_PolyBlend (void)
+void R_PolyBlend(void)
 {
 	if (!r_polyblend->value || !v_blend[3])
 		return;
@@ -266,7 +265,7 @@ void R_PolyBlend (void)
 
 //=======================================================================
 
-int SignbitsForPlane (cplane_t *out)
+int SignbitsForPlane(cplane_t *out)
 {
 	// for fast box on planeside test
 	int bits = 0;
@@ -278,7 +277,7 @@ int SignbitsForPlane (cplane_t *out)
 }
 
 
-void R_SetFrustum (void)
+void R_SetFrustum(void)
 {
 	// rotate VPN right by FOV_X/2 degrees
 	RotatePointAroundVector(frustum[0].normal, vup, vpn, -(90 - r_newrefdef.fov_x / 2 ));
@@ -307,7 +306,7 @@ void R_SetFrustum (void)
 R_SetupFrame
 ===============
 */
-void R_SetupFrame (void)
+void R_SetupFrame(void)
 {
 	r_framecount++;
 
@@ -391,7 +390,7 @@ void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble z
 R_SetupGL
 =============
 */
-void R_SetupGL (void)
+void R_SetupGL(void)
 {
 	//Knightmare- variable sky range
 	static GLdouble farz;
@@ -494,7 +493,7 @@ void R_SetupGL (void)
 R_Clear
 =============
 */
-void R_Clear (void)
+void R_Clear(void)
 {
 	GLbitfield clearBits = 0;	// bitshifter's consolidation
 
@@ -559,7 +558,7 @@ void R_Clear (void)
 R_Flash
 =============
 */
-void R_Flash (void)
+void R_Flash(void)
 {
 	R_PolyBlend();
 }
@@ -570,7 +569,7 @@ void R_Flash (void)
 R_DrawLastElements
 =============
 */
-void R_DrawLastElements (void)
+void R_DrawLastElements(void)
 {
 	//if (parts_prerender)
 	//	R_DrawParticles(parts_prerender);
@@ -587,7 +586,7 @@ R_RenderView
 r_newrefdef must be set before the first call
 ================
 */
-void R_RenderView (refdef_t *fd)
+void R_RenderView(refdef_t *fd)
 {
 	if (r_norefresh->value)
 		return;
@@ -690,7 +689,7 @@ void Con_DrawString(int x, int y, char *string, int alpha);
 float SCR_ScaledVideo(float param);
 #define	FONT_SIZE SCR_ScaledVideo(con_font_size->value)
 
-void R_SetGL2D (void)
+void R_SetGL2D(void)
 {
 	// set 2D virtual screen size
 	qglViewport(0,0, vid.width, vid.height);
@@ -742,10 +741,9 @@ void R_SetGL2D (void)
 /*
 ====================
 R_SetLightLevel
-
 ====================
 */
-void R_SetLightLevel (void)
+void R_SetLightLevel(void)
 {
 	vec3_t shadelight;
 
@@ -765,7 +763,7 @@ void R_SetLightLevel (void)
 R_RenderFrame
 @@@@@@@@@@@@@@@@@@@@@
 */
-void R_RenderFrame (refdef_t *fd)
+void R_RenderFrame(refdef_t *fd)
 {
 	R_RenderView(fd);
 	R_SetLightLevel();
@@ -773,7 +771,7 @@ void R_RenderFrame (refdef_t *fd)
 }
 
 
-void AssertCvarRange (cvar_t *var, float min, float max, qboolean isInteger)
+void AssertCvarRange(cvar_t *var, float min, float max, qboolean isInteger)
 {
 	if (!var)
 		return;
@@ -797,9 +795,9 @@ void AssertCvarRange (cvar_t *var, float min, float max, qboolean isInteger)
 }
 
 
-void R_Register (void)
+void R_Register(void)
 {
-	// added Psychospaz's console font size option
+	// Added Psychospaz's console font size option
 	con_font = Cvar_Get("con_font", "default", CVAR_ARCHIVE);
 	con_font_size = Cvar_Get("con_font_size", "8", CVAR_ARCHIVE);
 	alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
@@ -943,9 +941,6 @@ void R_Register (void)
 	Cmd_AddCommand("imagelist", R_ImageList_f);
 	Cmd_AddCommand("screenshot", R_ScreenShot_f);
 	Cmd_AddCommand("screenshot_silent", R_ScreenShot_Silent_f);
-	Cmd_AddCommand("screenshot_tga", R_ScreenShot_TGA_f);
-	Cmd_AddCommand("screenshot_jpg", R_ScreenShot_JPG_f);
-	Cmd_AddCommand("screenshot_png", R_ScreenShot_PNG_f);
 	Cmd_AddCommand("modellist", Mod_Modellist_f);
 	Cmd_AddCommand("gl_strings", GL_Strings_f);
 	//	Cmd_AddCommand ("resetvertexlights", R_ResetVertextLights_f);
@@ -980,7 +975,7 @@ qboolean R_SetMode (void)
 		{
 			Cvar_SetValue("vid_fullscreen", 0);
 			vid_fullscreen->modified = false;
-			VID_Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
+			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: fullscreen unavailable in this mode\n", __func__);
 			err = GLimp_SetMode(&vid.width, &vid.height, r_mode->value, false);
 
 			if (err == rserr_ok)
@@ -990,14 +985,14 @@ qboolean R_SetMode (void)
 		{
 			Cvar_SetValue("r_mode", glState.prev_mode);
 			r_mode->modified = false;
-			VID_Printf(PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n");
+			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: invalid mode\n", __func__);
 		}
 
 		// try setting it back to something safe
 		err = GLimp_SetMode(&vid.width, &vid.height, glState.prev_mode, false);
 		if (err != rserr_ok)
 		{
-			VID_Printf(PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n");
+			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: could not revert to safe mode\n", __func__);
 			return false;
 		}
 	}
@@ -1015,7 +1010,7 @@ Useful for parsing the GL extension string.
 Similar to code in Fruitz of Dojo Quake2 MacOSX Port.
 ===============
 */
-qboolean StringContainsToken (const char *string, const char *findToken)
+qboolean StringContainsToken(const char *string, const char *findToken)
 {
 	if (!string || !findToken) 
 		return false;
@@ -1475,7 +1470,7 @@ qboolean R_CheckGLExtensions()
 R_Init
 ===============
 */
-qboolean R_Init (void *hinstance, void *hWnd, char *reason)
+qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 {	
 	extern float r_turbsin[256];
 
@@ -1626,7 +1621,7 @@ qboolean R_Init (void *hinstance, void *hWnd, char *reason)
 R_ClearState
 ===============
 */
-void R_ClearState (void)
+void R_ClearState(void)
 {	
 	R_SetFogVars(false, 0, 0, 0, 0, 0, 0, 0); // clear fog effets
 	GL_EnableMultitexture(false);
@@ -1639,7 +1634,7 @@ void R_ClearState (void)
 GL_Strings_f
 =================
 */
-void GL_Strings_f (void)
+void GL_Strings_f(void)
 {
 	unsigned line = 0;
 
@@ -1673,7 +1668,7 @@ void GL_Strings_f (void)
 R_Shutdown
 ===============
 */
-void R_Shutdown (void)
+void R_Shutdown(void)
 {	
 	Cmd_RemoveCommand("modellist");
 	Cmd_RemoveCommand("screenshot");
@@ -1817,7 +1812,7 @@ R_SetPalette
 */
 unsigned r_rawpalette[256];
 
-void R_SetPalette (const unsigned char *palette)
+void R_SetPalette(const unsigned char *palette)
 {
 	byte *rp = (byte*)r_rawpalette;
 

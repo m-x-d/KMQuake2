@@ -19,8 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-	
 // q_shared.h -- included first by ALL program modules
+
+#pragma once
 
 #ifdef _MSC_VER	// _WIN32
 // unknown pragmas are SUPPOSED to be ignored, but....
@@ -114,9 +115,9 @@ typedef enum {false, true}	qboolean;
 // from Quake3 source
 #ifdef _MSC_VER	// _WIN32
 //#define Q_vsnprintf _vsnprintf
-__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args)
+__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args) //TODO: mxd. Replace with vsnprintf?
 {
-	int ret = _vsnprintf(Dest, Count, Format, Args);
+	int ret = _vsnprintf(Dest, Count, Format, Args);  
 	Dest[Count-1] = 0;	// null terminate
 	return ret;
 }
@@ -152,8 +153,6 @@ __inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list 
 #define ROQ_SUPPORT // whether to use new cinematic system
 
 #define OGG_SUPPORT // whether to use Ogg Vorbis soundtrack
-
-#define PNG_SUPPORT // whether to include PNG image support
 
 #define USE_CURL	// whether to include HTTP downloading
 
@@ -400,12 +399,12 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 
 //=============================================
 
-char *COM_SkipPath (char *pathname);
-void COM_StripExtension (char *in, char *out);
-void COM_FileBase (char *in, char *out);
-void COM_FilePath (char *in, char *out);
-char *COM_FileExtension (char *in);
-void COM_DefaultExtension (char *path, char *extension);
+char *COM_SkipPath(char *pathname);
+void COM_StripExtension(char *in, char *out);
+void COM_FileBase(char *in, char *out);
+void COM_FilePath(char *in, char *out);
+const char *COM_FileExtension(const char *in);
+void COM_DefaultExtension(char *path, char *extension);
 
 char *COM_Parse (char **data_p);
 // data is an in/out parm, returns a parsed out token
@@ -444,25 +443,25 @@ void Com_PageInMemory(byte *buffer, int size);
 #define S_COLOR_SHADOW	"^s"
 #define S_COLOR_ITALIC	"^i"
 
-#define Q_COLOR_ESCAPE		'^'
+#define Q_COLOR_ESCAPE	'^'
 
 #define Q_IsColorString(p)	(p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE)
 
 //=============================================
 
 // portable case insensitive compare
-int Q_stricmp (char *s1, char *s2);
-int Q_strcasecmp (char *s1, char *s2);
-int Q_strncasecmp (char *s1, char *s2, int n);
+int Q_stricmp(const char *s1, const char *s2);
+int Q_strcasecmp(char *s1, char *s2);
+int Q_strncasecmp(char *s1, char *s2, int n);
 
 //mxd. Portable case insensitive strstr
 char *Q_strcasestr(const char *haystack, const char *needle);
 
 void Q_strncpyz(char *dst, const char *src, int dstSize);
-void Q_strncatz (char *dst, const char *src, int dstSize);
-void Q_snprintfz (char *dst, int dstSize, const char *fmt, ...);
-char *Q_strlwr (char *string);
-char *Q_strupr (char *string);
+void Q_strncatz(char *dst, const char *src, int dstSize);
+void Q_snprintfz(char *dst, int dstSize, const char *fmt, ...);
+char *Q_strlwr(char *string);
+char *Q_strupr(char *string);
 
 //=============================================
 

@@ -19,13 +19,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "qcommon.h"
-#include "../include/zlibpng/unzip.h"
+#include "../include/zlib/unzip.h"
 
 // enables faster binary pak searck, still experimental
 #define BINARY_PACK_SEARCH
-
-
-#pragma warning (disable : 4715)
 
 /*
 =============================================================================
@@ -1108,6 +1105,7 @@ char *pakfile_ignore_names[] =
 {
 	"save/",
 	"scrnshot/",
+	"screenshots/", //mxd
 	"autoexec.cfg",
 	"kmq2config.cfg",
 	0

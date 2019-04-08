@@ -338,14 +338,14 @@ CL_PrepRefresh
 Call before entering a new level, or after changing dlls
 =================
 */
-qboolean needLoadingPlaque (void);
+extern int scr_draw_loading; //mxd
 
-void CL_PrepRefresh (void)
+void CL_PrepRefresh(void)
 {
 	char	mapname[64];
 	char	pname[MAX_QPATH];
 	vec3_t	axis;
-	const qboolean newPlaque = needLoadingPlaque();
+	const qboolean newPlaque = (!cls.disable_screen || !scr_draw_loading);
 
 	if (!cl.configstrings[CS_MODELS + 1][0])
 		return; // no map loaded
@@ -354,7 +354,6 @@ void CL_PrepRefresh (void)
 		SCR_BeginLoadingPlaque();
 
 	// Knightmare- for Psychospaz's map loading screen
-	loadingMessage = true;
 	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"loading %s", cl.configstrings[CS_MODELS + 1]);
 	loadingPercent = 0.0f;
 	// end Knightmare
@@ -519,8 +518,6 @@ void CL_PrepRefresh (void)
 	// start the cd track
 	CL_PlayBackgroundTrack();
 
-	// Knightmare- for Psychospaz's map loading screen
-	loadingMessage = false;
 	// Knightmare- close loading screen as soon as done
 	cls.disable_screen = false;
 
@@ -578,16 +575,17 @@ void V_Gun_Model_f (void)
 
 //============================================================================
 
-
-/*
-==================
-V_RenderView
-==================
-*/
-void V_RenderView (float stereo_separation)
+int entitycmpfnc(const entity_t *a, const entity_t *b)
 {
-	extern int entitycmpfnc(const entity_t *, const entity_t *);
+	// All other models are sorted by model then skin
+	if (a->model == b->model)
+		return (int)a->skin - (int)b->skin;
 
+	return (int)a->model - (int)b->model;
+}
+
+void V_RenderView(float stereo_separation)
+{
 	if (cls.state != ca_active)
 		return;
 

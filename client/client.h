@@ -536,7 +536,7 @@ typedef struct
 
 hudscale_t hudScale;
 
-float scaledHud(float param);
+float ScaledHud(float param);
 float HudScale(void);
 void InitHudScale(void);
 
@@ -725,7 +725,7 @@ void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int al
 void R_DrawCameraEffect(void);
 
 void R_GrabScreen(void); // screenshots for savegames
-void R_ScaledScreenshot(char *name); //  screenshots for savegames
+void R_ScaledScreenshot(char *filename); // screenshots for savegames
 
 int R_MarkFragments(const vec3_t origin, const vec3_t axis[3], float radius, int maxPoints, vec3_t *points, int maxFragments, markFragment_t *fragments);
 
@@ -824,13 +824,10 @@ void CL_Download_Calculate_KBps(int byteDistance, int totalSize);
 //
 // cl_view.c
 //
-extern	int	gun_frame;
-extern	struct model_s *gun_model;
-
-qboolean loadingMessage;
+extern int gun_frame;
+extern struct model_s *gun_model;
 
 char loadingMessages[96];
-
 float loadingPercent;
 
 void V_Init(void);

@@ -69,14 +69,14 @@ int	vec_to_st[6][3] =
 float skymins[2][6], skymaxs[2][6];
 float sky_min, sky_max;
 
-void DrawSkyPolygon (int nump, vec3_t vecs)
+void DrawSkyPolygon(int nump, vec3_t vecs)
 {
 	vec3_t	v, av;
 	float	s, t, dv;
 
 	c_sky++;
 
-	// decide which face it maps to
+	// Decide which face it maps to
 	VectorCopy(vec3_origin, v);
 	float *vp = vecs;
 	for (int i = 0; i < nump; i++, vp += 3)
@@ -93,7 +93,7 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 	else
 		axis = (v[2] < 0 ? 5 : 4);
 
-	// project new texture coords
+	// Project new texture coords
 	for (int i = 0; i < nump; i++, vecs += 3)
 	{
 		int j = vec_to_st[axis][2];
@@ -103,7 +103,7 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 			dv = -vecs[-j - 1];
 
 		if (dv < 0.001)
-			continue;	// don't divide by zero
+			continue; // Don't divide by zero
 
 		j = vec_to_st[axis][0];
 		if (j < 0)
@@ -125,7 +125,7 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 	}
 }
 
-#define	ON_EPSILON		0.1	// point on plane side epsilon
+#define	ON_EPSILON		0.1 // Point on plane side epsilon
 #define	MAX_CLIP_VERTS	64
 
 void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
@@ -138,11 +138,11 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 	int		i;
 
 	if (nump > MAX_CLIP_VERTS - 2)
-		VID_Error (ERR_DROP, "ClipSkyPolygon: MAX_CLIP_VERTS");
+		VID_Error(ERR_DROP, "ClipSkyPolygon: MAX_CLIP_VERTS");
 
 	if (stage == 6)
 	{
-		// fully clipped, so draw it
+		// Fully clipped, so draw it
 		DrawSkyPolygon(nump, vecs);
 		return;
 	}
@@ -174,12 +174,12 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 
 	if (!front || !back)
 	{
-		// not clipped
+		// Not clipped
 		ClipSkyPolygon(nump, vecs, stage + 1);
 		return;
 	}
 
-	// clip it
+	// Clip it
 	sides[i] = sides[0];
 	dists[i] = dists[0];
 	VectorCopy(vecs, (vecs + (i * 3)));
@@ -223,7 +223,7 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 		newc[1]++;
 	}
 
-	// continue
+	// Continue
 	ClipSkyPolygon(newc[0], newv[0][0], stage + 1);
 	ClipSkyPolygon(newc[1], newv[1][0], stage + 1);
 }
@@ -233,11 +233,11 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 R_AddSkySurface
 =================
 */
-void R_AddSkySurface (msurface_t *fa)
+void R_AddSkySurface(msurface_t *fa)
 {
 	vec3_t verts[MAX_CLIP_VERTS];
 
-	// calculate vertex values for sky box
+	// Calculate vertex values for sky box
 	for (glpoly_t *p = fa->polys; p; p = p->next)
 	{
 		for (int i = 0; i<p->numverts; i++)
@@ -253,7 +253,7 @@ void R_AddSkySurface (msurface_t *fa)
 R_ClearSkyBox
 ==============
 */
-void R_ClearSkyBox (void)
+void R_ClearSkyBox(void)
 {
 	for (int i = 0; i < 6; i++)
 	{
@@ -263,7 +263,7 @@ void R_ClearSkyBox (void)
 }
 
 
-void MakeSkyVec (float s, float t, int axis)
+void MakeSkyVec(float s, float t, int axis)
 {
 	vec3_t v, b;
 
@@ -306,24 +306,24 @@ int skytexorder[6] = { 0, 2, 1, 3, 4, 5 };
 
 void R_DrawSkyBox (void)
 {
-	int i;
-
 	if (skyrotate)
 	{
-		// check for no sky at all
-		for (i = 0; i < 6; i++)
-			if (skymins[0][i] < skymaxs[0][i] && skymins[1][i] < skymaxs[1][i])
-				break;
+		int c;
 
-		if (i == 6)
-			return; // nothing visible
+		// Check for no sky at all
+		for (c = 0; c < 6; c++)
+			if (skymins[0][c] < skymaxs[0][c] && skymins[1][c] < skymaxs[1][c])
+				break;
+		
+		if (c == 6)
+			return; // Nothing visible
 	}
 
 	qglPushMatrix();
 	qglTranslatef(r_origin[0], r_origin[1], r_origin[2]);
 	qglRotatef(r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 
-	for (i = 0; i < 6; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		if (skyrotate)
 		{
@@ -368,7 +368,7 @@ R_SetSky
 // 3dstudio environment map names
 char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
 
-void R_SetSky (char *name, float rotate, vec3_t axis)
+void R_SetSky(char *name, float rotate, vec3_t axis)
 {
 	char	pathname[MAX_QPATH];
 	float	imagesize;
@@ -383,15 +383,7 @@ void R_SetSky (char *name, float rotate, vec3_t axis)
 			r_picmip->value++;
 
 		Com_sprintf(pathname, sizeof(pathname), "env/%s%s.tga", skyname, suf[i]);
-		sky_images[i] = R_FindImage(pathname, it_sky);
-		
-		// Knightmare- support .jpg skies
-		if (!sky_images[i])
-		{
-			Com_sprintf(pathname, sizeof(pathname), "env/%s%s.jpg", skyname, suf[i]);
-			sky_images[i] = R_FindImage(pathname, it_sky);
-		}
-
+		sky_images[i] = R_FindImage(pathname, it_sky, false);
 		if (!sky_images[i])
 			sky_images[i] = glMedia.notexture;
 

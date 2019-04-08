@@ -220,7 +220,7 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 			break;
 
 		case SCALETYPE_HUD:
-			textSize = scaledHud(HUD_FONT_SIZE);
+			textSize = ScaledHud(HUD_FONT_SIZE);
 			textScale = HudScale();
 			// hack for alternate text color
 			if (altBit)

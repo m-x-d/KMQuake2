@@ -638,7 +638,7 @@ Draws the console with the solid background
 */
 void Con_DrawConsole(float frac, qboolean trans)
 {
-	int		i, x, len;
+	int		x, len;
 	int		rows;
 	char	*text, output[1024];
 	int		row;
@@ -720,7 +720,7 @@ void Con_DrawConsole(float frac, qboolean trans)
 	}
 	
 	row = con.display;
-	for (i = 0; i < rows; i++, y -= FONT_SIZE, row--)
+	for (int i = 0; i < rows; i++, y -= FONT_SIZE, row--)
 	{
 		// before || past scrollback wrap point
 		if (row < 0 || con.current - row >= con.totallines)
@@ -737,7 +737,7 @@ void Con_DrawConsole(float frac, qboolean trans)
 
 //ZOID- draw the download bar
 #ifdef USE_CURL	// HTTP downloading from R1Q2
-	if ( cls.downloadname[0] && (cls.download || cls.downloadposition) )
+	if (cls.downloadname[0] && (cls.download || cls.downloadposition))
 #else
 	if (cls.download)
 #endif	// USE_CURL
@@ -753,12 +753,12 @@ void Con_DrawConsole(float frac, qboolean trans)
 		x = con.linewidth - ((con.linewidth * 7) / 40) - (stringLen((const char *)&version) - 14);
 		y = x - strlen(text) - (cls.downloadrate > 0.0f ? 19 : 8);
 
-		i = con.linewidth / 3;
-		if (strlen(text) > i)
+		const int maxchars = con.linewidth / 3;
+		if (strlen(text) > maxchars)
 		{
-			y = x - i - 11;
-			strncpy(dlbar, text, i);
-			dlbar[i] = 0;
+			y = x - maxchars - 11;
+			strncpy(dlbar, text, maxchars);
+			dlbar[maxchars] = 0;
 			Q_strncatz(dlbar, "...", sizeof(dlbar));
 		}
 		else
@@ -776,7 +776,7 @@ void Con_DrawConsole(float frac, qboolean trans)
 		int graph_w = y * FONT_SIZE;
 		int graph_h = FONT_SIZE;
 
-		for (int j = 0; j < y; j++) // Add blank spaces
+		for (int i = 0; i < y; i++) // Add blank spaces
 			Com_sprintf(dlbar + len, sizeof(dlbar) - len, " ");
 
 		if (cls.downloadrate > 0.0f)
@@ -785,9 +785,9 @@ void Con_DrawConsole(float frac, qboolean trans)
 			Com_sprintf(dlbar + len, sizeof(dlbar) - len, " %2d%%", cls.downloadpercent);
 
 		// Draw it
-		for (i = 0; i < len; i++)
+		for (int i = 0; i < len; i++)
 			if (dlbar[i] != ' ')
-				R_DrawChar( (i + 1) * FONT_SIZE, graph_y, dlbar[i], CON_FONT_SCALE, 255, 255, 255, 255, false, i == (len - 1) );
+				R_DrawChar((i + 1) * FONT_SIZE, graph_y, dlbar[i], CON_FONT_SCALE, 255, 255, 255, 255, false, i == (len - 1));
 
 		// New solid color download bar
 		graph_x--;

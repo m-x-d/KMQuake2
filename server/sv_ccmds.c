@@ -89,9 +89,6 @@ Sets sv_client and sv_player to the player with idnum Cmd_Argv(1)
 */
 qboolean SV_SetPlayer (void)
 {
-	client_t *cl;
-	int i;
-
 	if (Cmd_Argc() < 2)
 		return false;
 
@@ -118,8 +115,9 @@ qboolean SV_SetPlayer (void)
 		return true;
 	}
 
-	// check for a name match
-	for (i = 0, cl = svs.clients; i < maxclients->value; i++, cl++)
+	// Check for a name match
+	client_t *cl = svs.clients;
+	for (int i = 0; i < maxclients->value; i++, cl++)
 	{
 		if (!cl->state)
 			continue;
@@ -144,9 +142,9 @@ SAVEGAME FILES
 
 ===============================================================================
 */
-void R_GrabScreen (void); // Knightmare- screenshots for savegames
-void R_ScaledScreenshot (char *name); // Knightmare- screenshots for savegames
-void R_FreePic (char *name); // Knightmare- unregisters an image
+void R_GrabScreen(void); // Knightmare- screenshots for savegames
+void R_ScaledScreenshot(char *filename); // Knightmare- screenshots for savegames
+void R_FreePic(char *name); // Knightmare- unregisters an image
 
 /*
 =====================
@@ -165,6 +163,7 @@ void SV_WipeSavegame (char *savename)
 	remove(name);
 	Com_sprintf(name, sizeof(name), "%s/save/%s/game.ssv", FS_Gamedir(), savename);
 	remove(name);
+
 	// Knightmare- delete screenshot
 	Com_sprintf(name, sizeof(name), "%s/save/%s/shot.jpg", FS_Gamedir(), savename);
 	remove(name);
@@ -235,7 +234,8 @@ void SV_CopySaveGame (char *src, char *dst)
 	SV_WipeSavegame(dst);
 
 	// copy the savegame over
-	char name[MAX_OSPATH], name2[MAX_OSPATH];
+	char name[MAX_OSPATH];
+	char name2[MAX_OSPATH];
 	Com_sprintf(name,  sizeof(name),  "%s/save/%s/server.ssv", FS_Gamedir(), src);
 	Com_sprintf(name2, sizeof(name2), "%s/save/%s/server.ssv", FS_Gamedir(), dst);
 	FS_CreatePath(name2);
@@ -256,7 +256,7 @@ void SV_CopySaveGame (char *src, char *dst)
 	Com_sprintf(name, sizeof(name), "%s/save/%s/", FS_Gamedir(), src);
 	const int len = strlen(name);
 	Com_sprintf(name, sizeof(name), "%s/save/%s/*.sav", FS_Gamedir(), src);
-	char *found = Sys_FindFirst(name, 0, 0 );
+	char *found = Sys_FindFirst(name, 0, 0);
 	while (found)
 	{
 		Q_strncpyz(name + len, found + len, sizeof(name) - len);
@@ -280,7 +280,6 @@ void SV_CopySaveGame (char *src, char *dst)
 /*
 ==============
 SV_WriteLevelFile
-
 ==============
 */
 void SV_WriteLevelFile (void)
@@ -337,13 +336,14 @@ void SV_ReadLevelFile (void)
 /*
 ==============
 SV_WriteServerFile
-
 ==============
 */
 void SV_WriteServerFile (qboolean autosave)
 {
-	char	fileName[MAX_OSPATH], varName[128], string[128];
-	char	comment[32];
+	char fileName[MAX_OSPATH];
+	char varName[128];
+	char string[128];
+	char comment[32];
 	
 	Com_DPrintf("SV_WriteServerFile(%s)\n", autosave ? "true" : "false");
 
@@ -355,28 +355,27 @@ void SV_WriteServerFile (qboolean autosave)
 		return;
 	}
 
-	// write the comment field
+	// Write the comment field
 	memset(comment, 0, sizeof(comment));
 	if (!autosave)
 	{
 		time_t aclock;
 		time(&aclock);
 		struct tm *newtime = localtime(&aclock);
-		Com_sprintf(comment, sizeof(comment), "%2i:%i%i %2i/%2i  ", newtime->tm_hour, newtime->tm_min / 10, newtime->tm_min%10, newtime->tm_mon + 1, newtime->tm_mday);
+		Com_sprintf(comment, sizeof(comment), "%2i:%i%i %2i/%2i  ", newtime->tm_hour, newtime->tm_min / 10, newtime->tm_min % 10, newtime->tm_mon + 1, newtime->tm_mday);
 		strncat(comment, sv.configstrings[CS_NAME], sizeof(comment) - 1 - strlen(comment));
 	}
 	else
 	{
-		// autosaved
+		// Autosaved
 		Com_sprintf(comment, sizeof(comment), "ENTERING %s", sv.configstrings[CS_NAME]);
 	}
 	fwrite(comment, 1, sizeof(comment), f);
 
-	// write the mapcmd
+	// Write the mapcmd
 	fwrite(svs.mapcmd, 1, sizeof(svs.mapcmd), f);
 
-	// write all CVAR_LATCH cvars
-	// these will be things like coop, skill, deathmatch, etc
+	// Write all CVAR_LATCH cvars. These will be things like coop, skill, deathmatch, etc
 	for (cvar_t *var = cvar_vars; var; var = var->next)
 	{
 		if (!(var->flags & CVAR_LATCH) || var->flags & CVAR_SAVE_IGNORE) // latched vars that are not saved (game, etc)
@@ -398,7 +397,7 @@ void SV_WriteServerFile (qboolean autosave)
 
 	fclose(f);
 
-	// write game state
+	// Write game state
 	Com_sprintf(fileName, sizeof(fileName), "%s/save/current/game.ssv", FS_Gamedir());
 	ge->WriteGame(fileName, autosave);
 }
@@ -423,15 +422,16 @@ void SV_WriteScreenshot (void)
 /*
 ==============
 SV_ReadServerFile
-
 ==============
 */
 void SV_ReadServerFile (void)
 {
-	fileHandle_t	f;
-	char	fileName[MAX_OSPATH], varName[128], string[128];
-	char	comment[32];
-	char	mapcmd[MAX_TOKEN_CHARS];
+	fileHandle_t f;
+	char fileName[MAX_OSPATH];
+	char varName[128];
+	char string[128];
+	char comment[32];
+	char mapcmd[MAX_TOKEN_CHARS];
 
 	Com_DPrintf("SV_ReadServerFile()\n");
 
@@ -443,14 +443,13 @@ void SV_ReadServerFile (void)
 		return;
 	}
 
-	// read the comment field
+	// Read the comment field
 	FS_Read(comment, sizeof(comment), f);
 
-	// read the mapcmd
+	// Read the mapcmd
 	FS_Read(mapcmd, sizeof(mapcmd), f);
 
-	// read all CVAR_LATCH cvars
-	// these will be things like coop, skill, deathmatch, etc
+	// Read all CVAR_LATCH cvars. These will be things like coop, skill, deathmatch, etc
 	while (true)
 	{
 		if (!FS_FRead(varName, 1, sizeof(varName), f))
@@ -463,21 +462,18 @@ void SV_ReadServerFile (void)
 
 	FS_FCloseFile(f);
 
-	// start a new game fresh with new cvars
+	// Start a new game fresh with new cvars
 	SV_InitGame();
 
-//	strncpy (svs.mapcmd, mapcmd);
 	Q_strncpyz(svs.mapcmd, mapcmd, sizeof(svs.mapcmd));
 
-	// read game state
+	// Read game state
 	Com_sprintf(fileName, sizeof(fileName), "%s/save/current/game.ssv", FS_Gamedir());
 	ge->ReadGame(fileName);
 }
 
 
 //=========================================================
-
-
 
 
 /*
@@ -526,19 +522,19 @@ void SV_GameMap_f (void)
 
 	FS_CreatePath(va("%s/save/current/", FS_Gamedir()));
 
-	// check for clearing the current savegame
+	// Check for clearing the current savegame
 	char *map = Cmd_Argv(1);
 	if (map[0] == '*')
 	{
-		// wipe all the *.sav files
+		// Wipe all the *.sav files
 		SV_WipeSavegame("current");
 	}
 	else
 	{
-		// save the map just exited
+		// Save the map just exited
 		if (sv.state == ss_game)
 		{
-			// clear all the client inuse flags before saving so that when the level is re-entered, 
+			// Clear all the client inuse flags before saving so that when the level is re-entered, 
 			// the clients will spawn at spawn points instead of occupying body shells
 			qboolean *savedInuse = malloc(maxclients->value * sizeof(qboolean));
 			client_t *cl = svs.clients;
@@ -550,7 +546,7 @@ void SV_GameMap_f (void)
 
 			SV_WriteLevelFile();
 
-			// we must restore these for clients to transfer over correctly
+			// We must restore these for clients to transfer over correctly
 			cl = svs.clients;
 			for (int i = 0; i < maxclients->value; i++, cl++)
 				cl->edict->inuse = savedInuse[i];
@@ -559,16 +555,16 @@ void SV_GameMap_f (void)
 		}
 	}
 
-	// start up the next map
+	// Start up the next map
 	SV_Map(false, Cmd_Argv(1), false);
 
-	// archive server state
+	// Archive server state
 	strncpy(svs.mapcmd, Cmd_Argv(1), sizeof(svs.mapcmd) - 1);
 
-	// copy off the level to the autosave slot
+	// Copy off the level to the autosave slot
 	// Knightmare- don't do this in deathmatch or for cinematics
-	char *ext = map + strlen(map) - 4; //mxd
-	if (!dedicated->value && !Cvar_VariableValue("deathmatch") && Q_strcasecmp(ext, ".cin") && Q_strcasecmp(ext, ".roq") && Q_strcasecmp(ext, ".pcx"))
+	char *ext = (char *)COM_FileExtension(map); //mxd
+	if (!dedicated->value && !Cvar_VariableValue("deathmatch") && Q_strcasecmp(ext, "cin") && Q_strcasecmp(ext, "roq") && Q_strcasecmp(ext, "pcx"))
 	{
 		SV_WriteServerFile(true);
 		SV_CopySaveGame("current", "kmq2save0");
@@ -607,30 +603,27 @@ void SV_Map_f (void)
 
 	sv.state = ss_dead; // don't save current level when changing
 	SV_WipeSavegame("current");
-	SV_GameMap_f ();
+	SV_GameMap_f();
 }
 
 /*
 =====================================================================
-
-  SAVEGAMES
-
+	SAVEGAMES
 =====================================================================
 */
-extern	char *load_saveshot;
-char sv_loadshotname[MAX_QPATH];
 
 /*
 ==============
 SV_Loadgame_f
-
 ==============
 */
+extern char *load_saveshot;
+
 void SV_Loadgame_f (void)
 {
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf("Usage: loadgame <directory>\n");
+		Com_Printf("Usage: load <directory>\n");
 		return;
 	}
 
@@ -640,7 +633,7 @@ void SV_Loadgame_f (void)
 	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\") )
 		Com_Printf("Bad savedir.\n");
 
-	// make sure the server.ssv file exists
+	// Make sure the server.ssv file exists
 	char name[MAX_OSPATH];
 	Com_sprintf(name, sizeof(name), "%s/save/%s/server.ssv", FS_Gamedir(), Cmd_Argv(1));
 	FILE *f = fopen(name, "rb");
@@ -649,22 +642,22 @@ void SV_Loadgame_f (void)
 		Com_Printf("No such savegame: %s\n", name);
 		return;
 	}
-	fclose (f);
+	fclose(f);
 
 	// Knightmare- set saveshot name
 	if (!dedicated->value && (!strcmp(Cmd_Argv(1), "quick") || !strcmp(Cmd_Argv(1), "quik")))
 	{
-		Com_sprintf(sv_loadshotname, sizeof(sv_loadshotname), "save/%s/shot.jpg", Cmd_Argv(1));
-		R_FreePic(sv_loadshotname);
+		static char sv_loadshotname[MAX_QPATH];
 		Com_sprintf(sv_loadshotname, sizeof(sv_loadshotname), "/save/%s/shot.jpg", Cmd_Argv(1));
+		R_FreePic(sv_loadshotname);
+
 		load_saveshot = sv_loadshotname;
 	}
 
 	SV_CopySaveGame(Cmd_Argv(1), "current");
-
 	SV_ReadServerFile();
 
-	// go to the map
+	// Go to the map
 	sv.state = ss_dead; // don't save current level when changing
 	SV_Map(false, svs.mapcmd, true);
 }
@@ -728,13 +721,13 @@ void SV_Savegame_f (void)
 	// When the level is reloaded, they will be shells awaiting a connecting client.
 	SV_WriteLevelFile();
 
-	// save server state
+	// Save server state
 	SV_WriteServerFile(false);
 
-	// take screenshot
+	// Take screenshot
 	SV_WriteScreenshot();
 
-	// copy it off
+	// Copy it off
 	SV_CopySaveGame("current", dir);
 
 	Com_Printf(S_COLOR_CYAN"Done.\n");
@@ -767,7 +760,8 @@ void SV_Kick_f (void)
 		return;
 
 	SV_BroadcastPrintf(PRINT_HIGH, "%s was kicked\n", sv_client->name);
-	// print directly, because the dropped client won't get the SV_BroadcastPrintf message
+
+	// Print directly, because the dropped client won't get the SV_BroadcastPrintf message
 	SV_ClientPrintf(sv_client, PRINT_HIGH, "You were kicked from the game\n");
 	SV_DropClient(sv_client);
 	sv_client->lastmessage = svs.realtime;	// min case there is a funny zombie
@@ -781,9 +775,6 @@ SV_Status_f
 */
 void SV_Status_f (void)
 {
-	int			i;
-	client_t	*cl;
-
 	if (!svs.clients)
 	{
 		Com_Printf("No server running.\n");
@@ -795,7 +786,8 @@ void SV_Status_f (void)
 	Com_Printf("num score ping name            lastmsg address               qport \n");
 	Com_Printf("--- ----- ---- --------------- ------- --------------------- ------\n");
 
-	for (i = 0, cl = svs.clients; i < maxclients->value; i++, cl++)
+	client_t *cl = svs.clients;
+	for (int i = 0; i < maxclients->value; i++, cl++)
 	{
 		if (!cl->state)
 			continue;
@@ -845,13 +837,10 @@ SV_ConSay_f
 */
 void SV_ConSay_f(void)
 {
-	client_t *client;
-	int		j;
-	char	text[1024];
-
 	if (Cmd_Argc() < 2)
 		return;
 
+	char text[1024];
 	Q_strncpyz(text, "console: ", sizeof(text));
 	char *p = Cmd_Args();
 
@@ -863,11 +852,10 @@ void SV_ConSay_f(void)
 
 	Q_strncatz(text, p, sizeof(text));
 
-	for (j = 0, client = svs.clients; j < maxclients->value; j++, client++)
-	{
+	client_t *client = svs.clients;
+	for (int j = 0; j < maxclients->value; j++, client++)
 		if (client->state == cs_spawned)
 			SV_ClientPrintf(client, PRINT_CHAT, "%s\n", text);
-	}
 }
 
 
@@ -886,7 +874,7 @@ void SV_Heartbeat_f (void)
 ===========
 SV_Serverinfo_f
 
-  Examine or change the serverinfo string
+Examine or change the serverinfo string
 ===========
 */
 void SV_Serverinfo_f (void)
@@ -911,7 +899,7 @@ void SV_DumpUser_f (void)
 		return;
 	}
 
-	if (!SV_SetPlayer ())
+	if (!SV_SetPlayer())
 		return;
 
 	Com_Printf("userinfo\n");
@@ -936,6 +924,7 @@ void SV_StartMod (char *mod)
 	Cbuf_AddText("exec autoexec.cfg\n");
 	Cbuf_AddText("d1\n");
 }
+
 
 /*
 ===================
@@ -966,9 +955,9 @@ recorded, but no playerinfo will be stored.  Primarily for demo merging.
 */
 void SV_ServerRecord_f (void)
 {
-	char	name[MAX_OSPATH];
-	char	buf_data[32768];
-	sizebuf_t	buf;
+	char name[MAX_OSPATH];
+	byte buf_data[32768];
+	sizebuf_t buf;
 
 	if (Cmd_Argc() != 2)
 	{
@@ -1014,6 +1003,7 @@ void SV_ServerRecord_f (void)
 	// serverdata needs to go over for all types of servers
 	// to make sure the protocol is right, and to set the gamedir
 	//
+
 	// send the serverdata
 	MSG_WriteByte(&buf, svc_serverdata);
 	MSG_WriteLong(&buf, PROTOCOL_VERSION);
@@ -1059,7 +1049,8 @@ void SV_ServerStop_f (void)
 		Com_Printf("Not doing a serverrecord.\n");
 		return;
 	}
-	fclose (svs.demofile);
+
+	fclose(svs.demofile);
 	svs.demofile = NULL;
 	Com_Printf("Recording completed.\n");
 }
@@ -1075,11 +1066,11 @@ Kick everyone off, possibly in preparation for a new game
 */
 void SV_KillServer_f (void)
 {
-	if (!svs.initialized)
-		return;
-
-	SV_Shutdown ("Server was killed.\n", false);
-	NET_Config ( false );	// close network sockets
+	if (svs.initialized)
+	{
+		SV_Shutdown("Server was killed.\n", false);
+		NET_Config(false); // close network sockets
+	}
 }
 
 /*
@@ -1109,30 +1100,29 @@ SV_InitOperatorCommands
 */
 void SV_InitOperatorCommands (void)
 {
-	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
-	Cmd_AddCommand ("kick", SV_Kick_f);
-	Cmd_AddCommand ("status", SV_Status_f);
-	Cmd_AddCommand ("serverinfo", SV_Serverinfo_f);
-	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
+	Cmd_AddCommand("heartbeat", SV_Heartbeat_f);
+	Cmd_AddCommand("kick", SV_Kick_f);
+	Cmd_AddCommand("status", SV_Status_f);
+	Cmd_AddCommand("serverinfo", SV_Serverinfo_f);
+	Cmd_AddCommand("dumpuser", SV_DumpUser_f);
 
-	Cmd_AddCommand ("changegame", SV_ChangeGame_f); // Knightmare added
+	Cmd_AddCommand("changegame", SV_ChangeGame_f); // Knightmare added
 
-	Cmd_AddCommand ("map", SV_Map_f);
-	Cmd_AddCommand ("demomap", SV_DemoMap_f);
-	Cmd_AddCommand ("gamemap", SV_GameMap_f);
-	Cmd_AddCommand ("setmaster", SV_SetMaster_f);
+	Cmd_AddCommand("map", SV_Map_f);
+	Cmd_AddCommand("demomap", SV_DemoMap_f);
+	Cmd_AddCommand("gamemap", SV_GameMap_f);
+	Cmd_AddCommand("setmaster", SV_SetMaster_f);
 
-	if ( dedicated->value )
-		Cmd_AddCommand ("say", SV_ConSay_f);
+	if (dedicated->value)
+		Cmd_AddCommand("say", SV_ConSay_f);
 
-	Cmd_AddCommand ("serverrecord", SV_ServerRecord_f);
-	Cmd_AddCommand ("serverstop", SV_ServerStop_f);
+	Cmd_AddCommand("serverrecord", SV_ServerRecord_f);
+	Cmd_AddCommand("serverstop", SV_ServerStop_f);
 
-	Cmd_AddCommand ("save", SV_Savegame_f);
-	Cmd_AddCommand ("load", SV_Loadgame_f);
+	Cmd_AddCommand("save", SV_Savegame_f);
+	Cmd_AddCommand("load", SV_Loadgame_f);
 
-	Cmd_AddCommand ("killserver", SV_KillServer_f);
+	Cmd_AddCommand("killserver", SV_KillServer_f);
 
-	Cmd_AddCommand ("sv", SV_ServerCommand_f);
+	Cmd_AddCommand("sv", SV_ServerCommand_f);
 }
-

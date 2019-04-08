@@ -19,39 +19,39 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // winquake.h: Win32-specific Quake header file
 
-#pragma warning( disable : 4229 )  // mgraph gets this
+#pragma once
 
-#include <windows.h>
+#include <Windows.h>
 #include <dsound.h>
 #include <stdint.h> //mxd
 
-//#define	WINDOW_STYLE	(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE)
-#define	WINDOW_STYLE	(WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE)
+#define	WINDOW_STYLE (WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE)
 
-extern	HINSTANCE	global_hInstance;
+extern HINSTANCE global_hInstance;
 
 extern LPDIRECTSOUND pDS;
 extern LPDIRECTSOUNDBUFFER pDSBuf;
 
 extern DWORD gSndBufSize;
 
-extern HWND			cl_hwnd;
-extern qboolean		ActiveApp, Minimized;
+extern HWND cl_hwnd;
+extern qboolean ActiveApp;
+extern qboolean Minimized;
 
-//void IN_Activate (qboolean active); //mxd. Redundant declaration
-void IN_MouseEvent (int mstate);
+void IN_MouseEvent(int mstate);
 
-extern int		window_center_x, window_center_y;
-extern RECT		window_rect;
+extern int	window_center_x;
+extern int	window_center_y;
+extern RECT	window_rect;
 
-extern HWND		hwnd_dialog; // Knightmare added
+extern HWND	hwnd_dialog; // Knightmare added
 
 #define NEW_DED_CONSOLE // enable new dedicated console //TODO: get rid of this, use only the new console?
 
 #ifdef NEW_DED_CONSOLE
-void Sys_ShowConsole (qboolean show);
-void Sys_ShutdownConsole (void);
-void Sys_InitDedConsole (void);
+void Sys_ShowConsole(qboolean show);
+void Sys_ShutdownConsole(void);
+void Sys_InitDedConsole(void);
 #endif // NEW_DED_CONSOLE
 
 //mxd. Borrowed from GZDoom

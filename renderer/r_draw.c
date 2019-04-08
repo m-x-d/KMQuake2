@@ -22,26 +22,29 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-image_t		*draw_chars;
+image_t *draw_chars;
 
-extern	qboolean	scrap_dirty;
-void Scrap_Upload (void);
+extern qboolean scrap_dirty;
+void Scrap_Upload(void);
 
 #define DEFAULT_FONT_SIZE 8.0f
 
-void RefreshFont (void)
+void RefreshFont(void)
 {
 	con_font->modified = false;
 
-	draw_chars = R_FindImage (va("fonts/%s.pcx", con_font->string), it_pic);
-	if (!draw_chars) // fall back on default font
-		draw_chars = R_FindImage ("fonts/default.pcx", it_pic);
-	if (!draw_chars) // fall back on old Q2 conchars
-		draw_chars = R_FindImage ("pics/conchars.pcx", it_pic);
-	if (!draw_chars) // prevent crash caused by missing font
-		VID_Error (ERR_FATAL, "RefreshFont: couldn't load pics/conchars");
+	draw_chars = R_FindImage(va("fonts/%s.pcx", con_font->string), it_pic, true);
 
-	GL_Bind( draw_chars->texnum );
+	if (!draw_chars) // fall back to default font
+		draw_chars = R_FindImage("fonts/default.pcx", it_pic, true);
+
+	if (!draw_chars) // fall back to old Q2 conchars
+		draw_chars = R_FindImage("pics/conchars.pcx", it_pic, true);
+
+	if (!draw_chars) // prevent crash caused by missing font
+		VID_Error(ERR_FATAL, "RefreshFont: couldn't load pics/conchars");
+
+	GL_Bind(draw_chars->texnum);
 }
 
 
@@ -50,17 +53,15 @@ void RefreshFont (void)
 R_DrawInitLocal
 ===============
 */
-void R_DrawInitLocal (void)
+void R_DrawInitLocal(void)
 {
-	image_t	*R_DrawFindPic (char *name);
+	image_t	*R_DrawFindPic(char *name);
 
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	// load console characters (don't bilerp characters)
-	RefreshFont();
-
-	R_InitChars (); // init char indexes
+	RefreshFont(); // load console characters (don't bilerp characters)
+	R_InitChars(); // init char indexes
 }
 
 
@@ -69,7 +70,7 @@ void R_DrawInitLocal (void)
 R_CharMapScale
 ================
 */
-float R_CharMapScale (void)
+float R_CharMapScale(void)
 {
 	return draw_chars->width / 128.0; //current width / original width
 }
@@ -81,7 +82,7 @@ unsigned char_count;
 R_InitChars
 ================
 */
-void R_InitChars (void)
+void R_InitChars(void)
 {
 	char_count = 0;
 }
@@ -91,7 +92,7 @@ void R_InitChars (void)
 R_FlushChars
 ================
 */
-void R_FlushChars (void)
+void R_FlushChars(void)
 {
 	if (rb_vertex == 0 || rb_index == 0) // nothing to flush
 		return;
@@ -118,7 +119,7 @@ Draws one variable sized graphics character with 0 being transparent.
 It can be clipped to the top of the screen to allow the console to be smoothly scrolled off.
 ================
 */
-void R_DrawChar (float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last)
+void R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last)
 {
 	vec2_t		texCoord[4], verts[4];
 	qboolean	addChar = true;
@@ -186,7 +187,7 @@ void R_DrawChar (float x, float y, int num, float scale, int red, int green, int
 R_DrawFindPic
 =============
 */
-image_t	*R_DrawFindPic (char *name)
+image_t	*R_DrawFindPic(char *name)
 {
 	image_t *gl;
 	char	fullname[MAX_QPATH];
@@ -194,11 +195,11 @@ image_t	*R_DrawFindPic (char *name)
 	if (name[0] != '/' && name[0] != '\\')
 	{
 		Com_sprintf(fullname, sizeof(fullname), "pics/%s.pcx", name);
-		gl = R_FindImage(fullname, it_pic);
+		gl = R_FindImage(fullname, it_pic, false);
 	}
 	else
 	{
-		gl = R_FindImage(name + 1, it_pic);
+		gl = R_FindImage(name + 1, it_pic, false);
 	}
 
 	return gl;
@@ -209,18 +210,18 @@ image_t	*R_DrawFindPic (char *name)
 R_DrawGetPicSize
 =============
 */
-void R_DrawGetPicSize (int *w, int *h, char *pic)
+void R_DrawGetPicSize(int *w, int *h, char *pic)
 {
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
 	{
-		*w = *h = -1;
+		*w = *h = 0; // returned -1 in KMQ2
 		return;
 	}
 
 	// Factor in replace scale, so tga/jpg replacements are scaled down...
-	*w = (int)((float)gl->width * gl->replace_scale_w);
-	*h = (int)((float)gl->height * gl->replace_scale_w);
+	*w = (int)(gl->width  * gl->replace_scale_w);
+	*h = (int)(gl->height * gl->replace_scale_h); //BUG? mxd. was replace_scale_w
 }
 
 
@@ -229,9 +230,9 @@ void R_DrawGetPicSize (int *w, int *h, char *pic)
 R_DrawStretchPic
 =============
 */
-void R_DrawStretchPic (int x, int y, int w, int h, char *pic, float alpha)
+void R_DrawStretchPic(int x, int y, int w, int h, char *pic, float alpha)
 {
-	vec2_t		texCoord[4], verts[4];
+	vec2_t texCoord[4], verts[4];
 
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
@@ -300,9 +301,9 @@ R_DrawScaledPic
 Psychospaz's code for drawing stretched crosshairs
 =============
 */
-void R_DrawScaledPic (int x, int y, float scale, float alpha, char *pic)
+void R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic)
 {
-	vec2_t	texCoord[4], verts[4];
+	vec2_t texCoord[4], verts[4];
 
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
@@ -377,9 +378,9 @@ void R_DrawScaledPic (int x, int y, float scale, float alpha, char *pic)
 R_DrawPic
 =============
 */
-void R_DrawPic (int x, int y, char *pic)
+void R_DrawPic(int x, int y, char *pic)
 {
-	vec2_t	texCoord[4], verts[4];
+	vec2_t texCoord[4], verts[4];
 
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
@@ -430,9 +431,9 @@ R_DrawTileClear
 This repeats a 64*64 tile graphic to fill the screen around a sized down refresh window.
 =============
 */
-void R_DrawTileClear (int x, int y, int w, int h, char *pic)
+void R_DrawTileClear(int x, int y, int w, int h, char *pic)
 {
-	vec2_t	texCoord[4], verts[4];
+	vec2_t texCoord[4], verts[4];
 
 	image_t *image = R_DrawFindPic(pic);
 	if (!image)
@@ -455,12 +456,12 @@ void R_DrawTileClear (int x, int y, int w, int h, char *pic)
 
 	rb_vertex = rb_index = 0;
 
-	indexArray[rb_index++] = rb_vertex+0;
-	indexArray[rb_index++] = rb_vertex+1;
-	indexArray[rb_index++] = rb_vertex+2;
-	indexArray[rb_index++] = rb_vertex+0;
-	indexArray[rb_index++] = rb_vertex+2;
-	indexArray[rb_index++] = rb_vertex+3;
+	indexArray[rb_index++] = rb_vertex + 0;
+	indexArray[rb_index++] = rb_vertex + 1;
+	indexArray[rb_index++] = rb_vertex + 2;
+	indexArray[rb_index++] = rb_vertex + 0;
+	indexArray[rb_index++] = rb_vertex + 2;
+	indexArray[rb_index++] = rb_vertex + 3;
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -481,9 +482,9 @@ R_DrawFill
 Fills a box of pixels with a 24-bit color w/ alpha
 ===========================
 */
-void R_DrawFill (int x, int y, int w, int h, int red, int green, int blue, int alpha)
+void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha)
 {
-	vec2_t	verts[4];
+	vec2_t verts[4];
 
 	red = min(red, 255);
 	green = min(green, 255);
@@ -535,9 +536,9 @@ R_DrawCameraEffect
 Video camera effect
 =============
 */
-void Mod_SetRenderParmsDefaults (renderparms_t *parms);
+extern void Mod_SetRenderParmsDefaults(renderparms_t *parms);
 
-void R_DrawCameraEffect (void)
+void R_DrawCameraEffect(void)
 {
 	image_t			*image[2];
 	float			texparms[2][4];
@@ -595,7 +596,7 @@ void R_DrawCameraEffect (void)
 		cameraParms.scroll_x = texparms[i][2];
 		cameraParms.scroll_y = texparms[i][3];
 
-		RB_ModifyTextureCoords (&texCoord[0][0], &verts[0][0], 4, cameraParms);
+		RB_ModifyTextureCoords(&texCoord[0][0], &verts[0][0], 4, cameraParms);
 
 		for (int j = 0; j < 4; j++)
 		{
@@ -628,10 +629,11 @@ Cinematic streaming
 */
 #ifdef ROQ_SUPPORT
 
-void R_DrawStretchRaw (int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight) //qboolean noDraw)
+void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight)
 {
-	int width = 1, height = 1;
-	vec2_t	texCoord[4], verts[4];
+	int width = 1;
+	int height = 1;
+	vec2_t texCoord[4], verts[4];
 
 	// Check the dimensions
 	if (!glConfig.arbTextureNonPowerOfTwo) // skip if nonstandard textures sizes are supported
@@ -701,7 +703,7 @@ void R_DrawStretchRaw (int x, int y, int w, int h, const byte *raw, int rawWidth
 
 extern unsigned r_rawpalette[256];
 
-void R_DrawStretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data)
+void R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data)
 {
 	unsigned		image32[256 * 256];
 	unsigned char	image8[256 * 256];

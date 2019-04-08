@@ -26,31 +26,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 model_t	*loadmodel;
 int		modfilelen;
 
-void *ModChunk_Begin (size_t maxsize);
+void *ModChunk_Begin(size_t maxsize);
 //void *ModChunk_Alloc (size_t size); //mxd. Moved to r_model.h
-size_t ModChunk_End (void);
-void ModChunk_Free (void *base);
-size_t Mod_GetAllocSizeSprite ();
-void Mod_LoadSpriteModel (model_t *mod, void *buffer);
-size_t Mod_GetAllocSizeBrushModel (void *buffer); //mxd
-void Mod_LoadBrushModel (model_t *mod, void *buffer);
+size_t ModChunk_End(void);
+void ModChunk_Free(void *base);
+size_t Mod_GetAllocSizeSprite();
+void Mod_LoadSpriteModel(model_t *mod, void *buffer);
+size_t Mod_GetAllocSizeBrushModel(void *buffer); //mxd
+void Mod_LoadBrushModel(model_t *mod, void *buffer);
 
 #ifdef MD2_AS_MD3
-size_t Mod_GetAllocSizeMD2New (void *buffer);
-void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer);
+size_t Mod_GetAllocSizeMD2New(void *buffer);
+void Mod_LoadAliasMD2ModelNew(model_t *mod, void *buffer);
 #else
-size_t Mod_GetAllocSizeMD2Old (void *buffer);
-void Mod_LoadAliasMD2ModelOld (model_t *mod, void *buffer);
+size_t Mod_GetAllocSizeMD2Old(void *buffer);
+void Mod_LoadAliasMD2ModelOld(model_t *mod, void *buffer);
 #endif
 
 //Harven++ MD3
-size_t Mod_GetAllocSizeMD3 (void *buffer);
-void Mod_LoadAliasMD3Model (model_t *mod, void *buffer);
+size_t Mod_GetAllocSizeMD3(void *buffer);
+void Mod_LoadAliasMD3Model(model_t *mod, void *buffer);
 //Harven-- MD3
 
-byte	mod_novis[MAX_MAP_LEAFS/8];
+byte	mod_novis[MAX_MAP_LEAFS / 8];
 
-#define	MAX_MOD_KNOWN	(MAX_MODELS * 2) // Knightmare- was 512
+#define	MAX_MOD_KNOWN (MAX_MODELS * 2) // Knightmare- was 512
 model_t	mod_known[MAX_MOD_KNOWN];
 int		mod_numknown;
 
@@ -58,17 +58,17 @@ int		mod_numknown;
 model_t	mod_inline[MAX_MOD_KNOWN];
 
 int		registration_sequence;
-qboolean	registration_active;	// map registration flag
+qboolean registration_active; // map registration flag
 
 /*
 ===============
 Mod_PointInLeaf
 ===============
 */
-mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
+mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model)
 {
 	if (!model || !model->nodes)
-		VID_Error (ERR_DROP, "Mod_PointInLeaf: bad model");
+		VID_Error(ERR_DROP, "Mod_PointInLeaf: bad model");
 
 	mnode_t *node = model->nodes;
 	while (true)
@@ -92,7 +92,7 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 Mod_DecompressVis
 ===================
 */
-byte *Mod_DecompressVis (byte *in, model_t *model)
+byte *Mod_DecompressVis(byte *in, model_t *model)
 {
 	static byte	decompressed[MAX_MAP_LEAFS / 8];
 
@@ -136,7 +136,7 @@ byte *Mod_DecompressVis (byte *in, model_t *model)
 Mod_ClusterPVS
 ==============
 */
-byte *Mod_ClusterPVS (int cluster, model_t *model)
+byte *Mod_ClusterPVS(int cluster, model_t *model)
 {
 	if (cluster == -1 || !model->vis)
 		return mod_novis;
@@ -152,19 +152,17 @@ byte *Mod_ClusterPVS (int cluster, model_t *model)
 Mod_Modellist_f
 ================
 */
-void Mod_Modellist_f (void)
+void Mod_Modellist_f(void)
 {
-	int		i;
-	model_t	*mod;
-
 	int total = 0;
 	VID_Printf(PRINT_ALL, "Loaded models:\n");
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
+	model_t *mod = mod_known;
+	for (int i = 0; i < mod_numknown; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
 
-		VID_Printf(PRINT_ALL, "%8i : %s\n",mod->extradatasize, mod->name);
+		VID_Printf(PRINT_ALL, "%8i : %s\n", mod->extradatasize, mod->name);
 		total += mod->extradatasize;
 	}
 
@@ -176,7 +174,7 @@ void Mod_Modellist_f (void)
 Mod_Init
 ===============
 */
-void Mod_Init (void)
+void Mod_Init(void)
 {
 	memset(mod_novis, 0xff, sizeof(mod_novis));
 	registration_active = false; // map registration flag
@@ -191,7 +189,7 @@ Mod_ForName
 Loads in a model for the given name
 ==================
 */
-model_t *Mod_ForName (char *name, qboolean crash)
+model_t *Mod_ForName(char *name, qboolean crash)
 {
 	model_t *mod;
 	int i;
@@ -214,6 +212,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	//
 	// search the currently loaded models
 	//
+
 	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
 	{
 		if (!mod->name[0])
@@ -305,9 +304,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 
 /*
 ===============================================================================
-
-					BRUSHMODEL LOADING
-
+	BRUSHMODEL LOADING
 ===============================================================================
 */
 
@@ -318,7 +315,7 @@ byte *mod_base;
 Mod_LoadLighting
 =================
 */
-void Mod_LoadLighting (lump_t *l)
+void Mod_LoadLighting(lump_t *l)
 {
 	if (l->filelen)
 	{
@@ -337,7 +334,7 @@ void Mod_LoadLighting (lump_t *l)
 Mod_LoadVisibility
 =================
 */
-void Mod_LoadVisibility (lump_t *l)
+void Mod_LoadVisibility(lump_t *l)
 {
 	if (!l->filelen)
 	{
@@ -363,7 +360,7 @@ void Mod_LoadVisibility (lump_t *l)
 Mod_LoadVertexes
 =================
 */
-void Mod_LoadVertexes (lump_t *l)
+void Mod_LoadVertexes(lump_t *l)
 {
 	dvertex_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -382,9 +379,9 @@ void Mod_LoadVertexes (lump_t *l)
 RadiusFromBounds
 =================
 */
-float RadiusFromBounds (vec3_t mins, vec3_t maxs)
+float RadiusFromBounds(vec3_t mins, vec3_t maxs)
 {
-	vec3_t	corner;
+	vec3_t corner;
 	for (int i = 0; i < 3; i++)
 		corner[i] = (fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]));
 
@@ -397,7 +394,7 @@ float RadiusFromBounds (vec3_t mins, vec3_t maxs)
 Mod_LoadSubmodels
 =================
 */
-void Mod_LoadSubmodels (lump_t *l)
+void Mod_LoadSubmodels(lump_t *l)
 {
 	dmodel_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -428,7 +425,7 @@ void Mod_LoadSubmodels (lump_t *l)
 Mod_LoadEdges
 =================
 */
-void Mod_LoadEdges (lump_t *l)
+void Mod_LoadEdges(lump_t *l)
 {
 	dedge_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -446,96 +443,15 @@ void Mod_LoadEdges (lump_t *l)
 
 //=======================================================
 
-// store the names of last textures that failed to load
-#define NUM_FAIL_TEXTURES 256
-char lastFailedTexture[NUM_FAIL_TEXTURES][MAX_OSPATH];
-long lastFailedTextureHash[NUM_FAIL_TEXTURES];
-static unsigned failedTexListIndex;
-
-/*
-===============
-Mod_InitFailedTexList
-===============
-*/
-void Mod_InitFailedTexList (void)
-{
-	for (int i = 0; i < NUM_FAIL_TEXTURES; i++)
-	{
-		Com_sprintf(lastFailedTexture[i], sizeof(lastFailedTexture[i]), "\0");
-		lastFailedTextureHash[i] = 0;
-	}
-
-	failedTexListIndex = 0;
-}
-
-/*
-===============
-Mod_CheckTexFailed
-===============
-*/
-qboolean Mod_CheckTexFailed (char *name)
-{
-	const long hash = Com_HashFileName(name, 0, false);
-	for (int i = 0; i < NUM_FAIL_TEXTURES; i++)
-	{
-		if (hash == lastFailedTextureHash[i]) // compare hash first
-		{	
-			if (lastFailedTexture[i][0] && !strcmp(name, lastFailedTexture[i]))
-				return true; // we already tried to load this image, didn't find it
-		}
-	}
-
-	return false;
-}
-
-/*
-===============
-Mod_AddToFailedTexList
-===============
-*/
-void Mod_AddToFailedTexList (char *name)
-{
-	Com_sprintf(lastFailedTexture[failedTexListIndex], sizeof(lastFailedTexture[failedTexListIndex]), "%s", name);
-	lastFailedTextureHash[failedTexListIndex] = Com_HashFileName(name, 0, false);
-	failedTexListIndex++;
-
-	// wrap around to start of list
-	if (failedTexListIndex >= NUM_FAIL_TEXTURES)
-		failedTexListIndex = 0;
-}
-
-/*
-===============
-Mod_FindTexture
-A wrapper function that uses a failed list to speed map load times
-===============
-*/
-image_t	*Mod_FindTexture (char *name, imagetype_t type)
-{
-	// don't try again to load a texture that just failed
-	if (Mod_CheckTexFailed(name))
-		return glMedia.notexture;
-
-	image_t *image = R_FindImage(name, type);
-
-	if (!image || (image == glMedia.notexture))
-		Mod_AddToFailedTexList(name);
-
-	return image;
-}
-
-//=======================================================
-
-// store the names and sizes of size reference .wal files
+// Store the names and sizes of size reference .wal files
 typedef struct walsize_s
 {
-	char	name[MAX_OSPATH];
 	long	hash;
 	int		width;
 	int		height;
 } walsize_t;
 
-#define NUM_WALSIZES 256
+#define NUM_WALSIZES 512 //mxd. Was 256
 walsize_t walSizeList[NUM_WALSIZES];
 static unsigned walSizeListIndex;
 
@@ -548,7 +464,6 @@ void Mod_InitWalSizeList (void)
 {
 	for (int i = 0; i < NUM_WALSIZES; i++)
 	{
-		Com_sprintf(walSizeList[i].name, sizeof(walSizeList[i].name), "\0");
 		walSizeList[i].hash = 0;
 		walSizeList[i].width = 0;
 		walSizeList[i].height = 0;
@@ -564,21 +479,28 @@ Mod_CheckWalSizeList
 */
 qboolean Mod_CheckWalSizeList (const char *name, int *width, int *height)
 {
-	const long hash = Com_HashFileName(name, 0, false);
+	if (!strlen(name)) //mxd. Sanity check
+	{
+		if (width)
+			*width = 0;
+		if (height)
+			*height = 0;
+
+		return true;
+	}
+	
+	const long hash = Com_HashFileName(name, 0, false); //mxd. Rewritten to use hash only
 	for (int i = 0; i < NUM_WALSIZES; i++)
 	{
-		if (hash == walSizeList[i].hash) // compare hash first
+		if (hash == walSizeList[i].hash)
 		{	
-			if (strlen(walSizeList[i].name) && !strcmp(name, walSizeList[i].name)) //mxd. Address of array 'walSizeList[i].name' will always evaluate to 'true'
-			{
-				// return size of texture
-				if (width)
-					*width = walSizeList[i].width;
-				if (height)
-					*height = walSizeList[i].height;
+			// Return size of texture
+			if (width)
+				*width = walSizeList[i].width;
+			if (height)
+				*height = walSizeList[i].height;
 
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -590,25 +512,25 @@ qboolean Mod_CheckWalSizeList (const char *name, int *width, int *height)
 Mod_AddToWalSizeList
 ===============
 */
-void Mod_AddToWalSizeList (const char *name, int width, int height)
+void Mod_AddToWalSizeList(const char *name, int width, int height)
 {
-	Com_sprintf(walSizeList[walSizeListIndex].name, sizeof(walSizeList[walSizeListIndex].name), "%s", name);
 	walSizeList[walSizeListIndex].hash = Com_HashFileName(name, 0, false);
 	walSizeList[walSizeListIndex].width = width;
 	walSizeList[walSizeListIndex].height = height;
 	walSizeListIndex++;
 
-	// wrap around to start of list
+	// Wrap around to start of list
 	if (walSizeListIndex >= NUM_WALSIZES)
 		walSizeListIndex = 0;
 }
+
 /*
 =================
 Mod_GetWalSize
 Adapted from Q2E
 =================
 */
-static void Mod_GetWalSize (const char *name, int *width, int *height)
+static void Mod_GetWalSize(const char *name, int *width, int *height)
 {
 	char path[MAX_QPATH];
 	Com_sprintf(path, sizeof(path), "textures/%s.wal", name);
@@ -616,21 +538,7 @@ static void Mod_GetWalSize (const char *name, int *width, int *height)
 	if (Mod_CheckWalSizeList(name, width, height)) // check if already in list
 		return;
 
-	miptex_t *mt;
-	FS_LoadFile(path, (void **)&mt); // load .wal file 
-	if (!mt)
-	{
-		// set null value to tell us to get actual size of texture
-		*width = *height = -1;
-		Mod_AddToWalSizeList(name, *width, *height); // add to list
-
-		return;
-	}
-
-	*width = LittleLong(mt->width); // grab size from wal
-	*height = LittleLong(mt->height);
-	FS_FreeFile((void *)mt); // free the wal
-
+	GetWalInfo(path, width, height); //mxd
 	Mod_AddToWalSizeList(name, *width, *height); // add to list
 }
 
@@ -664,13 +572,13 @@ void Mod_LoadTexinfo (lump_t *l)
 			out->next = NULL;
 
 		Com_sprintf(name, sizeof(name), "textures/%s.wal", in->texture);
-		out->image = Mod_FindTexture(name, it_wall); // was R_FindImage
+		out->image = R_FindImage(name, it_wall, false);
 		if (!out->image)
-			out->image = glMedia.notexture; //mxd. Mod_FindTexture will print a warning message if the texture wasn't found
+			out->image = glMedia.notexture; //mxd. R_FindImage will print a warning message if the texture wasn't found
 
 		// Added glow
 		Com_sprintf(name, sizeof(name), "textures/%s_glow.wal", in->texture);
-		out->glow = Mod_FindTexture(name, it_skin); // was R_FindImage
+		out->glow = R_FindImage(name, it_skin, true);
 		if (!out->glow)
 			out->glow = glMedia.notexture;
 
@@ -683,14 +591,14 @@ void Mod_LoadTexinfo (lump_t *l)
 		Mod_GetWalSize(in->texture, &out->texWidth, &out->texHeight);
 
 		// If no .wal texture was found, use width & height of actual texture
-		if (out->texWidth == -1 || out->texHeight == -1)
+		if (out->texWidth == 0 || out->texHeight == 0)
 		{
-			out->texWidth = out->image->width;
+			out->texWidth = out->image->width; //mxd. Only used in caustics rendering
 			out->texHeight = out->image->height;
 		}
 	}
 
-	// count animation frames
+	// Count animation frames
 	for (int i = 0; i < count; i++)
 	{
 		out = &loadmodel->texinfo[i];
@@ -707,7 +615,7 @@ CalcSurfaceExtents
 Fills in s->texturemins[] and s->extents[]
 ================
 */
-void CalcSurfaceExtents (msurface_t *s)
+void CalcSurfaceExtents(msurface_t *s)
 {
 	float	mins[2], maxs[2];
 	mvertex_t	*v;
@@ -755,18 +663,18 @@ void CalcSurfaceExtents (msurface_t *s)
 	}
 }
 
-void R_BuildPolygonFromSurface (msurface_t *fa);
-void R_CreateSurfaceLightmap (msurface_t *surf);
-void R_SetupLightmapPoints (msurface_t *surf); //mxd
-void R_EndBuildingLightmaps (void);
-void R_BeginBuildingLightmaps (model_t *m);
+void R_BuildPolygonFromSurface(msurface_t *fa);
+void R_CreateSurfaceLightmap(msurface_t *surf);
+void R_SetupLightmapPoints(msurface_t *surf); //mxd
+void R_EndBuildingLightmaps(void);
+void R_BeginBuildingLightmaps(model_t *m);
 
 /*
 =================
 Mod_LoadFaces
 =================
 */
-void Mod_LoadFaces (lump_t *l)
+void Mod_LoadFaces(lump_t *l)
 {
 	dface_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -801,7 +709,7 @@ void Mod_LoadFaces (lump_t *l)
 
 		CalcSurfaceExtents(out);
 
-	// lighting info
+		// Lighting info
 		for (int i = 0; i < MAXLIGHTMAPS; i++)
 			out->styles[i] = in->styles[i];
 
@@ -811,7 +719,7 @@ void Mod_LoadFaces (lump_t *l)
 		else
 			out->samples = loadmodel->lightdata + lightofs;
 		
-	// set the drawing flags
+		// Set the drawing flags
 		if (out->texinfo->flags & SURF_WARP)
 		{
 			out->flags |= SURF_DRAWTURB;
@@ -830,7 +738,7 @@ void Mod_LoadFaces (lump_t *l)
 				out->flags |= SURF_ENVMAP;
 		}
 
-	// create lightmaps and polygons
+		// Create lightmaps and polygons
 		R_CreateSurfaceLightmap(out);
 		R_SetupLightmapPoints(out); //mxd
 		R_BuildPolygonFromSurface(out);
@@ -845,7 +753,7 @@ void Mod_LoadFaces (lump_t *l)
 Mod_SetParent
 =================
 */
-void Mod_SetParent (mnode_t *node, mnode_t *parent)
+void Mod_SetParent(mnode_t *node, mnode_t *parent)
 {
 	node->parent = parent;
 	if (node->contents == -1)
@@ -860,7 +768,7 @@ void Mod_SetParent (mnode_t *node, mnode_t *parent)
 Mod_LoadNodes
 =================
 */
-void Mod_LoadNodes (lump_t *l)
+void Mod_LoadNodes(lump_t *l)
 {
 	dnode_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -902,7 +810,7 @@ void Mod_LoadNodes (lump_t *l)
 Mod_LoadLeafs
 =================
 */
-void Mod_LoadLeafs (lump_t *l)
+void Mod_LoadLeafs(lump_t *l)
 {
 	dleaf_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -952,7 +860,7 @@ void Mod_LoadLeafs (lump_t *l)
 Mod_LoadMarksurfaces
 =================
 */
-void Mod_LoadMarksurfaces (lump_t *l)
+void Mod_LoadMarksurfaces(lump_t *l)
 {
 	unsigned short *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -976,7 +884,7 @@ void Mod_LoadMarksurfaces (lump_t *l)
 Mod_LoadSurfedges
 =================
 */
-void Mod_LoadSurfedges (lump_t *l)
+void Mod_LoadSurfedges(lump_t *l)
 {
 	int *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -995,7 +903,7 @@ void Mod_LoadSurfedges (lump_t *l)
 Mod_LoadPlanes
 =================
 */
-void Mod_LoadPlanes (lump_t *l)
+void Mod_LoadPlanes(lump_t *l)
 {
 	dplane_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -1242,7 +1150,7 @@ size_t Mod_GetAllocSizeBrushModel(void *buffer)
 Mod_LoadBrushModel
 =================
 */
-void Mod_LoadBrushModel (model_t *mod, void *buffer)
+void Mod_LoadBrushModel(model_t *mod, void *buffer)
 {
 	loadmodel->type = mod_brush;
 
@@ -1308,9 +1216,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 
 /*
 ===============================================================================
-
-					MODEL MEMORY ALLOCATION
-
+	MODEL MEMORY ALLOCATION
 ===============================================================================
 */
 
@@ -1380,9 +1286,7 @@ void ModChunk_Free(void *base)
 
 /*
 ==============================================================================
-
-ALIAS MODELS
-
+	ALIAS MODELS
 ==============================================================================
 */
 
@@ -1392,7 +1296,7 @@ Mod_ParseBlendMode
 md3 skin protoshaders
 =================
 */
-GLenum Mod_ParseBlendMode (char *name)
+GLenum Mod_ParseBlendMode(char *name)
 {
 	if (!name)
 		return -1;
@@ -1451,7 +1355,7 @@ Mod_GetNextParm
 md3 skin protoshaders
 =================
 */
-qboolean Mod_GetNextParm (char **data, char **output)
+qboolean Mod_GetNextParm(char **data, char **output)
 {
 	if (!*data)
 		return false;
@@ -1476,7 +1380,7 @@ Mod_ParseWaveFunc
 md3 skin protoshaders
 =================
 */
-qboolean Mod_ParseWaveFunc (char **data, waveForm_t *out)
+qboolean Mod_ParseWaveFunc(char **data, waveForm_t *out)
 {
 	char *tok = NULL;
 
@@ -1510,7 +1414,7 @@ Mod_ParseFloat
 md3 skin protoshaders
 =================
 */
-qboolean Mod_ParseFloat (char **data, float *outnum, qboolean normalized)
+qboolean Mod_ParseFloat(char **data, float *outnum, qboolean normalized)
 {
 	char *token = NULL;
 
@@ -1531,7 +1435,7 @@ Mod_ParseModelScript
 skin protoshaders
 =================
 */
-void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int dataSize, char *meshname, int skinnum, char *scriptname)
+void Mod_ParseModelScript(maliasskin_t *skin, char **data, char *dataStart, int dataSize, char *meshname, int skinnum, char *scriptname)
 {
 	renderparms_t *skinParms = &skin->renderparms;
 
@@ -1797,7 +1701,7 @@ void Mod_ParseModelScript (maliasskin_t *skin, char **data, char *dataStart, int
 				break;
 			}
 
-			skin->glowimage = R_FindImage(glowname, it_skin);
+			skin->glowimage = R_FindImage(glowname, it_skin, true);
 			if (skin->glowimage)
 				memcpy(skin->glowname, glowname, MD3_MAX_PATH);
 		}
@@ -1815,7 +1719,7 @@ Mod_SetRenderParmsDefaults
 md3 skin protoshaders
 =================
 */
-void Mod_SetRenderParmsDefaults (renderparms_t *parms)
+void Mod_SetRenderParmsDefaults(renderparms_t *parms)
 {
 	parms->twosided = false;
 	parms->alphatest = false;
@@ -1846,7 +1750,7 @@ Mod_LoadModelScript
 md3 skin protoshaders
 =================
 */
-void Mod_LoadModelScript (model_t *mod, maliasmodel_t *aliasmod)
+void Mod_LoadModelScript(model_t *mod, maliasmodel_t *aliasmod)
 {
 	char scriptname[MAX_QPATH];
 	char *buf;
@@ -2115,15 +2019,13 @@ void Mod_LoadAliasMD2ModelOld (model_t *mod, void *buffer)
 Mod_FindTriangleWithEdge
 ===============
 */
-int Mod_FindTriangleWithEdge (maliasmesh_t *mesh, index_t p1, index_t p2, int ignore)
+int Mod_FindTriangleWithEdge(maliasmesh_t *mesh, index_t p1, index_t p2, int ignore)
 {
-	int		i;
-	index_t *indexes;
-
 	int count = 0;
 	int match = -1;
-	
-	for (i = 0, indexes = mesh->indexes; i < mesh->num_tris; i++, indexes += 3)
+
+	index_t *indexes = mesh->indexes;
+	for (int i = 0; i < mesh->num_tris; i++, indexes += 3)
 	{
 		if (   (indexes[0] == p2 && indexes[1] == p1)
 			|| (indexes[1] == p2 && indexes[2] == p1)
@@ -2142,7 +2044,7 @@ int Mod_FindTriangleWithEdge (maliasmesh_t *mesh, index_t p1, index_t p2, int ig
 		}
 	}
 
-	// detect edges shared by three triangles and make them seams
+	// Detect edges shared by three triangles and make them seams
 	if (count > 2)
 		match = -1;
 
@@ -2154,7 +2056,7 @@ int Mod_FindTriangleWithEdge (maliasmesh_t *mesh, index_t p1, index_t p2, int ig
 Mod_BuildTriangleNeighbors
 ===============
 */
-void Mod_BuildTriangleNeighbors (maliasmesh_t *mesh)
+void Mod_BuildTriangleNeighbors(maliasmesh_t *mesh)
 {
 	int		i, *n;
 	index_t	*index;
@@ -2174,7 +2076,7 @@ void Mod_BuildTriangleNeighbors (maliasmesh_t *mesh)
 NormalToLatLong
 =================
 */
-void NormalToLatLong (const vec3_t normal, byte bytes[2])
+void NormalToLatLong(const vec3_t normal, byte bytes[2])
 {
 	if (normal[0] == 0 && normal[1] == 0)
 	{
@@ -2294,9 +2196,9 @@ Based on md2 loading code in Q2E 0.40
 Mod_GetAllocSizeMD2() must be called first to init index and remap arrays.
 =================
 */
-void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer)
+void Mod_LoadAliasMD2ModelNew(model_t *mod, void *buffer)
 {
-	char	 name[MD3_MAX_PATH];
+	char name[MD3_MAX_PATH];
 
 	dmdl_t *pinmodel = (dmdl_t *)buffer;
 	maliasmodel_t *poutmodel = ModChunk_Alloc(sizeof(maliasmodel_t));
@@ -2474,7 +2376,7 @@ void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer)
 		Com_sprintf(name, sizeof(name), "players/male/grunt.pcx");
 		memcpy(poutskin->name, name, MD3_MAX_PATH);
 		Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
-		mod->skins[0][0] = R_FindImage(name, it_skin);
+		mod->skins[0][0] = R_FindImage(name, it_skin, false);
 	}
 	else
 	{
@@ -2484,7 +2386,7 @@ void Mod_LoadAliasMD2ModelNew (model_t *mod, void *buffer)
 			memcpy(name, ((char *)pinmodel + LittleLong(pinmodel->ofs_skins) + i * MAX_SKINNAME), MD3_MAX_PATH);
 			memcpy(poutskin->name, name, MD3_MAX_PATH);
 			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
-			mod->skins[0][i] = R_FindImage(name, it_skin);
+			mod->skins[0][i] = R_FindImage(name, it_skin, false);
 		}
 	}
 
@@ -2547,7 +2449,7 @@ size_t Mod_GetAllocSizeMD3(void *buffer)
 Mod_LoadAliasMD3Model
 =================
 */
-void Mod_LoadAliasMD3Model (model_t *mod, void *buffer)
+void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 {
 	char name[MD3_MAX_PATH];
 
@@ -2671,7 +2573,7 @@ void Mod_LoadAliasMD3Model (model_t *mod, void *buffer)
 
 			memcpy(poutskin->name, name, MD3_MAX_PATH);
 			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
-			mod->skins[i][j] = R_FindImage(name, it_skin);
+			mod->skins[i][j] = R_FindImage(name, it_skin, false);
 		}
 
 		//
@@ -2760,9 +2662,7 @@ void Mod_LoadAliasMD3Model (model_t *mod, void *buffer)
 
 /*
 ==============================================================================
-
-SPRITE MODELS
-
+	SPRITE MODELS
 ==============================================================================
 */
 
@@ -2783,7 +2683,7 @@ size_t Mod_GetAllocSizeSprite()
 Mod_LoadSpriteModel
 =================
 */
-void Mod_LoadSpriteModel (model_t *mod, void *buffer)
+void Mod_LoadSpriteModel(model_t *mod, void *buffer)
 {
 	dsprite_t *sprin = (dsprite_t *)buffer;
 	dsprite_t *sprout = ModChunk_Alloc(modfilelen);
@@ -2806,7 +2706,7 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 		sprout->frames[i].origin_x = LittleLong(sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong(sprin->frames[i].origin_y);
 		memcpy(sprout->frames[i].name, sprin->frames[i].name, MAX_SKINNAME);
-		mod->skins[0][i] = R_FindImage(sprout->frames[i].name, it_sprite);
+		mod->skins[0][i] = R_FindImage(sprout->frames[i].name, it_sprite, false);
 	}
 
 	mod->type = mod_sprite;
@@ -2821,22 +2721,21 @@ R_BeginRegistration
 Specifies the model that will be used as the world
 @@@@@@@@@@@@@@@@@@@@@
 */
-void R_BeginRegistration (char *model)
+void R_BeginRegistration(char *model)
 {
 	registration_sequence++;
-	r_oldviewcluster = -1;		// force markleafs
+	r_oldviewcluster = -1; // Force markleafs
 
-	Mod_InitFailedTexList();	// clear failed texture list
-	Mod_InitWalSizeList();		// clear wal size list
+	Mod_InitWalSizeList(); // Clear wal size list
 
 	char fullname[MAX_QPATH];
 	Com_sprintf(fullname, sizeof(fullname), "maps/%s.bsp", model);
 
 	// Explicitly free the old map if different. This guarantees that mod_known[0] is the world map
 	cvar_t *flushmap = Cvar_Get("flushmap", "0", 0);
-	if (strcmp(mod_known[0].name, fullname) || flushmap->value)
+	if (strcmp(mod_known[0].name, fullname) || flushmap->integer)
 	{
-		Mod_Free (&mod_known[0]);
+		Mod_Free(&mod_known[0]);
 		// clear this on map change (case of different server and autodownloading)
 		R_InitFailedImgList();
 	}
@@ -2852,7 +2751,7 @@ void R_BeginRegistration (char *model)
 R_RegisterModel
 @@@@@@@@@@@@@@@@@@@@@
 */
-struct model_s *R_RegisterModel (char *name)
+struct model_s *R_RegisterModel(char *name)
 {
 	// Knightmare- MD3 autoreplace code
 	const int len = strlen(name);
@@ -2878,14 +2777,14 @@ struct model_s *R_RegisterModel (char *name)
 		{
 			dsprite_t *sprout = (dsprite_t *)mod->extradata;
 			for (int i = 0; i < sprout->numframes; i++)
-				mod->skins[0][i] = R_FindImage(sprout->frames[i].name, it_sprite);
+				mod->skins[0][i] = R_FindImage(sprout->frames[i].name, it_sprite, false);
 		}
 		else if (mod->type == mod_md2)
 		{
 			dmdl_t *pheader = (dmdl_t *)mod->extradata;
 
 			for (int i = 0; i < pheader->num_skins; i++)
-				mod->skins[0][i] = R_FindImage ((char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME, it_skin);
+				mod->skins[0][i] = R_FindImage((char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME, it_skin, false);
 
 			mod->numframes = pheader->num_frames;
 		}
@@ -2898,10 +2797,10 @@ struct model_s *R_RegisterModel (char *name)
 			{
 				for (int k = 0; k < pheader3->meshes[i].num_skins; k++)
 				{
-					mod->skins[i][k] = R_FindImage(pheader3->meshes[i].skins[k].name, it_skin);
+					mod->skins[i][k] = R_FindImage(pheader3->meshes[i].skins[k].name, it_skin, false);
 
 					if (strlen(pheader3->meshes[i].skins[k].glowname))
-						pheader3->meshes[i].skins[k].glowimage = R_FindImage(pheader3->meshes[i].skins[k].glowname, it_skin);
+						pheader3->meshes[i].skins[k].glowimage = R_FindImage(pheader3->meshes[i].skins[k].glowname, it_skin, true);
 				}
 			}
 
@@ -2927,7 +2826,7 @@ struct model_s *R_RegisterModel (char *name)
 R_EndRegistration
 @@@@@@@@@@@@@@@@@@@@@
 */
-void R_EndRegistration (void)
+void R_EndRegistration(void)
 {
 	for (int i = 0; i < mod_numknown; i++)
 	{
@@ -2950,7 +2849,7 @@ void R_EndRegistration (void)
 Mod_Free
 ================
 */
-void Mod_Free (model_t *mod)
+void Mod_Free(model_t *mod)
 {
 	ModChunk_Free(mod->extradata); //mxd
 
@@ -2967,7 +2866,7 @@ void Mod_Free (model_t *mod)
 Mod_FreeAll
 ================
 */
-void Mod_FreeAll (void)
+void Mod_FreeAll(void)
 {
 	for (int i = 0; i < mod_numknown; i++)
 		if (mod_known[i].extradatasize)

@@ -255,9 +255,6 @@
     <ClCompile Include="..\..\..\renderer\r_main.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\renderer\r_misc.c">
-      <Filter>Source Files\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\renderer\r_model.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
@@ -347,6 +344,21 @@
     </ClCompile>
     <ClCompile Include="..\..\..\ui\ui_video_advanced.c">
       <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_image_stb.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_screenshot.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_particle_setup.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_image_pcx.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_image_wal.c">
+      <Filter>Source Files\renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

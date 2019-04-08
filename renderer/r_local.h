@@ -80,7 +80,7 @@ typedef enum
 typedef struct image_s
 {
 	char		name[MAX_QPATH];			// game path, including extension
-	long		hash;						// to speed up searching
+	long		hash;						// to speed up searching. //mxd. Changed: stores hash of name without extension!
 	imagetype_t	type;
 	int			width, height;				// source image
 	int			upload_width, upload_height;	// after power of two and picmip
@@ -94,7 +94,7 @@ typedef struct image_s
 
 	qboolean	paletted;
 
-	qboolean	is_cin;					// Heffo - To identify a cin texture's image_t
+	qboolean	is_cin;						// Heffo - To identify a cin texture's image_t
 	float		replace_scale_w;			// Knightmare- for scaling hi-res replacement images
 	float		replace_scale_h;			// Knightmare- for scaling hi-res replacement images
 } image_t;
@@ -376,6 +376,19 @@ void R_DrawAllParticles();
 void R_DrawAllDecals(void);
 
 //
+// r_particle_setup.c
+//
+void R_CreateDisplayLists();
+void R_ClearDisplayLists();
+void R_InitMedia();
+
+//
+// r_screenshot.c
+//
+void R_ScreenShot_f(void);
+void R_ScreenShot_Silent_f(void);
+
+//
 // r_light.c
 //
 //#define DYNAMIC_LIGHT_WIDTH  128
@@ -452,17 +465,6 @@ void R_RenderView(refdef_t *fd);
 void R_BeginFrame(float camera_separation);
 void R_SetPalette(const unsigned char *palette);
 
-//
-// r_misc.c
-//
-void R_CreateDisplayLists();
-void R_ClearDisplayLists();
-void R_InitMedia();
-void R_ScreenShot_f(void);
-void R_ScreenShot_Silent_f(void);
-void R_ScreenShot_TGA_f(void);
-void R_ScreenShot_JPG_f(void);
-void R_ScreenShot_PNG_f(void);
 
 //
 // r_model.c
@@ -602,18 +604,18 @@ void R_InitBloomTextures();
 //
 // r_draw.c
 //
-void	R_DrawGetPicSize(int *w, int *h, char *name);
-void	R_DrawPic(int x, int y, char *name);
+void R_DrawGetPicSize(int *w, int *h, char *name);
+void R_DrawPic(int x, int y, char *name);
 // added alpha for Psychospaz's transparent console
-void	R_DrawStretchPic(int x, int y, int w, int h, char *name, float alpha);
+void R_DrawStretchPic(int x, int y, int w, int h, char *name, float alpha);
 // Psychospaz's scaled crosshair support
-void	R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic);
-void	R_InitChars();
-void	R_FlushChars();
-void	R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
-void	R_DrawTileClear(int x, int y, int w, int h, char *name);
-void	R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
-float	R_CharMapScale();
+void R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic);
+void R_InitChars();
+void R_FlushChars();
+void R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
+void R_DrawTileClear(int x, int y, int w, int h, char *name);
+void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
+float R_CharMapScale();
 
 #ifdef ROQ_SUPPORT
 void	R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
@@ -626,12 +628,14 @@ void	R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data
 // r_image.c
 //
 void Draw_GetPalette();
-void GL_ResampleTexture(void *indata, int inwidth, int inheight, void *outdata,  int outwidth, int outheight);
 struct image_s *R_RegisterSkin(char *name);
 
 void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height);
-image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits);
-image_t	*R_FindImage (char *name, imagetype_t type);
+void GetPCXInfo(char *filename, int *width, int *height); //mxd. From YQ2
+image_t *R_LoadWal(char *name, imagetype_t type); //mxd
+void GetWalInfo(char *name, int *width, int *height); //mxd
+image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t type, int bits);
+image_t	*R_FindImage(char *name, imagetype_t type, qboolean silent); //mxd. +silent
 void GL_TextureMode(char *string);
 void R_ImageList_f(void);
 void R_InitFailedImgList();
@@ -642,6 +646,15 @@ void R_LoadNormalmap(const char *texture, mtexinfo_t *tex); //mxd
 void GL_TextureAlphaMode(char *string);
 void GL_TextureSolidMode(char *string);
 
+
+//
+// r_image_stb.c (mxd)
+//
+qboolean STBLoad(const char *origname, const char* type, byte **pic, int *width, int *height);
+qboolean STBResize(byte *input_pixels, int input_width, int input_height, byte *output_pixels, int output_width, int output_height, qboolean usealpha);
+qboolean STBSaveJPG(const char *filename, byte* source, int width, int height, int quality);
+qboolean STBSavePNG(const char *filename, byte* source, int width, int height);
+qboolean STBSaveTGA(const char *filename, byte* source, int width, int height);
 
 //
 // r_fog.c
@@ -805,10 +818,10 @@ void VID_Error(int err_level, char *str, ...);
 void CL_SetParticleImages();
 void VID_Printf(int print_level, char *str, ...);
 
-qboolean	VID_GetModeInfo(int *width, int *height, int mode);
-void		VID_NewWindow(int width, int height);
+qboolean VID_GetModeInfo(int *width, int *height, int mode);
+void VID_NewWindow(int width, int height);
 // Knightmare- added import of text color for renderer
-void		TextColor (int colornum, int *red, int *green, int *blue);
+void TextColor(int colornum, int *red, int *green, int *blue);
 
 /*
 ====================================================================

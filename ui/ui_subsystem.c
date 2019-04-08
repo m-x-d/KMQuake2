@@ -268,8 +268,8 @@ const char *Default_MenuKey(menuframework_s *m, int key)
 		{
 			m->cursor++;
 			// Knightmare- added Psychospaz's mouse support
-
 			UI_RefreshCursorLink();
+
 			Menu_AdjustCursor(m, 1);
 			sound = menu_move_sound;
 		}

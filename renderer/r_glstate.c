@@ -216,7 +216,8 @@ R_ParticleStencil
 uses stencil buffer to redraw particles only over trans surfaces
 =================
 */
-extern	cvar_t	*r_particle_overdraw;
+extern cvar_t *r_particle_overdraw;
+
 void R_ParticleStencil (int passnum)
 {
 	if (!glConfig.have_stencil || !r_particle_overdraw->value) 
@@ -293,11 +294,11 @@ GL_ShadeModel
 */
 void GL_ShadeModel (GLenum mode)
 {
-	if (glState.shadeModelMode == mode)
-		return;
-
-	glState.shadeModelMode = mode;
-	qglShadeModel(mode);
+	if (glState.shadeModelMode != mode)
+	{
+		glState.shadeModelMode = mode;
+		qglShadeModel(mode);
+	}
 }
 
 
@@ -312,7 +313,7 @@ void GL_TexEnv (GLenum mode)
 
 	if (mode != lastmodes[glState.currenttmu])
 	{
-		qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
+		qglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
 		lastmodes[glState.currenttmu] = mode;
 	}
 }
@@ -325,11 +326,11 @@ GL_CullFace
 */
 void GL_CullFace (GLenum mode)
 {
-	if (glState.cullMode == mode)
-		return;
-
-	glState.cullMode = mode;
-	qglCullFace(mode);
+	if (glState.cullMode != mode)
+	{
+		glState.cullMode = mode;
+		qglCullFace(mode);
+	}
 }
 
 
@@ -340,12 +341,12 @@ GL_PolygonOffset
 */
 void GL_PolygonOffset (GLfloat factor, GLfloat units)
 {
-	if (glState.offsetFactor == factor && glState.offsetUnits == units)
-		return;
-
-	glState.offsetFactor = factor;
-	glState.offsetUnits = units;
-	qglPolygonOffset(factor, units);
+	if (glState.offsetFactor != factor || glState.offsetUnits != units)
+	{
+		glState.offsetFactor = factor;
+		glState.offsetUnits = units;
+		qglPolygonOffset(factor, units);
+	}
 }
 
 
@@ -356,12 +357,12 @@ GL_AlphaFunc
 */
 void GL_AlphaFunc (GLenum func, GLclampf ref)
 {
-	if (glState.alphaFunc == func && glState.alphaRef == ref)
-		return;
-
-	glState.alphaFunc = func;
-	glState.alphaRef = ref;
-	qglAlphaFunc(func, ref);
+	if (glState.alphaFunc != func || glState.alphaRef != ref)
+	{
+		glState.alphaFunc = func;
+		glState.alphaRef = ref;
+		qglAlphaFunc(func, ref);
+	}
 }
 
 
@@ -372,12 +373,12 @@ GL_BlendFunc
 */
 void GL_BlendFunc (GLenum src, GLenum dst)
 {
-	if (glState.blendSrc == src && glState.blendDst == dst)
-		return;
-
-	glState.blendSrc = src;
-	glState.blendDst = dst;
-	qglBlendFunc(src, dst);
+	if (glState.blendSrc != src || glState.blendDst != dst)
+	{
+		glState.blendSrc = src;
+		glState.blendDst = dst;
+		qglBlendFunc(src, dst);
+	}
 }
 
 
@@ -388,11 +389,11 @@ GL_DepthFunc
 */
 void GL_DepthFunc (GLenum func)
 {
-	if (glState.depthFunc == func)
-		return;
-
-	glState.depthFunc = func;
-	qglDepthFunc(func);
+	if (glState.depthFunc != func)
+	{
+		glState.depthFunc = func;
+		qglDepthFunc(func);
+	}
 }
 
 
@@ -403,11 +404,11 @@ GL_DepthMask
 */
 void GL_DepthMask (GLboolean mask)
 {
-	if (glState.depthMask == mask)
-		return;
-
-	glState.depthMask = mask;
-	qglDepthMask(mask);
+	if (glState.depthMask != mask)
+	{
+		glState.depthMask = mask;
+		qglDepthMask(mask);
+	}
 }
 
 /*
@@ -417,12 +418,12 @@ GL_DepthRange
 */
 void GL_DepthRange (GLfloat rMin, GLfloat rMax)
 {
-	if (glState.depthMin == rMin && glState.depthMax == rMax)
-		return;
-
-	glState.depthMin = rMin;
-	glState.depthMax = rMax;
-	qglDepthRange(rMin, rMax);
+	if (glState.depthMin != rMin || glState.depthMax != rMax)
+	{
+		glState.depthMin = rMin;
+		glState.depthMax = rMax;
+		qglDepthRange(rMin, rMax);
+	}
 }
 
 
@@ -576,6 +577,34 @@ void GL_MBind (unsigned tmu, int texnum)
 		return;
 
 	GL_Bind(texnum);
+}
+
+/*
+=================
+GL_UpdateSwapInterval
+=================
+*/
+void GL_UpdateSwapInterval(void)
+{
+	static qboolean registering;
+
+	// don't swap interval if loading a map
+	if (registering != registration_active)
+		r_swapinterval->modified = true;
+
+	if (r_swapinterval->modified)
+	{
+		r_swapinterval->modified = false;
+		registering = registration_active;
+
+		if (!glState.stereo_enabled)
+		{
+#ifdef _WIN32
+			if (qwglSwapIntervalEXT)
+				qwglSwapIntervalEXT(registration_active ? 0 : r_swapinterval->value);
+#endif
+		}
+	}
 }
 
 /*

@@ -21,15 +21,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // r_image.c
 
 #include "r_local.h"
-//#include "r_cin.h"
-#include "../include/jpeg/jpeglib.h"
-#ifdef PNG_SUPPORT
-#include "../include/zlibpng/png.h"
-#endif	// PNG_SUPPORT
 
-image_t		gltextures[MAX_GLTEXTURES];
-int			numgltextures;
-int			base_textureid;		// gltextures[i] = base_textureid+i
+image_t	gltextures[MAX_GLTEXTURES];
+int		numgltextures;
+int		base_textureid; // gltextures[i] = base_textureid + i
 
 static byte			 intensitytable[256];
 static unsigned char gammatable[256];
@@ -39,18 +34,18 @@ cvar_t		*r_intensity;
 unsigned	d_8to24table[256];
 float		d_8to24tablef[256][3]; //Knightmare- MrG's Vertex array stuff
 
-qboolean GL_Upload8 (byte *data, int width, int height,  qboolean mipmap, qboolean is_sky);
-qboolean GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap);
+qboolean GL_Upload8(byte *data, int width, int height, qboolean mipmap);
+qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap);
 
 #define GL_SOLID_FORMAT 3 //mxd
 #define GL_ALPHA_FORMAT 4 //mxd
 
-int		gl_tex_solid_format = 3;
-int		gl_tex_alpha_format = 4;
-int		gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
-int		gl_filter_max = GL_LINEAR;
+int gl_tex_solid_format = 3;
+int gl_tex_alpha_format = 4;
+int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
+int gl_filter_max = GL_LINEAR;
 
-void GL_SetTexturePalette(unsigned palette[256])
+void GL_SetTexturePalette(const unsigned palette[256])
 {
 	unsigned char temptable[768];
 
@@ -150,14 +145,12 @@ void GL_TextureMode(char *string)
 	unsigned mode;
 
 	for (mode = 0; mode < NUM_GL_MODES; mode++)
-	{
 		if (!Q_stricmp(modes[mode].name, string))
 			break;
-	}
 
 	if (mode == NUM_GL_MODES)
 	{
-		VID_Printf(PRINT_ALL, "bad texture filtering mode name: '%s'\n", string);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad texture filtering mode name: '%s'\n", string);
 		return;
 	}
 
@@ -183,7 +176,7 @@ void GL_TextureMode(char *string)
 			continue;
 
 		//mxd. Also sky
-		if(glt->type == it_sky)
+		if (glt->type == it_sky)
 		{
 			for (int c = 0; c < 6; c++)
 				GL_ApplyTextureMode(sky_images[c]->texnum, filter, filter, r_anisotropic->value);
@@ -212,14 +205,12 @@ void GL_TextureAlphaMode(char *string)
 	unsigned mode;
 
 	for (mode = 0; mode < NUM_GL_ALPHA_MODES; mode++)
-	{
 		if (!Q_stricmp(gl_alpha_modes[mode].name, string))
 			break;
-	}
 
 	if (mode == NUM_GL_ALPHA_MODES)
 	{
-		VID_Printf(PRINT_ALL, "bad alpha texture mode name: '%s'\n", string);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad alpha texture mode name: '%s'\n", string);
 		return;
 	}
 
@@ -236,14 +227,12 @@ void GL_TextureSolidMode(char *string)
 	unsigned mode;
 
 	for (mode = 0; mode < NUM_GL_SOLID_MODES; mode++)
-	{
 		if (!Q_stricmp(gl_solid_modes[mode].name, string))
 			break;
-	}
 
 	if (mode == NUM_GL_SOLID_MODES)
 	{
-		VID_Printf(PRINT_ALL, "bad solid texture mode name: '%s'\n", string);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad solid texture mode name: '%s'\n", string);
 		return;
 	}
 
@@ -257,49 +246,36 @@ R_ImageList_f
 */
 void R_ImageList_f (void)
 {
-	int		i;
-	image_t	*image;
-
-	const char *palstrings[2] = { "RGB", "PAL" };
+	const char *palstrings[3] = { "RGB ", "RGBA", "PAL " }; //mxd. +RGBA
 
 	VID_Printf(PRINT_ALL, "------------------\n");
 	int texels = 0;
+	int texcount = 0; //mxd
 
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	image_t *image = gltextures;
+	for (int i = 0; i < numgltextures; i++, image++)
 	{
 		if (image->texnum <= 0)
 			continue;
 
 		texels += image->upload_width * image->upload_height;
+		texcount++; //mxd
 
 		switch (image->type)
 		{
-		case it_skin:
-			VID_Printf(PRINT_ALL, "M");
-			break;
-
-		case it_sprite:
-			VID_Printf(PRINT_ALL, "S");
-			break;
-
-		case it_wall:
-			VID_Printf(PRINT_ALL, "W");
-			break;
-
-		case it_pic:
-		case it_part:
-			VID_Printf(PRINT_ALL, "P");
-			break;
-
-		default:
-			VID_Printf(PRINT_ALL, " ");
-			break;
+			case it_skin:	VID_Printf(PRINT_ALL, "Skin:     "); break;
+			case it_sprite:	VID_Printf(PRINT_ALL, "Sprite:   "); break;
+			case it_wall:	VID_Printf(PRINT_ALL, "Wall:     "); break;
+			case it_pic:	VID_Printf(PRINT_ALL, "Picture:  "); break;
+			case it_part:	VID_Printf(PRINT_ALL, "Particle: "); break;
+			case it_sky:	VID_Printf(PRINT_ALL, "Sky:      "); break;
+			default:		VID_Printf(PRINT_ALL, "Unknown:  "); break;
 		}
 
-		VID_Printf(PRINT_ALL, " %3i %3i %s: %s\n",
-			image->upload_width, image->upload_height, palstrings[image->paletted], image->name);
+		VID_Printf(PRINT_ALL, "%4i x %-4i %s: %s\n", image->upload_width, image->upload_height, palstrings[(image->paletted ? 2 : image->has_alpha)], image->name);
 	}
 
+	VID_Printf(PRINT_ALL, "Total textures count: %i\n", texcount); //mxd
 	VID_Printf(PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
 }
 
@@ -322,8 +298,8 @@ int			scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
 byte		scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT];
 qboolean	scrap_dirty;
 
-// returns a texture number and the position inside it
-int Scrap_AllocBlock (int w, int h, int *x, int *y)
+// Returns a texture number and the position inside it
+int Scrap_AllocBlock(int w, int h, int *x, int *y)
 {
 	int j;
 
@@ -364,874 +340,17 @@ int Scrap_AllocBlock (int w, int h, int *x, int *y)
 	return -1;
 }
 
-int	scrap_uploads;
-
-void Scrap_Upload (void)
+void Scrap_Upload(void)
 {
-	scrap_uploads++;
 	GL_Bind(TEXNUM_SCRAPS);
-	GL_Upload8(scrap_texels[0], BLOCK_WIDTH, BLOCK_HEIGHT, false, false);
+	GL_Upload8(scrap_texels[0], BLOCK_WIDTH, BLOCK_HEIGHT, false);
 	scrap_dirty = false;
-}
-
-/*
-=================================================================
-
-PCX LOADING
-
-=================================================================
-*/
-
-
-/*
-==============
-LoadPCX
-==============
-*/
-void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *height)
-{
-	*pic = NULL;
-	*palette = NULL;
-
-	//
-	// load the file
-	//
-	byte *raw;
-	const int len = FS_LoadFile(filename, (void **)&raw);
-	if (!raw)
-	{
-		VID_Printf(PRINT_DEVELOPER, "Bad pcx file %s\n", filename);
-		return;
-	}
-
-	//
-	// parse the PCX file
-	//
-	pcx_t *pcx = (pcx_t *)raw;
-
-    pcx->xmin = LittleShort(pcx->xmin);
-    pcx->ymin = LittleShort(pcx->ymin);
-    pcx->xmax = LittleShort(pcx->xmax);
-    pcx->ymax = LittleShort(pcx->ymax);
-    pcx->hres = LittleShort(pcx->hres);
-    pcx->vres = LittleShort(pcx->vres);
-    pcx->bytes_per_line = LittleShort(pcx->bytes_per_line);
-    pcx->palette_type = LittleShort(pcx->palette_type);
-
-	raw = &pcx->data;
-
-	if (pcx->manufacturer != 0x0a
-		|| pcx->version != 5
-		|| pcx->encoding != 1
-		|| pcx->bits_per_pixel != 8
-		|| pcx->xmax >= 640
-		|| pcx->ymax >= 480)
-	{
-		VID_Printf(PRINT_ALL, "Bad pcx file %s\n", filename);
-		return;
-	}
-
-	byte *out = malloc((pcx->ymax + 1) * (pcx->xmax + 1));
-	*pic = out;
-	byte *pix = out;
-
-	if (palette)
-	{
-		*palette = malloc(768);
-		memcpy(*palette, (byte *)pcx + len - 768, 768);
-	}
-
-	if (width)
-		*width = pcx->xmax + 1;
-	if (height)
-		*height = pcx->ymax + 1;
-
-	for (int y = 0; y <= pcx->ymax; y++, pix += pcx->xmax + 1)
-	{
-		for (int x = 0; x <= pcx->xmax;)
-		{
-			int dataByte = *raw++;
-			int runLength;
-
-			if((dataByte & 0xC0) == 0xC0)
-			{
-				runLength = dataByte & 0x3F;
-				dataByte = *raw++;
-			}
-			else
-			{
-				runLength = 1;
-			}
-
-			while(runLength-- > 0)
-				pix[x++] = dataByte;
-		}
-	}
-
-	if (raw - (byte *)pcx > len)
-	{
-		VID_Printf(PRINT_DEVELOPER, "PCX file %s was malformed", filename);
-		free(*pic);
-		*pic = NULL;
-	}
-
-	FS_FreeFile(pcx);
-}
-
-/*
-=========================================================
-
-TARGA LOADING
-
-=========================================================
-*/
-
-// Definitions for image types
-#define TGA_Null		0   // no image data
-#define TGA_Map			1   // Uncompressed, color-mapped images
-#define TGA_RGB			2   // Uncompressed, RGB images
-#define TGA_Mono		3   // Uncompressed, black and white images
-#define TGA_RLEMap		9   // Runlength encoded color-mapped images
-#define TGA_RLERGB		10   // Runlength encoded RGB images
-#define TGA_RLEMono		11   // Compressed, black and white images
-#define TGA_CompMap		32   // Compressed color-mapped data, using Huffman, Delta, and runlength encoding
-#define TGA_CompMap4	33   // Compressed color-mapped data, using Huffman, Delta, and runlength encoding. 4-pass quadtree-type process
-// Definitions for interleave flag
-#define TGA_IL_None		0   // non-interleaved
-#define TGA_IL_Two		1   // two-way (even/odd) interleaving
-#define TGA_IL_Four		2   // four way interleaving
-#define TGA_IL_Reserved	3   // reserved
-// Definitions for origin flag
-#define TGA_O_UPPER		0   // Origin in lower left-hand corner
-#define TGA_O_LOWER		1   // Origin in upper left-hand corner
-#define MAXCOLORS		16384
-
-typedef struct _TargaHeader
-{
-	unsigned char 	id_length, colormap_type, image_type;
-	unsigned short	colormap_index, colormap_length;
-	unsigned char	colormap_size;
-	unsigned short	x_origin, y_origin, width, height;
-	unsigned char	pixel_size, attributes;
-} TargaHeader;
-
-
-/*
-=============
-R_LoadTGA
-NiceAss: LoadTGA() from Q2Ice, it supports more formats
-=============
-*/
-void R_LoadTGA(char *filename, byte **pic, int *width, int *height)
-{
-	int i;
-	int map_idx;
-	TargaHeader header;
-	byte tmp[2], r, g, b, a, j, k, l;
-
-	// load file
-	byte *data;
-	FS_LoadFile(filename, &data);
-
-	if (!data)
-		return;
-
-	byte *pdata = data;
-
-	header.id_length = *pdata++;
-	header.colormap_type = *pdata++;
-	header.image_type = *pdata++;
-
-	tmp[0] = pdata[0];
-	tmp[1] = pdata[1];
-	header.colormap_index = LittleShort(*((short *)tmp));
-	pdata += 2;
-	tmp[0] = pdata[0];
-	tmp[1] = pdata[1];
-	header.colormap_length = LittleShort(*((short *)tmp));
-	pdata += 2;
-	header.colormap_size = *pdata++;
-	header.x_origin = LittleShort(*((short *)pdata));
-	pdata += 2;
-	header.y_origin = LittleShort(*((short *)pdata));
-	pdata += 2;
-	header.width = LittleShort(*((short *)pdata));
-	pdata += 2;
-	header.height = LittleShort(*((short *)pdata));
-	pdata += 2;
-	header.pixel_size = *pdata++;
-	header.attributes = *pdata++;
-
-	if (header.id_length)
-		pdata += header.id_length;
-
-	// validate TGA type
-	switch (header.image_type)
-	{
-	case TGA_Map:
-	case TGA_RGB:
-	case TGA_Mono:
-	case TGA_RLEMap:
-	case TGA_RLERGB:
-	case TGA_RLEMono:
-		break;
-
-	default:
-		VID_Error(ERR_DROP, "R_LoadTGA: Only type 1 (map), 2 (RGB), 3 (mono), 9 (RLEmap), 10 (RLERGB), 11 (RLEmono) TGA images supported\n");
-		return;
-	}
-
-	// validate color depth
-	switch (header.pixel_size)
-	{
-	case 8:
-	case 15:
-	case 16:
-	case 24:
-	case 32:
-		break;
-
-	default:
-		VID_Error(ERR_DROP, "R_LoadTGA: Only 8, 15, 16, 24 and 32 bit images (with colormaps) supported\n");
-		return;
-	}
-
-	r = g = b = a = l = 0;
-
-	// if required, read the color map information
-	byte *ColorMap = NULL;
-	const int mapped = header.colormap_type == 1 && (header.image_type == TGA_Map || header.image_type == TGA_RLEMap || header.image_type == TGA_CompMap || header.image_type == TGA_CompMap4);
-	if (mapped)
-	{
-		// validate colormap size
-		switch (header.colormap_size)
-		{
-		case 8:
-		case 16:
-		case 32:
-		case 24:
-			break;
-
-		default:
-			VID_Error(ERR_DROP, "R_LoadTGA: Only 8, 16, 24 and 32 bit colormaps supported\n");
-			return;
-		}
-
-		const int temp1 = header.colormap_index;
-		const int temp2 = header.colormap_length;
-		if (temp1 + temp2 + 1 >= MAXCOLORS)
-		{
-			FS_FreeFile(data);
-			return;
-		}
-
-		ColorMap = (byte *)malloc(MAXCOLORS * 4);
-		map_idx = 0;
-		for (i = temp1; i < temp1 + temp2; ++i, map_idx += 4)
-		{
-			// read appropriate number of bytes, break into rgb & put in map
-			switch (header.colormap_size)
-			{
-			case 8:
-				r = g = b = *pdata++;
-				a = 255;
-				break;
-
-			case 15:
-				j = *pdata++;
-				k = *pdata++;
-				l = ((unsigned int)k << 8) + j;
-				r = (byte)(((k & 0x7C) >> 2) << 3);
-				g = (byte)((((k & 0x03) << 3) + ((j & 0xE0) >> 5)) << 3);
-				b = (byte)((j & 0x1F) << 3);
-				a = 255;
-				break;
-
-			case 16:
-				j = *pdata++;
-				k = *pdata++;
-				l = ((unsigned int)k << 8) + j;
-				r = (byte)(((k & 0x7C) >> 2) << 3);
-				g = (byte)((((k & 0x03) << 3) + ((j & 0xE0) >> 5)) << 3);
-				b = (byte)((j & 0x1F) << 3);
-				a = (k & 0x80) ? 255 : 0;
-				break;
-
-			case 24:
-				b = *pdata++;
-				g = *pdata++;
-				r = *pdata++;
-				a = 255;
-				l = 0;
-				break;
-
-			case 32:
-				b = *pdata++;
-				g = *pdata++;
-				r = *pdata++;
-				a = *pdata++;
-				l = 0;
-				break;
-
-			}
-
-			ColorMap[map_idx + 0] = r;
-			ColorMap[map_idx + 1] = g;
-			ColorMap[map_idx + 2] = b;
-			ColorMap[map_idx + 3] = a;
-		}
-	}
-
-	// check run-length encoding
-	const int rlencoded = header.image_type == TGA_RLEMap || header.image_type == TGA_RLERGB || header.image_type == TGA_RLEMono;
-	int RLE_count = 0;
-	int RLE_flag = 0;
-
-	const int w = header.width;
-	const int h = header.height;
-
-	if (width)
-		*width = w;
-	if (height)
-		*height = h;
-
-	const int size = w * h * 4;
-	*pic = (byte *)malloc(size);
-
-	memset(*pic, 0, size);
-
-	// read the Targa file body and convert to portable format
-	const int pixel_size = header.pixel_size;
-	const int origin =     (header.attributes & 0x20) >> 5;
-	const int interleave = (header.attributes & 0xC0) >> 6;
-	int truerow = 0;
-	int baserow = 0;
-
-	for (int y = 0; y < h; y++)
-	{
-		int realrow = truerow;
-		if (origin == TGA_O_UPPER)
-			realrow = h - realrow - 1;
-
-		byte *dst = *pic + realrow * w * 4;
-
-		for (int x = 0; x < w; x++)
-		{
-			// check if run length encoded
-			if (rlencoded)
-			{
-				if (!RLE_count)
-				{
-					// have to restart run
-					i = *pdata++;
-					RLE_flag = (i & 0x80);
-					
-					if (!RLE_flag)
-						RLE_count = i + 1; // stream of unencoded pixels
-					else
-						RLE_count = i - 127; // single pixel replicated
-
-					// decrement count & get pixel
-					--RLE_count;
-				}
-				else
-				{
-					// have already read count & (at least) first pixel
-					--RLE_count;
-					if (RLE_flag)
-						goto PixEncode; // replicated pixels
-				}
-			}
-
-			// read appropriate number of bytes, break into RGB
-			switch (pixel_size)
-			{
-			case 8:
-				r = g = b = l = *pdata++;
-				a = 255;
-				break;
-
-			case 15:
-				j = *pdata++;
-				k = *pdata++;
-				l = ((unsigned int)k << 8) + j;
-				r = (byte)(((k & 0x7C) >> 2) << 3);
-				g = (byte)((((k & 0x03) << 3) + ((j & 0xE0) >> 5)) << 3);
-				b = (byte)((j & 0x1F) << 3);
-				a = 255;
-				break;
-
-			case 16:
-				j = *pdata++;
-				k = *pdata++;
-				l = ((unsigned int)k << 8) + j;
-				r = (byte)(((k & 0x7C) >> 2) << 3);
-				g = (byte)((((k & 0x03) << 3) + ((j & 0xE0) >> 5)) << 3);
-				b = (byte)((j & 0x1F) << 3);
-				a = 255;
-				break;
-
-			case 24:
-				b = *pdata++;
-				g = *pdata++;
-				r = *pdata++;
-				a = 255;
-				l = 0;
-				break;
-
-			case 32:
-				b = *pdata++;
-				g = *pdata++;
-				r = *pdata++;
-				a = *pdata++;
-				l = 0;
-				break;
-
-			default:
-				VID_Error(ERR_DROP, "Illegal pixel_size '%d' in file '%s'\n", filename);
-				return;
-			}
-
-		PixEncode:
-			if (mapped)
-			{
-				map_idx = l * 4;
-				*dst++ = ColorMap[map_idx + 0];
-				*dst++ = ColorMap[map_idx + 1];
-				*dst++ = ColorMap[map_idx + 2];
-				*dst++ = ColorMap[map_idx + 3];
-			}
-			else
-			{
-				*dst++ = r;
-				*dst++ = g;
-				*dst++ = b;
-				*dst++ = a;
-			}
-		}
-
-		if (interleave == TGA_IL_Four)
-			truerow += 4;
-		else if (interleave == TGA_IL_Two)
-			truerow += 2;
-		else
-			truerow++;
-
-		if (truerow >= h)
-			truerow = ++baserow;
-	}
-
-	if (mapped)
-		free(ColorMap);
-
-	FS_FreeFile(data);
-}
-
-
-/*
-=================================================================
-
-PNG LOADING
-
-From Quake2Max
-
-=================================================================
-*/
-#ifdef PNG_SUPPORT
-
-typedef struct png_handle_s 
-{
-	char	*tmpBuf;
-	int		tmpi;
-	long	fBgColor;		// DL Background color Added 30/05/2000
-	int		fTransparent;	// DL Is this Image Transparent?   Added 30/05/2000
-	long	fRowBytes;		// DL Added 30/05/2000
-	double	fGamma;			// DL Added 07/06/2000
-	double	fScreenGamma;	// DL Added 07/06/2000
-	char	*fRowPtrs;		// DL Changed for consistancy 30/05/2000  
-	char	*data;			// property data: pByte read fData;
-	char	*title;
-	char	*author;
-	char	*description;
-	int		bitDepth;
-	int		bytesPerPixel;
-	int		colorType;
-	int		height;
-	int		width;
-	int		interlace;
-	int		compression;
-	int		filter;
-	double	lastModified;
-	int		transparent;
-} png_handle_t;
-
-png_handle_t *r_png_handle = 0;
-
-void R_InitializePNGData (void) 
-{
-	// Initialize Data and RowPtrs
-	if (r_png_handle->data) 
-	{
-		free(r_png_handle->data);
-		r_png_handle->data = 0;
-	}
-
-	if (r_png_handle->fRowPtrs) 
-	{
-		free(r_png_handle->fRowPtrs);
-		r_png_handle->fRowPtrs = 0;
-	}
-
-	r_png_handle->data = malloc(r_png_handle->height * r_png_handle->fRowBytes ); // DL Added 30/5/2000
-	r_png_handle->fRowPtrs = malloc(sizeof(void*) * r_png_handle->height);
-
-	if (r_png_handle->data && r_png_handle->fRowPtrs) 
-	{
-		long * cvaluep = (long*)r_png_handle->fRowPtrs;    
-		for (long y = 0; y < r_png_handle->height; y++)
-			cvaluep[y] = (long)r_png_handle->data + (y * (long)r_png_handle->fRowBytes); //DL Added 08/07/2000      
-	}
-}
-
-void R_CreatePNG (void) 
-{
-	if (r_png_handle)
-		return;
-
-	r_png_handle = malloc(sizeof(png_handle_t));
-	r_png_handle->data = 0;
-	r_png_handle->fRowPtrs = 0;
-	r_png_handle->height = 0;
-	r_png_handle->width = 0;
-	r_png_handle->colorType = PNG_COLOR_TYPE_RGBA;	// was PNG_COLOR_TYPE_RGB
-	r_png_handle->interlace = PNG_INTERLACE_NONE;
-	r_png_handle->compression = PNG_COMPRESSION_TYPE_DEFAULT;
-	r_png_handle->filter = PNG_FILTER_TYPE_DEFAULT;
-}
-
-void R_DestroyPNG (qboolean keepData) 
-{  
-	if (!r_png_handle) 
-		return;
-
-	if (r_png_handle->data && !keepData) 
-		free(r_png_handle->data);
-
-	if (r_png_handle->fRowPtrs) 
-		free(r_png_handle->fRowPtrs);
-
-	free(r_png_handle);
-	r_png_handle = NULL;
-}
-
-void PNGAPI R_ReadPNGData (png_structp png, png_bytep data, png_size_t length) 
-{
-	// called by pnglib
-	for (unsigned i = 0; i < length; i++) 
-		data[i] = r_png_handle->tmpBuf[r_png_handle->tmpi++]; // give pnglib some more bytes  
-}
-
-
-/*
-==============
-R_LoadPNG
-==============
-*/
-void R_LoadPNG (char *filename, byte **pic, int *width, int *height) 
-{
-	byte ioBuffer[8192];
-	
-	*pic = NULL;
-
-	byte *raw;
-	FS_LoadFile(filename, (void **)&raw);
-
-	if (!raw)
-	{
-		// Knightmare- skip this unless developer >= 2 because it spams the console
-		if (developer->value > 1)
-			VID_Printf(PRINT_DEVELOPER, "Bad png file %s\n", filename);
-
-		return;
-	}
-
-	if (png_sig_cmp(raw, 0, 4)) 
-		return;  
-
-	png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-	if (!png) 
-		return;
-
-	png_infop pnginfo = png_create_info_struct(png);
-
-	if (!pnginfo)
-	{
-		png_destroy_read_struct(&png, &pnginfo, 0);
-		return;
-	}
-
-	R_CreatePNG(); // creates the r_png_handle struct
-
-	r_png_handle->tmpBuf = raw; //buf = whole file content
-	r_png_handle->tmpi = 0; 
-	png_set_read_fn(png, ioBuffer, R_ReadPNGData);
-	png_read_info(png, pnginfo);
-
-	png_get_IHDR(png, pnginfo, &r_png_handle->width, &r_png_handle->height, &r_png_handle->bitDepth,
-				&r_png_handle->colorType, &r_png_handle->interlace, &r_png_handle->compression, &r_png_handle->filter);
-	// ...removed bgColor code here...
-
-	if (r_png_handle->colorType == PNG_COLOR_TYPE_PALETTE)  
-		png_set_palette_to_rgb(png);
-
-	if (r_png_handle->colorType == PNG_COLOR_TYPE_GRAY && r_png_handle->bitDepth < 8) 
-		png_set_gray_1_2_4_to_8(png);
-
-	// Add alpha channel if present
-	if (png_get_valid(png, pnginfo, PNG_INFO_tRNS))
-		png_set_tRNS_to_alpha(png);
-
-	// Expand grayscale to RGB
-	if (r_png_handle->colorType == PNG_COLOR_TYPE_GRAY || r_png_handle->colorType == PNG_COLOR_TYPE_GRAY_ALPHA)
-		png_set_gray_to_rgb(png);
-
-	if (r_png_handle->bitDepth < 8)
-		png_set_expand(png);
-
-	// hax: expand 24bit to 32bit
-	if (r_png_handle->bitDepth == 8 && r_png_handle->colorType == PNG_COLOR_TYPE_RGB) 
-		png_set_filler(png, 255, PNG_FILLER_AFTER);
-
-	// update the info structure
-	png_read_update_info(png, pnginfo);
-
-	r_png_handle->fRowBytes = png_get_rowbytes(png, pnginfo);
-	r_png_handle->bytesPerPixel = png_get_channels(png, pnginfo);  // DL Added 30/08/2000
-
-	R_InitializePNGData();
-	if (r_png_handle->data && r_png_handle->fRowPtrs)
-		png_read_image(png, (png_bytepp)r_png_handle->fRowPtrs);
-
-	png_read_end(png, pnginfo); // read last information chunks
-
-	png_destroy_read_struct(&png, &pnginfo, 0);
-
-	// only load 32 bit by now...
-	if (r_png_handle->bitDepth == 8)
-	{
-		*pic = r_png_handle->data;
-		*width = r_png_handle->width;
-		*height = r_png_handle->height;
-	}
-	else
-	{
-		VID_Printf(PRINT_DEVELOPER, "Bad png color depth: %s\n", filename);
-		*pic = NULL;
-		free(r_png_handle->data);
-	}
-
-	R_DestroyPNG(true);
-	FS_FreeFile((void *)raw);
-}
-#endif	// PNG_SUPPORT
-
-/*
-=================================================================
-
-JPEG LOADING
-
-By Robert 'Heffo' Heffernan
-
-=================================================================
-*/
-
-void jpg_null(j_decompress_ptr cinfo)
-{
-}
-
-unsigned char jpg_fill_input_buffer(j_decompress_ptr cinfo)
-{
-    VID_Printf(PRINT_ALL, "Premature end of JPEG data\n");
-    return 1;
-}
-
-void jpg_skip_input_data(j_decompress_ptr cinfo, long num_bytes)
-{
-	if(cinfo->src->bytes_in_buffer >= (size_t) num_bytes) // //mxd. bytes_in_buffer can't be < 0
-	{
-		cinfo->src->next_input_byte += (size_t)num_bytes;
-		cinfo->src->bytes_in_buffer -= (size_t)num_bytes;
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "Premature end of JPEG data\n");
-	}
-}
-
-void jpeg_mem_src(j_decompress_ptr cinfo, const unsigned char *mem, unsigned long len) //mxd. Was byte *mem, int len. Fixes C4028: formal parameters 2 and 3 different from declaration
-{
-    cinfo->src = (struct jpeg_source_mgr *)(*cinfo->mem->alloc_small)((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(struct jpeg_source_mgr));
-    cinfo->src->init_source = jpg_null;
-    cinfo->src->fill_input_buffer = jpg_fill_input_buffer;
-    cinfo->src->skip_input_data = jpg_skip_input_data;
-    cinfo->src->resync_to_restart = jpeg_resync_to_restart;
-    cinfo->src->term_source = jpg_null;
-    cinfo->src->bytes_in_buffer = len;
-    cinfo->src->next_input_byte = mem;
-}
-
-#define DSTATE_START	200	/* after create_decompress */
-#define DSTATE_INHEADER	201	/* reading header markers, no SOS yet */
-
-//mxd. JPEG Error handling...
-struct custom_jpeg_error_mgr
-{
-	struct jpeg_error_mgr pub;
-	jmp_buf setjmp_buffer;
-};
-
-typedef struct custom_jpeg_error_mgr *custom_jpeg_error_ptr;
-
-static void custom_jpeg_error_exit(j_common_ptr cinfo)
-{
-	// cinfo->err really points to custom_jpeg_error_mgr struct, so coerce pointer
-	custom_jpeg_error_ptr err = (custom_jpeg_error_ptr)cinfo->err;
-
-	// Return control to the setjmp point
-	longjmp(err->setjmp_buffer, 1);
-}
-
-/*
-==============
-R_LoadJPG
-==============
-*/
-void R_LoadJPG (char *filename, byte **pic, int *width, int *height)
-{
-	struct jpeg_decompress_struct	cinfo;
-	struct custom_jpeg_error_mgr	jerr; //mxd
-	byte							*rawdata;
-
-	// Load JPEG file into memory
-	const int rawsize = FS_LoadFile(filename, (void **)&rawdata);
-	if (!rawdata)
-	{
-		VID_Printf(PRINT_DEVELOPER, "Bad jpg file %s\n", filename);
-		return;	
-	}
-
-	// Knightmare- check for bad data
-	if (	rawdata[6] != 'J'
-		||	rawdata[7] != 'F'
-		||	rawdata[8] != 'I'
-		||	rawdata[9] != 'F')
-	{
-		VID_Printf(PRINT_ALL, "Bad jpg file %s\n", filename);
-		FS_FreeFile(rawdata);
-		return;
-	}
-
-	// Initialise libJpeg Object
-	cinfo.err = jpeg_std_error(&jerr.pub);
-	jerr.pub.error_exit = custom_jpeg_error_exit; //mxd
-	if (setjmp(jerr.setjmp_buffer)) //mxd
-	{
-		// Display the message
-		char buffer[JMSG_LENGTH_MAX];
-		(*cinfo.err->format_message) ((j_common_ptr)&cinfo, buffer);
-		VID_Printf(PRINT_ALL, "Failed to load jpg file %s. %s\n", filename, buffer);
-
-		// Get rid of data
-		jpeg_destroy_decompress(&cinfo);
-		FS_FreeFile(rawdata);
-		return;
-	}
-
-	jpeg_create_decompress(&cinfo);
-
-	// Feed JPEG memory into the libJpeg Object
-	jpeg_mem_src(&cinfo, rawdata, rawsize);
-
-	// Process JPEG header
-	jpeg_read_header(&cinfo, true); // bombs out here
-
-	// Start Decompression
-	jpeg_start_decompress(&cinfo);
-
-	// Check Color Components
-	if(cinfo.output_components != 3)
-	{
-		VID_Printf(PRINT_ALL, "Failed to load jpg file %s: invalid JPEG color components\n", filename);
-		jpeg_destroy_decompress(&cinfo);
-		FS_FreeFile(rawdata);
-		return;
-	}
-
-	// Allocate Memory for decompressed image
-	byte *rgbadata = malloc(cinfo.output_width * cinfo.output_height * 4);
-	if(!rgbadata)
-	{
-		VID_Printf(PRINT_ALL, "Insufficient RAM for JPEG buffer\n");
-		jpeg_destroy_decompress(&cinfo);
-		FS_FreeFile(rawdata);
-		return;
-	}
-
-	// Pass sizes to output
-	*width = cinfo.output_width; *height = cinfo.output_height;
-
-	// Allocate Scanline buffer
-	byte *scanline = malloc(cinfo.output_width * 3);
-	if(!scanline)
-	{
-		VID_Printf(PRINT_ALL, "Insufficient RAM for JPEG scanline buffer\n");
-		free(rgbadata);
-		jpeg_destroy_decompress(&cinfo);
-		FS_FreeFile(rawdata);
-		return;
-	}
-
-	// Read Scanlines, and expand from RGB to RGBA
-	byte *q = rgbadata;
-	while(cinfo.output_scanline < cinfo.output_height)
-	{
-		byte *p = scanline;
-		jpeg_read_scanlines(&cinfo, &scanline, 1);
-
-		for(unsigned i = 0; i < cinfo.output_width; i++)
-		{
-			q[0] = p[0];
-			q[1] = p[1];
-			q[2] = p[2];
-			q[3] = 255;
-
-			p += 3;
-			q += 4;
-		}
-	}
-
-	// Free the scanline buffer
-	free(scanline);
-
-	// Finish Decompression
-	jpeg_finish_decompress(&cinfo);
-
-	// Destroy JPEG object
-	jpeg_destroy_decompress(&cinfo);
-
-	// Free raw data buffer
-	FS_FreeFile(rawdata);
-
-	// Return the 'rgbadata'
-	*pic = rgbadata;
 }
 
 
 /*
 ====================================================================
-
 IMAGE FLOOD FILLING
-
 ====================================================================
 */
 
@@ -1253,23 +372,28 @@ typedef struct
 #define FLOODFILL_FIFO_SIZE 0x1000
 #define FLOODFILL_FIFO_MASK (FLOODFILL_FIFO_SIZE - 1)
 
-#define FLOODFILL_STEP( off, dx, dy ) \
+#define FLOODFILL_STEP(off, dx, dy) \
 { \
 	if (pos[off] == fillcolor) \
 	{ \
 		pos[off] = 255; \
-		fifo[inpt].x = x + (dx), fifo[inpt].y = y + (dy); \
+		fifo[inpt].x = x + dx; \
+		fifo[inpt].y = y + dy; \
 		inpt = (inpt + 1) & FLOODFILL_FIFO_MASK; \
 	} \
-	else if (pos[off] != 255) fdc = pos[off]; \
+	else if (pos[off] != 255) \
+	{ \
+		fdc = pos[off];	\
+	} \
 }
 
-void R_FloodFillSkin( byte *skin, int skinwidth, int skinheight )
+void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 {
-	const byte			fillcolor = *skin; // assume this is the pixel to fill
-	floodfill_t			fifo[FLOODFILL_FIFO_SIZE];
-	int					inpt = 0, outpt = 0;
-	int					filledcolor = 0;
+	const byte	fillcolor = *skin; // assume this is the pixel to fill
+	floodfill_t	fifo[FLOODFILL_FIFO_SIZE];
+	int			inpt = 0;
+	int			outpt = 0;
+	int			filledcolor = 0;
 
 	// attempt to find opaque black
 	for (int i = 0; i < 256; ++i)
@@ -1298,138 +422,21 @@ void R_FloodFillSkin( byte *skin, int skinwidth, int skinheight )
 
 		outpt = (outpt + 1) & FLOODFILL_FIFO_MASK;
 
-		if (x > 0)				FLOODFILL_STEP(-1, -1, 0);
-		if (x < skinwidth - 1)	FLOODFILL_STEP(1, 1, 0);
-		if (y > 0)				FLOODFILL_STEP(-skinwidth, 0, -1);
-		if (y < skinheight - 1)	FLOODFILL_STEP(skinwidth, 0, 1);
+		if (x > 0)
+			FLOODFILL_STEP(-1, -1, 0);
+		if (x < skinwidth - 1)
+			FLOODFILL_STEP(1, 1, 0);
+
+		if (y > 0)
+			FLOODFILL_STEP(-skinwidth, 0, -1);
+		if (y < skinheight - 1)
+			FLOODFILL_STEP(skinwidth, 0, 1);
 
 		skin[x + skinwidth * y] = fdc;
 	}
 }
 
 //=======================================================
-
-
-
-/*
-================
-GL_ResampleTextureLerpLine
-from DarkPlaces
-================
-*/
-
-void GL_ResampleTextureLerpLine (byte *in, byte *out, int inwidth, int outwidth) //mxd. Very similar to R_ResampleShotLerpLine, except alpha handling
-{ 
-	int j, f;
-
-	const int fstep = (int)(inwidth * 65536.0f / outwidth);
-	const int endx = inwidth - 1;
-	int oldx = 0;
-
-	for (j = 0, f = 0; j < outwidth; j++, f += fstep) 
-	{
-		const int xi = (int) f >> 16; 
-		if (xi != oldx) 
-		{ 
-			in += (xi - oldx) * 4; 
-			oldx = xi; 
-		}
-
-		if (xi < endx) 
-		{
-			const int l2 = f & 0xFFFF;
-			const int l1 = 0x10000 - l2; 
-
-			*out++ = (byte)((in[0] * l1 + in[4] * l2) >> 16);
-			*out++ = (byte)((in[1] * l1 + in[5] * l2) >> 16); 
-			*out++ = (byte)((in[2] * l1 + in[6] * l2) >> 16); 
-			*out++ = (byte)((in[3] * l1 + in[7] * l2) >> 16); 
-		} 
-		else // last pixel of the line has no pixel to lerp to 
-		{ 
-			*out++ = in[0]; 
-			*out++ = in[1]; 
-			*out++ = in[2]; 
-			*out++ = in[3]; 
-		} 
-	} 
-}
-
-/*
-================
-GL_ResampleTexture
-================
-*/
-void GL_ResampleTexture (void *indata, int inwidth, int inheight, void *outdata, int outwidth, int outheight) //mxd. Very similar to R_ResampleShot, except alpha handling
-{ 
-	int i, j, f;
-
-	byte *out = outdata;
-	const int fstep = (int)(inheight * 65536.0f / outheight);
-
-	byte *row1 = malloc(outwidth * 4);
-	byte *row2 = malloc(outwidth * 4);
-	byte *inrow = indata;
-	int oldy = 0;
-	const int endy = inheight - 1;
-
-	GL_ResampleTextureLerpLine(inrow, row1, inwidth, outwidth);
-	GL_ResampleTextureLerpLine(inrow + inwidth * 4, row2, inwidth, outwidth);
-
-	for (i = 0, f = 0; i < outheight; i++, f += fstep)
-	{
-		const int yi = f >> 16;
-		if (yi != oldy)
-		{
-			inrow = (byte *)indata + inwidth * 4 * yi;
-
-			if (yi == oldy + 1)
-				memcpy(row1, row2, outwidth * 4);
-			else
-				GL_ResampleTextureLerpLine(inrow, row1, inwidth, outwidth);
-
-			if (yi < endy)
-				GL_ResampleTextureLerpLine(inrow + inwidth * 4, row2, inwidth, outwidth);
-			else
-				memcpy(row2, row1, outwidth * 4);
-
-			oldy = yi;
-		}
-
-		if (yi < endy)
-		{
-			const int l2 = f & 0xFFFF;
-			const int l1 = 0x10000 - l2;
-
-			for (j = 0; j < outwidth; j++)
-			{
-				*out++ = (byte)((*row1++ * l1 + *row2++ * l2) >> 16);
-				*out++ = (byte)((*row1++ * l1 + *row2++ * l2) >> 16);
-				*out++ = (byte)((*row1++ * l1 + *row2++ * l2) >> 16);
-				*out++ = (byte)((*row1++ * l1 + *row2++ * l2) >> 16);
-			}
-
-			row1 -= outwidth * 4;
-			row2 -= outwidth * 4;
-		}
-		else // last line has no pixels to lerp to 
-		{
-			for (j = 0; j < outwidth; j++)
-			{
-				*out++ = *row1++;
-				*out++ = *row1++;
-				*out++ = *row1++;
-				*out++ = *row1++;
-			}
-
-			row1 -= outwidth * 4;
-		}
-	}
-
-	free(row1);
-	free(row2);
-}
-
 
 /*
 ================
@@ -1438,7 +445,7 @@ GL_LightScaleTexture
 Scale up the pixel values in a texture to increase the lighting range
 ================
 */
-void GL_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only_gamma)
+void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboolean only_gamma)
 {
 	byte *p = (byte *)in;
 	const int size = inwidth * inheight;
@@ -1464,7 +471,8 @@ GL_MipMap
 Operates in place, quartering the size of the texture
 ================
 */
-void GL_MipMap (byte *in, int width, int height)
+#ifdef USE_GLMIPMAP
+void GL_MipMap(byte *in, int width, int height)
 {
 	width <<= 2;
 	height >>= 1;
@@ -1481,6 +489,7 @@ void GL_MipMap (byte *in, int width, int height)
 		}
 	}
 }
+#endif
 
 
 /*
@@ -1488,7 +497,7 @@ void GL_MipMap (byte *in, int width, int height)
 GL_BuildPalettedTexture
 ================
 */
-void GL_BuildPalettedTexture (unsigned char *paletted_texture, unsigned char *scaled, int scaled_width, int scaled_height)
+void GL_BuildPalettedTexture(unsigned char *paletted_texture, unsigned char *scaled, int scaled_width, int scaled_height)
 {
 	for (int i = 0; i < scaled_width * scaled_height; i++ )
 	{
@@ -1513,9 +522,9 @@ by Heffo/changes by Nexus
 */
 
 static int		upload_width, upload_height; //** DMP made local to module
-static qboolean uploaded_paletted;			//** DMP ditto
+static qboolean uploaded_paletted;			 //** DMP ditto
 
-int nearest_power_of_2 (int size)
+int nearest_power_of_2(int size)
 {
 	int i = 2;
 
@@ -1547,7 +556,7 @@ Returns has_alpha
 ===============
 */
 //#define USE_GLMIPMAP
-qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
+qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 {
 	unsigned 	*scaled;
 	int			scaled_width, scaled_height;
@@ -1587,11 +596,11 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 	}
 	else
 	{
-		scaled_width = nearest_power_of_2(width);
+		scaled_width =  nearest_power_of_2(width);
 		scaled_height = nearest_power_of_2(height);
 	}
 
-	scaled_width = min(glConfig.max_texsize, scaled_width);
+	scaled_width =  min(glConfig.max_texsize, scaled_width);
 	scaled_height = min(glConfig.max_texsize, scaled_height);
 
 	//
@@ -1624,7 +633,7 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 	if (scaled_width != width || scaled_height != height) 
 	{
 		scaled = malloc(scaled_width * scaled_height * 4);
-		GL_ResampleTexture(data, width, height, scaled, scaled_width, scaled_height);
+		STBResize((byte *)data, width, height, (byte *)scaled, scaled_width, scaled_height, true); //mxd
 	}
 	else
 	{
@@ -1697,7 +706,7 @@ GL_Upload8
 Returns has_alpha
 ===============
 */
-qboolean GL_Upload8 (byte *data, int width, int height,  qboolean mipmap, qboolean is_sky )
+qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
 {
 	unsigned trans[512 * 256];
 
@@ -1743,13 +752,12 @@ This is also used as an entry point for the generated notexture
 Nexus  - changes for hires-textures
 ================
 */
-image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits)
+image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t type, int bits)
 {
 	image_t	*image;
 	int		i;
-	char	s[128]; 
-
-	// find a free image_t
+	
+	// Find a free image_t
 	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
 		if (!image->texnum)
 			break;
@@ -1757,55 +765,60 @@ image_t *R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t ty
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			VID_Error(ERR_DROP, "MAX_GLTEXTURES");
+			VID_Error(ERR_DROP, "%s: map has too many textures (max. is %i)", __func__, MAX_GLTEXTURES);
 
 		numgltextures++;
 	}
 
-	image = &gltextures[i];
-
-	if (strlen(name) >= sizeof(image->name))
-		VID_Error(ERR_DROP, "Draw_LoadPic: image name \"%s\" is too long (maximum is %i)", name, sizeof(image->name));
+	const size_t len = strlen(name); //mxd
+	if (len >= sizeof(image->name))
+		VID_Error(ERR_DROP, "%s: image name \"%s\" is too long (%i / %i chars)", __func__, name, len, sizeof(image->name));
 
 	Q_strncpyz(image->name, name, sizeof(image->name));
-	image->hash = Com_HashFileName(name, 0, false);	// Knightmare added
 	image->registration_sequence = registration_sequence;
 
+	//mxd. Store hash of name without extension
+	const char *ext = COM_FileExtension(name);
+	const int extlen = strlen(ext);
+
+	char namewe[MAX_QPATH]; //mxd
+	if(extlen > 0)
+	{
+		memset(namewe, 0, MAX_QPATH);
+		memcpy(namewe, name, len - (extlen + 1));
+	}
+	else
+	{
+		strcpy(namewe, name); //mxd. Some texture names don't have extension, like "***notexture***"
+	}
+
+	image->hash = Com_HashFileName(namewe, 0, false); // Knightmare added
 	image->width = width;
 	image->height = height;
 	image->type = type;
-	image->replace_scale_w = image->replace_scale_h = 1.0f; // Knightmare added
+	image->replace_scale_w = 1.0f; // Knightmare added
+	image->replace_scale_h = 1.0f; 
 
 	if (type == it_skin && bits == 8)
 		R_FloodFillSkin(pic, width, height);
 
-// replacement scaling hack for TGA/JPEG HUD images and skins
-// TODO: replace this with shaders as soon as they are supported
-	const int len = strlen(name); 
-	Q_strncpyz(s, name, sizeof(s));
+	// Replacement scaling hack for TGA/JPEG HUD images and skins
 
-	// check if we have a tga/jpg pic
-#ifdef PNG_SUPPORT
-	if (type == it_pic && (!strcmp(s + len - 4, ".tga") || !strcmp(s + len - 4, ".png") || !strcmp(s + len - 4, ".jpg")) )
-#else	// PNG_SUPPORT
-	if (type == it_pic && (!strcmp(s + len - 4, ".tga") || !strcmp(s + len - 4, ".jpg")) )
-#endif	// PNG_SUPPORT
-	{ 
-		byte	*pcx, *palette;
-		int		pcxwidth, pcxheight;
-		s[len - 3] = 'p'; // replace extension 
-		s[len - 2] = 'c';
-		s[len - 1] = 'x';
-		LoadPCX(s, &pcx, &palette, &pcxwidth, &pcxheight); // load .pcx file 
+	// Check vanilla image size if we have a tga/png/jpg pic (name will still hold which all are 32-bit images)
+	if ((type == it_pic || type == it_skin) && (!strcmp(ext, "tga") || !strcmp(ext, "png") || !strcmp(ext, "jpg")))
+	{
+		char tmp_name[256];
+		strcpy(tmp_name, namewe);
+
+		int pcxwidth, pcxheight;
+		strcat(tmp_name, ".pcx");
+		GetPCXInfo(tmp_name, &pcxwidth, &pcxheight);
 		
-		if (pcx && pcxwidth > 0 && pcxheight > 0)
+		if (pcxwidth > 0 && pcxheight > 0)
 		{
 			image->replace_scale_w = (float)pcxwidth / image->width;
 			image->replace_scale_h = (float)pcxheight / image->height;
 		}
-
-		if (pcx) free(pcx);
-		if (palette) free(palette);
 	}
 
 	// load little pics into the scrap
@@ -1840,7 +853,7 @@ nonscrap:
 		GL_Bind(image->texnum);
 
 		if (bits == 8)
-			image->has_alpha = GL_Upload8(pic, width, height, (image->type != it_pic && image->type != it_sky), image->type == it_sky);
+			image->has_alpha = GL_Upload8(pic, width, height, (image->type != it_pic && image->type != it_sky));
 		else
 			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, (image->type != it_pic && image->type != it_sky));
 
@@ -1857,10 +870,9 @@ nonscrap:
 }
 
 
-// store the names of last images that failed to load
-#define NUM_FAIL_IMAGES 256
-char lastFailedImage[NUM_FAIL_IMAGES][MAX_OSPATH];
-long lastFailedImageHash[NUM_FAIL_IMAGES];
+// Store the names of last images that failed to load
+#define NUM_FAIL_IMAGES 512 //mxd. Was 256
+static long failedImageHashes[NUM_FAIL_IMAGES];
 static unsigned failedImgListIndex;
 
 /*
@@ -1868,14 +880,9 @@ static unsigned failedImgListIndex;
 R_InitFailedImgList
 ===============
 */
-void R_InitFailedImgList (void)
+void R_InitFailedImgList(void)
 {
-	for (int i = 0; i < NUM_FAIL_IMAGES; i++)
-	{
-		Com_sprintf(lastFailedImage[i], sizeof(lastFailedImage[i]), "\0");
-		lastFailedImageHash[i] = 0;
-	}
-
+	memset(failedImageHashes, 0, sizeof(long) * NUM_FAIL_IMAGES); //mxd
 	failedImgListIndex = 0;
 }
 
@@ -1884,11 +891,10 @@ void R_InitFailedImgList (void)
 R_CheckImgFailed
 ===============
 */
-qboolean R_CheckImgFailed (char *name)
+qboolean R_CheckImgFailed(long namehash) //mxd. Check hash instead of name
 {
-	const long hash = Com_HashFileName(name, 0, false);
 	for (int i = 0; i < NUM_FAIL_IMAGES; i++)
-		if (hash == lastFailedImageHash[i] && lastFailedImage[i][0] && !strcmp(name, lastFailedImage[i])) // compare hash first
+		if (namehash == failedImageHashes[i])
 			return true; // we already tried to load this image, didn't find it
 
 	return false;
@@ -1899,46 +905,17 @@ qboolean R_CheckImgFailed (char *name)
 R_AddToFailedImgList
 ===============
 */
-void R_AddToFailedImgList (char *name)
+void R_AddToFailedImgList(char *name)
 {
-	if (!strncmp(name, "save/", 5)) // don't add saveshots
+	if (!strncmp(name, "save/", 5)) // Don't add saveshots
 		return;
 
-	Com_sprintf(lastFailedImage[failedImgListIndex], sizeof(lastFailedImage[failedImgListIndex]), "%s", name);
-	lastFailedImageHash[failedImgListIndex] = Com_HashFileName(name, 0, false);
+	failedImageHashes[failedImgListIndex] = Com_HashFileName(name, 0, false);
 	failedImgListIndex++;
 
-	// wrap around to start of list
+	// Wrap around to start of list
 	if (failedImgListIndex >= NUM_FAIL_IMAGES)
 		failedImgListIndex = 0;
-}
-
-/*
-================
-R_LoadWal
-================
-*/
-image_t *R_LoadWal (char *name, imagetype_t type)
-{
-	miptex_t *mt;
-	FS_LoadFile(name, (void **)&mt);
-	if (!mt)
-	{
-		if (type == it_wall)
-			VID_Printf(PRINT_ALL, "R_FindImage: can't load %s\n", name);
-
-		return NULL;
-	}
-
-	const int width = LittleLong(mt->width);
-	const int height = LittleLong(mt->height);
-	const int ofs = LittleLong(mt->offsets[0]);
-
-	image_t *image = R_LoadPic(name, (byte *)mt + ofs, width, height, it_wall, 8);
-
-	FS_FreeFile((void *)mt);
-
-	return image;
 }
 
 
@@ -1949,163 +926,105 @@ R_FindImage
 Finds or loads the given image
 ===============
 */
-image_t	*R_FindImage (char *name, imagetype_t type)
+image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 {
-	image_t	*image;
-	int		i;
-	int		width, height;
-	char	s[128];
-
 	if (!name)
+	{
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: empty filename\n", __func__, name); //mxd
 		return NULL;
+	}
 
 	const int len = strlen(name);
 	if (len < 5)
-		return NULL;
-
-	// fix up bad image paths
-    char *tmp = name;
-    while (*tmp != 0)
-    {
-        if (*tmp == '\\')
-            *tmp = '/';
-        tmp++;
-    }
-
-	// look for it
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
 	{
-		if (!strcmp(name, image->name))
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: invalid filename: '%s'\n", __func__, name); //mxd
+		return NULL;
+	}
+
+	if (len >= MAX_QPATH)
+	{
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: filename is too long: '%s' (%i / %i chars)\n", __func__, name, len, MAX_QPATH - 1); //mxd
+		return NULL;
+	}
+
+	// Fix backslashes
+	char *ptr;
+	while ((ptr = strchr(name, '\\')))
+		*ptr = '/';
+
+	// Get extension (mxd. From YQ2)
+	const char *ext = COM_FileExtension(name);
+	const int extlen = strlen(ext);
+
+	//mxd. Strip extension?
+	char namewe[MAX_QPATH];
+	if(extlen > 0)
+	{
+		memset(namewe, 0, MAX_QPATH);
+		memcpy(namewe, name, len - (extlen + 1));
+	}
+	else
+	{
+		strcpy(namewe, name); //mxd. Some texture names don't have extension, like "***notexture***"
+	}
+	
+	//mxd. Hash it
+	const long namehash = Com_HashFileName(namewe, 0, false);
+
+	// Look for it. mxd: Compare hashes instead of strings, use name without extension to avoid R_FindImage recursion.
+	image_t *image = gltextures;
+	for (int i = 0; i < numgltextures; i++, image++)
+	{
+		if(namehash == image->hash) //mxd
 		{
 			image->registration_sequence = registration_sequence;
 			return image;
 		}
 	}
 
-	// don't try again to load an image that just failed
-	if (R_CheckImgFailed(name))
+	//mxd. All internal textures should be already loaded, all external ones mist have an extension
+	if(extlen == 0)
 	{
-		if (!strcmp(name + len - 4, ".tga"))
-		{
-#ifdef PNG_SUPPORT
-			// fall back to png
-			Q_strncpyz(s, name, sizeof(s));
-			s[len - 3] = 'p';
-			s[len - 2] = 'n';
-			s[len - 1] = 'g';
-			return R_FindImage(s, type);
-#else	// PNG_SUPPORT
-			// fall back to jpg
-			Q_strncpyz(s, name, sizeof(s));
-			s[len - 3] = 'j';
-			s[len - 2] = 'p';
-			s[len - 1] = 'g';
-			return R_FindImage(s, type);
-#endif	// PNG_SUPPORT
-		}
-
-#ifdef PNG_SUPPORT
-		if (!strcmp(name + len - 4, ".png"))
-		{
-			// fall back to jpg
-			Q_strncpyz(s, name, sizeof(s));
-			s[len - 3] = 'j';
-			s[len - 2] = 'p';
-			s[len - 1] = 'g';
-			return R_FindImage(s, type);
-		}
-#endif	// PNG_SUPPORT
-
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: failed to load internal texture '%s'\n", __func__, name); //mxd
 		return NULL;
 	}
 
-	// MrG's automatic JPG & TGA loading
-	// search for TGAs or JPGs to replace .pcx and .wal images
-	if (!strcmp(name + len - 4, ".pcx") || !strcmp(name + len - 4, ".wal")) //TODO: mxd. shouldn't this actually look for JPGs (and probably PNGs)?
-	{
-		Q_strncpyz(s, name, sizeof(s));
-		s[len - 3] = 't';
-		s[len - 2] = 'g';
-		s[len - 1] = 'a';
-		image = R_FindImage(s, type);
-		if (image)
-			return image;
-	}
+	// Don't try again to load an image that just failed
+	if (R_CheckImgFailed(namehash))
+		return NULL; //mxd. No texture match. Period.
 
-	//
-	// load the pic from disk
-	//
+	// Load the pic from disk
+	char tmp_name[MAX_QPATH];
 	byte *pic = NULL;
-	byte *palette = NULL;
+	int width, height;
 
-	if (!strcmp(name + len - 4, ".pcx"))
+	//mxd. Try to load a tga, png or jpg image first (in that order/priority)
+	if (STBLoad(namewe, "tga", &pic, &width, &height))
 	{
-		LoadPCX(name, &pic, &palette, &width, &height);
+		Com_sprintf(tmp_name, MAX_QPATH, "%s.tga", namewe);
+		image = R_LoadPic(tmp_name, pic, width, height, type, 32);
+	}
+	else if (STBLoad(namewe, "png", &pic, &width, &height))
+	{
+		Com_sprintf(tmp_name, MAX_QPATH, "%s.png", namewe);
+		image = R_LoadPic(tmp_name, pic, width, height, type, 32);
+	}
+	else if (STBLoad(namewe, "jpg", &pic, &width, &height))
+	{
+		Com_sprintf(tmp_name, MAX_QPATH, "%s.jpg", namewe);
+		image = R_LoadPic(tmp_name, pic, width, height, type, 32);
+	}
+	else if (!strcmp(ext, "pcx"))
+	{
+		LoadPCX(name, &pic, NULL, &width, &height);
 		if (pic)
 			image = R_LoadPic(name, pic, width, height, type, 8);
 		else
 			image = NULL;
 	}
-	else if (!strcmp(name + len - 4, ".wal"))
+	else if (!strcmp(ext, "wal"))
 	{
 		image = R_LoadWal(name, type);
-	}
-	else if (!strcmp(name + len - 4, ".tga"))
-	{
-		R_LoadTGA(name, &pic, &width, &height);
-		if (pic)
-			image = R_LoadPic(name, pic, width, height, type, 32);
-#ifdef PNG_SUPPORT
-		else
-		{ 
-			// fall back to png
-			R_AddToFailedImgList(name);
-			Q_strncpyz(s, name, sizeof(s));
-			s[len - 3] = 'p';
-			s[len - 2] = 'n';
-			s[len - 1] = 'g';
-			return R_FindImage(s, type);
-		}
-#else	// PNG_SUPPORT
-		else
-		{
-			// fall back to jpg
-			R_AddToFailedImgList(name);
-			Q_strncpyz(s, name, sizeof(s));
-			s[len - 3] = 'j';
-			s[len - 2] = 'p';
-			s[len - 1] = 'g';
-			return R_FindImage(s, type);
-		}
-#endif	// PNG_SUPPORT
-	}
-#ifdef PNG_SUPPORT
-	else if (!strcmp(name + len - 4, ".png"))
-	{
-		R_LoadPNG(name, &pic, &width, &height);
-		if (pic)
-		{
-			image = R_LoadPic(name, pic, width, height, type, 32);
-		}
-		else
-		{
-			// fall back to jpg
-			R_AddToFailedImgList(name);
-			Q_strncpyz(s, name, sizeof(s));
-			s[len - 3] = 'j';
-			s[len - 2] = 'p';
-			s[len - 1] = 'g';
-			return R_FindImage(s, type);
-		}
-	}
-#endif	// PNG_SUPPORT
-	else if (!strcmp(name + len - 4, ".jpg")) // Heffo - JPEG support
-	{
-		R_LoadJPG(name, &pic, &width, &height);
-		if (pic)
-			image = R_LoadPic(name, pic, width, height, type, 32);
-		else
-			image = NULL;
 	}
 	else
 	{
@@ -2113,14 +1032,16 @@ image_t	*R_FindImage (char *name, imagetype_t type)
 	}
 
 	if (!image)
-		R_AddToFailedImgList(name);
+	{
+		//mxd. We can only get here once per unique image name now, right?
+		if(!silent)
+			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: can't find '%s'\n", __func__, name);
 
-	if (pic) free(pic);
-	if (palette) free(palette);
+		R_AddToFailedImgList(namewe);
+	}
 
 	return image;
 }
-
 
 
 /*
@@ -2128,9 +1049,9 @@ image_t	*R_FindImage (char *name, imagetype_t type)
 R_RegisterSkin
 ===============
 */
-struct image_s *R_RegisterSkin (char *name)
+struct image_s *R_RegisterSkin(char *name)
 {
-	return R_FindImage(name, it_skin);
+	return R_FindImage(name, it_skin, false);
 }
 
 
@@ -2141,12 +1062,9 @@ R_FreeUnusedImages
 Any image that was not touched on this registration sequence will be freed.
 ================
 */
-void R_FreeUnusedImages (void)
+void R_FreeUnusedImages(void)
 {
-	int		i;
-	image_t	*image;
-
-	// never free notexture or particle textures
+	// Never free notexture or particle textures
 	glMedia.notexture->registration_sequence = registration_sequence;
 	glMedia.whitetexture->registration_sequence = registration_sequence;
 #ifdef ROQ_SUPPORT
@@ -2160,22 +1078,23 @@ void R_FreeUnusedImages (void)
 	glMedia.shelltexture->registration_sequence = registration_sequence;
 	glMedia.particlebeam->registration_sequence = registration_sequence;
 
-	for (i = 0; i < PARTICLE_TYPES; i++)
+	for (int i = 0; i < PARTICLE_TYPES; i++)
 		if (glMedia.particletextures[i]) // dont mess with null ones silly :p
 			glMedia.particletextures[i]->registration_sequence = registration_sequence;
 
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	image_t *image = gltextures;
+	for (int i = 0; i < numgltextures; i++, image++)
 	{
 		if (image->registration_sequence == registration_sequence)
-			continue; // used this sequence
+			continue; // Used this sequence
 
 		if (!image->registration_sequence)
-			continue; // free image_t slot
+			continue; // Free image_t slot
 
 		if (image->type == it_pic)
-			continue; // don't free pics
+			continue; // Don't free pics
 
-		// free it
+		// Free it
 		qglDeleteTextures(1, &image->texnum);
 		memset(image, 0, sizeof(*image));
 	}
@@ -2187,10 +1106,10 @@ void R_FreeUnusedImages (void)
 Draw_GetPalette
 ===============
 */
-void Draw_GetPalette ()
+void Draw_GetPalette()
 {
-	byte	*pic, *pal;
-	int		width, height;
+	byte *pic, *pal;
+	int width, height;
 
 	// get the palette
 	LoadPCX("pics/colormap.pcx", &pic, &pal, &width, &height);
@@ -2219,7 +1138,7 @@ void Draw_GetPalette ()
 R_InitImages
 ===============
 */
-void R_InitImages (void)
+void R_InitImages(void)
 {
 	registration_sequence = 1;
 
@@ -2272,12 +1191,15 @@ by Knightmare
 Frees a single pic
 ===============
 */
-void R_FreePic (char *name)
+void R_FreePic(char *name)
 {
-	int		i;
-	image_t	*image;
+	//mxd. Compare hash instead of name
+	char namewe[MAX_QPATH];
+	COM_StripExtension(name, namewe);
+	const long hash = Com_HashFileName(namewe, 0, false);
 
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	image_t *image = gltextures;
+	for (int i = 0; i < numgltextures; i++, image++)
 	{
 		if (!image->registration_sequence)
 			continue; // free image_t slot
@@ -2285,11 +1207,12 @@ void R_FreePic (char *name)
 		if (image->type != it_pic)
 			continue; // only free pics
 
-		if (!strcmp(name, image->name))
+		if(hash == image->hash) //mxd
 		{
-			// free it
+			// Free it
 			qglDeleteTextures(1, &image->texnum);
 			memset(image, 0, sizeof(*image));
+
 			return; //we're done here
 		}
 	}
@@ -2300,17 +1223,15 @@ void R_FreePic (char *name)
 R_ShutdownImages
 ===============
 */
-void R_ShutdownImages (void)
+void R_ShutdownImages(void)
 {
-	int		i;
-	image_t	*image;
-
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	image_t *image = gltextures;
+	for (int i = 0; i < numgltextures; i++, image++)
 	{
 		if (!image->registration_sequence)
 			continue; // free image_t slot
 
-		// free it
+		// Free it
 		qglDeleteTextures(1, &image->texnum);
 		memset(image, 0, sizeof(*image));
 	}
@@ -2329,26 +1250,14 @@ void R_LoadNormalmap(const char *texture, mtexinfo_t *tex)
 	byte *pic = NULL; // Stores RGBA image data
 	int	width, height;
 
-	Com_sprintf(name, sizeof(name), "textures/%s_normal.tga", texture);
-	R_LoadTGA(name, &pic, &width, &height);
+	Com_sprintf(name, sizeof(name), "textures/%s_normal", texture);
 
-#ifdef PNG_SUPPORT
-	if(!pic)
+	if (   !STBLoad(name, "tga", &pic, &width, &height)
+		&& !STBLoad(name, "png", &pic, &width, &height)
+		&& !STBLoad(name, "jpg", &pic, &width, &height))
 	{
-		Com_sprintf(name, sizeof(name), "textures/%s_normal.png", texture);
-		R_LoadPNG(name, &pic, &width, &height);
+		return; // No dice...
 	}
-#endif
-
-	if(!pic)
-	{
-		Com_sprintf(name, sizeof(name), "textures/%s_normal.jpg", texture);
-		R_LoadJPG(name, &pic, &width, &height);
-	}
-
-	// No dice...
-	if(!pic)
-		return;
 
 	// Dimensions must match...
 	if(tex->image->width != width || tex->image->height != height)
