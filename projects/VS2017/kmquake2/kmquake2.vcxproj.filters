@@ -123,9 +123,6 @@
     <ClCompile Include="..\..\..\game\m_flash.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\client\x86.c">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\qcommon\cmd.c">
       <Filter>Source Files\common</Filter>
     </ClCompile>
