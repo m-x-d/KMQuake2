@@ -56,7 +56,7 @@ extern qboolean halfconback;	// whether to draw Q3-style console
 
 void Con_CheckResize(void);
 void Con_Init(void);
-void Con_DrawConsole(float frac, qboolean ingame); //Knightmare changed
+void Con_DrawConsole(float heightratio, qboolean transparent); //Knightmare changed
 void Con_CenteredPrint(char *text);
 int Con_LinesOnScreen(); //mxd
 int Con_FirstLine(); //mxd

@@ -636,7 +636,7 @@ Con_DrawConsole
 Draws the console with the solid background
 ================
 */
-void Con_DrawConsole(float frac, qboolean trans)
+void Con_DrawConsole(float heightratio, qboolean transparent)
 {
 	int		x, len;
 	int		rows;
@@ -651,7 +651,7 @@ void Con_DrawConsole(float frac, qboolean trans)
 
 	// Q3-style console bottom bar
 	TextColor((int)alt_text_color->value, &red, &green, &blue);
-	if ((newconback_found && con_newconback->value) || con_oldconbar->value )
+	if ((newconback_found && con_newconback->value) || con_oldconbar->value)
 	{
 		barwidth = SCREEN_WIDTH;
 		barheight = 2;
@@ -663,7 +663,7 @@ void Con_DrawConsole(float frac, qboolean trans)
 		barheight = 0;
 	}
 
-	int lines = viddef.height * frac;
+	int lines = viddef.height * heightratio;
 	if (lines <= 0)
 		return;
 
@@ -672,7 +672,7 @@ void Con_DrawConsole(float frac, qboolean trans)
 
 	// Psychospaz's transparent console
 	//alpha = (trans) ? ((frac/ (newconback_found?0.5:con_height->value) )*con_alpha->value) : 1;
-	const float alpha = trans ? ((newconback_found && con_newconback->value) ? con_alpha->value : 2 * frac * con_alpha->value) : 1;
+	const float alpha = transparent ? ((newconback_found && con_newconback->value) ? con_alpha->value : 2 * heightratio * con_alpha->value) : 1;
 
 	// draw the background
 	int y = lines - barheight;
