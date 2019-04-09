@@ -31,6 +31,8 @@ The .pak files are just a linear collapse of a directory tree
 ========================================================================
 */
 
+#pragma once
+
 #define IDPAKHEADER		(('K'<<24)+('C'<<16)+('A'<<8)+'P')
 
 typedef struct

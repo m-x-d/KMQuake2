@@ -4,6 +4,8 @@
 // -Harven
 //
 
+#pragma once
+
 typedef struct maliascoord_s
 {
 	vec2_t			st;
@@ -18,11 +20,11 @@ typedef struct maliasvertex_s
 
 typedef struct
 {
-    vec3_t			mins;
+	vec3_t			mins;
 	vec3_t			maxs;
 	vec3_t			scale;
-    vec3_t			translate;
-    float			radius;
+	vec3_t			translate;
+	float			radius;
 } maliasframe_t;
 
 typedef struct
@@ -31,7 +33,8 @@ typedef struct
 	dorientation_t	orient;
 } maliastag_t;
 
-typedef enum {
+typedef enum
+{
 	WAVEFORM_SIN,
 	WAVEFORM_TRIANGLE,
 	WAVEFORM_SQUARE,
@@ -82,27 +85,27 @@ typedef struct
 
 typedef struct
 {
-    int				num_verts;
+	int				num_verts;
 	char			name[MD3_MAX_PATH];
 	maliasvertex_t	*vertexes;
 	maliascoord_t	*stcoords;
 
-    int				num_tris;
-    index_t			*indexes;
+	int				num_tris;
+	index_t			*indexes;
 	int				*trneighbors;
 
-    int				num_skins;
+	int				num_skins;
 	maliasskin_t	*skins;
 } maliasmesh_t;
 
 typedef struct maliasmodel_s
 {
-    int				num_frames;
+	int				num_frames;
 	maliasframe_t	*frames;
 
-    int				num_tags;
+	int				num_tags;
 	maliastag_t		*tags;
 
-    int				num_meshes;
+	int				num_meshes;
 	maliasmesh_t	*meshes;
 } maliasmodel_t;

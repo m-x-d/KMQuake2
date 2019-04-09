@@ -18,8 +18,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
+#pragma once
+
 #ifdef _WIN32
-#  include <windows.h>
+	#include <Windows.h>
 #endif
 
 #include <stdio.h>
@@ -27,7 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "glext.h" //Knightmare- MrG's shader waterwarp support
-//#include <math.h>
 
 #ifndef __linux__
 #ifndef GL_COLOR_INDEX8_EXT
@@ -38,12 +39,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../client/ref.h"
 #include "qgl.h"
 
-// up / down
-#define	PITCH	0
-// left / right
-#define	YAW		1
-// fall over
-#define	ROLL	2
+
+#define PITCH	0 // up / down
+#define YAW		1 // left / right
+#define ROLL	2 // fall over
 
 #ifndef __VIDDEF_T
 #define __VIDDEF_T
@@ -53,18 +52,13 @@ typedef struct
 } viddef_t;
 #endif
 
-extern	viddef_t	vid;
+extern	viddef_t vid;
 
 
 /*
-  skins will be outline flood filled and mip mapped
-  pics and sprites with alpha will be outline flood filled
-  pic won't be mip mapped
-
-  model skin
-  sprite frame
-  wall texture
-  pic
+  skins will be outline flood filled and mip mapped.
+  pics and sprites with alpha will be outline flood filled.
+  pics won't be mip mapped.
 */
 
 typedef enum 
@@ -99,15 +93,13 @@ typedef struct image_s
 	float		replace_scale_h;			// Knightmare- for scaling hi-res replacement images
 } image_t;
 
-#define	MAX_LIGHTMAPS	256	// change by Brendon Chung, was 128
+#define MAX_LIGHTMAPS		256	// change by Brendon Chung, was 128
 
-#define	TEXNUM_LIGHTMAPS	1024
-//#define	TEXNUM_SCRAPS		1152
-//#define	TEXNUM_IMAGES		1153
-#define	TEXNUM_SCRAPS		TEXNUM_LIGHTMAPS + MAX_LIGHTMAPS
-#define	TEXNUM_IMAGES		TEXNUM_SCRAPS + 1
+#define TEXNUM_LIGHTMAPS	1024
+#define TEXNUM_SCRAPS		(TEXNUM_LIGHTMAPS + MAX_LIGHTMAPS) // Was 1152
+#define TEXNUM_IMAGES		(TEXNUM_SCRAPS + 1) // Was 1153
 
-#define	MAX_GLTEXTURES	4096 // Knightmare increased, was 1024
+#define MAX_GLTEXTURES		4096 // Knightmare increased, was 1024
 
 //Harven MD3 ++
 #include "r_alias.h" // needs image_t struct
@@ -127,12 +119,9 @@ typedef enum
 
 #include "r_model.h"
 
-//void GL_BeginRendering (int *x, int *y, int *width, int *height); //mxd. Redundant declaration
-//void GL_EndRendering (void); //mxd. Redundant declaration
-
 void GL_UpdateSwapInterval();
 
-extern	float	gldepthmin, gldepthmax;
+extern float gldepthmin, gldepthmax;
 
 typedef struct
 {
@@ -149,8 +138,8 @@ typedef struct
 
 //====================================================
 
-extern	image_t		gltextures[MAX_GLTEXTURES];
-extern	int			numgltextures;
+extern image_t	gltextures[MAX_GLTEXTURES];
+extern int		numgltextures;
 
 
 #define PARTICLE_TYPES 256
@@ -192,7 +181,7 @@ extern	int			c_brush_calls, c_brush_surfs, c_brush_polys, c_alias_polys, c_part_
 extern	byte	*saveshotdata;
 
 
-extern	int			gl_filter_min, gl_filter_max;
+extern	int		gl_filter_min, gl_filter_max;
 
 //
 // view origin
@@ -630,10 +619,6 @@ void	R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data
 void Draw_GetPalette();
 struct image_s *R_RegisterSkin(char *name);
 
-void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height);
-void GetPCXInfo(char *filename, int *width, int *height); //mxd. From YQ2
-image_t *R_LoadWal(char *name, imagetype_t type); //mxd
-void GetWalInfo(char *name, int *width, int *height); //mxd
 image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t type, int bits);
 image_t	*R_FindImage(char *name, imagetype_t type, qboolean silent); //mxd. +silent
 void GL_TextureMode(char *string);
@@ -648,6 +633,20 @@ void GL_TextureSolidMode(char *string);
 
 
 //
+// r_image_pcx.c
+//
+void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height);
+void GetPCXInfo(char *filename, int *width, int *height); //mxd. From YQ2
+
+
+//
+// r_image_wal.c
+//
+image_t *R_LoadWal(char *name, imagetype_t type); //mxd
+void GetWalInfo(char *name, int *width, int *height); //mxd
+
+
+//
 // r_image_stb.c (mxd)
 //
 qboolean STBLoad(const char *origname, const char* type, byte **pic, int *width, int *height);
@@ -655,6 +654,7 @@ qboolean STBResize(byte *input_pixels, int input_width, int input_height, byte *
 qboolean STBSaveJPG(const char *filename, byte* source, int width, int height, int quality);
 qboolean STBSavePNG(const char *filename, byte* source, int width, int height);
 qboolean STBSaveTGA(const char *filename, byte* source, int width, int height);
+
 
 //
 // r_fog.c
