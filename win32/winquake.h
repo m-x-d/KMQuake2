@@ -44,15 +44,10 @@ extern int	window_center_x;
 extern int	window_center_y;
 extern RECT	window_rect;
 
-extern HWND	hwnd_dialog; // Knightmare added
-
-#define NEW_DED_CONSOLE // enable new dedicated console //TODO: get rid of this, use only the new console?
-
-#ifdef NEW_DED_CONSOLE
+// Console window
 void Sys_ShowConsole(qboolean show);
 void Sys_ShutdownConsole(void);
 void Sys_InitDedConsole(void);
-#endif // NEW_DED_CONSOLE
 
 //mxd. Borrowed from GZDoom
 typedef struct // 92 bytes

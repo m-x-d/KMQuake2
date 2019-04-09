@@ -24,34 +24,33 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "resource.h"
 #include "winquake.h"
 
-#ifdef NEW_DED_CONSOLE
-
 //mxd. Enable modern controls...
 #include "CommCtrl.h" 
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-#define CONSOLE_WINDOW_STYLE		(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|WS_CLIPCHILDREN|WS_GROUP)
+#define CONSOLE_WINDOW_STYLE		(WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN | WS_GROUP)
 #define CONSOLE_WINDOW_CLASS_NAME	"KMQuake 2 SBE Console"
 
 #ifdef ERASER_COMPAT_BUILD
-#ifdef NET_SERVER_BUILD
-#define CONSOLE_WINDOW_NAME			"KMQuake2 Console (Eraser net server)"
-#else // NET_SERVER_BUILD
-#define CONSOLE_WINDOW_NAME			"KMQuake2 Console (Eraser Compatible)"
-#endif // NET_SERVER_BUILD
+	#ifdef NET_SERVER_BUILD
+		#define CONSOLE_WINDOW_NAME	"KMQuake2 Console (Eraser net server)"
+	#else // NET_SERVER_BUILD
+		#define CONSOLE_WINDOW_NAME	"KMQuake2 Console (Eraser Compatible)"
+	#endif // NET_SERVER_BUILD
 #else // ERASER_COMPAT_BUILD
-#ifdef NET_SERVER_BUILD
-#define CONSOLE_WINDOW_NAME			"KMQuake2 Console (net server)"
-#else
-#define CONSOLE_WINDOW_NAME			"KMQuake 2 SBE Console"
-#endif // NET_SERVER_BUILD
+	#ifdef NET_SERVER_BUILD
+		#define CONSOLE_WINDOW_NAME	"KMQuake2 Console (net server)"
+	#else
+		#define CONSOLE_WINDOW_NAME	"KMQuake 2 SBE Console"
+	#endif // NET_SERVER_BUILD
 #endif // ERASER_COMPAT_BUILD
 
-#define MAX_OUTPUT					32768
-#define MAX_INPUT					256
-#define	MAX_PRINTMSG				8192
+#define MAX_OUTPUT		32768
+#define MAX_INPUT		256
+#define	MAX_PRINTMSG	8192
 
-typedef struct {
+typedef struct
+{
 	int			outLen;					// To keep track of output buffer len
 	char		cmdBuffer[MAX_INPUT];	// Buffered input from dedicated console
 	qboolean	timerActive;			// Timer is active (for fatal errors)
@@ -496,5 +495,3 @@ void Sys_InitDedConsole (void)
 	// Hide it to start
 	Sys_ShowConsole(true);
 }
-
-#endif // NEW_DED_CONSOLE

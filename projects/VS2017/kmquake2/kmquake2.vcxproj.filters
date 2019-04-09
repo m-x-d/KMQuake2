@@ -180,9 +180,6 @@
     <ClCompile Include="..\..\..\server\sv_world.c">
       <Filter>Source Files\server</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\win32\conproc.c">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\win32\in_win.c">
       <Filter>Source Files\system</Filter>
     </ClCompile>
@@ -378,9 +375,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\client\client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\win32\conproc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\client\console.h">

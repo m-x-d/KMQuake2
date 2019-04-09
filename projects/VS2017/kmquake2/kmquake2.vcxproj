@@ -262,7 +262,6 @@
     <ClCompile Include="..\..\..\ui\ui_video.c" />
     <ClCompile Include="..\..\..\ui\ui_video_advanced.c" />
     <ClCompile Include="..\..\..\win32\cd_win.c" />
-    <ClCompile Include="..\..\..\win32\conproc.c" />
     <ClCompile Include="..\..\..\win32\glw_imp.c" />
     <ClCompile Include="..\..\..\win32\in_win.c" />
     <ClCompile Include="..\..\..\win32\net_wins.c" />
@@ -304,7 +303,6 @@
     <ClInclude Include="..\..\..\renderer\warpsin.h" />
     <ClInclude Include="..\..\..\server\server.h" />
     <ClInclude Include="..\..\..\ui\ui_local.h" />
-    <ClInclude Include="..\..\..\win32\conproc.h" />
     <ClInclude Include="..\..\..\win32\winquake.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

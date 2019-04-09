@@ -17,207 +17,40 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-// sys_win.h
+
+// sys_win.c
 
 #include "../qcommon/qcommon.h"
 #include "winquake.h"
-#include "resource.h"
-#include <errno.h>
-#include <float.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <direct.h>
-#include <io.h>
-#include <conio.h>
 #include <intrin.h> //mxd. For __cpuid
-#include "../win32/conproc.h"
 
-#define MINIMUM_WIN_MEMORY	0x0a00000
-#define MAXIMUM_WIN_MEMORY	0x1000000
+qboolean ActiveApp; //mxd. int -> qboolean
+qboolean Minimized;
 
-int			starttime;
-qboolean	ActiveApp; //mxd. int -> qboolean
-qboolean	Minimized;
+HINSTANCE global_hInstance;
 
-static HANDLE		hinput, houtput;
+unsigned sys_msg_time;
+unsigned sys_frame_time;
 
-unsigned	sys_msg_time;
-unsigned	sys_frame_time;
-
-
-static HANDLE		qwclsemaphore;
-
-#define	MAX_NUM_ARGVS	128
-int			argc;
-char		*argv[MAX_NUM_ARGVS];
+#define	MAX_NUM_ARGVS 128
+int argc;
+char *argv[MAX_NUM_ARGVS];
 
 
-#ifndef NEW_DED_CONSOLE
-/*
-===============================================================================
-
-DEDICATED CONSOLE
-
-===============================================================================
-*/
-static char	console_text[256];
-static int	console_textlen;
-
-/*
-================
-Sys_InitConsole
-================
-*/
-void Sys_InitConsole (void)
-{
-	if (!dedicated->value)
-		return;
-
-	if (!AllocConsole ())
-		Sys_Error ("Couldn't create dedicated server console");
-	hinput = GetStdHandle (STD_INPUT_HANDLE);
-	houtput = GetStdHandle (STD_OUTPUT_HANDLE);
-	
-	// let QHOST hook in
-	InitConProc (argc, argv);
-}
-
-
-/*
-================
-Sys_ConsoleInput
-================
-*/
-char *Sys_ConsoleInput (void)
-{
-	INPUT_RECORD	recs[1024];
-	int		dummy;
-	int		ch, numread, numevents;
-
-	if (!dedicated || !dedicated->value)
-		return NULL;
-
-	for ( ;; )
-	{
-		if (!GetNumberOfConsoleInputEvents (hinput, &numevents))
-			Sys_Error ("Error getting # of console events");
-
-		if (numevents <= 0)
-			break;
-
-		if (!ReadConsoleInput(hinput, recs, 1, &numread))
-			Sys_Error ("Error reading console input");
-
-		if (numread != 1)
-			Sys_Error ("Couldn't read console input");
-
-		if (recs[0].EventType == KEY_EVENT)
-		{
-			if (!recs[0].Event.KeyEvent.bKeyDown)
-			{
-				ch = recs[0].Event.KeyEvent.uChar.AsciiChar;
-
-				switch (ch)
-				{
-					case '\r':
-						WriteFile(houtput, "\r\n", 2, &dummy, NULL);	
-
-						if (console_textlen)
-						{
-							console_text[console_textlen] = 0;
-							console_textlen = 0;
-							return console_text;
-						}
-						break;
-
-					case '\b':
-						if (console_textlen)
-						{
-							console_textlen--;
-							WriteFile(houtput, "\b \b", 3, &dummy, NULL);	
-						}
-						break;
-
-					default:
-						if (ch >= ' ')
-						{
-							if (console_textlen < sizeof(console_text)-2)
-							{
-								WriteFile(houtput, &ch, 1, &dummy, NULL);	
-								console_text[console_textlen] = ch;
-								console_textlen++;
-							}
-						}
-						break;
-				}
-			}
-		}
-	}
-	return NULL;
-}
-
-
-/*
-================
-Sys_ConsoleOutput
-
-Print text to the dedicated console
-================
-*/
-void Sys_ConsoleOutput (char *string)
-{
-	int		dummy;
-	char	text[256];
-
-	if (!dedicated || !dedicated->value)
-		return;
-
-	if (console_textlen)
-	{
-		text[0] = '\r';
-		memset(&text[1], ' ', console_textlen);
-		text[console_textlen+1] = '\r';
-		text[console_textlen+2] = 0;
-		WriteFile(houtput, text, console_textlen+2, &dummy, NULL);
-	}
-
-	WriteFile(houtput, string, strlen(string), &dummy, NULL);
-
-	if (console_textlen)
-		WriteFile(houtput, console_text, console_textlen, &dummy, NULL);
-}
-
-//================================================================
-#endif // NEW_DED_CONSOLE
-
-/*
-================
-Sys_Sleep
-================
-*/
-void Sys_Sleep (int msec)
+void Sys_Sleep(int msec)
 {
 	Sleep(msec);
 }
 
-/*
-================
-Sys_TickCount
-================
-*/
-unsigned Sys_TickCount (void)
+unsigned Sys_TickCount(void)
 {
 	return GetTickCount();
 }
 
-/*
-================
-Sys_SendKeyEvents
-
-Send Key_Event calls
-================
-*/
-void Sys_SendKeyEvents (void)
+// Send Key_Event calls
+void Sys_SendKeyEvents(void)
 {
 	MSG msg;
 
@@ -231,17 +64,10 @@ void Sys_SendKeyEvents (void)
 		DispatchMessage(&msg);
 	}
 
-	// grab frame time 
+	// Grab frame time 
 	sys_frame_time = timeGetTime();	// FIXME: should this be at start?
 }
 
-
-/*
-================
-Sys_GetClipboardData
-
-================
-*/
 char *Sys_GetClipboardData(void)
 {
 	char *data = NULL;
@@ -267,63 +93,25 @@ char *Sys_GetClipboardData(void)
 }
 
 
-/*
-===============================================================================
+#pragma region ======================= SYSTEM IO
 
-SYSTEM IO
-
-===============================================================================
-*/
-
-#ifndef NEW_DED_CONSOLE
-void Sys_Error (char *error, ...)
-{
-	va_list		argptr;
-	char		text[1024];
-
-	CL_Shutdown ();
-	Qcommon_Shutdown ();
-
-	va_start (argptr, error);
-//	vsprintf (text, error, argptr);
-	Q_vsnprintf (text, sizeof(text), error, argptr);
-	va_end (argptr);
-
-	MessageBox(NULL, text, "Error", 0 /* MB_OK */ );
-
-	if (qwclsemaphore)
-		CloseHandle (qwclsemaphore);
-
-// shut down QHOST hooks if necessary
-	DeinitConProc ();
-
-	exit (1);
-}
-#endif // NEW_DED_CONSOLE
-
-
-void Sys_Quit (void)
+void Sys_Quit(void)
 {
 	timeEndPeriod(1);
 
 	CL_Shutdown();
 	Qcommon_Shutdown();
-	CloseHandle(qwclsemaphore);
+
 	if (dedicated && dedicated->value)
 		FreeConsole();
 
-// shut down QHOST hooks if necessary
-	DeinitConProc();
-
-#ifdef NEW_DED_CONSOLE
 	Sys_ShutdownConsole();
-#endif
 
 	exit(0);
 }
 
 
-void WinError (void)
+void WinError(void)
 {
 	LPVOID lpMsgBuf;
 
@@ -344,15 +132,10 @@ void WinError (void)
 	LocalFree(lpMsgBuf);
 }
 
-//================================================================
+#pragma endregion
 
-/*
-================
-Sys_ScanForCD
 
-================
-*/
-char *Sys_ScanForCD (void)
+char *Sys_ScanForCD(void)
 {
 	static char	cddir[MAX_OSPATH];
 	static qboolean	done;
@@ -360,10 +143,10 @@ char *Sys_ScanForCD (void)
 	char		test[MAX_QPATH];
 	qboolean	missionpack = false; // Knightmare added
 
-	if (done)		// don't re-check
+	if (done) // Don't re-check
 		return cddir;
 
-	// no abort/retry/fail errors
+	// No abort/retry/fail errors
 	SetErrorMode (SEM_FAILCRITICALERRORS);
 
 	drive[0] = 'c';
@@ -383,14 +166,14 @@ char *Sys_ScanForCD (void)
 			if (!strcmp(argv[i + 1], "rogue") || !strcmp(argv[i + 1], "xatrix"))
 				missionpack = true;
 
-			break; // game parameter only appears once in command line
+			break; // Game parameter only appears once in command line
 		}
 	}
 
-	// scan the drives
+	// Scan the drives
 	for (drive[0] = 'c'; drive[0] <= 'z'; drive[0]++)
 	{
-		// where activision put the stuff...
+		// Where activision put the stuff...
 		if (missionpack) // Knightmare- mission packs have cinematics in different path
 		{
 			sprintf(cddir, "%sdata\\max", drive);
@@ -421,14 +204,9 @@ char *Sys_ScanForCD (void)
 	return NULL;
 }
 
-//================================================================
+#pragma region ======================= CPU detection
 
-/*
-=================
-Sys_DetectCPU
-Adapted from GZDoom (https://github.com/coelckers/gzdoom/blob/2ae8d394418519b6c40bc117e08342039c77577a/src/x86.cpp#L74)
-=================
-*/
+// Adapted from GZDoom (https://github.com/coelckers/gzdoom/blob/2ae8d394418519b6c40bc117e08342039c77577a/src/x86.cpp#L74)
 
 #define MAKE_ID(a, b, c, d)	((uint32_t)((a)|((b)<<8)|((c)<<16)|((d)<<24)))
 
@@ -518,7 +296,7 @@ CPUInfo CheckCPUID()
 	return cpu;
 }
 
-static void Sys_DetectCPU (char *cpuString, int maxSize)
+static void Sys_DetectCPU(char *cpuString, int maxSize)
 {
 #if defined _M_IX86
 
@@ -683,11 +461,11 @@ static void Sys_DetectCPU (char *cpuString, int maxSize)
 #endif
 }
 
-/*
-================
-GetOsName (mxd. Adapted from Quake2xp)
-================
-*/
+#pragma endregion 
+
+#pragma region ======================= OS detection
+
+// mxd. Adapted from Quake2xp
 
 qboolean Is64BitWindows()
 {
@@ -756,12 +534,10 @@ qboolean GetOsName(char* result)
 	return false;
 }
 
-/*
-================
-Sys_Init
-================
-*/
-void Sys_Init (void)
+#pragma endregion
+
+
+void Sys_Init(void)
 {
 	timeBeginPeriod(1);
 
@@ -785,152 +561,66 @@ void Sys_Init (void)
 	sprintf(string, "%i", (int)(memStatus.ullTotalPhys >> 20)); //mxd. Uh oh! We'll be in trouble once average ram size exceeds 2 147 483 647 MB!
 	Com_Printf("RAM: %s MB\n", string);
 	Cvar_Get("sys_ramMegs", string, CVAR_NOSET|CVAR_LATCH|CVAR_SAVE_IGNORE); //mxd. Never used for anything other than printing to the console
-
-#ifndef NEW_DED_CONSOLE
-	Sys_InitConsole(); // show dedicated console, moved to function
-#endif
 }
 
-
-/*
-==============================================================================
-
- WINDOWS CRAP
-
-==============================================================================
-*/
-
-/*
-=================
-Sys_AppActivate
-=================
-*/
-void Sys_AppActivate (void)
+void Sys_AppActivate(void)
 {
 	ShowWindow(cl_hwnd, SW_RESTORE);
 	SetForegroundWindow(cl_hwnd );
 }
 
-/*
-========================================================================
 
-GAME DLL
+#pragma region ======================= GAME DLL
 
-========================================================================
-*/
+static HINSTANCE game_library;
 
-static HINSTANCE	game_library;
-
-/*
-=================
-Sys_UnloadGame
-=================
-*/
-void Sys_UnloadGame (void)
+void Sys_UnloadGame(void)
 {
 	if (!FreeLibrary(game_library))
 		Com_Error(ERR_FATAL, "FreeLibrary failed for game library");
+
 	game_library = NULL;
 }
 
-/*
-=================
-Sys_GetGameAPI
-
-Loads the game dll
-=================
-*/
-void *Sys_GetGameAPI (void *parms)
+// Loads the game dll
+void *Sys_GetGameAPI(void *parms)
 {
-	void	*(*GetGameAPI) (void *);
-	char	name[MAX_OSPATH];
-	char	*path;
-	char	cwd[MAX_OSPATH];
-
-#if defined _M_IX86
-	//Knightmare- changed DLL name for better cohabitation
-	const char *gamename = "kmq2gamex86.dll"; 
-
-#ifdef NDEBUG
-	const char *debugdir = "release";
-#else
-	const char *debugdir = "debug";
-#endif
-
-#elif defined _M_ALPHA
-	const char *gamename = "kmq2gameaxp.dll";
-
-#ifdef NDEBUG
-	const char *debugdir = "releaseaxp";
-#else
-	const char *debugdir = "debugaxp";
-#endif
-
-#endif
-
 	if (game_library)
-		Com_Error (ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame");
+		Com_Error(ERR_FATAL, "Sys_GetGameAPI called without calling Sys_UnloadingGame first");
 
-	// check the current debug directory first for development purposes
-	_getcwd (cwd, sizeof(cwd));
-	Com_sprintf(name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
-	game_library = LoadLibrary ( name );
-	if (game_library)
+	// Run through the search paths
+	char* path = NULL;
+	char name[MAX_OSPATH];
+	while (true)
 	{
-		Com_DPrintf ("LoadLibrary (%s)\n", name);
-	}
-	else
-	{
-#ifdef DEBUG
-		// check the current directory for other development purposes
-		Com_sprintf(name, sizeof(name), "%s/%s", cwd, gamename);
-		game_library = LoadLibrary( name );
+		path = FS_NextPath(path);
+		if (!path)
+			return NULL; // couldn't find one anywhere
+
+		Com_sprintf(name, sizeof(name), "%s/%s", path, "kmq2gamex86.dll");
+		game_library = LoadLibrary(name);
 		if (game_library)
 		{
 			Com_DPrintf("LoadLibrary (%s)\n", name);
-		}
-		else
-#endif
-		{
-			// now run through the search paths
-			path = NULL;
-			while (true)
-			{
-				path = FS_NextPath(path);
-				if (!path)
-					return NULL; // couldn't find one anywhere
-
-				Com_sprintf(name, sizeof(name), "%s/%s", path, gamename);
-				game_library = LoadLibrary(name);
-				if (game_library)
-				{
-					Com_DPrintf("LoadLibrary (%s)\n",name);
-					break;
-				}
-			}
+			break;
 		}
 	}
 
-	GetGameAPI = (void *)GetProcAddress(game_library, "GetGameAPI");
+	// Get game API
+	void*(*GetGameAPI)(void*) = (void *)GetProcAddress(game_library, "GetGameAPI");
 	if (!GetGameAPI)
 	{
-		Sys_UnloadGame ();		
+		Sys_UnloadGame();
 		return NULL;
 	}
 
 	return GetGameAPI(parms);
 }
 
-//=======================================================================
+#pragma endregion
 
 
-/*
-==================
-ParseCommandLine
-
-==================
-*/
-void ParseCommandLine (LPSTR lpCmdLine)
+void ParseCommandLine(LPSTR lpCmdLine)
 {
 	argc = 1;
 	argv[0] = "exe";
@@ -957,59 +647,20 @@ void ParseCommandLine (LPSTR lpCmdLine)
 	}
 }
 
-/*
-==================
-WinMain
 
-==================
-*/
-HINSTANCE	global_hInstance;
-HWND		hwnd_dialog; // Knightmare added
-
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	MSG				msg;
-	int				time, oldtime, newtime;
-	char			*cddir;
-	qboolean		cdscan = false; // Knightmare added
-
-	/* previous instances do not exist in Win32 */
-	if (hPrevInstance)
-		return 0;
+	MSG			msg;
+	int			time, newtime;
+	qboolean	cdscan = false; // Knightmare added
 
 	global_hInstance = hInstance;
 
 	ParseCommandLine(lpCmdLine);
 
-#ifndef NEW_DED_CONSOLE
-	// Knightmare- startup logo, code from TomazQuake
-	//if (!(dedicated && dedicated->value))
-	{
-		hwnd_dialog = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL, NULL);
-		RECT			rect; // Knightmare added
-
-		if (hwnd_dialog)
-		{
-			if (GetWindowRect (hwnd_dialog, &rect))
-			{
-				if (rect.left > (rect.top * 2))
-				{
-					SetWindowPos (hwnd_dialog, 0, (rect.left/2) - ((rect.right - rect.left)/2), rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-				}
-			}
-
-			ShowWindow (hwnd_dialog, SW_SHOWDEFAULT);
-			UpdateWindow (hwnd_dialog);
-			SetForegroundWindow (hwnd_dialog);
-		}
-	}
-	// end Knightmare
-#endif
-
-#ifdef NEW_DED_CONSOLE // init debug console
+	// Init console window
 	Sys_InitDedConsole();
 	Com_Printf("KMQuake 2 SBE %4.2f %s %s %s\n", VERSION, CPUSTRING, BUILDSTRING, __DATE__); //mxd. Version
-#endif
 
 	// Knightmare- scan for cd command line option
 	for (int i = 0; i < argc; i++)
@@ -1021,15 +672,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
 	}
 
-	// if we find the CD, add a +set cddir xxx command line
+	// If we find the CD, add a +set cddir xxx command line
 	if (cdscan)
 	{
-		cddir = Sys_ScanForCD();
+		char* cddir = Sys_ScanForCD();
 		if (cddir && argc < MAX_NUM_ARGVS - 3)
 		{
 			int i;
 
-			// don't override a cddir on the command line
+			// Don't override a cddir on the command line
 			for (i = 0; i < argc ; i++)
 				if (!strcmp(argv[i], "cddir"))
 					break;
@@ -1044,18 +695,18 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 
 	Qcommon_Init(argc, argv);
-	oldtime = Sys_Milliseconds();
+	int oldtime = Sys_Milliseconds();
 
-	/* main window message loop */
+	// Main window message loop
 	while (true)
 	{
-		// if at a full screen console, don't update unless needed
-		if (Minimized || (dedicated && dedicated->value) )
+		// If at a full screen console, don't update unless needed
+		if (Minimized || (dedicated && dedicated->integer))
 			Sleep(1);
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
 		{
-			if (!GetMessage (&msg, NULL, 0, 0))
+			if (!GetMessage(&msg, NULL, 0, 0))
 				Com_Quit();
 
 			sys_msg_time = msg.time;
@@ -1072,9 +723,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			Sleep(0); // may also use Speep(1); to free more CPU, but it can lower your fps
 		}
 
-		_controlfp( _PC_24, _MCW_PC );
 		Qcommon_Frame(time);
-
 		oldtime = newtime;
 	}
 }
