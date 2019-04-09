@@ -269,6 +269,7 @@
     <ClCompile Include="..\..\..\win32\q_shwin.c" />
     <ClCompile Include="..\..\..\win32\snd_win.c" />
     <ClCompile Include="..\..\..\win32\sys_console.c" />
+    <ClCompile Include="..\..\..\win32\sys_info.c" />
     <ClCompile Include="..\..\..\win32\sys_win.c" />
     <ClCompile Include="..\..\..\win32\vid_dll.c" />
   </ItemGroup>

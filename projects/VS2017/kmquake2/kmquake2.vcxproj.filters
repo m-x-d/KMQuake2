@@ -354,6 +354,9 @@
     <ClCompile Include="..\..\..\renderer\r_image_wal.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\win32\sys_info.c">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\anorms.h">
