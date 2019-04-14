@@ -173,8 +173,8 @@ void UI_InitSavegameData(void)
 
 void DrawSaveshot(qboolean loadmenu)
 {
-	char shotname [MAX_QPATH];
-	char mapshotname [MAX_QPATH];
+	char shotname[MAX_QPATH];
+	char mapshotname[MAX_QPATH];
 	int i;
 
 	if (loadmenu)
@@ -275,7 +275,9 @@ void LoadGame_MenuDraw(void)
 {
 	Menu_DrawBanner("m_banner_load_game");
 	Menu_Draw(&s_loadgame_menu);
-	DrawSaveshot(true);
+
+	if(s_loadgame_menu.cursor < MAX_SAVEGAMES) //mxd. Don't try to draw a saveshot for the "back" button!
+		DrawSaveshot(true);
 }
 
 const char *LoadGame_MenuKey(int key)
@@ -312,7 +314,9 @@ void SaveGame_MenuDraw(void)
 	Menu_DrawBanner("m_banner_save_game");
 	Menu_AdjustCursor(&s_savegame_menu, 1);
 	Menu_Draw(&s_savegame_menu);
-	DrawSaveshot(false);
+
+	if (s_savegame_menu.cursor < MAX_SAVEGAMES - 1) //mxd. Don't try to draw a saveshot for the "back" button!
+		DrawSaveshot(false);
 }
 
 void SaveGame_MenuInit( void )

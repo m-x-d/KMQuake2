@@ -236,10 +236,7 @@ void R_DrawStretchPic(int x, int y, int w, int h, char *pic, float alpha)
 
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
-	{
-		VID_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
-		return;
-	}
+		return; //mxd. R_FindImage has already printed a warning if the image wasn't found
 
 	if (scrap_dirty)
 		Scrap_Upload();
