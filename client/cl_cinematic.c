@@ -42,14 +42,14 @@ typedef struct
 
 typedef struct
 {
-	byte			y[4];
-	byte			u;
-	byte			v;
+	byte y[4];
+	byte u;
+	byte v;
 } roqCell_t;
 
 typedef struct
 {
-	byte			idx[4];
+	byte idx[4];
 } roqQCell_t;
 
 typedef struct
@@ -76,10 +76,6 @@ typedef struct
 	int				vidWidth;
 	int				vidHeight;
 	byte			*vidBuffer;
-
-	int				rawWidth;
-	int				rawHeight;
-	byte			*rawBuffer;
 
 	int				frameCount;
 	int				frameTime;
@@ -109,110 +105,11 @@ typedef struct
 	byte			*roqBufferPtr[2];
 } cinematic_t;
 
-static cinematic_t	cinematics[MAX_CINEMATICS];
+static cinematic_t cinematics[MAX_CINEMATICS];
 
-typedef struct
-{
-	int			rendType;
-	const char	*renderer_string;
-	const char	*vendor_string;
-	const char	*version_string;
-	const char	*extensions_string;
 
-	// for parsing newer OpenGL versions
-	int			version_major;
-	int			version_minor;
-	int			version_release;
-
-	qboolean	allowCDS; //TODO: remove this
-	// max texture size
-	int			max_texsize;
-	int			max_texunits;
-
-	// non-power of two texture support
-	qboolean	arbTextureNonPowerOfTwo;
-
-	qboolean	multitexture;
-	qboolean	mtexcombine;	// added Vic's RGB brightening
-
-	qboolean	have_stencil;
-	qboolean	extStencilWrap;
-	qboolean	atiSeparateStencil;
-	qboolean	extStencilTwoSide;
-
-	qboolean	extCompiledVertArray;
-	qboolean	drawRangeElements;
-
-	// texture shader support
-	qboolean	arb_fragment_program;
-	qboolean	arb_vertex_program;
-	qboolean	NV_texshaders;
-
-	// anisotropic filtering
-	qboolean	anisotropic;
-	float		max_anisotropy;
-
-	qboolean	newTexFormat;			// whether to use GL_RGBA textures / GL_BGRA lightmaps
-} glconfig_t;
-
-extern	glconfig_t glConfig;
-
-/*
-=================
-Com_FileExtension
-
-Returns the extension, if any (does not include the .)
-=================
-*/
-void Com_FileExtension (const char *path, char *dst, int dstSize)
-{
-	const char *s = path + strlen(path);
-	const char *last = s;
-
-	while (*s != '/' && *s != '\\' && s != path)
-	{
-		if (*s == '.')
-		{
-			last = s + 1;
-			break;
-		}
-
-		s--;
-	}
-
-	Q_strncpyz(dst, last, dstSize);
-}
-
-/*
-=================
-Com_DefaultExtension
-
-If path doesn't have a .EXT, append newExtension (newExtension should include the .)
-=================
-*/
-void Com_DefaultExtension (char *path, int maxSize, const char *newExtension)
-{
-	char *s = path + strlen(path);
-
-	while (*s != '/' && *s != '\\' && s != path)
-	{
-		if (*s == '.')
-			return; // It has an extension
-
-		s--;
-	}
-
-	Q_strncatz(path, newExtension, maxSize);
-}
-
-/*
-=================
-Com_DefaultPath
-
-If path doesn't have a / or \\, append newPath (newPath should not include the /)
-=================
-*/
-void Com_DefaultPath (char *path, int maxSize, const char *newPath)
+// If path doesn't have a / or \\, append newPath (newPath should not include the /)
+void DefaultPath(char *path, int maxSize, const char *newPath)
 {
 	char oldPath[MAX_OSPATH];
 	char *s = path;
@@ -231,23 +128,13 @@ void Com_DefaultPath (char *path, int maxSize, const char *newPath)
 
 //=============================================================
 
-/*
-=================
-CIN_Skip
-=================
-*/
-static void CIN_Skip (cinematic_t *cin, int count)
+static void CIN_Skip(cinematic_t *cin, int count)
 {
 	FS_Seek(cin->file, count, FS_SEEK_CUR);
 	cin->remaining -= count;
 }
 
-/*
-=================
-CIN_SoundSqrTableInit
-=================
-*/
-static void CIN_SoundSqrTableInit (cinematic_t *cin)
+static void CIN_SoundSqrTableInit(cinematic_t *cin)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -256,12 +143,7 @@ static void CIN_SoundSqrTableInit (cinematic_t *cin)
 	}
 }
 
-/*
-=================
-CIN_ReadChunk
-=================
-*/
-static void CIN_ReadChunk (cinematic_t *cin)
+static void CIN_ReadChunk(cinematic_t *cin)
 {
 	roqChunk_t *chunk = &cin->roqChunk;
 
@@ -276,12 +158,7 @@ static void CIN_ReadChunk (cinematic_t *cin)
 	cin->remaining -= sizeof(roqChunk_t);
 }
 
-/*
-=================
-CIN_ReadInfo
-=================
-*/
-static void CIN_ReadInfo (cinematic_t *cin)
+static void CIN_ReadInfo(cinematic_t *cin)
 {
 	short data[4];
 
@@ -298,25 +175,9 @@ static void CIN_ReadInfo (cinematic_t *cin)
 
 	cin->roqBufferPtr[0] = cin->roqBuffer;
 	cin->roqBufferPtr[1] = cin->roqBuffer + cin->vidWidth * cin->vidHeight * 4;
-
-	cin->rawWidth = clamp(cin->vidWidth, 1, glConfig.max_texsize); // was 512
-	cin->rawHeight = clamp(cin->vidHeight, 1, glConfig.max_texsize); // was 512
-
-	if (cin->rawWidth != cin->vidWidth || cin->rawHeight != cin->vidHeight)
-	{
-		if (cin->rawBuffer)
-			Z_Free(cin->rawBuffer);
-
-		cin->rawBuffer = Z_Malloc(cin->rawWidth * cin->rawHeight * 4);
-	}
 }
 
-/*
-=================
-CIN_ReadCodebook
-=================
-*/
-static void CIN_ReadCodebook (cinematic_t *cin)
+static void CIN_ReadCodebook(cinematic_t *cin)
 {
 	roqChunk_t *chunk = &cin->roqChunk;
 
@@ -333,19 +194,14 @@ static void CIN_ReadCodebook (cinematic_t *cin)
 	cin->remaining -= chunk->size;
 }
 
-/*
-=================
-CIN_DecodeBlock
-=================
-*/
-static void CIN_DecodeBlock (byte *dst0, byte *dst1, const byte *src0, const byte *src1, float u, float v)
+static void CIN_DecodeBlock(byte *dst0, byte *dst1, const byte *src0, const byte *src1, float u, float v)
 {
 	int rgb[3];
 
 	// Convert YCbCr to RGB
-	rgb[0] = 1.402 * v;
-	rgb[1] = -0.34414 * u - 0.71414 * v;
-	rgb[2] = 1.772 * u;
+	rgb[0] = (int)(1.402f * v);
+	rgb[1] = (int)(-0.34414f * u - 0.71414f * v);
+	rgb[2] = (int)(1.772f * u);
 
 	// 1st pixel
 	dst0[0] = clamp(rgb[0] + src0[0], 0, 255);
@@ -372,13 +228,7 @@ static void CIN_DecodeBlock (byte *dst0, byte *dst1, const byte *src0, const byt
 	dst1[7] = 255;
 }
 
-
-/*
-=================
-CIN_ApplyVector2x2
-=================
-*/
-static void CIN_ApplyVector2x2 (cinematic_t *cin, int x, int y, const roqCell_t *cell)
+static void CIN_ApplyVector2x2(cinematic_t *cin, int x, int y, const roqCell_t *cell)
 {
 	byte *dst0 = cin->roqBufferPtr[0] + (y * cin->vidWidth + x) * 4;
 	byte *dst1 = dst0 + cin->vidWidth * 4;
@@ -386,12 +236,7 @@ static void CIN_ApplyVector2x2 (cinematic_t *cin, int x, int y, const roqCell_t 
 	CIN_DecodeBlock(dst0, dst1, cell->y, cell->y + 2, (float)((int)cell->u - 128), (float)((int)cell->v - 128));
 }
 
-/*
-=================
-CIN_ApplyVector4x4
-=================
-*/
-static void CIN_ApplyVector4x4 (cinematic_t *cin, int x, int y, const roqCell_t *cell)
+static void CIN_ApplyVector4x4(cinematic_t *cin, int x, int y, const roqCell_t *cell)
 {
 	byte yp[4];
 
@@ -417,12 +262,7 @@ static void CIN_ApplyVector4x4 (cinematic_t *cin, int x, int y, const roqCell_t 
 	CIN_DecodeBlock(dst1, dst1 + 8, yp, yp + 2, u, v);
 }
 
-/*
-=================
-CIN_ApplyMotion4x4
-=================
-*/
-static void CIN_ApplyMotion4x4 (cinematic_t *cin, int x, int y, byte mv, char meanX, char meanY)
+static void CIN_ApplyMotion4x4(cinematic_t *cin, int x, int y, byte mv, char meanX, char meanY)
 {
 	const int x1 = x + 8 - (mv >> 4) - meanX;
 	const int y1 = y + 8 - (mv & 15) - meanY;
@@ -439,12 +279,7 @@ static void CIN_ApplyMotion4x4 (cinematic_t *cin, int x, int y, byte mv, char me
 	}
 }
 
-/*
-=================
-CIN_ApplyMotion8x8
-=================
-*/
-static void CIN_ApplyMotion8x8 (cinematic_t *cin, int x, int y, byte mv, char meanX, char meanY)
+static void CIN_ApplyMotion8x8(cinematic_t *cin, int x, int y, byte mv, char meanX, char meanY)
 {
 	const int x1 = x + 8 - (mv >> 4) - meanX;
 	const int y1 = y + 8 - (mv & 15) - meanY;
@@ -461,12 +296,7 @@ static void CIN_ApplyMotion8x8 (cinematic_t *cin, int x, int y, byte mv, char me
 	}
 }
 
-/*
-=================
-CIN_SmallestNode1
-=================
-*/
-static int CIN_SmallestNode1 (cinematic_t *cin, int numNodes)
+static int CIN_SmallestNode1(cinematic_t *cin, int numNodes)
 {
 	int best = 99999999;
 	int bestNode = -1;
@@ -490,14 +320,8 @@ static int CIN_SmallestNode1 (cinematic_t *cin, int numNodes)
 	return bestNode;
 }
 
-/*
-=================
-CIN_Huff1TableInit
-
-Reads the 64k counts table and initializes the node trees
-=================
-*/
-static void CIN_Huff1TableInit (cinematic_t *cin)
+// Reads the 64k counts table and initializes the node trees
+static void CIN_Huff1TableInit(cinematic_t *cin)
 {
 	byte counts[256];
 
@@ -541,12 +365,7 @@ static void CIN_Huff1TableInit (cinematic_t *cin)
 	}
 }
 
-/*
-=================
-CIN_Huff1Decompress
-=================
-*/
-static void CIN_Huff1Decompress (cinematic_t *cin, const byte *data, int size)
+static void CIN_Huff1Decompress(cinematic_t *cin, const byte *data, int size)
 {
 	if (!cin->hBuffer)
 		cin->hBuffer = Z_Malloc(cin->vidWidth * cin->vidHeight * 4);
@@ -557,7 +376,7 @@ static void CIN_Huff1Decompress (cinematic_t *cin, const byte *data, int size)
 	unsigned *out = (unsigned *)cin->hBuffer;
 
 	// Read bits
-	int *nodesBase = cin->hNodes1 - 512;	// Nodes 0-255 aren't stored
+	int *nodesBase = cin->hNodes1 - 512; // Nodes 0-255 aren't stored
 	int *nodes = nodesBase;
 	int nodeNum = cin->hNumNodes1[0];
 
@@ -587,12 +406,7 @@ static void CIN_Huff1Decompress (cinematic_t *cin, const byte *data, int size)
 		Com_Error(ERR_DROP, "CIN_Huff1Decompress: decompression overread by %i", (input - data) - size);
 }
 
-/*
-=================
-CIN_ReadPalette
-=================
-*/
-static void CIN_ReadPalette (cinematic_t *cin)
+static void CIN_ReadPalette(cinematic_t *cin)
 {
 	byte palette[768];
 
@@ -610,38 +424,7 @@ static void CIN_ReadPalette (cinematic_t *cin)
 	}
 }
 
-/*
-=================
-CIN_ResampleFrame
-=================
-*/
-static void CIN_ResampleFrame (cinematic_t *cin)
-{
-	if (cin->rawWidth == cin->vidWidth && cin->rawHeight == cin->vidHeight)
-		return;
-
-	unsigned *dst = (unsigned *)cin->rawBuffer;
-	const int fracStep = cin->vidWidth * 0x10000 / cin->rawWidth;
-
-	for (int i = 0; i < cin->rawHeight; i++, dst += cin->rawWidth)
-	{
-		unsigned *src = (unsigned *)cin->vidBuffer + cin->vidWidth * (i * cin->vidHeight / cin->rawHeight);
-		int frac = fracStep >> 1;
-
-		for (int j = 0; j < cin->rawWidth; j++)
-		{
-			dst[j] = src[frac >> 16];
-			frac += fracStep;
-		}
-	}
-}
-
-/*
-=================
-CIN_ReadVideoFrame
-=================
-*/
-static void CIN_ReadVideoFrame (cinematic_t *cin)
+static void CIN_ReadVideoFrame(cinematic_t *cin)
 {
 	if (!cin->isRoQ)
 	{
@@ -806,17 +589,9 @@ static void CIN_ReadVideoFrame (cinematic_t *cin)
 
 		cin->vidBuffer = cin->roqBufferPtr[1];
 	}
-
-	// Resample
-	CIN_ResampleFrame(cin);
 }
 
-/*
-=================
-CIN_ReadAudioFrame
-=================
-*/
-static void CIN_ReadAudioFrame (cinematic_t *cin)
+static void CIN_ReadAudioFrame(cinematic_t *cin)
 {
 	byte data[0x40000];
 	int samples;
@@ -906,16 +681,11 @@ static void CIN_ReadAudioFrame (cinematic_t *cin)
 	S_RawSamples(samples, cin->sndRate, cin->sndWidth, cin->sndChannels, data, false);
 }
 
-/*
-=================
-CIN_ReadNextFrame
-=================
-*/
-static qboolean CIN_ReadNextFrame (cinematic_t *cin)
+static qboolean CIN_ReadNextFrame(cinematic_t *cin)
 {
 	if (!cin->isRoQ)
 	{
-		if (cin->remaining > 0) //mxd. V612 An unconditional 'return' within a loop.
+		if (cin->remaining > 0)
 		{
 			int command;
 			FS_Read(&command, sizeof(command), cin->file);
@@ -941,16 +711,16 @@ static qboolean CIN_ReadNextFrame (cinematic_t *cin)
 		return false;
 	}
 
-	roqChunk_t	*chunk = &cin->roqChunk;
+	roqChunk_t *chunk = &cin->roqChunk;
 
 	while (cin->remaining > 0)
 	{
 		CIN_ReadChunk(cin);
 
-		if (cin->remaining <= 0 || chunk->size > cin->remaining)
-			return false;	// Done
+		if (cin->remaining <= 0 || (int)chunk->size > cin->remaining)
+			return false; // Done
 
-		if (chunk->size == 0) //mxd. unsigned can't be < 0
+		if (chunk->size == 0)
 			continue;
 
 		if (chunk->id == RoQ_INFO)
@@ -982,12 +752,7 @@ static qboolean CIN_ReadNextFrame (cinematic_t *cin)
 	return false;
 }
 
-/*
-=================
-CIN_StaticCinematic
-=================
-*/
-static qboolean CIN_StaticCinematic (cinematic_t *cin, const char *name)
+static qboolean CIN_StaticCinematic(cinematic_t *cin, const char *name)
 {
 	byte *buffer;
 	byte *out;
@@ -1085,23 +850,6 @@ static qboolean CIN_StaticCinematic (cinematic_t *cin, const char *name)
 
 	cin->vidBuffer = cin->pcxBuffer;
 
-	if (glConfig.arbTextureNonPowerOfTwo)
-	{
-		cin->rawWidth = cin->vidWidth;
-		cin->rawHeight = cin->vidHeight;
-	}
-	else
-	{
-		cin->rawWidth = 256;
-		cin->rawHeight = 256;
-	}
-
-	if (cin->rawWidth != cin->vidWidth || cin->rawHeight != cin->vidHeight)
-		cin->rawBuffer = Z_Malloc(cin->rawWidth * cin->rawHeight * 4);
-
-	// Resample
-	CIN_ResampleFrame(cin);
-
 	cin->frameCount = -1;
 	cin->frameTime = cls.realtime;
 	cl.cinematicframe = cin->frameCount;
@@ -1112,17 +860,10 @@ static qboolean CIN_StaticCinematic (cinematic_t *cin, const char *name)
 	return true;
 }
 
-/*
-=================
-CIN_HandleForVideo
-=================
-*/
-static cinematic_t *CIN_HandleForVideo (cinHandle_t *handle)
+static cinematic_t *CIN_HandleForVideo(cinHandle_t *handle)
 {
-	cinematic_t	*cin;
-	int			i;
-
-	for (i = 0, cin = cinematics; i < MAX_CINEMATICS; i++, cin++)
+	cinematic_t	*cin = cinematics;
+	for (int i = 0; i < MAX_CINEMATICS; i++, cin++)
 	{
 		if (cin->playing)
 			continue;
@@ -1135,12 +876,7 @@ static cinematic_t *CIN_HandleForVideo (cinHandle_t *handle)
 	return NULL;
 }
 
-/*
-=================
-CIN_GetVideoByHandle
-=================
-*/
-static cinematic_t *CIN_GetVideoByHandle (cinHandle_t handle)
+static cinematic_t *CIN_GetVideoByHandle(cinHandle_t handle)
 {
 	if (handle <= 0 || handle > MAX_CINEMATICS)
 		Com_Error(ERR_DROP, "CIN_GetVideoByHandle: out of range");
@@ -1148,31 +884,22 @@ static cinematic_t *CIN_GetVideoByHandle (cinHandle_t handle)
 	return &cinematics[handle - 1];
 }
 
-/*
-==================
-SCR_RunCinematic
-==================
-*/
-void SCR_RunCinematic (void)
+//TODO: mxd. Remove
+void SCR_RunCinematic(void)
 {
 	// Do nothing
 	//CIN_RunCinematic(cls.cinematicHandle);
 }
 
-/*
-=================
-CIN_RunCinematic
-=================
-*/
-qboolean CIN_RunCinematic (cinHandle_t handle)
+qboolean CIN_RunCinematic(cinHandle_t handle)
 {
 	cinematic_t *cin = CIN_GetVideoByHandle(handle);
 
 	if (!cin->playing)
-		return false;	// Not running
+		return false; // Not running
 	
 	if (cin->frameCount == -1)
-		return true;	// Static image
+		return true; // Static image
 
 	/*if (cls.key_dest != key_game)
 	{
@@ -1214,37 +941,27 @@ qboolean CIN_RunCinematic (cinHandle_t handle)
 	return true;
 }
 
-/*
-=================
-CIN_SetExtents
-=================
-*/
-void CIN_SetExtents (cinHandle_t handle, int x, int y, int w, int h)
+void CIN_SetExtents(cinHandle_t handle, int x, int y, int w, int h)
 {
 	cinematic_t *cin = CIN_GetVideoByHandle(handle);
 
 	if (!cin->playing)
-		return;		// Not running
+		return; // Not running
 
-	float realx = x;
-	float realy = y;
-	float realw = w;
-	float realh = h;
+	float realx = (float)x;
+	float realy = (float)y;
+	float realw = (float)w;
+	float realh = (float)h;
 
 	SCR_AdjustFrom640(&realx, &realy, &realw, &realh, ALIGN_CENTER);
 
-	cin->x = realx;
-	cin->y = realy;
-	cin->w = realw;
-	cin->h = realh;
+	cin->x = (int)realx;
+	cin->y = (int)realy;
+	cin->w = (int)realw;
+	cin->h = (int)realh;
 }
 
-/*
-=================
-SCR_PlayCinematic
-=================
-*/
-void SCR_PlayCinematic (char *name)
+void SCR_PlayCinematic(char *name)
 {
 	char filename[MAX_QPATH];
 
@@ -1257,7 +974,7 @@ void SCR_PlayCinematic (char *name)
 	if (!Q_stricmp(name + strlen(name) - 4, ".pcx"))
 	{
 		Q_strncpyz(filename, name, sizeof(filename));
-		Com_DefaultPath(filename, sizeof(filename), "pics");
+		DefaultPath(filename, sizeof(filename), "pics");
 		cl.cinematicframe = -1;
 		cl.cinematictime = 1;
 		SCR_EndLoadingPlaque();
@@ -1266,15 +983,15 @@ void SCR_PlayCinematic (char *name)
 	else
 	{
 		Q_strncpyz(filename, name, sizeof(filename));
-		Com_DefaultPath(filename, sizeof(filename), "video");
-		Com_DefaultExtension(filename, sizeof(filename), ".cin");
+		DefaultPath(filename, sizeof(filename), "video");
+		COM_DefaultExtension(filename, ".cin");
 	}
 
 	cls.cinematicHandle = CIN_PlayCinematic(filename, 0, 0, 640, 480, CIN_SYSTEM);
 	if (!cls.cinematicHandle)
 	{
 		Com_Printf("Cinematic %s not found\n", filename);
-		cl.cinematictime = 0;	// done
+		cl.cinematictime = 0; // done
 		SCR_FinishCinematic();
 	}
 	else
@@ -1286,12 +1003,7 @@ void SCR_PlayCinematic (char *name)
 	}
 }
 
-/*
-=================
-SCR_StopCinematic
-=================
-*/
-void SCR_StopCinematic (void)
+void SCR_StopCinematic(void)
 {
 	if (!cls.cinematicHandle)
 		return;
@@ -1302,28 +1014,16 @@ void SCR_StopCinematic (void)
 	cls.cinematicHandle = 0;
 }
 
-/*
-====================
-SCR_FinishCinematic
-
-Called when either the cinematic completes, or it is aborted
-====================
-*/
-void SCR_FinishCinematic (void)
+// Called when either the cinematic completes, or it is aborted
+void SCR_FinishCinematic(void)
 {
-	// tell the server to advance to the next map / cinematic
-	MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-	SZ_Print (&cls.netchan.message, va("nextserver %i\n", cl.servercount));
+	// Tell the server to advance to the next map / cinematic
+	MSG_WriteByte(&cls.netchan.message, clc_stringcmd);
+	SZ_Print(&cls.netchan.message, va("nextserver %i\n", cl.servercount));
 }
 
-/*
-=================
-SCR_DrawCinematic
-=================
-*/
-qboolean SCR_DrawCinematic (void)
+qboolean SCR_DrawCinematic(void)
 {
-
 	if (cl.cinematictime <= 0 || !cls.cinematicHandle)
 		return false;
 
@@ -1341,17 +1041,12 @@ qboolean SCR_DrawCinematic (void)
 	return true;
 }
 
-/*
-=================
-CIN_DrawCinematic
-=================
-*/
-void CIN_DrawCinematic (cinHandle_t handle)
+void CIN_DrawCinematic(cinHandle_t handle)
 {
 	cinematic_t *cin = CIN_GetVideoByHandle(handle);
 
-	if (!cin->playing)
-		return;			// Not running
+	if (!cin->playing) // Not running
+		return;
 
 	if (cin->frameCount == -1) // Knightmare- HACK to show JPG endscreens
 	{
@@ -1365,9 +1060,9 @@ void CIN_DrawCinematic (cinHandle_t handle)
 		SCR_AdjustFrom640(&x, &y, &w, &h, ALIGN_CENTER);
 
 		if (w < viddef.width || h < viddef.height)
-			R_DrawFill (0, 0, viddef.width, viddef.height, 0, 0, 0, 255);
+			R_DrawFill(0, 0, viddef.width, viddef.height, 0, 0, 0, 255);
 
-		R_DrawStretchPic (x, y, w, h, picname, 1.0);
+		R_DrawStretchPic((int)x, (int)y, (int)w, (int)h, picname, 1.0f);
 
 		return;
 	}
@@ -1375,26 +1070,16 @@ void CIN_DrawCinematic (cinHandle_t handle)
 	if (cin->w < viddef.width || cin->h < viddef.height)
 		R_DrawFill(0, 0, viddef.width, viddef.height, 0, 0, 0, 255);
 
-	if (cin->rawWidth == cin->vidWidth && cin->rawHeight == cin->vidHeight)
-		R_DrawStretchRaw(cin->x, cin->y, cin->w, cin->h, cin->vidBuffer, cin->vidWidth, cin->vidHeight);
-	else
-		R_DrawStretchRaw(cin->x, cin->y, cin->w, cin->h, cin->rawBuffer, cin->rawWidth, cin->rawHeight);
+	R_DrawStretchRaw(cin->x, cin->y, cin->w, cin->h, cin->vidBuffer, cin->vidWidth, cin->vidHeight);
 }
 
-/*
-=================
-CIN_PlayCinematic
-=================
-*/
-cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int flags)
+cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int flags)
 {
-	cinematic_t	*cin;
 	cinHandle_t	handle;
-	int			i;
-	char		extension[8];
 
 	// See if already playing this cinematic
-	for (i = 0, cin = cinematics; i < MAX_CINEMATICS; i++, cin++)
+	cinematic_t *cin = cinematics;
+	for (int i = 0; i < MAX_CINEMATICS; i++, cin++)
 	{
 		if (!cin->playing)
 			continue;
@@ -1403,9 +1088,9 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 			return i + 1;
 	}
 
-	Com_FileExtension(name, extension, sizeof(extension));
+	const char *ext = COM_FileExtension(name);
 
-	if (!Q_stricmp(extension, "cin")) // RoQ autoreplace hack
+	if (!Q_stricmp(ext, "cin")) // RoQ autoreplace hack
 	{
 		char s[MAX_QPATH];
 		const int len = strlen(name);
@@ -1426,17 +1111,17 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 	// Fill it in
 	Q_strncpyz(cin->name, name, sizeof(cin->name));
 
-	float realx = x;
-	float realy = y;
-	float realw = w;
-	float realh = h;
+	float realx = (float)x;
+	float realy = (float)y;
+	float realw = (float)w;
+	float realh = (float)h;
 
 	SCR_AdjustFrom640(&realx, &realy, &realw, &realh, ALIGN_CENTER);
 
-	cin->x = realx;
-	cin->y = realy;
-	cin->w = realw;
-	cin->h = realh;
+	cin->x = (int)realx;
+	cin->y = (int)realy;
+	cin->w = (int)realw;
+	cin->h = (int)realh;
 	cin->flags = flags;
 
 	if (cin->flags & CIN_SYSTEM)
@@ -1446,7 +1131,7 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 		UI_ForceMenuOff();	// Close the menu
 	}
 
-	if (!Q_stricmp(extension, "pcx"))
+	if (!Q_stricmp(ext, "pcx"))
 	{
 		// Static PCX image
 		if (!CIN_StaticCinematic(cin, name))
@@ -1455,12 +1140,12 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 		return handle;
 	}
 
-	if (!Q_strcasecmp(extension, "roq"))
+	if (!Q_stricmp(ext, "roq"))
 	{
 		cin->isRoQ = true;
 		cin->rate = 30;
 	}
-	else if (!Q_stricmp(extension, "cin"))
+	else if (!Q_stricmp(ext, "cin"))
 	{
 		cin->isRoQ = false;
 		cin->rate = 14;
@@ -1494,20 +1179,6 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 
 		cin->remaining -= 20;
 
-		if (glConfig.arbTextureNonPowerOfTwo)
-		{
-			cin->rawWidth = cin->vidWidth;
-			cin->rawHeight = cin->vidHeight;
-		}
-		else
-		{
-			cin->rawWidth = 256;
-			cin->rawHeight = 256;
-		}
-
-		if (cin->rawWidth != cin->vidWidth || cin->rawHeight != cin->vidHeight)
-			cin->rawBuffer = Z_Malloc(cin->rawWidth * cin->rawHeight * 4);
-
 		CIN_Huff1TableInit(cin);
 
 		cin->start = FS_FTell(cin->file);
@@ -1536,12 +1207,7 @@ cinHandle_t CIN_PlayCinematic (const char *name, int x, int y, int w, int h, int
 	return handle;
 }
 
-/*
-=================
-CIN_StopCinematic
-=================
-*/
-void CIN_StopCinematic (cinHandle_t handle)
+void CIN_StopCinematic(cinHandle_t handle)
 {
 	if (!handle)
 		return;
@@ -1550,9 +1216,6 @@ void CIN_StopCinematic (cinHandle_t handle)
 
 	if (!cin->playing)
 		return;	// Not running
-
-	if (cin->rawBuffer)
-		Z_Free(cin->rawBuffer);
 
 	if (cin->pcxBuffer)
 		Z_Free(cin->pcxBuffer);
