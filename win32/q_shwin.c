@@ -23,108 +23,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <direct.h>
 #include <io.h>
 
-//===============================================================================
 
-#if 0 //mxd. Replaced with ModChunk_*
-
-int		hunkcount;
-
-
-byte	*membase;
-int		hunkmaxsize;
-int		cursize;
-
-#define	VIRTUAL_ALLOC
-
-void *Hunk_Begin (int maxsize)
-{
-	// reserve a huge chunk of memory, but don't commit any yet
-	cursize = 0;
-	hunkmaxsize = maxsize;
-#ifdef VIRTUAL_ALLOC
-	membase = VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
-#else
-	membase = malloc (maxsize);
-	memset(membase, 0, maxsize);
-#endif
-	if (!membase)
-		Sys_Error ("VirtualAlloc reserve failed");
-	return (void *)membase;
-}
-
-void *Hunk_Alloc (int size)
-{
-	void	*buf;
-
-	// round to cacheline
-	size = (size+31)&~31;
-
-#ifdef VIRTUAL_ALLOC
-	// commit pages as needed
-//	buf = VirtualAlloc (membase+cursize, size, MEM_COMMIT, PAGE_READWRITE);
-	buf = VirtualAlloc (membase, cursize+size, MEM_COMMIT, PAGE_READWRITE);
-	if (!buf)
-	{
-		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &buf, 0, NULL);
-		Sys_Error ("VirtualAlloc commit failed.\n%s", buf);
-	}
-#endif
-	cursize += size;
-	if (cursize > hunkmaxsize)
-		Sys_Error ("Hunk_Alloc overflow");
-
-	return (void *)(membase+cursize-size);
-}
-
-int Hunk_End (void)
-{
-
-	// free the remaining unused virtual memory
-#if 0
-	void	*buf;
-
-	// write protect it
-	buf = VirtualAlloc (membase, cursize, MEM_COMMIT, PAGE_READONLY);
-	if (!buf)
-		Sys_Error ("VirtualAlloc commit failed");
-#endif
-
-	hunkcount++;
-//Com_Printf("hunkcount: %i\n", hunkcount);
-	return cursize;
-}
-
-void Hunk_Free (void *base)
-{
-	if ( base )
-#ifdef VIRTUAL_ALLOC
-		VirtualFree (base, 0, MEM_RELEASE);
-#else
-		free (base);
-#endif
-
-	hunkcount--;
-}
-
-#endif
-
-//===============================================================================
-
-
-/*
-================
-Sys_Milliseconds
-================
-*/
 int	curtime;
 int Sys_Milliseconds(void)
 {
-	static int		base;
+	static int base;
 	static qboolean	initialized = false;
 
 	if (!initialized)
 	{
-		// let base retain 16 bits of effectively random data
+		// Let base retain 16 bits of effectively random data
 		base = timeGetTime() & 0xffff0000;
 		initialized = true;
 	}
@@ -135,22 +43,16 @@ int Sys_Milliseconds(void)
 
 void Sys_Mkdir(char *path)
 {
-	_mkdir (path);
+	_mkdir(path);
 }
 
-//
-// added from Q2E
-//
+// From Q2E
 void Sys_Rmdir(char *path)
 {
 	_rmdir(path);
 }
 
-/*
-=================
-Sys_GetCurrentDirectory
-=================
-*/
+// From Q2E
 char *Sys_GetCurrentDirectory(void)
 {
 	static char	dir[MAX_OSPATH];
@@ -160,15 +62,12 @@ char *Sys_GetCurrentDirectory(void)
 
 	return dir;
 }
-//
-//	End Q2E code
-//
 
 //============================================
 
-char	findbase[MAX_OSPATH];
-char	findpath[MAX_OSPATH];
-int		findhandle;
+char findbase[MAX_OSPATH];
+char findpath[MAX_OSPATH];
+int findhandle;
 
 static qboolean CompareAttributes(unsigned found, unsigned musthave, unsigned canthave)
 {
@@ -205,18 +104,10 @@ char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave )
 		Sys_Error("Sys_BeginFind without close");
 	findhandle = 0;
 
-	COM_FilePath (path, findbase);
-	findhandle = _findfirst (path, &findinfo);
+	COM_FilePath(path, findbase);
+	findhandle = _findfirst(path, &findinfo);
 
-/*	if (findhandle == -1)
-		return NULL;
-	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
-		return NULL;
-	Com_sprintf(findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
-	return findpath;
-*/
-// Knightmare- AnthonyJ's player menu bug fix
-//	(not loading dirs when loose files are present in baseq2/players/)
+	// Knightmare- AnthonyJ's player menu bug fix (not loading dirs when loose files are present in baseq2/players/)
 	while (findhandle != -1)
 	{
 		if (CompareAttributes(findinfo.attrib, musthave, canthave))
@@ -233,7 +124,6 @@ char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave )
 	}
 
 	return NULL;
-//end Knightmare
 }
 
 char *Sys_FindNext(unsigned musthave, unsigned canthave)
@@ -242,17 +132,8 @@ char *Sys_FindNext(unsigned musthave, unsigned canthave)
 
 	if (findhandle == -1)
 		return NULL;
-/*
-	if (_findnext (findhandle, &findinfo) == -1)
-		return NULL;
-	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
-		return NULL;
 
-	Com_sprintf(findpath, sizeof(findpath), "%s/%s", findbase, findinfo.name);
-	return findpath;
-*/
-// Knightmare- AnthonyJ's player menu bug fix
-//	(not loading dirs when loose files are present in baseq2/players/)
+	// Knightmare- AnthonyJ's player menu bug fix (not loading dirs when loose files are present in baseq2/players/)
 	while (_findnext(findhandle, &findinfo) != -1)
 	{
 		if (CompareAttributes(findinfo.attrib, musthave, canthave))
@@ -263,7 +144,6 @@ char *Sys_FindNext(unsigned musthave, unsigned canthave)
 	}
 	
 	return NULL;
-//end Knightmare
 }
 
 void Sys_FindClose(void)
@@ -273,8 +153,6 @@ void Sys_FindClose(void)
 
 	findhandle = 0;
 }
-
-//============================================
 
 /*
 =================
