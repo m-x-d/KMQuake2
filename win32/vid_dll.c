@@ -25,32 +25,34 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "winquake.h"
 
 // Console variables that we need to access from this module
-cvar_t		*scanforcd; // Knightmare- just here to enable command line option without error
-cvar_t		*win_noalttab;
-cvar_t		*win_alttab_restore_desktop;	// Knightmare- whether to restore desktop resolution on alt-tab
-cvar_t		*vid_gamma;
-cvar_t		*vid_ref;			// Name of Refresh DLL loaded
-cvar_t		*vid_xpos;			// X coordinate of window position
-cvar_t		*vid_ypos;			// Y coordinate of window position
-cvar_t		*vid_fullscreen;
-cvar_t		*r_customwidth;
-cvar_t		*r_customheight;
+cvar_t *scanforcd; // Knightmare- just here to enable command line option without error
+cvar_t *win_noalttab;
+cvar_t *win_alttab_restore_desktop;	// Knightmare- whether to restore desktop resolution on alt-tab
+cvar_t *vid_gamma;
+cvar_t *vid_ref;	// Name of Refresh DLL loaded
+cvar_t *vid_xpos;	// X coordinate of window position
+cvar_t *vid_ypos;	// Y coordinate of window position
+cvar_t *vid_fullscreen;
+cvar_t *r_customwidth;
+cvar_t *r_customheight;
 
 // Global variables used internally by this module
-viddef_t	viddef;				// global video state; used by other modules
-qboolean	kmgl_active = 0;
+viddef_t viddef;	// global video state; used by other modules
+qboolean kmgl_active = 0;
 
-HWND        cl_hwnd;            // Main window handle for life of program
+HWND cl_hwnd; // Main window handle for life of program
 
-#define VID_NUM_MODES (sizeof(vid_modes) / sizeof(vid_modes[0]))
+#define VID_NUM_MODES	((int)(sizeof(vid_modes) / sizeof(vid_modes[0])))
 
-LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static qboolean s_alttab_disabled;
 extern unsigned sys_msg_time;
 
 /*
-** WIN32 helper functions
+==========================================================================
+	WIN32 helper functions
+==========================================================================
 */
 
 static void WIN_DisableAltTab(void)
@@ -77,9 +79,7 @@ static void WIN_EnableAltTab(void)
 
 /*
 ==========================================================================
-
-DLL GLUE
-
+	DLL GLUE
 ==========================================================================
 */
 
@@ -144,13 +144,7 @@ byte scantokey[128] =
 	0,			0,		0,			0,			0,		0,				0,			0			// 7 
 }; 
 
-/*
-=======
-MapKey
-
-Map from windows to quake keynums
-=======
-*/
+// Map from windows to quake keynums
 int MapKey(int key)
 {
 	const int modified = (key >> 16) & 255;
@@ -216,17 +210,17 @@ void AppActivate(BOOL fActive, BOOL minimize)
 
 	Key_ClearStates();
 
-	// we don't want to act like we're active if we're minimized
+	// We don't want to act like we're active if we're minimized
 	ActiveApp = (fActive && !Minimized);
 
-	// minimize/restore mouse-capture on demand
+	// Minimize/restore mouse-capture on demand
 	if (!ActiveApp)
 	{
 		IN_Activate(false);
 		CDAudio_Activate(false);
 		S_Activate(false);
 
-		if (win_noalttab->value)
+		if (win_noalttab->integer)
 			WIN_EnableAltTab();
 	}
 	else
@@ -235,19 +229,13 @@ void AppActivate(BOOL fActive, BOOL minimize)
 		CDAudio_Activate(true);
 		S_Activate(true);
 
-		if (win_noalttab->value)
+		if (win_noalttab->integer)
 			WIN_DisableAltTab();
 	}
 }
 
-/*
-====================
-MainWndProc
-
-main window procedure
-====================
-*/
-LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+// Main window procedure
+LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -275,7 +263,7 @@ LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
 	case WM_DESTROY:
-		// let sound and input know about this?
+		// Let sound and input know about this?
 		cl_hwnd = NULL;
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
@@ -319,8 +307,8 @@ LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
-// this is complicated because Win32 seems to pack multiple mouse events into
-// one update sometimes, so we always check all states and look for events
+	// This is complicated because Win32 seems to pack multiple mouse events into
+	// one update sometimes, so we always check all states and look for events
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
@@ -330,8 +318,6 @@ LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_XBUTTONDOWN:// Backslash's imouse explorer buttons
 	case WM_XBUTTONUP:	// Backslash's imouse explorer buttons 
 	case WM_MOUSEMOVE:
-	// Logitech mouse support
-	//case WM_MWHOOK:
 		{
 			int temp = 0;
 
@@ -355,22 +341,14 @@ LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
-	/*case WM_SYSCOMMAND:
-		if ( wParam == SC_SCREENSAVE )
-			return 0;
-		return DefWindowProc (hWnd, uMsg, wParam, lParam);*/
-	// Idle's fix
-	case WM_SYSCOMMAND:
-		switch (wParam & 0xfffffff0)	// bitshifter's fix for screensaver bug
+	case WM_SYSCOMMAND: // Idle's fix
+		switch (wParam & 0xfffffff0) // bitshifter's fix for screensaver bug
 		{
 		case SC_SCREENSAVE:
 		case SC_MONITORPOWER:
 			return 0;
 		case SC_CLOSE:
 			CL_Quit_f();
-		//case SC_MAXIMIZE:
-		//	Cvar_SetValue ("vid_fullscreen", 1);
-		//	return 0;
 		}
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
@@ -399,23 +377,17 @@ LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
-	default:	// pass all unhandled messages to DefWindowProc
+	default: // Pass all unhandled messages to DefWindowProc
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	/* return 0 if handled message, 1 if not */
+	// Return 0 if handled message, 1 if not
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-/*
-============
-VID_Restart_f
-
-Console command to re-start the video mode and refresh DLL. We do this
-simply by setting the modified flag for the vid_ref variable, which will
-cause the entire video mode and refresh DLL to be reset on the next frame.
-============
-*/
+// Console command to restart the video mode and refresh DLL. We do this
+// simply by setting the modified flag for the vid_ref variable, which will
+// cause the entire video mode and refresh DLL to be reset on the next frame.
 void VID_Restart_f(void)
 {
 	vid_ref->modified = true;
@@ -428,27 +400,30 @@ void VID_Front_f(void)
 }
 
 /*
-** VID_GetModeInfo
+==========================================================================
+	Get mode info
+==========================================================================
 */
+
 typedef struct vidmode_s
 {
-	const char *description;
-	int         width, height;
-	int         mode;
+	const char	*description;
+	int			width, height;
+	int			mode;
 } vidmode_t;
 
 // Knightmare- added 1280x1024, 1400x1050, 856x480, 1024x480 modes
 vidmode_t vid_modes[] =
 {
-#include "../qcommon/vid_modes.h"
+	#include "../qcommon/vid_modes.h"
 };
 
 qboolean VID_GetModeInfo(int *width, int *height, int mode)
 {
-	if (mode == -1) // custom mode
+	if (mode == -1) // Custom mode
 	{
-		*width  = r_customwidth->value;
-		*height = r_customheight->value;
+		*width  = r_customwidth->integer;
+		*height = r_customheight->integer;
 		return true;
 	}
 
@@ -461,67 +436,45 @@ qboolean VID_GetModeInfo(int *width, int *height, int mode)
 	return true;
 }
 
-/*
-==============
-VID_UpdateWindowPosAndSize
-==============
-*/
 void VID_UpdateWindowPosAndSize(int x, int y)
 {
-	RECT r;
-
-	r.left   = 0;
-	r.top    = 0;
-	r.right  = viddef.width;
-	r.bottom = viddef.height;
-
+	RECT r = { 0, 0, viddef.width, viddef.height };
 	const int style = GetWindowLong(cl_hwnd, GWL_STYLE);
 	AdjustWindowRect(&r, style, FALSE);
 
 	const int w = r.right - r.left;
 	const int h = r.bottom - r.top;
 
-	MoveWindow(cl_hwnd, vid_xpos->value, vid_ypos->value, w, h, TRUE);
+	MoveWindow(cl_hwnd, x, y, w, h, TRUE);
 }
 
-/*
-==============
-VID_NewWindow
-==============
-*/
 void VID_NewWindow(int width, int height)
 {
 	viddef.width  = width;
 	viddef.height = height;
 
-	cl.force_refdef = true;		// can't use a paused refdef
+	cl.force_refdef = true; // Can't use a paused refdef
 }
 
 void VID_FreeReflib(void)
 {
-	kmgl_active  = false;
+	kmgl_active = false;
 }
 
-
-extern	decalpolys_t *active_decals;
-static qboolean reclip_decals = false;
-qboolean vid_reloading; // Knightmare- flag to not unnecessarily drop console
-
-/*
-==============
-UpdateVideoRef
-==============
-*/
 void UpdateVideoRef(void)
 {
+	extern decalpolys_t *active_decals;
+	static qboolean reclip_decals = false;
+
+	qboolean vid_reloading = false; // Knightmare- flag to not unnecessarily drop console
 	char reason[128];
 
 	if (vid_ref->modified)
 	{
-		cl.force_refdef = true;		// can't use a paused refdef
+		cl.force_refdef = true; // Can't use a paused refdef
 		S_StopAllSounds();
 
-		// unclip decals
+		// Unclip decals
 		if (active_decals)
 		{
 			CL_UnclipDecals();
@@ -529,11 +482,9 @@ void UpdateVideoRef(void)
 		}
 	}
 
-	vid_reloading = false;
-
 	while (vid_ref->modified)
 	{
-		// refresh has changed
+		// Refresh has changed
 		vid_ref->modified = false;
 		vid_fullscreen->modified = true;
 		cl.refresh_prepped = false;
@@ -541,9 +492,7 @@ void UpdateVideoRef(void)
 		vid_reloading = true;
 		// end Knightmare
 
-		//==========================
-		// compacted code from VID_LoadRefresh
-		//==========================
+		// Compacted code from VID_LoadRefresh
 		if (kmgl_active)
 		{
 			R_Shutdown();
@@ -562,38 +511,28 @@ void UpdateVideoRef(void)
 		Com_Printf( "------------------------------------\n");
 
 		kmgl_active = true;
-		//==========================
 	}
 
-	// added to close loading screen
+	// Added to close loading screen
 	if (cl.refresh_prepped && vid_reloading)
 		cls.disable_screen = false;
 
-	// re-clip decals
+	// Re-clip decals
 	if (cl.refresh_prepped && reclip_decals)
 	{
 		CL_ReclipDecals();
 		reclip_decals = false;
 	}
-
- 	vid_reloading = false;
 }
 
-
-/*
-============
-VID_CheckChanges
-
-This function gets called once just before drawing each frame, and it's sole purpose in life
-is to check to see if any of the video mode parameters have changed, and if they have to 
-update the rendering DLL and/or video mode to match.
-============
-*/
+// This function gets called once just before drawing each frame, and it's sole purpose in life
+// is to check to see if any of the video mode parameters have changed, and if they have to 
+// update the rendering DLL and/or video mode to match.
 void VID_CheckChanges(void)
 {
 	if (win_noalttab->modified)
 	{
-		if (win_noalttab->value)
+		if (win_noalttab->integer)
 			WIN_DisableAltTab();
 		else
 			WIN_EnableAltTab();
@@ -601,28 +540,23 @@ void VID_CheckChanges(void)
 		win_noalttab->modified = false;
 	}
 
-	//update changed vid_ref
+	// Update changed vid_ref
 	UpdateVideoRef();
 
-	// update our window position
+	// Update our window position
 	if (vid_xpos->modified || vid_ypos->modified)
 	{
-		if (!vid_fullscreen->value)
-			VID_UpdateWindowPosAndSize(vid_xpos->value, vid_ypos->value);
+		if (!vid_fullscreen->integer)
+			VID_UpdateWindowPosAndSize(vid_xpos->integer, vid_ypos->integer);
 
 		vid_xpos->modified = false;
 		vid_ypos->modified = false;
 	}
 }
 
-/*
-============
-VID_Init
-============
-*/
 void VID_Init(void)
 {
-	/* Create the video variables so we know how to start the graphics drivers */
+	// Create the video variables so we know how to start the graphics drivers
 	vid_ref = Cvar_Get("vid_ref", "gl", CVAR_ARCHIVE);
 	vid_xpos = Cvar_Get("vid_xpos", "3", CVAR_ARCHIVE);
 	vid_ypos = Cvar_Get("vid_ypos", "22", CVAR_ARCHIVE);
@@ -638,19 +572,14 @@ void VID_Init(void)
 	// Force vid_ref to gl. Older versions of Lazarus code check only vid_ref = gl for fadein effects
 	Cvar_Set("vid_ref", "gl");
 
-	/* Add some console commands that we want to handle */
+	// Add some console commands that we want to handle
 	Cmd_AddCommand("vid_restart", VID_Restart_f);
 	Cmd_AddCommand("vid_front", VID_Front_f);
 
-	/* Start the graphics mode and load refresh DLL */
+	// Start the graphics mode and load refresh DLL
 	VID_CheckChanges();
 }
 
-/*
-============
-VID_Shutdown
-============
-*/
 void VID_Shutdown(void)
 {
 	if (kmgl_active)

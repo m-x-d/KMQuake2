@@ -19,37 +19,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 /*
-
 d*_t structures are on-disk representations
 m*_t structures are in-memory
-
 */
+
+#pragma once
 
 /*
 ==============================================================================
-
-BRUSH MODELS
-
+	BRUSH MODELS
 ==============================================================================
 */
 
-
-//
-// in memory representation
-//
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
+// In memory representation
 typedef struct
 {
-	vec3_t		position;
+	vec3_t position;
 } mvertex_t;
 
 typedef struct
 {
 	vec3_t		mins, maxs;
-	vec3_t		origin;		// for sounds or lights
+	vec3_t		origin;		// For sounds or lights
 	float		radius;
 	int			headnode;
-	int			visleafs;		// not including the solid leaf 0
+	int			visleafs;	// Not including the solid leaf 0
 	int			firstface, numfaces;
 } mmodel_t;
 
@@ -57,7 +51,6 @@ typedef struct
 #define	SIDE_FRONT	0
 #define	SIDE_BACK	1
 #define	SIDE_ON		2
-
 
 #define	SURF_PLANEBACK		2
 #define	SURF_DRAWSKY		4
@@ -67,11 +60,9 @@ typedef struct
 #define SURF_UNDERWATER		0x100
 #define SURF_UNDERSLIME		0x200
 #define SURF_UNDERLAVA		0x400
-#define SURF_MASK_CAUSTIC	(SURF_UNDERWATER|SURF_UNDERSLIME|SURF_UNDERLAVA)
-// Psychospaz's envmapping
-#define SURF_ENVMAP			0x800
+#define SURF_MASK_CAUSTIC	(SURF_UNDERWATER | SURF_UNDERSLIME | SURF_UNDERLAVA)
+#define SURF_ENVMAP			0x800 // Psychospaz's envmapping
 
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
 typedef struct
 {
 	unsigned short	v[2];
@@ -85,22 +76,11 @@ typedef struct mtexinfo_s
 	int			texHeight;	// added Q2E hack
 	int			flags;
 	int			numframes;
-	struct mtexinfo_s	*next;		// animation chain
+	struct mtexinfo_s *next; // animation chain
 	image_t		*image;
 	image_t		*glow;		// glow overlay
 	float		*nmapvectors; //mxd. texWidth * texHeight of float[3] normalmap vectors, in [-1 .. 1] range
 } mtexinfo_t;
-
-/*
-typedef struct
-{
-	vec3_t		xyz;
-	vec2_t		texture_st;
-	vec2_t		lightmap_st;
-	byte		basecolor[4];
-	byte		color[4];
-} mpolyvertex_t;
-*/
 
 #define	VERTEXSIZE	7
 
@@ -115,14 +95,13 @@ typedef struct glpoly_s
 	byte		*vertexlight;
 	vec3_t		center;
 
-	int			flags;			// for SURF_UNDERWATER (not needed anymore?)
-	float		verts[4][VERTEXSIZE];	// variable sized (xyz s1t1 s2t2)
-//	mpolyvertex_t	verts[4];			// variable sized (xyz s1t1 s2t2 rgb rgba)
+	int			flags; // for SURF_UNDERWATER (not needed anymore?)
+	float		verts[4][VERTEXSIZE]; // variable sized (xyz s1t1 s2t2)
 } glpoly_t;
 
 typedef struct msurface_s
 {
-	int			visframe;		// should be drawn when node is crossed
+	int			visframe;	// should be drawn when node is crossed
 
 	cplane_t	*plane;
 	int			flags;
@@ -148,7 +127,7 @@ typedef struct msurface_s
 	
 // lighting info
 	int			dlightframe;
-	int			dlightbits[(MAX_DLIGHTS + 31) >> 5];	// derived from MAX_DLIGHTS
+	int			dlightbits[(MAX_DLIGHTS + 31) >> 5]; // derived from MAX_DLIGHTS
 	qboolean	cached_dlight;
 
 	int			lightmaptexturenum;
@@ -164,46 +143,42 @@ typedef struct msurface_s
 	entity_t	*entity;		// entity pointer
 } msurface_t;
 
-
 typedef struct malphasurface_s
 {
 	msurface_t	*surf;
-	entity_t	*entity;		// entity pointer
+	entity_t	*entity; // entity pointer
 	struct	malphasurface_s	*surfacechain;
 } malphasurface_t;
 
-
 typedef struct mnode_s
 {
-// common with leaf
-	int			contents;		// -1, to differentiate from leafs
-	int			visframe;		// node needs to be traversed if current
+	// Common with leaf
+	int			contents;	// -1, to differentiate from leafs
+	int			visframe;	// node needs to be traversed if current
 	
-	float		minmaxs[6];		// for bounding box culling
+	float		minmaxs[6];	// for bounding box culling
 
 	struct mnode_s	*parent;
 
-// node specific
+	// Node specific
 	cplane_t	*plane;
-	struct mnode_s	*children[2];	
+	struct mnode_s	*children[2];
 
-	unsigned short		firstsurface;
-	unsigned short		numsurfaces;
+	unsigned short firstsurface;
+	unsigned short numsurfaces;
 } mnode_t;
-
-
 
 typedef struct mleaf_s
 {
-// common with node
-	int			contents;		// wil be a negative contents number
-	int			visframe;		// node needs to be traversed if current
+	// Common with node
+	int			contents;	// wil be a negative contents number
+	int			visframe;	// node needs to be traversed if current
 
-	float		minmaxs[6];		// for bounding box culling
+	float		minmaxs[6];	// for bounding box culling
 
 	struct mnode_s	*parent;
 
-// leaf specific
+	// Leaf specific
 	int			cluster;
 	int			area;
 
@@ -214,13 +189,8 @@ typedef struct mleaf_s
 
 //===================================================================
 
-//
 // Whole model
-//
-
-//Harven++ MD3 added mod_md3
 typedef enum { mod_bad, mod_brush, mod_sprite, mod_alias, mod_md2 } modtype_t;
-//Harven-- MD3
 
 typedef struct model_s
 {
@@ -233,23 +203,17 @@ typedef struct model_s
 	
 	int			flags;
 
-//
-// volume occupied by the model graphics
-//		
+	// Volume occupied by the model graphics
 	vec3_t		mins, maxs;
 	float		radius;
 
-//
-// solid volume for clipping 
-//
+	// Solid volume for clipping 
 	qboolean	clipbox;
 	vec3_t		clipmins, clipmaxs;
 
-//
-// brush model
-//
+	// Brush model
 	int			firstmodelsurface, nummodelsurfaces;
-	int			lightmap;		// only for submodels
+	int			lightmap;	// only for submodels
 
 	int			numsubmodels;
 	mmodel_t	*submodels;
@@ -257,7 +221,7 @@ typedef struct model_s
 	int			numplanes;
 	cplane_t	*planes;
 
-	int			numleafs;		// number of visible leafs, not counting 0
+	int			numleafs;	// number of visible leafs, not counting 0
 	mleaf_t		*leafs;
 
 	int			numvertexes;
@@ -286,14 +250,14 @@ typedef struct model_s
 
 	byte		*lightdata;
 
-	// for alias models and skins
+	// For alias models and skins
 	// Echon's per-mesh skin support
 	image_t		*skins[MD3_MAX_MESHES][MAX_MD2SKINS];
 
 	size_t		extradatasize;
 	void		*extradata;
 
-	qboolean	hasAlpha; // if model has scripted transparency
+	qboolean	hasAlpha; // If model has scripted transparency
 
 #ifdef PROJECTION_SHADOWS // projection shadows from BeefQuake R6
 	//signed int	edge_tri[MAX_TRIANGLES][3]; // make this dynamically allocated?
@@ -303,23 +267,16 @@ typedef struct model_s
 
 //============================================================================
 
-void	Mod_Init (void);
-//void	Mod_ClearAll (void); //mxd. Missing definition
-model_t *Mod_ForName (char *name, qboolean crash);
-mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model);
-byte	*Mod_ClusterPVS (int cluster, model_t *model);
+void Mod_Init(void);
+model_t *Mod_ForName(char *name, qboolean crash);
+mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model);
+byte *Mod_ClusterPVS(int cluster, model_t *model);
 
-void	Mod_Modellist_f (void);
-
-//mxd. Redundant declarations
-/*void	*Hunk_Begin (int maxsize);
-void	*Hunk_Alloc (int size);
-int		Hunk_End (void);
-void	Hunk_Free (void *base);*/
+void Mod_Modellist_f(void);
 
 void *ModChunk_Alloc(size_t size); //mxd
 
-void	Mod_FreeAll (void);
-void	Mod_Free (model_t *mod);
+void Mod_FreeAll(void);
+void Mod_Free(model_t *mod);
 
-extern qboolean	registration_active;	// map registration flag
+extern qboolean registration_active; // map registration flag

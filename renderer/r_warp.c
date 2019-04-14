@@ -21,12 +21,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-extern	model_t	*loadmodel;
-msurface_t	*warpface;
+extern model_t *loadmodel;
+msurface_t *warpface;
 
-#define	SUBDIVIDE_SIZE	64
+#define SUBDIVIDE_SIZE 64
 
-void BoundPoly (int numverts, float *verts, vec3_t mins, vec3_t maxs)
+void BoundPoly(int numverts, float *verts, vec3_t mins, vec3_t maxs)
 {
 	mins[0] = mins[1] = mins[2] = 999999;
 	maxs[0] = maxs[1] = maxs[2] = -999999;
@@ -44,9 +44,8 @@ void BoundPoly (int numverts, float *verts, vec3_t mins, vec3_t maxs)
 	}
 }
 
-void SubdividePolygon (int numverts, float *verts)
+void SubdividePolygon(int numverts, float *verts)
 {
-	int		j;
 	vec3_t	mins, maxs;
 	vec3_t	front[64], back[64];
 	float	dist[64];
@@ -65,13 +64,13 @@ void SubdividePolygon (int numverts, float *verts)
 		if (maxs[i] - m < 8 || m - mins[i] < 8)
 			continue;
 
-		// cut it
+		// Cut it
 		float *v = verts + i;
-		for (j = 0; j < numverts; j++, v+= 3)
+		for (int j = 0; j < numverts; j++, v+= 3)
 			dist[j] = *v - m;
 
-		// wrap cases
-		dist[j] = dist[0];
+		// Wrap cases
+		dist[numverts] = dist[0];
 		v -= i;
 		VectorCopy(verts, v);
 
@@ -79,7 +78,7 @@ void SubdividePolygon (int numverts, float *verts)
 		int b = 0;
 		v = verts;
 
-		for (j = 0; j < numverts; j++, v+= 3)
+		for (int j = 0; j < numverts; j++, v+= 3)
 		{
 			if (dist[j] >= 0)
 			{
@@ -98,7 +97,7 @@ void SubdividePolygon (int numverts, float *verts)
 
 			if (dist[j] > 0 != dist[j + 1] > 0)
 			{
-				// clip point
+				// Clip point
 				const float frac = dist[j] / (dist[j] - dist[j + 1]);
 
 				for (int k = 0; k < 3; k++)
@@ -115,13 +114,13 @@ void SubdividePolygon (int numverts, float *verts)
 		return;
 	}
 
-	// add a point in the center to help keep warp valid
+	// Add a point in the center to help keep warp valid
 	glpoly_t *poly = ModChunk_Alloc(sizeof(glpoly_t) + (numverts - 2) * VERTEXSIZE * sizeof(float));
 	poly->next = warpface->polys;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;
 	
-	// alloc vertex light fields
+	// Alloc vertex light fields
 	const int size = poly->numverts * 3 * sizeof(byte);
 	poly->vertexlight = ModChunk_Alloc(size);
 	poly->vertexlightbase = ModChunk_Alloc(size);
@@ -129,10 +128,10 @@ void SubdividePolygon (int numverts, float *verts)
 	memset(poly->vertexlightbase, 0, size);
 	poly->vertexlightset = false;
 	
-
 	VectorClear(total);
 	float total_s = 0;
 	float total_t = 0;
+
 	for (int i = 0; i < numverts; i++, verts += 3)
 	{
 		VectorCopy(verts, poly->verts[i + 1]);
@@ -148,29 +147,23 @@ void SubdividePolygon (int numverts, float *verts)
 	}
 
 	VectorScale(total, 1.0 / (float)numverts, poly->verts[0]);
-	VectorCopy(poly->verts[0], poly->center); // for vertex lighting
+	VectorCopy(poly->verts[0], poly->center); // For vertex lighting
 	poly->verts[0][3] = total_s / numverts;
 	poly->verts[0][4] = total_t / numverts;
 
-	// copy first vertex to last
+	// Copy first vertex to last
 	memcpy(poly->verts[numverts + 1], poly->verts[1], sizeof(poly->verts[0]));
 }
 
-/*
-================
-R_SubdivideSurface
-
-Breaks a polygon up along axial 64 unit boundaries so that turbulent warps can be done reasonably.
-================
-*/
-void R_SubdivideSurface (msurface_t *fa)
+// Breaks a polygon up along axial 64 unit boundaries so that turbulent warps can be done reasonably.
+void R_SubdivideSurface(msurface_t *fa)
 {
-	vec3_t		verts[64];
-	float		*vec;
+	vec3_t verts[64];
+	float *vec;
 
 	warpface = fa;
 
-	// convert edges back to a normal polygon
+	// Convert edges back to a normal polygon
 	for (int i = 0; i < fa->numedges; i++)
 	{
 		const int lindex = loadmodel->surfedges[fa->firstedge + i];
@@ -186,20 +179,13 @@ void R_SubdivideSurface (msurface_t *fa)
 	SubdividePolygon(fa->numedges, verts[0]);
 }
 
-/*
-================
-R_GetWarpSurfaceVertsCount (mxd)
+// mxd. Returns the number of verts, which will be created during warp polygon subdivision.
+// Used in Mod_GetAllocSizeBrushModel.
 
-Returns the number of verts, which will be created during warp polygon subdivision.
-Used in Mod_GetAllocSizeBrushModel.
-================
-*/
-
-size_t warppolyvertssize; //in bytes
+size_t warppolyvertssize; // In bytes
 
 void CalculateWarpPolygonVertsSize(int numverts, float *verts)
 {
-	int		j;
 	vec3_t	mins, maxs;
 	vec3_t	front[64], back[64];
 	float	dist[64];
@@ -217,13 +203,13 @@ void CalculateWarpPolygonVertsSize(int numverts, float *verts)
 		if (maxs[i] - m < 8 || m - mins[i] < 8)
 			continue;
 
-		// cut it
+		// Cut it
 		float *v = verts + i;
-		for (j = 0; j < numverts; j++, v += 3)
+		for (int j = 0; j < numverts; j++, v += 3)
 			dist[j] = *v - m;
 
-		// wrap cases
-		dist[j] = dist[0];
+		// Wrap cases
+		dist[numverts] = dist[0];
 		v -= i;
 		VectorCopy(verts, v);
 
@@ -231,7 +217,7 @@ void CalculateWarpPolygonVertsSize(int numverts, float *verts)
 		int b = 0;
 		v = verts;
 
-		for (j = 0; j < numverts; j++, v += 3)
+		for (int j = 0; j < numverts; j++, v += 3)
 		{
 			if (dist[j] >= 0)
 			{
@@ -250,7 +236,7 @@ void CalculateWarpPolygonVertsSize(int numverts, float *verts)
 
 			if (dist[j] > 0 != dist[j + 1] > 0)
 			{
-				// clip point
+				// Clip point
 				const float frac = dist[j] / (dist[j] - dist[j + 1]);
 
 				for (int k = 0; k < 3; k++)
@@ -279,7 +265,7 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 	const int numedges = LittleShort(face->numedges);
 	const int firstedge = LittleLong(face->firstedge);
 
-	// convert edges back to a normal polygon
+	// Convert edges back to a normal polygon
 	for (int i = 0; i < numedges; i++)
 	{
 		const int lindex = LittleLong(surfedges[firstedge + i]);
@@ -302,29 +288,19 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 
 //=========================================================
 
-
-
-// speed up sin calculations - Ed
-float	r_turbsin[] =
+// Speed up sin calculations - Ed
+float r_turbsin[] =
 {
 	#include "warpsin.h"
 };
 #define TURBSCALE (256.0 / M_PI2)
 
-
-
 // MrG - texture shader stuffs
 #define DST_SIZE 16
 unsigned int dst_texture_NV, dst_texture_ARB;
 
-/*
-===============
-CreateDSTTex_NV
-
-Create the texture which warps texture shaders
-===============
-*/
-void CreateDSTTex_NV (void)
+// Create the texture which warps texture shaders
+void CreateDSTTex_NV(void)
 {
 	char data[DST_SIZE][DST_SIZE][2];
 
@@ -347,14 +323,8 @@ void CreateDSTTex_NV (void)
 	qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
-/*
-===============
-CreateDSTTex_ARB
-
-Create the texture which warps texture shaders
-===============
-*/
-void CreateDSTTex_ARB (void)
+// Create the texture which warps texture shaders
+void CreateDSTTex_ARB(void)
 {
 	unsigned char dist[DST_SIZE][DST_SIZE][4];
 
@@ -382,15 +352,8 @@ void CreateDSTTex_ARB (void)
 	qglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
 }
 
-/*
-===============
-R_InitDSTTex
-
-Resets the texture which warps texture shaders.
-Needed after a vid_restart.
-===============
-*/
-void R_InitDSTTex (void)
+// Resets the texture which warps texture shaders. Needed after a vid_restart.
+void R_InitDSTTex(void)
 {
 	dst_texture_NV = dst_texture_ARB = 0;
 	CreateDSTTex_NV();
@@ -398,17 +361,10 @@ void R_InitDSTTex (void)
 }
 //end MrG
 
+extern image_t *R_TextureAnimation(msurface_t *surf);
 
-image_t *R_TextureAnimation (msurface_t *surf);
-
-/*
-=============
-RB_RenderWarpSurface
-
-backend for R_DrawWarpSurface
-=============
-*/
-void RB_RenderWarpSurface (msurface_t *fa)
+// Backend for R_DrawWarpSurface
+void RB_RenderWarpSurface(msurface_t *fa)
 {
 	float		args[7] = {0, 0.05, 0, 0, 0.04, 0, 0};
 	image_t		*image = R_TextureAnimation(fa);
@@ -420,7 +376,7 @@ void RB_RenderWarpSurface (msurface_t *fa)
 	if (texShaderWarpNV && texShaderWarpARB)
 		texShaderWarpARB = (r_pixel_shader_warp->value == 1.0f);
 
-	if (rb_vertex == 0 || rb_index == 0) // nothing to render
+	if (rb_vertex == 0 || rb_index == 0) // Nothing to render
 		return;
 
 	c_brush_calls++;
@@ -433,12 +389,7 @@ void RB_RenderWarpSurface (msurface_t *fa)
 			R_SetVertexRGBScale(true);
 	}
 
-	/*
-	Texture Shader waterwarp
-	Damn this looks fantastic
-	WHY texture shaders? because I can!
-	- MrG
-	*/
+	// Texture Shader waterwarp - MrG
 	if (texShaderWarpARB)
 	{
 		GL_SelectTexture(0);
@@ -509,21 +460,15 @@ void RB_RenderWarpSurface (msurface_t *fa)
 	rb_vertex = rb_index = 0;
 }
 
-/*
-=============
-R_DrawWarpSurface
-
-Does a water warp on the pre-fragmented glpoly_t chain.
-added Psychospaz's lightmaps on alpha surfaces
-=============
-*/
-void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render)
+// Does a water warp on the pre-fragmented glpoly_t chain.
+// added Psychospaz's lightmaps on alpha surfaces
+void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 {
-	float		*v, s, t, scroll, rdt = r_newrefdef.time;
-	vec3_t		point;
-	int			i;
-	const qboolean	light = r_warp_lighting->value && !r_fullbright->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
-	const qboolean	texShaderNV = glConfig.NV_texshaders && glConfig.multitexture
+	float scroll;
+	const float rdt = r_newrefdef.time;
+	vec3_t point;
+	const qboolean light = r_warp_lighting->value && !r_fullbright->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
+	const qboolean texShaderNV = glConfig.NV_texshaders && glConfig.multitexture
 								&& ( (!glConfig.arb_fragment_program && r_pixel_shader_warp->value)
 									|| (glConfig.arb_fragment_program && r_pixel_shader_warp->value > 1) );
 
@@ -536,7 +481,6 @@ void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render)
 	else
 		scroll = 0.0f;
 
-//	rb_vertex = rb_index = 0;
 	for (glpoly_t *bp = fa->polys; bp; bp = bp->next)
 	{
 		c_brush_polys += bp->numverts - 2;
@@ -545,25 +489,22 @@ void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render)
 		if (RB_CheckArrayOverflow(p->numverts, (p->numverts - 2) * 3))
 			RB_RenderWarpSurface(fa);
 
-		for (i = 0; i < p->numverts - 2; i++)
+		for (int i = 0; i < p->numverts - 2; i++)
 		{
 			indexArray[rb_index++] = rb_vertex;
 			indexArray[rb_index++] = rb_vertex + i + 1;
 			indexArray[rb_index++] = rb_vertex + i + 2;
 		}
 
-		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
+		float* v = p->verts[0];
+		for (int i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 		{
-		#if !id386
-			s = v[3] + r_turbsin[(int)((v[4]*0.125+rdt) * TURBSCALE) & 255];
-			t = v[4] + r_turbsin[(int)((v[3]*0.125+rdt) * TURBSCALE) & 255];
-		#else
-			s = v[3] + r_turbsin[Q_ftol( ((v[4] * 0.125 + rdt) * TURBSCALE) ) & 255];
-			t = v[4] + r_turbsin[Q_ftol( ((v[3] * 0.125 + rdt) * TURBSCALE) ) & 255];
-		#endif
+			float s = v[3] + r_turbsin[(int)((v[4] * 0.125 + rdt) * TURBSCALE) & 255];
+			float t = v[4] + r_turbsin[(int)((v[3] * 0.125 + rdt) * TURBSCALE) & 255];
 			s += scroll;
 			s *= DIV64;
 			t *= DIV64;
+
 //=============== Water waves ========================
 			VectorCopy(v, point);
 			if (r_waterwave->value > 0 && !(fa->texinfo->flags & SURF_FLOWING)
@@ -574,6 +515,7 @@ void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render)
 				point[2] = v[2] + r_waterwave->value * sin(v[0] * 0.025 + rdt) * sin(v[2] * 0.05 + rdt);
 			}
 //=============== End water waves ====================
+
 			// MrG - texture shader waterwarp
 			if (texShaderNV)
 			{

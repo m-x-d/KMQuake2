@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-#ifndef __REF_H
-#define __REF_H
+
+#pragma once
 
 #include "../qcommon/qcommon.h"
 
@@ -31,14 +31,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DIV256 0.00390625
 #define DIV512 0.001953125
 
-#define Vector4Set(v, w, x, y, z)	(v[0]=(w), v[1]=(x), v[2]=(y), v[3]=(z))
-#define Vector2Set(v, x, y)	(v[0]=(x), v[1]=(y))
-#define Vector2Copy(v, w)	(w[0]=v[0], w[1]=v[1])
-
-#define	MAX_DLIGHTS		64 // was 32
-#define	MAX_ENTITIES	2048 // was 128
-#define	MAX_PARTICLES	8192 // was 4096
-#define	MAX_LIGHTSTYLES	256
+#define MAX_DLIGHTS		64   // was 32
+#define MAX_ENTITIES	2048 // was 128
+#define MAX_PARTICLES	8192 // was 4096
+#define MAX_LIGHTSTYLES	256
 
 #define MAX_DECAL_VERTS			256
 #define MAX_VERTS_PER_FRAGMENT	8
@@ -67,31 +63,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef struct entity_s
 {
-	struct model_s		*model;			// opaque type outside refresh
-	float				angles[3];
-	//vec3_t				axis[3];		// Rotation vectors
+	struct model_s *model;	// opaque type outside refresh
+	float angles[3];
+	//vec3_t axis[3];		// Rotation vectors
 
-	// most recent data
-	float				origin[3];		// also used as RF_BEAM's "from"
-	int					frame;			// also used as RF_BEAM's diameter
+	// Most recent data
+	float origin[3]; // also used as RF_BEAM's "from"
+	int frame; // also used as RF_BEAM's diameter
 
-	// previous data for lerping
-	float				oldorigin[3];	// also used as RF_BEAM's "to"
-	int					oldframe;
+	// Previous data for lerping
+	float oldorigin[3];	// also used as RF_BEAM's "to"
+	int oldframe;
 
 	// misc
-	float	backlerp;				// 0.0 = current, 1.0 = old
-	int		skinnum;				// also used as RF_BEAM's palette index
+	float backlerp; // 0.0 = current, 1.0 = old
+	int skinnum; // also used as RF_BEAM's palette index
 
-	int		lightstyle;				// for flashing entities
-	float	alpha;					// ignore if RF_TRANSLUCENT isn't set
+	int lightstyle; // for flashing entities
+	float alpha; // ignore if RF_TRANSLUCENT isn't set
 
-	float	scale;
+	float scale;
 
-	struct image_s	*skin;			// NULL for inline skin
-	int		flags;
-	int		renderfx;
-
+	struct image_s *skin; // NULL for inline skin
+	int flags;
+	int renderfx;
 } entity_t;
 
 #define ENTITY_FLAGS  68
@@ -112,12 +107,7 @@ typedef struct
 	vec3_t	color;
 } m_dlight_t;
 
-
-//***********************************
-//psychospaz
-//particles
-//***********************************
-
+// psychospaz particles
 #define PART_GRAVITY	1
 #define PART_SPARK		2
 #define PART_ANGLED		4
@@ -139,62 +129,60 @@ typedef struct
 #define PART_DEPTHHACK_MID		0x10000 //65536
 #define PART_DEPTHHACK_LONG		0x20000 //128K
 
-//combo flags
-#define PART_DEPTHHACK	(PART_DEPTHHACK_SHORT|PART_DEPTHHACK_MID|PART_DEPTHHACK_LONG)
+// Combo flags
+#define PART_DEPTHHACK	(PART_DEPTHHACK_SHORT | PART_DEPTHHACK_MID | PART_DEPTHHACK_LONG)
 
 typedef struct
 {
 	int numPoints;
-	int	firstPoint;
-	struct mnode_s	*node;
+	int firstPoint;
+	struct mnode_s *node;
 } markFragment_t;
 
 typedef struct decalpolys_s decalpolys_t;
 struct decalpolys_s
 {
-	decalpolys_t *next; // for allocation linked list
-	decalpolys_t *nextpoly; // for linked list
-	qboolean	clearflag;
-	int		numpolys;
-	vec3_t	polys[MAX_VERTS_PER_FRAGMENT];
-	vec2_t	coords[MAX_VERTS_PER_FRAGMENT];
-	struct mnode_s	*node;
+	decalpolys_t *next; // For allocation linked list
+	decalpolys_t *nextpoly; // For linked list
+	qboolean clearflag;
+	int numpolys;
+	vec3_t polys[MAX_VERTS_PER_FRAGMENT];
+	vec2_t coords[MAX_VERTS_PER_FRAGMENT];
+	struct mnode_s *node;
 };
 
-//Knightmare- Psychospaz's enhanced particle code
+// Knightmare- Psychospaz's enhanced particle code
 typedef struct
 {
-	vec3_t	angle;
-	vec3_t	origin;
-	int		color;
+	vec3_t angle;
+	vec3_t origin;
+	int color;
 	
-	float	size;
-	int		flags;
-	float	alpha;
+	float size;
+	int flags;
+	float alpha;
 
-	int		blendfunc_src;
-	int		blendfunc_dst;
+	int blendfunc_src;
+	int blendfunc_dst;
 
-	float	red;
-	float	green;
-	float	blue;
+	float red;
+	float green;
+	float blue;
 
 	decalpolys_t *decal;
 
-	int		image;
+	int image;
 } particle_t;
-
 // end Knightmare
 
 typedef struct
 {
-	float		rgb[3];	 // 0.0 - 2.0
-	float		white;	 // highest of rgb
+	float rgb[3]; // 0.0 - 2.0
+	float white; // highest of rgb
 } lightstyle_t;
 
 
 // Knightmare- added Psychospaz's menu cursor
-//cursor - psychospaz
 #define MENU_CURSOR_BUTTON_MAX 2
 
 #define MENUITEM_ACTION		1
@@ -204,52 +192,50 @@ typedef struct
 
 typedef struct
 {
-	//only 2 buttons for menus
-	float		buttontime[MENU_CURSOR_BUTTON_MAX];
-	int			buttonclicks[MENU_CURSOR_BUTTON_MAX];
-	int			buttonused[MENU_CURSOR_BUTTON_MAX];
-	qboolean	buttondown[MENU_CURSOR_BUTTON_MAX];
+	// Only 2 buttons for menus
+	float buttontime[MENU_CURSOR_BUTTON_MAX];
+	int buttonclicks[MENU_CURSOR_BUTTON_MAX];
+	int buttonused[MENU_CURSOR_BUTTON_MAX];
+	qboolean buttondown[MENU_CURSOR_BUTTON_MAX];
 
-	qboolean	mouseaction;
+	qboolean mouseaction;
 
-	//this is the active item that cursor is on.
-	int			menuitemtype;
-	void		*menuitem;
-	void		*menu;
+	// This is the active item that cursor is on.
+	int menuitemtype;
+	void *menuitem;
+	void *menu;
 
-	//coords
-	int		x;
-	int		y;
+	// Coords
+	int x;
+	int y;
 
-	int		oldx;
-	int		oldy;
+	int oldx;
+	int oldy;
 } cursor_t;
 
 typedef struct
 {
-	int			x, y, width, height;// in virtual screen coordinates
-	float		fov_x, fov_y;
-	float		vieworg[3];
-	float		viewangles[3];
-	float		blend[4];			// rgba 0-1 full screen blend
-	float		time;				// time is uesed to auto animate
-	int			rdflags;			// RDF_UNDERWATER, etc
+	int x, y, width, height; // In virtual screen coordinates
+	float fov_x, fov_y;
+	float vieworg[3];
+	float viewangles[3];
+	float blend[4];			// rgba 0-1 full screen blend
+	float time;				// time is used to auto animate
+	int rdflags;			// RDF_UNDERWATER, etc
 
-	byte		*areabits;			// if not NULL, only areas with set bits will be drawn
+	byte *areabits;			// if not NULL, only areas with set bits will be drawn
 
-	lightstyle_t	*lightstyles;	// [MAX_LIGHTSTYLES]
+	lightstyle_t *lightstyles;	// [MAX_LIGHTSTYLES]
 
-	int			num_entities;
-	entity_t	*entities;
+	int num_entities;
+	entity_t *entities;
 
-	int			num_dlights;
-	dlight_t	*dlights;
+	int num_dlights;
+	dlight_t *dlights;
 
-	int			num_particles;
-	particle_t	*particles;
+	int num_particles;
+	particle_t *particles;
 
-	int			num_decals;
-	particle_t	*decals;
+	int num_decals;
+	particle_t *decals;
 } refdef_t;
-
-#endif // __REF_H

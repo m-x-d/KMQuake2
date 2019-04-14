@@ -259,22 +259,22 @@ void CL_ParseMuzzleFlash (void)
 	dl->minlight = 32;
 	dl->die = cl.time; // + 0.1;
 
-	const float volume = (silenced ? 0.2 : 1);
+	const float volume = (silenced ? 0.2f : 1);
 
 	switch (weapon)
 	{
 	case MZ_BLASTER:
-		VectorSet(dl->color, 1, 1, 0.15); //mxd
+		VectorSet(dl->color, 1, 1, 0.15f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_BLUEHYPERBLASTER:
-		VectorSet(dl->color, 0.15, 0.15, 1); //mxd
+		VectorSet(dl->color, 0.15f, 0.15f, 1); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_HYPERBLASTER:
-		VectorSet(dl->color, 1, 1, 0.15); //mxd
+		VectorSet(dl->color, 1, 1, 0.15f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
@@ -297,48 +297,48 @@ void CL_ParseMuzzleFlash (void)
 
 	case MZ_CHAINGUN1:
 		dl->radius = 200 + (rand() & 31);
-		VectorSet(dl->color, 1, 0.25, 0); //mxd
+		VectorSet(dl->color, 1, 0.25f, 0); //mxd
 		Com_sprintf(soundname, sizeof(soundname), "weapons/machgf%ib.wav", (rand() % 5) + 1);
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_CHAINGUN2:
 		dl->radius = 225 + (rand() & 31);
-		VectorSet(dl->color, 1, 0.5, 0); //mxd
-		dl->die = cl.time + 0.1;	// long delay
+		VectorSet(dl->color, 1, 0.5f, 0); //mxd
+		dl->die = cl.time + 0.1f;	// long delay
 		Com_sprintf(soundname, sizeof(soundname), "weapons/machgf%ib.wav", (rand() % 5) + 1);
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0);
 		Com_sprintf(soundname, sizeof(soundname), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0.05);
+		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0.05f);
 		break;
 
 	case MZ_CHAINGUN3:
-		dl->radius = 250 + (rand()&31);
+		dl->radius = 250 + (rand() & 31);
 		VectorSet(dl->color, 1, 1, 0); //mxd
-		dl->die = cl.time + 0.1;	// long delay
+		dl->die = cl.time + 0.1f;	// long delay
 		Com_sprintf(soundname, sizeof(soundname), "weapons/machgf%ib.wav", (rand() % 5) + 1);
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0);
 		Com_sprintf(soundname, sizeof(soundname), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0.033);
+		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0.033f);
 		Com_sprintf(soundname, sizeof(soundname), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0.066);
+		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound(soundname), volume, ATTN_NORM, 0.066f);
 		break;
 
 	case MZ_RAILGUN:
-		VectorSet(dl->color, 0.5, 0.5, 1); //mxd
+		VectorSet(dl->color, 0.5f, 0.5f, 1.0f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/railgf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_ROCKET:
-		VectorSet(dl->color, 1, 0.5, 0.2); //mxd
+		VectorSet(dl->color, 1.0f, 0.5f, 0.2f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/rocklf1a.wav"), volume, ATTN_NORM, 0);
-		S_StartSound(NULL, i, CHAN_AUTO,   S_RegisterSound("weapons/rocklr1b.wav"), volume, ATTN_NORM, 0.1);
+		S_StartSound(NULL, i, CHAN_AUTO,   S_RegisterSound("weapons/rocklr1b.wav"), volume, ATTN_NORM, 0.1f);
 		break;
 
 	case MZ_GRENADE:
-		VectorSet(dl->color, 1, 0.5, 0); //mxd
+		VectorSet(dl->color, 1.0f, 0.5f, 0.0f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav"), volume, ATTN_NORM, 0);
-		S_StartSound(NULL, i, CHAN_AUTO,   S_RegisterSound("weapons/grenlr1b.wav"), volume, ATTN_NORM, 0.1);
+		S_StartSound(NULL, i, CHAN_AUTO,   S_RegisterSound("weapons/grenlr1b.wav"), volume, ATTN_NORM, 0.1f);
 		break;
 
 	case MZ_BFG:
@@ -348,41 +348,41 @@ void CL_ParseMuzzleFlash (void)
 
 	case MZ_LOGIN:
 		VectorSet(dl->color, 0, 1, 0); //mxd
-		dl->die = cl.time + 1.0;
+		dl->die = cl.time + 1;
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("misc/tele1.wav"), 1, ATTN_NORM, 0); // Knightmare: "weapons/grenlf1a.wav" -> "misc/tele1.wav"
 		CL_LogoutEffect(pl->current.origin, weapon);
 		break;
 
 	case MZ_LOGOUT:
 		VectorSet(dl->color, 1, 0, 0); //mxd
-		dl->die = cl.time + 1.0;
+		dl->die = cl.time + 1;
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("misc/tele1.wav"), 1, ATTN_NORM, 0); // Knightmare: "weapons/grenlf1a.wav" -> "misc/tele1.wav"
 		CL_LogoutEffect(pl->current.origin, weapon);
 		break;
 
 	case MZ_RESPAWN:
 		VectorSet(dl->color, 1, 1, 0); //mxd
-		dl->die = cl.time + 1.0;
+		dl->die = cl.time + 1;
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav"), 1, ATTN_NORM, 0);
 		CL_LogoutEffect(pl->current.origin, weapon);
 		break;
 
 	// RAFAEL
 	case MZ_PHALANX:
-		VectorSet(dl->color, 1, 0.5, 0.5); //mxd
+		VectorSet(dl->color, 1, 0.5f, 0.5f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/plasshot.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	// RAFAEL
 	case MZ_IONRIPPER:
-		VectorSet(dl->color, 1, 0.5, 0.5); //mxd
+		VectorSet(dl->color, 1, 0.5f, 0.5f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/rippfire.wav"), volume, ATTN_NORM, 0);
 		break;
 
 // ======================
 // PGM
 	case MZ_ETF_RIFLE:
-		VectorSet(dl->color, 0.9, 0.7, 0); //mxd
+		VectorSet(dl->color, 0.9f, 0.7f, 0); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/nail1.wav"), volume, ATTN_NORM, 0);
 		break;
 
@@ -397,7 +397,7 @@ void CL_ParseMuzzleFlash (void)
 		break;
 
 	case MZ_BLASTER2:
-		VectorSet(dl->color, 0.15, 1, 0.15); //mxd
+		VectorSet(dl->color, 0.15f, 1, 0.15f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav"), volume, ATTN_NORM, 0); // FIXME - different sound for blaster2 ??
 		break;
 
@@ -431,22 +431,22 @@ void CL_ParseMuzzleFlash (void)
 // ======================
 //Knightmare 1/3/2002- blue blaster and green hyperblaster and red blaster and hyperblaster
 	case MZ_BLUEBLASTER:
-		VectorSet(dl->color, 0.15, 0.15, 1); //mxd
+		VectorSet(dl->color, 0.15f, 0.15f, 1); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_GREENHYPERBLASTER:
-		VectorSet(dl->color, 0.15, 1, 0.15); //mxd
+		VectorSet(dl->color, 0.15f, 1, 0.15f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_REDBLASTER:
-		VectorSet(dl->color, 1, 0.15, 0.15); //mxd
+		VectorSet(dl->color, 1, 0.15f, 0.15f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 
 	case MZ_REDHYPERBLASTER:
-		VectorSet(dl->color, 1, 0.15, 0.15); //mxd
+		VectorSet(dl->color, 1, 0.15f, 0.15f); //mxd
 		S_StartSound(NULL, i, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav"), volume, ATTN_NORM, 0);
 		break;
 //end Knightmare
@@ -495,9 +495,9 @@ void CL_ParseMuzzleFlash2 (void)
 
 	cdlight_t *dl = CL_AllocDlight(ent);
 	VectorCopy(origin,  dl->origin);
-	dl->radius = 200 + (rand() & 31);
+	dl->radius = 200.0f + (rand() & 31);
 	dl->minlight = 32;
-	dl->die = cl.time;	// + 0.1;
+	dl->die = (float)cl.time;	// + 0.1;
 
 	switch (flash_number)
 	{
@@ -651,14 +651,14 @@ void CL_ParseMuzzleFlash2 (void)
 
 	case MZ2_CHICK_ROCKET_1:
 	case MZ2_TURRET_ROCKET:			// PGM
-		VectorSet(dl->color, 1, 0.5, 0.2); //mxd
+		VectorSet(dl->color, 1, 0.5f, 0.2f); //mxd
 		S_StartSound(NULL, ent, CHAN_WEAPON, S_RegisterSound("chick/chkatck2.wav"), 1, ATTN_NORM, 0);
 		break;
 
 	case MZ2_TANK_ROCKET_1:
 	case MZ2_TANK_ROCKET_2:
 	case MZ2_TANK_ROCKET_3:
-		VectorSet(dl->color, 1, 0.5, 0.2); //mxd
+		VectorSet(dl->color, 1, 0.5f, 0.2f); //mxd
 		S_StartSound(NULL, ent, CHAN_WEAPON, S_RegisterSound("tank/tnkatck1.wav"), 1, ATTN_NORM, 0);
 		break;
 
@@ -673,7 +673,7 @@ void CL_ParseMuzzleFlash2 (void)
 //	case MZ2_CARRIER_ROCKET_2:
 //	case MZ2_CARRIER_ROCKET_3:
 //	case MZ2_CARRIER_ROCKET_4:
-		VectorSet(dl->color, 1, 0.5, 0.2); //mxd
+		VectorSet(dl->color, 1, 0.5f, 0.2f); //mxd
 		S_StartSound(NULL, ent, CHAN_WEAPON, S_RegisterSound("tank/rocket.wav"), 1, ATTN_NORM, 0);
 		break;
 
@@ -681,7 +681,7 @@ void CL_ParseMuzzleFlash2 (void)
 	case MZ2_GUNNER_GRENADE_2:
 	case MZ2_GUNNER_GRENADE_3:
 	case MZ2_GUNNER_GRENADE_4:
-		VectorSet(dl->color, 1, 0.5, 0); //mxd
+		VectorSet(dl->color, 1, 0.5f, 0); //mxd
 		S_StartSound(NULL, ent, CHAN_WEAPON, S_RegisterSound("gunner/gunatck3.wav"), 1, ATTN_NORM, 0);
 		break;
 
@@ -822,9 +822,9 @@ void CL_ParseMuzzleFlash2 (void)
 	case MZ2_WIDOW2_BEAM_SWEEP_9:
 	case MZ2_WIDOW2_BEAM_SWEEP_10:
 	case MZ2_WIDOW2_BEAM_SWEEP_11:
-		dl->radius = 300 + (rand() & 100);
+		dl->radius = 300.0f + (rand() & 100);
 		VectorSet(dl->color, 1, 1, 0); //mxd
-		dl->die = cl.time + 200;
+		dl->die = cl.time + 200.0f;
 		break;
 // ROGUE
 // ======

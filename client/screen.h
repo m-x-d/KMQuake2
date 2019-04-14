@@ -78,10 +78,10 @@ void SCR_DrawCrosshair(void);
 
 
 extern	float		scr_con_current;
-extern	float		scr_conlines;		// lines of console to display
+extern	float		scr_conlines; // lines of console to display
 
 extern	float		scr_letterbox_current;
-extern	float		scr_letterbox_lines;		// lines of letterbox to display
+extern	float		scr_letterbox_lines; // lines of letterbox to display
 extern	qboolean	scr_letterbox_active;
 extern	qboolean	scr_hidehud;
 
@@ -93,7 +93,7 @@ extern	cvar_t		*crosshair_scale;
 extern	cvar_t		*crosshair_alpha;
 extern	cvar_t		*crosshair_pulse;
 
-extern	vrect_t		scr_vrect;		// position of render window
+extern	vrect_t		scr_vrect; // position of render window
 
 extern	char		crosshair_pic[MAX_QPATH];
 extern	int			crosshair_width, crosshair_height;
@@ -101,11 +101,11 @@ extern	int			crosshair_width, crosshair_height;
 // Psychospaz's scaled menu stuff
 #define SCREEN_WIDTH	640.0f
 #define SCREEN_HEIGHT	480.0f
-#define STANDARD_ASPECT_RATIO ((float)SCREEN_WIDTH/(float)SCREEN_HEIGHT)
+#define STANDARD_ASPECT_RATIO ((float)SCREEN_WIDTH / (float)SCREEN_HEIGHT)
 
 // rendered size of console font - everthing adjusts to this...
 #define	FONT_SIZE		SCR_ScaledVideo(con_font_size->value)
-#define CON_FONT_SCALE	SCR_ScaledVideo(con_font_size->value)/8
+#define CON_FONT_SCALE	(FONT_SIZE / 8)
 
 #define MENU_FONT_SIZE	8
 #define MENU_LINE_SIZE	10
@@ -114,11 +114,10 @@ extern	int			crosshair_width, crosshair_height;
 
 
 //
-// scr_cin.c
+// scr_cinematic.c
 //
 void SCR_PlayCinematic(char *name);
 qboolean SCR_DrawCinematic(void);
-void SCR_RunCinematic(void);
 void SCR_StopCinematic(void);
 void SCR_FinishCinematic(void);
 

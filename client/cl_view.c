@@ -345,12 +345,12 @@ void CL_PrepRefresh(void)
 	char	mapname[64];
 	char	pname[MAX_QPATH];
 	vec3_t	axis;
-	const qboolean newPlaque = (!cls.disable_screen || !scr_draw_loading);
 
 	if (!cl.configstrings[CS_MODELS + 1][0])
 		return; // no map loaded
 
-	if (newPlaque)
+	// Use new loading plaque?
+	if (!cls.disable_screen || !scr_draw_loading)
 		SCR_BeginLoadingPlaque();
 
 	// Knightmare- for Psychospaz's map loading screen

@@ -30,8 +30,7 @@ short	*snd_out;
 
 void S_WriteLinearBlastStereo16 (void);
 
-#if !(defined __linux__ && defined __i386__)
-#if	!id386
+#if !(defined __linux__) && !id386
 
 void S_WriteLinearBlastStereo16 (void)
 {
@@ -102,7 +101,6 @@ LClampDone2:
 	}
 }
 
-#endif
 #endif
 
 void S_TransferStereo16 (unsigned long *pbuf, int endtime)
@@ -359,8 +357,7 @@ void S_InitScaletable (void)
 }
 
 
-#if !(defined __linux__ && defined __i386__)
-#if	!id386
+#if !(defined __linux__) && !id386
 
 void S_PaintChannelFrom8 (channel_t *ch, sfxcache_t *sc, int count, int offset)
 {
@@ -466,7 +463,7 @@ LDone:
 }
 
 #endif
-#endif
+
 
 void S_PaintChannelFrom16 (channel_t *ch, sfxcache_t *sc, int count, int offset)
 {

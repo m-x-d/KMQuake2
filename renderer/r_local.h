@@ -48,11 +48,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __VIDDEF_T
 typedef struct
 {
-	unsigned width, height; // coordinates from main game
+	int width, height; // Coordinates from main game
 } viddef_t;
 #endif
 
-extern	viddef_t vid;
+extern viddef_t vid;
 
 
 /*
@@ -77,7 +77,7 @@ typedef struct image_s
 	long		hash;						// to speed up searching. //mxd. Changed: stores hash of name without extension!
 	imagetype_t	type;
 	int			width, height;				// source image
-	int			upload_width, upload_height;	// after power of two and picmip
+	int			upload_width, upload_height;// after power of two and picmip
 	int			registration_sequence;		// 0 = free
 	struct		msurface_s	*texturechain;	// for sort-by-texture world drawing
 	struct		msurface_s	*warp_texturechain;	// same as above, for warp surfaces

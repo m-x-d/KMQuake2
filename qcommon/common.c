@@ -30,44 +30,43 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define MAX_NUM_ARGVS	50
 
 
-int		com_argc;
-char	*com_argv[MAX_NUM_ARGVS + 1];
+int com_argc;
+char *com_argv[MAX_NUM_ARGVS + 1];
 
-int		realtime;
+int realtime;
 
 jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
 
 
-FILE	*log_stats_file;
+FILE *log_stats_file;
 
-cvar_t	*host_speeds;
-cvar_t	*log_stats;
-cvar_t	*developer;
-cvar_t	*timescale;
-cvar_t	*fixedtime;
-cvar_t	*logfile_active;	// 1 = buffer log, 2 = flush after each print
-cvar_t	*showtrace;
-cvar_t	*dedicated;
+cvar_t *host_speeds;
+cvar_t *log_stats;
+cvar_t *developer;
+cvar_t *timescale;
+cvar_t *fixedtime;
+cvar_t *logfile_active; // 1 = buffer log, 2 = flush after each print
+cvar_t *showtrace;
+cvar_t *dedicated;
 
 // Knightmare- for the game DLL to tell what engine it's running under
 cvar_t *sv_engine;
 cvar_t *sv_engine_version;
 
-FILE	*logfile;
+FILE *logfile;
 
-int		server_state;
+int server_state;
 
 // host_speeds times
-int		time_before_game;
-int		time_after_game;
-int		time_before_ref;
-int		time_after_ref;
+int time_before_game;
+int time_after_game;
+int time_before_ref;
+int time_after_ref;
+
 
 /*
 ============================================================================
-
-CLIENT / SERVER interactions
-
+	CLIENT / SERVER interactions
 ============================================================================
 */
 
@@ -76,7 +75,7 @@ static char	*rd_buffer;
 static int	rd_buffersize;
 static void	(*rd_flush)(int target, char *buffer);
 
-void Com_BeginRedirect (int target, char *buffer, int buffersize, void (*flush))
+void Com_BeginRedirect(int target, char *buffer, int buffersize, void (*flush))
 {
 	if (!target || !buffer || !buffersize || !flush)
 		return;
@@ -89,7 +88,7 @@ void Com_BeginRedirect (int target, char *buffer, int buffersize, void (*flush))
 	*rd_buffer = 0;
 }
 
-void Com_EndRedirect (void)
+void Com_EndRedirect(void)
 {
 	rd_flush(rd_target, rd_buffer);
 
@@ -99,17 +98,11 @@ void Com_EndRedirect (void)
 	rd_flush = NULL;
 }
 
-/*
-=============
-Com_Printf
-
-Both client and server can use this, and it will output to the apropriate place.
-=============
-*/
+// Both client and server can use this, and it will output to the apropriate place.
 void Com_Printf(char *fmt, ...)
 {
 	va_list	argptr;
-	char	msg[MAXPRINTMSG];
+	static char msg[MAXPRINTMSG]; //mxd. +static
 
 	va_start(argptr, fmt);
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);	// fix for nVidia 191.xx crash
@@ -129,8 +122,8 @@ void Com_Printf(char *fmt, ...)
 
 	Con_Print(msg);
 		
-	// also echo to debugging console
-	if (msg[strlen(msg) - 1] != '\r') // skip overwritten outputs
+	// Also echo to debugging console
+	if (msg[strlen(msg) - 1] != '\r') // Skip overwritten outputs
 		Sys_ConsoleOutput(msg);
 
 	// logfile
@@ -155,18 +148,11 @@ void Com_Printf(char *fmt, ...)
 	}
 }
 
-
-/*
-================
-Com_DPrintf
-
-A Com_Printf that only shows up if the "developer" cvar is set
-================
-*/
-void Com_DPrintf (char *fmt, ...)
+// A Com_Printf that only shows up if the "developer" cvar is set
+void Com_DPrintf(char *fmt, ...)
 {
 	va_list	argptr;
-	char	msg[MAXPRINTMSG];
+	static char msg[MAXPRINTMSG]; //mxd. +static
 		
 	if (!developer || !developer->value)
 		return; // don't confuse non-developers with techie stuff...
@@ -179,21 +165,15 @@ void Com_DPrintf (char *fmt, ...)
 }
 
 
-/*
-================
-Com_CPrintf
-
-mxd. A Com_Printf that only prints to VS console in DEBUG build
-================
-*/
-void Com_CPrintf (char *fmt, ...)
+// mxd. A Com_Printf that only prints to VS console in DEBUG build
+void Com_CPrintf(char *fmt, ...)
 {
 #ifndef _DEBUG
 	return;
 #endif
 	
 	va_list	argptr;
-	char	msg[MAXPRINTMSG];
+	static char msg[MAXPRINTMSG]; //mxd. +static
 
 	va_start(argptr, fmt);
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr); // fix for nVidia 191.xx crash
@@ -202,17 +182,11 @@ void Com_CPrintf (char *fmt, ...)
 	OutputDebugString(msg);
 }
 
-/*
-=============
-Com_Error
-
-Both client and server can use this, and it will do the apropriate things.
-=============
-*/
-void Com_Error (int code, char *fmt, ...)
+// Both client and server can use this, and it will do the apropriate things.
+void Com_Error(int code, char *fmt, ...)
 {
-	va_list			argptr;
-	static char		msg[MAXPRINTMSG];
+	va_list argptr;
+	static char msg[MAXPRINTMSG];
 	static qboolean	recursive;
 
 	if (recursive)
@@ -253,15 +227,8 @@ void Com_Error (int code, char *fmt, ...)
 	Sys_Error("%s", msg);
 }
 
-
-/*
-=============
-Com_Quit
-
-Both client and server can use this, and it will do the apropriate things.
-=============
-*/
-void Com_Quit (void)
+// Both client and server can use this, and it will do the apropriate things.
+void Com_Quit(void)
 {
 	SV_Shutdown("Server quit\n", false);
 	CL_Shutdown();
@@ -275,23 +242,12 @@ void Com_Quit (void)
 	Sys_Quit();
 }
 
-
-/*
-==================
-Com_ServerState
-==================
-*/
-int Com_ServerState (void)
+int Com_ServerState(void)
 {
 	return server_state;
 }
 
-/*
-==================
-Com_SetServerState
-==================
-*/
-void Com_SetServerState (int state)
+void Com_SetServerState(int state)
 {
 	server_state = state;
 }
@@ -299,14 +255,13 @@ void Com_SetServerState (int state)
 
 /*
 ==============================================================================
-
-			MESSAGE IO FUNCTIONS
+	MESSAGE IO FUNCTIONS
 
 Handles byte ordering and avoids alignment errors
 ==============================================================================
 */
 
-vec3_t	bytedirs[NUMVERTEXNORMALS] =
+vec3_t bytedirs[NUMVERTEXNORMALS] = 
 {
 	#include "../client/anorms.h"
 };
@@ -315,7 +270,7 @@ vec3_t	bytedirs[NUMVERTEXNORMALS] =
 // writing functions
 //
 
-void MSG_WriteChar (sizebuf_t *sb, int c)
+void MSG_WriteChar(sizebuf_t *sb, int c)
 {
 #ifdef PARANOID
 	if (c < -128 || c > 127)
@@ -326,7 +281,7 @@ void MSG_WriteChar (sizebuf_t *sb, int c)
 	buf[0] = c;
 }
 
-void MSG_WriteByte (sizebuf_t *sb, int c)
+void MSG_WriteByte(sizebuf_t *sb, int c)
 {
 #ifdef PARANOID
 	if (c < 0 || c > 255)
@@ -337,7 +292,7 @@ void MSG_WriteByte (sizebuf_t *sb, int c)
 	buf[0] = c;
 }
 
-void MSG_WriteShort (sizebuf_t *sb, int c)
+void MSG_WriteShort(sizebuf_t *sb, int c)
 {
 #ifdef PARANOID
 	if (c < ((short)0x8000) || c > (short)0x7fff)
@@ -349,7 +304,7 @@ void MSG_WriteShort (sizebuf_t *sb, int c)
 	buf[1] = c >> 8;
 }
 
-void MSG_WriteLong (sizebuf_t *sb, int c)
+void MSG_WriteLong(sizebuf_t *sb, int c)
 {
 	byte *buf = SZ_GetSpace(sb, 4);
 	buf[0] = c & 0xff;
@@ -358,7 +313,7 @@ void MSG_WriteLong (sizebuf_t *sb, int c)
 	buf[3] = c >> 24;
 }
 
-void MSG_WriteFloat (sizebuf_t *sb, float f)
+void MSG_WriteFloat(sizebuf_t *sb, float f)
 {
 	union
 	{
@@ -373,14 +328,13 @@ void MSG_WriteFloat (sizebuf_t *sb, float f)
 	SZ_Write(sb, &dat.l, 4);
 }
 
-void MSG_WriteString (sizebuf_t *sb, char *s)
+void MSG_WriteString(sizebuf_t *sb, char *s)
 {
 	if (!s)
 		SZ_Write(sb, "", 1);
 	else
 		SZ_Write(sb, s, strlen(s) + 1);
 }
-
 
 // 24-bit coordinate transmission code
 #ifdef LARGE_MAP_SIZE
@@ -389,7 +343,7 @@ void MSG_WriteString (sizebuf_t *sb, char *s)
 #define UPRBITS	0xFF000000
 qboolean LegacyProtocol(void);
 
-void MSG_WriteCoordNew (sizebuf_t *sb, float f)
+void MSG_WriteCoordNew(sizebuf_t *sb, float f)
 {
 	const int tmp = f * 8;				// 1/8 granulation, leaves bounds of +/-1M in signed 24-bit form
 	const byte trans1 = tmp >> 16;		// bits 16-23
@@ -400,7 +354,7 @@ void MSG_WriteCoordNew (sizebuf_t *sb, float f)
 	MSG_WriteShort(sb, trans2);
 }
 
-float MSG_ReadCoordNew (sizebuf_t *msg_read)
+float MSG_ReadCoordNew(sizebuf_t *msg_read)
 {
 	const byte trans1 = MSG_ReadByte(msg_read);
 	const unsigned short trans2 = MSG_ReadShort(msg_read);
@@ -417,7 +371,7 @@ float MSG_ReadCoordNew (sizebuf_t *msg_read)
 }
 
 // Player movement coords are already in 1/8 precision integer form
-void MSG_WritePMCoordNew (sizebuf_t *sb, int in)
+void MSG_WritePMCoordNew(sizebuf_t *sb, int in)
 {
 	const byte trans1 = in >> 16;	  // bits 16-23
 	const unsigned short trans2 = in; // bits 0-15
@@ -426,7 +380,7 @@ void MSG_WritePMCoordNew (sizebuf_t *sb, int in)
 	MSG_WriteShort(sb, trans2);
 }
 
-int MSG_ReadPMCoordNew (sizebuf_t *msg_read)
+int MSG_ReadPMCoordNew(sizebuf_t *msg_read)
 {
 	const byte trans1 = MSG_ReadByte(msg_read);
 	const unsigned short trans2 = MSG_ReadShort(msg_read);
@@ -443,27 +397,25 @@ int MSG_ReadPMCoordNew (sizebuf_t *msg_read)
 
 #endif // LARGE_MAP_SIZE
 
-
 #ifdef LARGE_MAP_SIZE
 
-void MSG_WriteCoord (sizebuf_t *sb, float f)
+void MSG_WriteCoord(sizebuf_t *sb, float f)
 {
 	MSG_WriteCoordNew(sb, f);
 }
 
 #else // LARGE_MAP_SIZE
 
-void MSG_WriteCoord (sizebuf_t *sb, float f)
+void MSG_WriteCoord(sizebuf_t *sb, float f)
 {
 	MSG_WriteShort(sb, (int)(f * 8));
 }
 
 #endif // LARGE_MAP_SIZE
 
-
 #ifdef LARGE_MAP_SIZE
 
-void MSG_WritePos (sizebuf_t *sb, vec3_t pos)
+void MSG_WritePos(sizebuf_t *sb, vec3_t pos)
 {
 	MSG_WriteCoordNew(sb, pos[0]);
 	MSG_WriteCoordNew(sb, pos[1]);
@@ -472,7 +424,7 @@ void MSG_WritePos (sizebuf_t *sb, vec3_t pos)
 
 #else // LARGE_MAP_SIZE
 
-void MSG_WritePos (sizebuf_t *sb, vec3_t pos)
+void MSG_WritePos(sizebuf_t *sb, vec3_t pos)
 {
 	MSG_WriteShort(sb, (int)(pos[0] * 8));
 	MSG_WriteShort(sb, (int)(pos[1] * 8));
@@ -481,19 +433,17 @@ void MSG_WritePos (sizebuf_t *sb, vec3_t pos)
 
 #endif // LARGE_MAP_SIZE
 
-
-void MSG_WriteAngle (sizebuf_t *sb, float f)
+void MSG_WriteAngle(sizebuf_t *sb, float f)
 {
 	MSG_WriteByte(sb, (int)(f * 256 / 360) & 255);
 }
 
-void MSG_WriteAngle16 (sizebuf_t *sb, float f)
+void MSG_WriteAngle16(sizebuf_t *sb, float f)
 {
 	MSG_WriteShort(sb, ANGLE2SHORT(f));
 }
 
-
-void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
+void MSG_WriteDeltaUsercmd(sizebuf_t *sb, usercmd_t *from, usercmd_t *cmd)
 {
 	// Send the movement message
 	int bits = 0;
@@ -514,33 +464,32 @@ void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 	if (cmd->impulse != from->impulse)
 		bits |= CM_IMPULSE;
 
-	MSG_WriteByte(buf, bits);
+	MSG_WriteByte(sb, bits);
 
 	if (bits & CM_ANGLE1)
-		MSG_WriteShort(buf, cmd->angles[0]);
+		MSG_WriteShort(sb, cmd->angles[0]);
 	if (bits & CM_ANGLE2)
-		MSG_WriteShort(buf, cmd->angles[1]);
+		MSG_WriteShort(sb, cmd->angles[1]);
 	if (bits & CM_ANGLE3)
-		MSG_WriteShort(buf, cmd->angles[2]);
+		MSG_WriteShort(sb, cmd->angles[2]);
 
 	if (bits & CM_FORWARD)
-		MSG_WriteShort(buf, cmd->forwardmove);
+		MSG_WriteShort(sb, cmd->forwardmove);
 	if (bits & CM_SIDE)
-		MSG_WriteShort(buf, cmd->sidemove);
+		MSG_WriteShort(sb, cmd->sidemove);
 	if (bits & CM_UP)
-		MSG_WriteShort(buf, cmd->upmove);
+		MSG_WriteShort(sb, cmd->upmove);
 
 	if (bits & CM_BUTTONS)
-		MSG_WriteByte(buf, cmd->buttons);
+		MSG_WriteByte(sb, cmd->buttons);
 	if (bits & CM_IMPULSE)
-		MSG_WriteByte(buf, cmd->impulse);
+		MSG_WriteByte(sb, cmd->impulse);
 
-	MSG_WriteByte(buf, cmd->msec);
-	MSG_WriteByte(buf, cmd->lightlevel);
+	MSG_WriteByte(sb, cmd->msec);
+	MSG_WriteByte(sb, cmd->lightlevel);
 }
 
-
-void MSG_WriteDir (sizebuf_t *sb, vec3_t dir)
+void MSG_WriteDir(sizebuf_t *sb, vec3_t dir)
 {
 	if (!dir)
 	{
@@ -563,8 +512,7 @@ void MSG_WriteDir (sizebuf_t *sb, vec3_t dir)
 	MSG_WriteByte(sb, best);
 }
 
-
-void MSG_ReadDir (sizebuf_t *sb, vec3_t dir)
+void MSG_ReadDir(sizebuf_t *sb, vec3_t dir)
 {
 	const int b = MSG_ReadByte(sb);
 	if (b >= NUMVERTEXNORMALS)
@@ -572,16 +520,9 @@ void MSG_ReadDir (sizebuf_t *sb, vec3_t dir)
 	VectorCopy(bytedirs[b], dir);
 }
 
-
-/*
-==================
-MSG_WriteDeltaEntity
-
-Writes part of a packetentities message.
-Can delta from either a baseline or a previous packet_entity
-==================
-*/
-void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity)
+// Writes part of a packetentities message.
+// Can delta from either a baseline or a previous packet_entity
+void MSG_WriteDeltaEntity(entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity)
 {
 	if (!to->number)
 		Com_Error(ERR_FATAL, "Unset entity number");
@@ -589,7 +530,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	if (to->number >= MAX_EDICTS)
 		Com_Error(ERR_FATAL, "Entity number >= MAX_EDICTS");
 
-// send an update
+	// Send an update
 	int bits = 0;
 
 	if (to->number >= 256)
@@ -650,7 +591,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	if (to->solid != from->solid)
 		bits |= U_SOLID;
 
-	// event is not delta compressed, just 0 compressed
+	// Event is not delta compressed, just 0 compressed
 	if (to->event)
 		bits |= U_EVENT;
 	
@@ -684,7 +625,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 
 	// Knightmare 5/11/2002- added alpha
 #ifdef NEW_ENTITY_STATE_MEMBERS
-	// cap new value to correct range
+	// Cap new value to correct range
 	to->alpha = clamp(to->alpha, 0.0, 1.0);
 
 	// Since the floating point value is never quite the same, compare the new and the old as what they will be sent as
@@ -693,7 +634,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 #endif
 
 	//
-	// write the message
+	// Write the message
 	//
 	if (!bits && !force)
 		return; // nothing to send!
@@ -831,20 +772,18 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 		MSG_WriteShort(msg, to->solid);
 }
 
-
-//============================================================
-
-//
-// reading functions
-//
-
-void MSG_BeginReading (sizebuf_t *msg)
+/*
+============================================================
+	READING FUNCTIONS
+============================================================
+*/
+void MSG_BeginReading(sizebuf_t *msg)
 {
 	msg->readcount = 0;
 }
 
 // returns -1 if no more characters are available
-int MSG_ReadChar (sizebuf_t *msg_read)
+int MSG_ReadChar(sizebuf_t *msg_read)
 {
 	int	c;
 	
@@ -872,7 +811,7 @@ int MSG_ReadByte(sizebuf_t *msg_read)
 	return c;
 }
 
-int MSG_ReadShort (sizebuf_t *msg_read)
+int MSG_ReadShort(sizebuf_t *msg_read)
 {
 	int	c;
 	
@@ -886,7 +825,7 @@ int MSG_ReadShort (sizebuf_t *msg_read)
 	return c;
 }
 
-int MSG_ReadLong (sizebuf_t *msg_read)
+int MSG_ReadLong(sizebuf_t *msg_read)
 {
 	int	c;
 	
@@ -907,7 +846,7 @@ int MSG_ReadLong (sizebuf_t *msg_read)
 	return c;
 }
 
-float MSG_ReadFloat (sizebuf_t *msg_read)
+float MSG_ReadFloat(sizebuf_t *msg_read)
 {
 	union
 	{
@@ -934,7 +873,7 @@ float MSG_ReadFloat (sizebuf_t *msg_read)
 	return dat.f;
 }
 
-char *MSG_ReadString (sizebuf_t *msg_read)
+char *MSG_ReadString(sizebuf_t *msg_read)
 {
 	static char	string[2048];
 
@@ -954,7 +893,7 @@ char *MSG_ReadString (sizebuf_t *msg_read)
 	return string;
 }
 
-char *MSG_ReadStringLine (sizebuf_t *msg_read)
+char *MSG_ReadStringLine(sizebuf_t *msg_read)
 {
 	static char	string[2048];
 
@@ -977,7 +916,7 @@ char *MSG_ReadStringLine (sizebuf_t *msg_read)
 
 #ifdef LARGE_MAP_SIZE
 
-float MSG_ReadCoord (sizebuf_t *msg_read)
+float MSG_ReadCoord(sizebuf_t *msg_read)
 {
 	if (LegacyProtocol())
 		return MSG_ReadShort(msg_read) * (1.0 / 8);
@@ -987,7 +926,7 @@ float MSG_ReadCoord (sizebuf_t *msg_read)
 
 #else // LARGE_MAP_SIZE
 
-float MSG_ReadCoord (sizebuf_t *msg_read)
+float MSG_ReadCoord(sizebuf_t *msg_read)
 {
 	return MSG_ReadShort(msg_read) * (1.0 / 8);
 }
@@ -997,7 +936,7 @@ float MSG_ReadCoord (sizebuf_t *msg_read)
 
 #ifdef LARGE_MAP_SIZE
 
-void MSG_ReadPos (sizebuf_t *msg_read, vec3_t pos)
+void MSG_ReadPos(sizebuf_t *msg_read, vec3_t pos)
 {
 	if (LegacyProtocol())
 	{
@@ -1015,7 +954,7 @@ void MSG_ReadPos (sizebuf_t *msg_read, vec3_t pos)
 
 #else // LARGE_MAP_SIZE
 
-void MSG_ReadPos (sizebuf_t *msg_read, vec3_t pos)
+void MSG_ReadPos(sizebuf_t *msg_read, vec3_t pos)
 {
 	pos[0] = MSG_ReadShort(msg_read) * (1.0 / 8);
 	pos[1] = MSG_ReadShort(msg_read) * (1.0 / 8);
@@ -1025,23 +964,23 @@ void MSG_ReadPos (sizebuf_t *msg_read, vec3_t pos)
 #endif // LARGE_MAP_SIZE
 
 
-float MSG_ReadAngle (sizebuf_t *msg_read)
+float MSG_ReadAngle(sizebuf_t *msg_read)
 {
 	return MSG_ReadChar(msg_read) * (360.0 / 256);
 }
 
-float MSG_ReadAngle16 (sizebuf_t *msg_read)
+float MSG_ReadAngle16(sizebuf_t *msg_read)
 {
 	return SHORT2ANGLE(MSG_ReadShort(msg_read));
 }
 
-void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move)
+void MSG_ReadDeltaUsercmd(sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move)
 {
 	memcpy(move, from, sizeof(*move));
 
 	const int bits = MSG_ReadByte(msg_read);
 		
-// read current angles
+	// Read current angles
 	if (bits & CM_ANGLE1)
 		move->angles[0] = MSG_ReadShort(msg_read);
 	if (bits & CM_ANGLE2)
@@ -1049,7 +988,7 @@ void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move
 	if (bits & CM_ANGLE3)
 		move->angles[2] = MSG_ReadShort(msg_read);
 		
-// read movement
+	// Read movement
 	if (bits & CM_FORWARD)
 		move->forwardmove = MSG_ReadShort(msg_read);
 	if (bits & CM_SIDE)
@@ -1057,22 +996,22 @@ void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move
 	if (bits & CM_UP)
 		move->upmove = MSG_ReadShort(msg_read);
 	
-// read buttons
+	// Read buttons
 	if (bits & CM_BUTTONS)
 		move->buttons = MSG_ReadByte(msg_read);
 
 	if (bits & CM_IMPULSE)
 		move->impulse = MSG_ReadByte(msg_read);
 
-// read time to run command
+	// Read time to run command
 	move->msec = MSG_ReadByte(msg_read);
 
-// read the light level
+	// Read the light level
 	move->lightlevel = MSG_ReadByte(msg_read);
 }
 
 
-void MSG_ReadData (sizebuf_t *msg_read, void *data, int len)
+void MSG_ReadData(sizebuf_t *msg_read, void *data, int len)
 {
 	for (int i = 0; i < len; i++)
 		((byte *)data)[i] = MSG_ReadByte(msg_read);
@@ -1081,20 +1020,20 @@ void MSG_ReadData (sizebuf_t *msg_read, void *data, int len)
 
 //===========================================================================
 
-void SZ_Init (sizebuf_t *buf, byte *data, int length)
+void SZ_Init(sizebuf_t *buf, byte *data, int length)
 {
 	memset(buf, 0, sizeof(*buf));
 	buf->data = data;
 	buf->maxsize = length;
 }
 
-void SZ_Clear (sizebuf_t *buf)
+void SZ_Clear(sizebuf_t *buf)
 {
 	buf->cursize = 0;
 	buf->overflowed = false;
 }
 
-void *SZ_GetSpace (sizebuf_t *buf, int length)
+void *SZ_GetSpace(sizebuf_t *buf, int length)
 {
 	if (buf->cursize + length > buf->maxsize)
 	{
@@ -1115,12 +1054,12 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 	return data;
 }
 
-void SZ_Write (sizebuf_t *buf, void *data, int length)
+void SZ_Write(sizebuf_t *buf, void *data, int length)
 {
 	memcpy(SZ_GetSpace(buf, length), data, length);
 }
 
-void SZ_Print (sizebuf_t *buf, char *data)
+void SZ_Print(sizebuf_t *buf, char *data)
 {
 	const int len = strlen(data) + 1;
 
@@ -1140,15 +1079,8 @@ void SZ_Print (sizebuf_t *buf, char *data)
 
 //============================================================================
 
-
-/*
-================
-COM_CheckParm
-
-Returns the position (1 to argc-1) in the program's argument list where the given parameter apears, or 0 if not present
-================
-*/
-int COM_CheckParm (char *parm)
+// Returns the position (1 to argc-1) in the program's argument list where the given parameter apears, or 0 if not present
+int COM_CheckParm(char *parm)
 {
 	for (int i = 1; i < com_argc; i++)
 		if (!strcmp(parm, com_argv[i]))
@@ -1157,12 +1089,12 @@ int COM_CheckParm (char *parm)
 	return 0;
 }
 
-int COM_Argc (void)
+int COM_Argc(void)
 {
 	return com_argc;
 }
 
-char *COM_Argv (int arg)
+char *COM_Argv(int arg)
 {
 	if (arg < 0 || arg >= com_argc || !com_argv[arg])
 		return "";
@@ -1170,7 +1102,7 @@ char *COM_Argv (int arg)
 	return com_argv[arg];
 }
 
-void COM_ClearArgv (int arg)
+void COM_ClearArgv(int arg)
 {
 	if (arg < 0 || arg >= com_argc || !com_argv[arg])
 		return;
@@ -1178,13 +1110,7 @@ void COM_ClearArgv (int arg)
 	com_argv[arg] = "";
 }
 
-
-/*
-================
-COM_InitArgv
-================
-*/
-void COM_InitArgv (int argc, char **argv)
+void COM_InitArgv(int argc, char **argv)
 {
 	if (argc > MAX_NUM_ARGVS)
 		Com_Error(ERR_FATAL, "argc > MAX_NUM_ARGVS");
@@ -1199,14 +1125,8 @@ void COM_InitArgv (int argc, char **argv)
 	}
 }
 
-/*
-================
-COM_AddParm
-
-Adds the given string at the end of the current argument list
-================
-*/
-void COM_AddParm (char *parm)
+// Adds the given string at the end of the current argument list
+void COM_AddParm(char *parm)
 {
 	if (com_argc == MAX_NUM_ARGVS)
 		Com_Error(ERR_FATAL, "COM_AddParm: MAX_NUM)ARGS");
@@ -1214,32 +1134,27 @@ void COM_AddParm (char *parm)
 	com_argv[com_argc++] = parm;
 }
 
-
-
-
-/// just for debugging
-int	memsearch (byte *start, int count, int search)
+// just for debugging
+/*int	memsearch(byte *start, int count, int search)
 {
 	for (int i = 0; i < count; i++)
 		if (start[i] == search)
 			return i;
 
 	return -1;
-}
+}*/
 
-
-char *CopyString (char *in)
+char *CopyString(char *in)
 {
 	char *out = Z_Malloc(strlen(in) + 1);
 	Q_strncpyz(out, in, strlen(in) + 1);
 	return out;
 }
 
-
-void Info_Print (char *s)
+void Info_Print(char *s)
 {
-	char	key[512];
-	char	value[512];
+	char key[512];
+	char value[512];
 
 	if (*s == '\\')
 		s++;
@@ -1287,32 +1202,25 @@ void Info_Print (char *s)
 
 /*
 ==============================================================================
-
 	ZONE MEMORY ALLOCATION
 
 just cleared malloc with counters now...
 ==============================================================================
 */
 
-#define Z_MAGIC		0x1d1d
-
+#define Z_MAGIC 0x1d1d
 
 typedef struct zhead_s
 {
-	struct zhead_s	*prev, *next;
-	short	magic;
-	short	tag;	// for group free
-	int		size;
+	struct zhead_s *prev, *next;
+	short magic;
+	short tag; // for group free
+	int size;
 } zhead_t;
 
 zhead_t	z_chain;
-int		z_count, z_bytes;
+int z_count, z_bytes;
 
-/*
-========================
-Z_Free
-========================
-*/
 void Z_Free(void *ptr)
 {
 	zhead_t *z = (zhead_t *)ptr - 1;
@@ -1328,23 +1236,12 @@ void Z_Free(void *ptr)
 	free(z);
 }
 
-
-/*
-========================
-Z_Stats_f
-========================
-*/
-void Z_Stats_f (void)
+void Z_Stats_f(void)
 {
 	Com_Printf("%i bytes in %i blocks\n", z_bytes, z_count);
 }
 
-/*
-========================
-Z_FreeTags
-========================
-*/
-void Z_FreeTags (int tag)
+void Z_FreeTags(int tag)
 {
 	zhead_t *next;
 
@@ -1356,17 +1253,12 @@ void Z_FreeTags (int tag)
 	}
 }
 
-/*
-========================
-Z_TagMalloc
-========================
-*/
-void *Z_TagMalloc (int size, int tag)
+void *Z_TagMalloc(int size, int tag)
 {
 	size += sizeof(zhead_t);
 	zhead_t *z = malloc(size);
 	if (!z)
-		Com_Error (ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes", size);
+		Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes", size);
 
 	memset(z, 0, size);
 	z_count++;
@@ -1383,12 +1275,7 @@ void *Z_TagMalloc (int size, int tag)
 	return (void *)(z + 1);
 }
 
-/*
-========================
-Z_Malloc
-========================
-*/
-void *Z_Malloc (int size)
+void *Z_Malloc(int size)
 {
 	return Z_TagMalloc(size, 0);
 }
@@ -1464,19 +1351,13 @@ static byte chktbl[1024] =
 0x39, 0x4f, 0xdd, 0xe4, 0xb6, 0x19, 0x27, 0xfb, 0xb8, 0xf5, 0x32, 0x73, 0xe5, 0xcb, 0x32
 };
 
-/*
-====================
-COM_BlockSequenceCRCByte
-
-For proxy protecting
-====================
-*/
-byte COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
+// For proxy protecting
+byte COM_BlockSequenceCRCByte(byte *base, int length, int sequence)
 {
 	byte chkb[64];
 
 	if (sequence < 0)
-		Sys_Error("sequence < 0, this shouldn't happen\n");
+		Sys_Error("%s: sequence < 0, this shouldn't happen\n", __func__);
 
 	byte *p = chktbl + (sequence % (sizeof(chktbl) - 4));
 
@@ -1516,25 +1397,13 @@ float crand(void)
 void Key_Init(void);
 void SCR_EndLoadingPlaque(void);
 
-/*
-=============
-Com_Error_f
-
-Just throw a fatal error to test error shutdown procedures
-=============
-*/
-void Com_Error_f (void)
+// Throws a fatal error to test error shutdown procedures
+void Com_Error_f(void)
 {
 	Com_Error(ERR_FATAL, "%s", Cmd_Argv(1));
 }
 
-
-/*
-=================
-Qcommon_Init
-=================
-*/
-void Qcommon_Init (int argc, char **argv)
+void Qcommon_Init(int argc, char **argv)
 {
 	char *s;
 
@@ -1543,7 +1412,7 @@ void Qcommon_Init (int argc, char **argv)
 
 	z_chain.next = z_chain.prev = &z_chain;
 
-	// prepare enough of the subsystems to handle cvar and command buffer management
+	// Prepare enough of the subsystems to handle cvar and command buffer management
 	COM_InitArgv(argc, argv);
 
 	Swap_Init();
@@ -1554,7 +1423,7 @@ void Qcommon_Init (int argc, char **argv)
 
 	Key_Init();
 
-	// we need to add the early commands twice, because a basedir or cddir needs to be set before execing
+	// We need to add the early commands twice, because a basedir or cddir needs to be set before execing
 	// config files, but we want other parms to override the settings of the config files
 	Cbuf_AddEarlyCommands(false);
 	Cbuf_Execute();
@@ -1567,9 +1436,7 @@ void Qcommon_Init (int argc, char **argv)
 	Cbuf_AddEarlyCommands(true);
 	Cbuf_Execute();
 
-	//
-	// init commands and vars
-	//
+	// Init commands and vars
 	Cmd_AddCommand("z_stats", Z_Stats_f);
 	Cmd_AddCommand("error", Com_Error_f);
 
@@ -1613,7 +1480,7 @@ void Qcommon_Init (int argc, char **argv)
 	// add + commands from command line
 	if (!Cbuf_AddLateCommands())
 	{
-		// if the user didn't give any commands, run default action
+		// If the user didn't give any commands, run default action
 		if (!dedicated->value)
 			Cbuf_AddText("d1\n");
 		else
@@ -1623,22 +1490,16 @@ void Qcommon_Init (int argc, char **argv)
 	}
 	else
 	{
-		// the user asked for something explicit, so drop the loading plaque
+		// The user asked for something explicit, so drop the loading plaque
 		SCR_EndLoadingPlaque();
 	}
 
 	Com_Printf("====== KMQuake 2 SBE Initialized ======\n\n");
 }
 
-/*
-=================
-Qcommon_Frame
-=================
-*/
-void Qcommon_Frame (int msec)
+void Qcommon_Frame(int msec)
 {
-	char	*s;
-	int		time_before, time_between, time_after;
+	char *s;
 
 	if (setjmp(abortframe))
 		return; // an ERR_DROP was thrown
@@ -1647,7 +1508,7 @@ void Qcommon_Frame (int msec)
 	{
 		log_stats->modified = false;
 
-		if (log_stats->value)
+		if (log_stats->integer)
 		{
 			if (log_stats_file)
 			{
@@ -1669,23 +1530,22 @@ void Qcommon_Frame (int msec)
 		}
 	}
 
-	if (fixedtime->value)
+	if (fixedtime->integer)
 	{
 		msec = fixedtime->value;
 	}
-	else if (timescale->value)
+	else if (timescale->integer)
 	{
 		msec *= timescale->value;
-		if (msec < 1)
-			msec = 1;
+		msec = max(msec, 1);
 	}
 
-	if (showtrace->value)
+	if (showtrace->integer)
 	{
-		extern int c_traces, c_brush_traces;
-		extern int c_pointcontents;
+		extern int c_traces, c_brush_traces, c_pointcontents;
 
-		Com_Printf("%4i traces  %4i points\n", c_traces, c_pointcontents);
+		Com_Printf("%4i traces, %4i brush traces, %4i points\n", c_traces, c_brush_traces, c_pointcontents);
+
 		c_traces = 0;
 		c_brush_traces = 0;
 		c_pointcontents = 0;
@@ -1700,22 +1560,19 @@ void Qcommon_Frame (int msec)
 
 	Cbuf_Execute();
 
-	if (host_speeds->value)
-		time_before = Sys_Milliseconds();
-
-	SV_Frame(msec);
-
-	if (host_speeds->value)
-		time_between = Sys_Milliseconds();
-
-	CL_Frame(msec);
-
-	if (host_speeds->value)
-		time_after = Sys_Milliseconds();
-
-
-	if (host_speeds->value)
+	// Print performance stats?
+	if (host_speeds->integer)
 	{
+		const int time_before = Sys_Milliseconds();
+
+		SV_Frame(msec);
+
+		const int time_between = Sys_Milliseconds();
+
+		CL_Frame(msec);
+		
+		const int time_after = Sys_Milliseconds();
+		
 		const int all = time_after - time_before;
 		int sv = time_between - time_before;
 		int cl = time_after - time_between;
@@ -1723,30 +1580,23 @@ void Qcommon_Frame (int msec)
 		const int rf = time_after_ref - time_before_ref;
 		sv -= gm;
 		cl -= rf;
-		Com_Printf("all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n",
-			all, sv, gm, cl, rf);
-	}	
+
+		Com_Printf("all:%3i server:%3i game:%3i client:%3i refresh:%3i\n", all, sv, gm, cl, rf);
+	}
+	else // Just run the game logic
+	{
+		SV_Frame(msec);
+		CL_Frame(msec);
+	}
 }
 
-/*
-=================
-Qcommon_Shutdown
-=================
-*/
-void Qcommon_Shutdown (void)
+void Qcommon_Shutdown(void)
 {	
 	FS_Shutdown();
 }
 
-
-/*
-=================
-StripHighBits
-
-String parsing function from r1q2
-=================
-*/
-void StripHighBits (char *string, int highbits)
+// String parsing function from r1q2
+void StripHighBits(char *string, int highbits)
 {
 	char *p = string;
 	const byte high = (highbits ? 127 : 255);
@@ -1762,29 +1612,16 @@ void StripHighBits (char *string, int highbits)
 	p[0] = '\0';
 }
 
-
-/*
-=================
-IsValidChar
-
-Security function from r1q2
-=================
-*/
-qboolean IsValidChar (int c)
+// Security function from r1q2
+qboolean IsValidChar(int c)
 {
 	if (!isalnum(c) && c != '_' && c != '-')
 		return false;
 	return true;
 }
 
-/*
-=================
-ExpandNewLines
-
-String parsing function from r1q2
-=================
-*/
-void ExpandNewLines (char *string)
+// String parsing function from r1q2
+void ExpandNewLines(char *string)
 {
 	char *q = string;
 	char *s = q;
@@ -1815,14 +1652,8 @@ void ExpandNewLines (char *string)
 	*s = '\0';
 }
 
-/*
-=================
-StripQuotes
-
-String parsing function from r1q2
-=================
-*/
-char *StripQuotes (char *string)
+// String parsing function from r1q2
+char *StripQuotes(char *string)
 {
 	if (!string[0])
 		return string;
@@ -1838,17 +1669,11 @@ char *StripQuotes (char *string)
 	return string;
 }
 
-/*
-=================
-MakePrintable
-
-String parsing function from r1q2
-=================
-*/
-const char *MakePrintable (const void *subject, size_t numchars)
+// String parsing function from r1q2
+const char *MakePrintable(const void *subject, size_t numchars)
 {
 	static char printable[4096];
-	char		tmp[8];
+	char tmp[8];
 
 	if (!subject)
 	{
@@ -1872,7 +1697,7 @@ const char *MakePrintable (const void *subject, size_t numchars)
 		}
 		else
 		{
-			sprintf (tmp, "%.3d", s[0]);
+			sprintf(tmp, "%.3d", s[0]);
 			*p++ = '\\';
 			*p++ = tmp[0];
 			*p++ = tmp[1];

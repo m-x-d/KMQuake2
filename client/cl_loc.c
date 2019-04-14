@@ -156,11 +156,11 @@ void CL_LoadLoc(void)
 				token4++;
 			}
 
-			// copy the data to the struct
+			// Copy the data to the struct
 			int index = CL_FreeLoc();
-			locations[index].origin[0] = atof(token1) * fpScaler;
-			locations[index].origin[1] = atof(token2) * fpScaler;
-			locations[index].origin[2] = atof(token3) * fpScaler;
+			locations[index].origin[0] = (float)atof(token1) * fpScaler;
+			locations[index].origin[1] = (float)atof(token2) * fpScaler;
+			locations[index].origin[2] = (float)atof(token3) * fpScaler;
 
 			Q_strncpyz(locations[index].name, token4, sizeof(locations[index].name));
 			locations[index].used = true;

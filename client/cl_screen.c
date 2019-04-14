@@ -1691,8 +1691,7 @@ void SCR_UpdateScreen(void)
 		if (cls.download) // Knightmare- don't time out on downloads
 			cls.disable_screen = Sys_Milliseconds();
 
-		if (Sys_Milliseconds() - cls.disable_screen > 120000
-			&& cl.refresh_prepped && cl.cinematictime == 0) // Knightmare- dont time out on vid restart
+		if (Sys_Milliseconds() - cls.disable_screen > 120000 && cl.refresh_prepped && cl.cinematictime == 0) // Knightmare- dont time out on vid restart
 		{
 			cls.disable_screen = 0;
 			Com_Printf("Loading plaque timed out.\n");
@@ -1706,9 +1705,7 @@ void SCR_UpdateScreen(void)
 	if (!scr_initialized || !con.initialized)
 		return; // not initialized yet
 
-	//
-	// range check cl_camera_separation so we don't inadvertently fry someone's brain
-	//
+	// Range check cl_camera_separation so we don't inadvertently fry someone's brain
 	if (cl_stereo_separation->value > 1.0)
 		Cvar_SetValue("cl_stereo_separation", 1.0);
 	else if (cl_stereo_separation->value < 0)
@@ -1719,7 +1716,7 @@ void SCR_UpdateScreen(void)
 		numframes = 2;
 		separation[0] = -cl_stereo_separation->value / 2;
 		separation[1] =  cl_stereo_separation->value / 2;
-	}		
+	}
 	else
 	{
 		separation[0] = 0;
@@ -1745,7 +1742,7 @@ void SCR_UpdateScreen(void)
 
 			// NO FULLSCREEN CONSOLE!!!
 			continue;
-		} 
+		}
 
 		// If a cinematic is supposed to be running, handle menus and console specially
 		if (cl.cinematictime > 0)

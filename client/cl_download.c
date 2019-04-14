@@ -43,31 +43,21 @@ byte *precache_model; // used for skin checking in alias models
 
 // ENV_CNT is map load, ENV_CNT+1 is first env map
 #define ENV_CNT (CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
-#define TEXTURE_CNT (ENV_CNT+13)
+#define TEXTURE_CNT (ENV_CNT + 13)
 
 // Knightmare- old configstrings for version 34 client compatibility
 #define OLD_ENV_CNT (OLD_CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
-#define OLD_TEXTURE_CNT (OLD_ENV_CNT+13)
+#define OLD_TEXTURE_CNT (OLD_ENV_CNT + 13)
 
 
 static const char *env_suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 
-void CL_InitFailedDownloadList (void);
+void CL_InitFailedDownloadList(void);
 
-
-/*
-=================
-CL_RequestNextDownload
-=================
-*/
-void CL_RequestNextDownload (void)
+void CL_RequestNextDownload(void)
 {
-	unsigned	map_checksum;		// for detecting cheater maps
+	unsigned	map_checksum; // For detecting cheater maps
 	char		fn[MAX_OSPATH];
-	dmdl_t		*md2header;
-	dmd3_t		*md3header;
-	dmd3mesh_t	*md3mesh;
-	dsprite_t	*spriteheader;
 	char		*skinname;
 	int			cs_sounds, cs_playerskins, cs_images;
 	int			max_models, max_sounds, max_images;
@@ -76,7 +66,7 @@ void CL_RequestNextDownload (void)
 	if (cls.state != ca_connected)
 		return;
 
-	// clear failed download list
+	// Clear failed download list
 	if (precache_check == CS_MODELS)
 		CL_InitFailedDownloadList ();
 
@@ -113,19 +103,17 @@ void CL_RequestNextDownload (void)
 	if (!LegacyProtocol() && precache_check == CS_MODELS && precache_pak == 0 )
 	{
 		precache_pak++;
-		if (strlen(cl.configstrings[CS_PAKFILE])) {
-			if (!CL_CheckOrDownloadFile(cl.configstrings[CS_PAKFILE]))
-				return;  // started a download
-		}
+		if (strlen(cl.configstrings[CS_PAKFILE]) && !CL_CheckOrDownloadFile(cl.configstrings[CS_PAKFILE]))
+			return; // Started a download
 	}
 
 	// ZOID
 	if (precache_check == CS_MODELS)
 	{ 
-		// confirm map
+		// Confirm map
 		precache_check = CS_MODELS + 2; // 0 isn't used
 		if (allow_download_maps->value && !CL_CheckOrDownloadFile(cl.configstrings[CS_MODELS + 1]))
-			return; // started a download
+			return; // Started a download
 	}
 
 	if (precache_check >= CS_MODELS && precache_check < CS_MODELS + max_models)
@@ -146,97 +134,64 @@ void CL_RequestNextDownload (void)
 					if (!CL_CheckOrDownloadFile(cl.configstrings[precache_check]))
 					{
 						precache_model_skin = 1;
-						return; // started a download
+						return; // Started a download
 					}
 
 					precache_model_skin = 1;
 				}
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
-				// pending downloads (models), let's wait here before we can check skins.
+				// Pending downloads (models), let's wait here before we can check skins.
 				if (CL_PendingHTTPDownloads())
 					return;
-#endif	// USE_CURL
+#endif
 
-				// checking for skins in the model
+				// Checking for skins in the model
 				if (!precache_model)
 				{
-
 					FS_LoadFile(cl.configstrings[precache_check], (void **)&precache_model);
 					if (!precache_model)
 					{
 						precache_model_skin = 0;
 						precache_check++;
 
-						continue; // couldn't load it
+						continue; // Couldn't load it
 					}
 
-					if (LittleLong(*(unsigned *)precache_model) != IDALIASHEADER)
+					//mxd. Rewritten for clarity
+					qboolean skipmodel = true;
+					const int modelid = LittleLong(*(unsigned *)precache_model);
+					if (modelid == IDALIASHEADER) // md2 model?
 					{
-						// is it an md3?
-						if (LittleLong(*(unsigned *)precache_model) != IDMD3HEADER)
-						{	
-							// is it a sprite?
-							if (LittleLong(*(unsigned *)precache_model) != IDSPRITEHEADER)
-							{
-								// not a recognized model
-								FS_FreeFile(precache_model);
-								precache_model = 0;
-								precache_model_skin = 0;
-								precache_check++;
-
-								continue;
-							}
-
-							// get sprite header
-							spriteheader = (dsprite_t *)precache_model;
-							if (LittleLong (spriteheader->version) != SPRITE_VERSION)
-							{
-								// not a recognized sprite
-								FS_FreeFile(precache_model);
-								precache_model = 0;
-								precache_check++;
-								precache_model_skin = 0;
-
-								continue; // couldn't load it
-							}
-						}
-						else
-						{
-							// get md3 header
-							md3header = (dmd3_t *)precache_model;
-							if (LittleLong (md3header->version) != MD3_ALIAS_VERSION)
-							{
-								// not a recognized md3
-								FS_FreeFile(precache_model);
-								precache_model = 0;
-								precache_check++;
-								precache_model_skin = 0;
-
-								continue; // couldn't load it
-							}
-						}
+						dmdl_t *md2header = (dmdl_t *)precache_model;
+						skipmodel = (LittleLong(md2header->version) != ALIAS_VERSION);
 					}
-					else
+					else if(modelid == IDMD3HEADER) // md3 model?
 					{
-						// get md2 header
-						md2header = (dmdl_t *)precache_model;
-						if (LittleLong (md2header->version) != ALIAS_VERSION)
-						{
-							// not a recognized md2
-							FS_FreeFile(precache_model);
-							precache_model = 0;
-							precache_check++;
-							precache_model_skin = 0;
+						dmd3_t *md3header = (dmd3_t *)precache_model;
+						skipmodel = (LittleLong(md3header->version) != MD3_ALIAS_VERSION);
+					}
+					else if(modelid == IDSPRITEHEADER) // sprite?
+					{
+						dsprite_t *spriteheader = (dsprite_t *)precache_model;
+						skipmodel = (LittleLong(spriteheader->version) != SPRITE_VERSION);
+					}
 
-							continue; // couldn't load it
-						}
+					if(skipmodel)
+					{
+						// Not a recognized model or sprite
+						FS_FreeFile(precache_model);
+						precache_model = 0;
+						precache_model_skin = 0;
+						precache_check++;
+
+						continue; // Couldn't load it
 					}
 				}
 
 				if (LittleLong(*(unsigned *)precache_model) == IDALIASHEADER) // md2
 				{
-					md2header = (dmdl_t *)precache_model;
+					dmdl_t *md2header = (dmdl_t *)precache_model;
 					while (precache_model_skin - 1 < LittleLong(md2header->num_skins))
 					{
 						skinname = (char *)precache_model + LittleLong(md2header->ofs_skins) + (precache_model_skin - 1) * MAX_SKINNAME;
@@ -258,10 +213,10 @@ void CL_RequestNextDownload (void)
 				}
 				else if (LittleLong(*(unsigned *)precache_model) == IDMD3HEADER) // md3
 				{
-					md3header = (dmd3_t *)precache_model;
+					dmd3_t *md3header = (dmd3_t *)precache_model;
 					while (precache_model_skin - 1 < LittleLong(md3header->num_skins))
 					{
-						md3mesh = (dmd3mesh_t *)((byte *)md3header + LittleLong(md3header->ofs_meshes));
+						dmd3mesh_t *md3mesh = (dmd3mesh_t *)((byte *)md3header + LittleLong(md3header->ofs_meshes));
 						for (int i = 0; i < md3header->num_meshes; i++)
 						{
 							if (precache_model_skin - 1 >= LittleLong(md3header->num_skins))
@@ -283,13 +238,13 @@ void CL_RequestNextDownload (void)
 
 							precache_model_skin++;
 
-							md3mesh = (dmd3mesh_t *)((byte *)md3mesh + LittleLong (md3mesh->meshsize));
+							md3mesh = (dmd3mesh_t *)((byte *)md3mesh + LittleLong(md3mesh->meshsize));
 						}
 					}
 				}
 				else // sprite
 				{
-					spriteheader = (dsprite_t *)precache_model;
+					dsprite_t *spriteheader = (dsprite_t *)precache_model;
 					while (precache_model_skin - 1 < LittleLong(spriteheader->numframes))
 					{
 						skinname = spriteheader->frames[(precache_model_skin - 1)].name;
@@ -297,8 +252,8 @@ void CL_RequestNextDownload (void)
 						// r1ch: spam warning for models that are broken
 						if (strchr(skinname, '\\'))
 							Com_Printf("Warning, sprite %s with incorrectly linked skin: %s\n", cl.configstrings[precache_check], skinname);
-						else if (strlen(skinname) > MAX_SKINNAME-1) //mxd. Never triggered, because dsprframe_t.name[64]
-							Com_Error(ERR_DROP, "Sprite %s has too long a skin path: %s", cl.configstrings[precache_check], skinname);
+						//else if (strlen(skinname) > MAX_SKINNAME - 1) //mxd. Never triggered, because dsprframe_t.name[64]
+							//Com_Error(ERR_DROP, "Sprite %s has too long a skin path: %s", cl.configstrings[precache_check], skinname);
 
 						if (!CL_CheckOrDownloadFile(skinname))
 						{
@@ -483,7 +438,7 @@ void CL_RequestNextDownload (void)
 
 		CM_LoadMap(cl.configstrings[CS_MODELS + 1], true, &map_checksum);
 
-		if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM]))
+		if (map_checksum != (unsigned)atoi(cl.configstrings[CS_MAPCHECKSUM]))
 		{
 			Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
 			return;
@@ -896,7 +851,7 @@ void CL_ParseDownload (void)
 
 		fclose(cls.download);
 
-		// rename the temp file to it's final name
+		// Rename the temp file to it's final name
 		CL_DownloadFileName(oldn, sizeof(oldn), cls.downloadtempname);
 		CL_DownloadFileName(newn, sizeof(newn), cls.downloadname);
 		const int r = rename(oldn, newn);
@@ -906,11 +861,11 @@ void CL_ParseDownload (void)
 		cls.download = NULL;
 		cls.downloadpercent = 0;
 
-		// add new pk3s to search paths, hack by Jay Dolan
+		// Add new pk3s to search paths, hack by Jay Dolan
 		if (strstr(newn, ".pk3")) 
 			FS_AddPK3File(newn);
 
-		// get another file if needed
+		// Get another file if needed
 		CL_RequestNextDownload();
 	}
 }
@@ -931,24 +886,19 @@ typedef struct
 
 dlSpeedInfo_t	dlSpeedInfo;
 
-/*
-=====================
-CL_Download_Reset_KBps_counter
-=====================
-*/
-void CL_Download_Reset_KBps_counter (void)
+
+void CL_Download_Reset_KBps_counter(void)
 {
-	dlSpeedInfo.timeCount = dlSpeedInfo.prevTime = dlSpeedInfo.prevTimeCount = dlSpeedInfo.bytesRead = dlSpeedInfo.byteCount = 0;
+	dlSpeedInfo.timeCount = 0;
+	dlSpeedInfo.prevTime = 0;
+	dlSpeedInfo.prevTimeCount = 0;
+	dlSpeedInfo.bytesRead = 0;
+	dlSpeedInfo.byteCount = 0;
 	dlSpeedInfo.startTime = (float)cls.realtime;
 	cls.downloadrate = 0;
 }
 
-/*
-=====================
-CL_Download_Calculate_KBps
-=====================
-*/
-void CL_Download_Calculate_KBps (int byteDistance, int totalSize)
+void CL_Download_Calculate_KBps(int byteDistance, int totalSize)
 {
 	const float	timeDistance = (float)(cls.realtime - dlSpeedInfo.prevTime);
 	const float	totalTime = (dlSpeedInfo.timeCount - dlSpeedInfo.startTime) / 1000.0f;
@@ -959,8 +909,8 @@ void CL_Download_Calculate_KBps (int byteDistance, int totalSize)
 
 	if (totalTime >= 1.0f)
 	{
-		cls.downloadrate = (float)dlSpeedInfo.byteCount / 1024.0f;
-		Com_DPrintf("Rate: %4.2fKB/s, Downloaded %4.2fKB of %4.2fKB\n", cls.downloadrate, (float)dlSpeedInfo.bytesRead / 1024.0, (float)totalSize / 1024.0);
+		cls.downloadrate = dlSpeedInfo.byteCount / 1024.0f;
+		Com_DPrintf("Rate: %4.2fKB/s, Downloaded %4.2fKB of %4.2fKB\n", cls.downloadrate, dlSpeedInfo.bytesRead / 1024.0f, totalSize / 1024.0f);
 		dlSpeedInfo.byteCount = 0;
 		dlSpeedInfo.startTime = (float)cls.realtime;
 	}

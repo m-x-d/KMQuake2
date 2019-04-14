@@ -1553,7 +1553,7 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glConfig.max_texsize);
 	VID_Printf(PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %i\n", glConfig.max_texsize);
 
-	glConfig.extensions_string = qglGetString(GL_EXTENSIONS);
+	glConfig.extensions_string = (const char*)qglGetString(GL_EXTENSIONS);
 	
 	if (developer->value > 0)	// print extensions 2 to a line
 	{

@@ -146,7 +146,7 @@ void Cbuf_InsertText (char *text)
 Cbuf_CopyToDefer
 ============
 */
-void Cbuf_CopyToDefer (void)
+void Cbuf_CopyToDefer(void)
 {
 	memcpy(defer_text_buf, cmd_text_buf, cmd_text.cursize);
 	defer_text_buf[cmd_text.cursize] = 0;
@@ -158,7 +158,7 @@ void Cbuf_CopyToDefer (void)
 Cbuf_InsertFromDefer
 ============
 */
-void Cbuf_InsertFromDefer (void)
+void Cbuf_InsertFromDefer(void)
 {
 	Cbuf_InsertText(defer_text_buf);
 	defer_text_buf[0] = 0;
@@ -170,7 +170,7 @@ void Cbuf_InsertFromDefer (void)
 Cbuf_ExecuteText
 ============
 */
-void Cbuf_ExecuteText (int exec_when, char *text)
+void Cbuf_ExecuteText(int exec_when, char *text)
 {
 	switch (exec_when)
 	{
@@ -186,16 +186,16 @@ void Cbuf_ExecuteText (int exec_when, char *text)
 Cbuf_Execute
 ============
 */
-void Cbuf_Execute (void)
+void Cbuf_Execute(void)
 {
-	int		i;
-	char	line[1024];
+	int i;
+	char line[1024];
 
-	alias_count = 0;		// don't allow infinite alias loops
+	alias_count = 0; // Don't allow infinite alias loops
 
 	while (cmd_text.cursize)
 	{
-// find a \n or ; line break
+		// Find a \n or ; line break
 		char *text = (char *)cmd_text.data;
 
 		int quotes = 0;
@@ -211,8 +211,8 @@ void Cbuf_Execute (void)
 
 		// [SkulleR]'s fix for overflow vulnerability
 		if (i > sizeof(line) - 1)
-			i =  sizeof(line) - 1; 		
-		memcpy (line, text, i); // stack buffer overflow possible
+			i = sizeof(line) - 1;
+		memcpy(line, text, i); // stack buffer overflow possible
 		line[i] = 0;
 		
 // delete the text from the command buffer and move remaining commands down
@@ -220,20 +220,22 @@ void Cbuf_Execute (void)
 // beginning of the text buffer
 
 		if (i == cmd_text.cursize)
+		{
 			cmd_text.cursize = 0;
+		}
 		else
 		{
 			i++;
 			cmd_text.cursize -= i;
-			memmove (text, text+i, cmd_text.cursize);
+			memmove(text, text + i, cmd_text.cursize);
 		}
 
-// execute the command line
-		Cmd_ExecuteString (line);
+		// Execute the command line
+		Cmd_ExecuteString(line);
 		
 		if (cmd_wait)
 		{
-			// skip out while text still remains in buffer, leaving it for next frame
+			// Skip out while text still remains in buffer, leaving it for next frame
 			cmd_wait = false;
 			break;
 		}
@@ -254,7 +256,7 @@ the client and server initialize for the first time.
 Other commands are added late, after all initialization is complete.
 ===============
 */
-void Cbuf_AddEarlyCommands (qboolean clear)
+void Cbuf_AddEarlyCommands(qboolean clear)
 {
 	for (int i = 0; i < COM_Argc(); i++)
 	{

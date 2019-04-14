@@ -289,11 +289,10 @@ typedef struct
 	float		renderFrameTime;	// seconds since last refresh frame
 
 // screen rendering information
-	float		disable_screen;		// showing loading plaque between levels
-									// or changing rendering dlls
+	int			disable_screen;		// showing loading plaque between levels or changing rendering dlls
 									// if time gets > 30 seconds ahead, break it
-	int			disable_servercount;	// when we receive a frame and cl.servercount
-									// > cls.disable_servercount, clear disable_screen
+									//mxd. float -> int
+	int			disable_servercount;// when we receive a frame and cl.servercount > cls.disable_servercount, clear disable_screen
 
 // connection information
 	char		servername[MAX_OSPATH];	// name of server from original connect
