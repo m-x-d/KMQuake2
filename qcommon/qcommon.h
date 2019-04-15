@@ -25,6 +25,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../game/q_shared.h"
 
 #define	VERSION		0.20 //was 3.21
+#define ENGINE_NAME "KMQuake 2 SBE" //mxd
+
+#ifdef ERASER_COMPAT_BUILD //mxd. Formatted to be appended to ENGINE_NAME
+	#ifdef NET_SERVER_BUILD
+		#define ENGINE_BUILD " (Eraser net server)"
+	#else
+		#define ENGINE_BUILD " (Eraser compatible)"
+	#endif
+#else
+	#ifdef NET_SERVER_BUILD
+		#define ENGINE_BUILD " (net server)"
+	#else
+		#define ENGINE_BUILD ""
+	#endif
+#endif
 
 #define	BASEDIRNAME		"baseq2"
 
@@ -33,46 +48,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DEFAULTSKIN		"grunt"
 
 #ifdef WIN32
-
-#ifdef NDEBUG
-#define BUILDSTRING "Win32 RELEASE"
+	#ifdef NDEBUG
+		#define BUILDSTRING "Win32 RELEASE"
+	#else
+		#define BUILDSTRING "Win32 DEBUG"
+	#endif
+	#ifdef _M_IX86
+		#define	CPUSTRING	"x86"
+	#elif defined _M_X64
+		#define	CPUSTRING	"x64"
+	#endif
 #else
-#define BUILDSTRING "Win32 DEBUG"
-#endif
-
-#ifdef _M_IX86
-#define	CPUSTRING	"x86"
-#elif defined _M_ALPHA
-#define	CPUSTRING	"AXP"
-#endif
-
-#elif defined __linux__
-
-#define BUILDSTRING "Linux"
-
-#ifdef __i386__
-#define CPUSTRING "i386"
-#elif defined __alpha__
-#define CPUSTRING "axp"
-#else
-#define CPUSTRING "Unknown"
-#endif
-
-#elif defined __sun__
-
-#define BUILDSTRING "Solaris"
-
-#ifdef __i386__
-#define CPUSTRING "i386"
-#else
-#define CPUSTRING "sparc"
-#endif
-
-#else	// !WIN32
-
-#define BUILDSTRING "NON-WIN32"
-#define	CPUSTRING	"NON-WIN32"
-
+	#define BUILDSTRING "NON-WIN32"
+	#define	CPUSTRING	"NON-WIN32"
 #endif
 
 //============================================================================
@@ -110,28 +98,28 @@ void MSG_WriteAngle(sizebuf_t *sb, float f);
 void MSG_WriteAngle16(sizebuf_t *sb, float f);
 void MSG_WriteDeltaUsercmd(sizebuf_t *sb, usercmd_t *from, usercmd_t *cmd);
 void MSG_WriteDeltaEntity(entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity);
-void MSG_WriteDir(sizebuf_t *sb, vec3_t vector);
+void MSG_WriteDir(sizebuf_t *sb, vec3_t dir);
 
 
-void MSG_BeginReading(sizebuf_t *sb);
+void MSG_BeginReading(sizebuf_t *msg);
 
-int MSG_ReadChar(sizebuf_t *sb);
-int MSG_ReadByte(sizebuf_t *sb);
-int MSG_ReadShort(sizebuf_t *sb);
-int MSG_ReadLong(sizebuf_t *sb);
-float MSG_ReadFloat(sizebuf_t *sb);
-char *MSG_ReadString(sizebuf_t *sb);
-char *MSG_ReadStringLine(sizebuf_t *sb);
+int MSG_ReadChar(sizebuf_t *msg_read);
+int MSG_ReadByte(sizebuf_t *msg_read);
+int MSG_ReadShort(sizebuf_t *msg_read);
+int MSG_ReadLong(sizebuf_t *msg_read);
+float MSG_ReadFloat(sizebuf_t *msg_read);
+char *MSG_ReadString(sizebuf_t *msg_read);
+char *MSG_ReadStringLine(sizebuf_t *msg_read);
 
-float MSG_ReadCoord(sizebuf_t *sb);
-void MSG_ReadPos(sizebuf_t *sb, vec3_t pos);
-float MSG_ReadAngle(sizebuf_t *sb);
-float MSG_ReadAngle16(sizebuf_t *sb);
-void MSG_ReadDeltaUsercmd(sizebuf_t *sb, usercmd_t *from, usercmd_t *cmd);
+float MSG_ReadCoord(sizebuf_t *msg_read);
+void MSG_ReadPos(sizebuf_t *msg_read, vec3_t pos);
+float MSG_ReadAngle(sizebuf_t *msg_read);
+float MSG_ReadAngle16(sizebuf_t *msg_read);
+void MSG_ReadDeltaUsercmd(sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move);
 
-void MSG_ReadDir(sizebuf_t *sb, vec3_t vector);
+void MSG_ReadDir(sizebuf_t *sb, vec3_t dir);
 
-void MSG_ReadData(sizebuf_t *sb, void *buffer, int size);
+void MSG_ReadData(sizebuf_t *msg_read, void *data, int len);
 
 #ifdef LARGE_MAP_SIZE // 24-bit pmove origin coordinate transmission code
 void MSG_WritePMCoordNew(sizebuf_t *sb, int in);
@@ -539,7 +527,7 @@ char *Cvar_Userinfo(void);
 char *Cvar_Serverinfo(void);
 // returns an info string containing all the CVAR_SERVERINFO cvars
 
-extern	qboolean userinfo_modified;
+extern qboolean userinfo_modified;
 // this is set each time a CVAR_USERINFO variable is changed so that the client knows to send it to the server
 
 /*

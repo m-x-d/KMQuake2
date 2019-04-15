@@ -159,7 +159,7 @@ void CL_ParseServerData (void)
 		// seperate the printfs so the server message can have a color
 		Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
 		con.ormask = 128;
-		Com_Printf("%c"S_COLOR_SHADOW S_COLOR_ALT"%s\n", 2, str);
+		Com_Printf("%c"S_COLOR_SHADOW S_COLOR_ALT"%s\n", 2, str); //mxd. First char marks the text as colored (see Con_Print())
 		con.ormask = 0;
 
 		// need to prep refresh at next oportunity

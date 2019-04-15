@@ -222,8 +222,8 @@ void JoinServer_MenuInit( void )
 
 	static const char *compatibility_names[] =
 	{
-		"version 56 (KMQuake2)", // was 35
-		"version 34 (stock Quake2)",
+		"version 56 (KMQuake 2)", // was 35
+		"version 34 (stock Quake 2)",
 		0
 	};
 
@@ -245,7 +245,7 @@ void JoinServer_MenuInit( void )
 	s_joinserver_compatibility_box.generic.y	= y += MENU_LINE_SIZE;
 	s_joinserver_compatibility_box.generic.cursor_offset = -24;
 	s_joinserver_compatibility_box.generic.callback = ClientCompatibilityFunc;
-	s_joinserver_compatibility_box.generic.statusbar = "set to version 34 to ping non-KMQuake2 servers";
+	s_joinserver_compatibility_box.generic.statusbar = "set to version 34 to ping non-KMQuake 2 servers";
 	s_joinserver_compatibility_box.itemnames = compatibility_names;
 
 	s_joinserver_address_book_action.generic.type	= MTYPE_ACTION;

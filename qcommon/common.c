@@ -127,14 +127,14 @@ void Com_Printf(char *fmt, ...)
 		Sys_ConsoleOutput(msg);
 
 	// logfile
-	if (logfile_active && logfile_active->value)
+	if (logfile_active && logfile_active->integer)
 	{
 		char name[MAX_QPATH];
 		
 		if (!logfile)
 		{
-			Com_sprintf(name, sizeof(name), "%s/qconsole.log", FS_Gamedir());
-			if (logfile_active->value > 2)
+			Com_sprintf(name, sizeof(name), "%s/kmq2console.log", FS_Gamedir());
+			if (logfile_active->integer > 2)
 				logfile = fopen(name, "a");
 			else
 				logfile = fopen(name, "w");
@@ -143,7 +143,7 @@ void Com_Printf(char *fmt, ...)
 		if (logfile)
 			fprintf(logfile, "%s", msg);
 
-		if (logfile_active->value > 1)
+		if (logfile_active->integer > 1)
 			fflush(logfile); // force it to save every time
 	}
 }
@@ -1454,8 +1454,8 @@ void Qcommon_Init(int argc, char **argv)
 #endif
 
 	// Knightmare- for the game DLL to tell what engine it's running under
-	sv_engine = Cvar_Get("sv_engine", "KMQuake2", CVAR_SERVERINFO | CVAR_NOSET | CVAR_LATCH);
-	sv_engine_version = Cvar_Get("sv_engine_version", va("%4.2f",VERSION), CVAR_SERVERINFO | CVAR_NOSET | CVAR_LATCH);
+	sv_engine = Cvar_Get("sv_engine", ENGINE_NAME, CVAR_SERVERINFO | CVAR_NOSET | CVAR_LATCH); //mxd. "KMQuake2" -> ENGINE_NAME
+	sv_engine_version = Cvar_Get("sv_engine_version", va("%4.2f", VERSION), CVAR_SERVERINFO | CVAR_NOSET | CVAR_LATCH);
 	// end Knightmare
 	
 	s = va("%4.2f %s %s %s", VERSION, CPUSTRING, __DATE__, BUILDSTRING);

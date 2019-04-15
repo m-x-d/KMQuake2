@@ -17,10 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+
 // screen.h
 
-#ifndef SCREEN_H
-#define SCREEN_H
+#pragma once
 
 typedef struct
 {
@@ -30,7 +30,6 @@ typedef struct
 } screenscale_t;
 
 screenscale_t screenScale;
-
 
 typedef enum
 {
@@ -76,12 +75,11 @@ void SCR_DrawChar(float x, float y, scralign_t align, int num, int red, int gree
 void SCR_DrawString(float x, float y, scralign_t align, const char *string, int alpha);
 void SCR_DrawCrosshair(void);
 
-
 extern	float		scr_con_current;
-extern	float		scr_conlines; // lines of console to display
+extern	float		scr_conlines; // Lines of console to display
 
 extern	float		scr_letterbox_current;
-extern	float		scr_letterbox_lines; // lines of letterbox to display
+extern	float		scr_letterbox_lines; // Lines of letterbox to display
 extern	qboolean	scr_letterbox_active;
 extern	qboolean	scr_hidehud;
 
@@ -93,7 +91,7 @@ extern	cvar_t		*crosshair_scale;
 extern	cvar_t		*crosshair_alpha;
 extern	cvar_t		*crosshair_pulse;
 
-extern	vrect_t		scr_vrect; // position of render window
+extern	vrect_t		scr_vrect; // Position of render window
 
 extern	char		crosshair_pic[MAX_QPATH];
 extern	int			crosshair_width, crosshair_height;
@@ -103,7 +101,7 @@ extern	int			crosshair_width, crosshair_height;
 #define SCREEN_HEIGHT	480.0f
 #define STANDARD_ASPECT_RATIO ((float)SCREEN_WIDTH / (float)SCREEN_HEIGHT)
 
-// rendered size of console font - everthing adjusts to this...
+// Rendered size of console font - everthing adjusts to this...
 #define	FONT_SIZE		SCR_ScaledVideo(con_font_size->value)
 #define CON_FONT_SCALE	(FONT_SIZE / 8)
 
@@ -112,13 +110,11 @@ extern	int			crosshair_width, crosshair_height;
 
 #define HUD_FONT_SIZE	8.0
 
-
 //
-// scr_cinematic.c
+// cl_cinematic.c
 //
 void SCR_PlayCinematic(char *name);
 qboolean SCR_DrawCinematic(void);
+void SCR_RunCinematic(void);
 void SCR_StopCinematic(void);
 void SCR_FinishCinematic(void);
-
-#endif // SCREEN_H

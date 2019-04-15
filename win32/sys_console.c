@@ -29,21 +29,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define CONSOLE_WINDOW_STYLE		(WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN | WS_GROUP)
-#define CONSOLE_WINDOW_CLASS_NAME	"KMQuake 2 SBE Console"
-
-#ifdef ERASER_COMPAT_BUILD
-	#ifdef NET_SERVER_BUILD
-		#define CONSOLE_WINDOW_NAME	"KMQuake2 Console (Eraser net server)"
-	#else // NET_SERVER_BUILD
-		#define CONSOLE_WINDOW_NAME	"KMQuake2 Console (Eraser Compatible)"
-	#endif // NET_SERVER_BUILD
-#else // ERASER_COMPAT_BUILD
-	#ifdef NET_SERVER_BUILD
-		#define CONSOLE_WINDOW_NAME	"KMQuake2 Console (net server)"
-	#else
-		#define CONSOLE_WINDOW_NAME	"KMQuake 2 SBE Console"
-	#endif // NET_SERVER_BUILD
-#endif // ERASER_COMPAT_BUILD
+#define CONSOLE_WINDOW_CLASS_NAME	ENGINE_NAME" Console" //mxd. +ENGINE_NAME
+#define CONSOLE_WINDOW_NAME			ENGINE_NAME" Console"ENGINE_BUILD //mxd. +ENGINE_NAME, +ENGINE_BUILD
 
 #define MAX_OUTPUT		32768
 #define MAX_INPUT		256
@@ -79,12 +66,7 @@ typedef struct
 static sysConsole_t	sys_console;
 
 
-/*
-=================
-Sys_ConsoleInput
-=================
-*/
-char *Sys_ConsoleInput (void)
+char *Sys_ConsoleInput(void)
 {
 	static char buffer[MAX_INPUT];
 
@@ -97,36 +79,36 @@ char *Sys_ConsoleInput (void)
 	return buffer;
 }
 
-
-/*
-=================
-Sys_ConsoleOutput
-=================
-*/
-void Sys_ConsoleOutput (char *text)
+void Sys_ConsoleOutput(char *text)
 {
-	char	buffer[MAX_PRINTMSG];
-	int		len = 0;
+	char buffer[MAX_PRINTMSG];
+	int len = 0;
 
 	// Change \n to \r\n so it displays properly in the edit box and
 	// remove color escapes
 	while (*text)
 	{
-		if (*text == '\n'){
+		if (*text == '\n')
+		{
 			buffer[len++] = '\r';
 			buffer[len++] = '\n';
 		}
 		else if (Q_IsColorString(text))
+		{
 			text++;
+		}
 		else
+		{
 			buffer[len++] = *text;
+		}
 
 		text++;
 	}
 	buffer[len] = 0;
 
 	sys_console.outLen += len;
-	if (sys_console.outLen >= MAX_OUTPUT) {
+	if (sys_console.outLen >= MAX_OUTPUT)
+	{
 		SendMessage(sys_console.hWndOutput, EM_SETSEL, 0, -1);
 		sys_console.outLen = len;
 	}
@@ -145,25 +127,18 @@ void Sys_ConsoleOutput (char *text)
 	InvalidateRect(sys_console.hWndOutput, NULL, TRUE);
 }
 
-
-/*
-=================
-Sys_Error
-=================
-*/
-void Sys_Error (char *error, ...)
+void Sys_Error(char *error, ...)
 {
 	char	string[1024];
 	va_list	argPtr;
 	MSG		msg;
 
 	// Make sure all subsystems are down
-	CL_Shutdown ();
+	CL_Shutdown();
 	Qcommon_Shutdown();
 
 	va_start(argPtr, error);
-//	vsprintf(string, error, argPtr);
-	Q_vsnprintf (string, sizeof(string), error, argPtr);
+	Q_vsnprintf(string, sizeof(string), error, argPtr);
 	va_end(argPtr);
 
 	// Echo to console
@@ -194,18 +169,13 @@ void Sys_Error (char *error, ...)
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
 		// Don't hog the CPU
 		Sleep(25);
 	}
 }
 
-
-/*
-=================
-Sys_ShowConsole
-=================
-*/
-void Sys_ShowConsole (qboolean show)
+void Sys_ShowConsole(qboolean show)
 {
 	if (!show)
 	{
@@ -226,13 +196,7 @@ void Sys_ShowConsole (qboolean show)
 	SendMessage(sys_console.hWndOutput, EM_SCROLLCARET, 0, 0);
 }
 
-
-/*
-=================
-Sys_ConsoleProc
-=================
-*/
-static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LONG WINAPI Sys_ConsoleProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -242,12 +206,12 @@ static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 			SetFocus(sys_console.hWndInput);
 			return 0;
 		}
-
 		break;
+
 	case WM_CLOSE:
 		Sys_Quit();
-
 		break;
+
 	case WM_COMMAND:
 		if (HIWORD(wParam) == BN_CLICKED)
 		{
@@ -270,25 +234,28 @@ static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		{
 			InvalidateRect(sys_console.hWndOutput, NULL, TRUE);
 		}
-
 		break;
+
 	case WM_CTLCOLOREDIT:
 		if ((HWND)lParam == sys_console.hWndOutput)
 		{
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetBkColor((HDC)wParam, RGB(39, 115, 102));
 			SetTextColor((HDC)wParam, RGB(255, 255, 255));
+
 			return (LONG)sys_console.hBrushOutput;
 		}
+
 		if ((HWND)lParam == sys_console.hWndInput)
 		{
 			SetBkMode((HDC)wParam, TRANSPARENT);
 			SetBkColor((HDC)wParam, RGB(255, 255, 255));
 			SetTextColor((HDC)wParam, RGB(0, 0, 0));
+
 			return (LONG)sys_console.hBrushInput;
 		}
-
 		break;
+
 	case WM_CTLCOLORSTATIC:
 		if ((HWND)lParam == sys_console.hWndMsg)
 		{
@@ -302,25 +269,18 @@ static LONG WINAPI Sys_ConsoleProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 			return (LONG)sys_console.hBrushMsg;
 		}
-
 		break;
+
 	case WM_TIMER:
 		sys_console.flashColor = !sys_console.flashColor;
 		InvalidateRect(sys_console.hWndMsg, NULL, TRUE);
-		
 		break;
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-
-/*
-=================
-Sys_ConsoleEditProc
-=================
-*/
-static LONG WINAPI Sys_ConsoleEditProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LONG WINAPI Sys_ConsoleEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -335,36 +295,31 @@ static LONG WINAPI Sys_ConsoleEditProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 					Com_Printf("]%s\n", sys_console.cmdBuffer);
 				}
 
-				return 0;	// Keep it from beeping
+				return 0; // Keep it from beeping
 			}
 		}
 		else if (hWnd == sys_console.hWndOutput)
 		{
 			return 0;	// Read only
 		}
-
 		break;
+
 	case WM_VSCROLL:
 		if (LOWORD(wParam) == SB_THUMBTRACK)
 			return 0;
-
 		break;
 	}
 
 	if (hWnd == sys_console.hWndOutput)
 		return CallWindowProc(sys_console.defOutputProc, hWnd, uMsg, wParam, lParam);
+
 	if (hWnd == sys_console.hWndInput)
 		return CallWindowProc(sys_console.defInputProc, hWnd, uMsg, wParam, lParam);
+
 	return 0;
 }
 
-
-/*
-=================
-Sys_ShutdownConsole
-=================
-*/
-void Sys_ShutdownConsole (void)
+void Sys_ShutdownConsole(void)
 {
 	if (sys_console.timerActive)
 		KillTimer(sys_console.hWnd, 1);
@@ -396,12 +351,8 @@ void Sys_ShutdownConsole (void)
 }
 
 #define LOGO_OFFSET 125
-/*
-=================
-Sys_InitDedConsole
-=================
-*/
-void Sys_InitDedConsole (void)
+
+void Sys_InitDedConsole(void)
 {
 	WNDCLASSEX	wc;
 	RECT		r;

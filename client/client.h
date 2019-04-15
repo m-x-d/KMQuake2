@@ -1034,7 +1034,7 @@ int	color8green(int color8);
 int	color8blue(int color8);
 void color8_to_vec3(int color8, vec3_t v); //mxd
 void vectoangles(vec3_t value1, vec3_t angles);
-void vectoangles2(vec3_t value1, vec3_t angles); //mxd. Identical to vectoangles
+void vectoangles2(vec3_t value1, vec3_t angles); //mxd. Identical to vectoangles //TODO: remove?
 
 
 #ifdef LOC_SUPPORT	// Xile/NiceAss LOC
@@ -1048,6 +1048,7 @@ void CL_LocDelete(void);
 void CL_LocAdd(char *name);
 void CL_LocWrite(void);
 void CL_LocHelp_f(void);
+
 #endif	// LOC_SUPPORT
 
 

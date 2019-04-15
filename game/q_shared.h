@@ -23,15 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-#ifdef _MSC_VER	// _WIN32
-// unknown pragmas are SUPPOSED to be ignored, but....
-#pragma warning(disable : 4244)     // MIPS
-#pragma warning(disable : 4136)     // X86
-#pragma warning(disable : 4051)     // ALPHA
-
-#pragma warning(disable : 4018)     // signed/unsigned mismatch
-#pragma warning(disable : 4305)		// truncation from const double to float
-
+#ifdef _MSC_VER
+	#pragma warning(disable : 4018) // signed/unsigned mismatch
+	#pragma warning(disable : 4244) // conversion from X to Y, possible loss of data
+	#pragma warning(disable : 4305) // truncation from 'double' to 'float'
 #endif
 
 #include <assert.h>
@@ -42,88 +37,49 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdlib.h>
 #include <time.h>
 
-#if (defined _M_IX86 || defined __i386__) && !defined C_ONLY && !defined __sun__
-#define id386	1
+#if defined _M_IX86
+	#define id386	1 //TODO: (mxd) remove 
 #else
-#define id386	0
+	#define id386	0
 #endif
 
-#if defined _M_ALPHA && !defined C_ONLY
-#define idaxp	1
-#else
-#define idaxp	0
+#ifdef true
+	#undef true
 #endif
 
-#if defined(__APPLE__) || defined(MACOSX)
-#undef true
-#undef false
-#define _mkdir(a)	mkdir(a, 0777)
-//#define DISABLE_FOG
-#endif // __APPLE__ || MACOSX
-
-typedef unsigned char 		byte;
-typedef enum {false, true}	qboolean;
-
-// 64-bit integer definitions
-#ifdef _WIN32 
-#  ifndef __GNUC__	// MSVC/Borland
-	typedef __int64 qint64;
-#  else	// Cygwin
-#	include <_G_config.h>
-	typedef _G_int64_t qint64;
-#  endif
-#elif defined(__MACOS__)
-#	include <sys/types.h>
-	typedef SInt64 qint64;
-#elif defined(__APPLE__) || defined(MACOSX) // MacOS X Framework build
-#	include <sys/types.h>
-	typedef int64_t qint64;
-#elif defined(__BEOS__)	// Be
-#	include <inttypes.h>
-	typedef int64_t qint64;
-#elif defined (__EMX__)	// OS/2 GCC
-	typedef long long qint64;
-#elif defined (DJGPP)	// DJGPP
-	typedef long long qint64;
-#elif defined(R5900)	// PS2 EE
-	typedef long qint64;
+#ifdef false
+	#undef false
 #endif
+
+typedef enum {false, true} qboolean;
+typedef unsigned char byte;
 
 #ifndef NULL
-#define NULL ((void *)0)
-#endif
-
-#ifndef min
-#define min(a,b)        (((a) < (b)) ? (a) : (b))
-#endif
-#ifndef max
-#define max(a,b)        (((a) > (b)) ? (a) : (b))
+	#define NULL ((void *)0)
 #endif
 
 #ifndef clamp //mxd
-#define clamp(value, minimum, maximum) (min(maximum, max(minimum, value)))
+	#define clamp(value, minimum, maximum) (min(maximum, max(minimum, value)))
 #endif
 
 #ifndef nonzero //mxd
-#define nonzero(value, default_value) (value ? value : default_value)
+	#define nonzero(value, default_value) (value ? value : default_value)
 #endif
 
 #ifndef sign //mxd. Same as Math.Sign in C#
-#define sign(value) (value == 0 ? 0 : (value > 0 ? 1 : -1))
+	#define sign(value) (value == 0 ? 0 : (value > 0 ? 1 : -1))
 #endif
 
 // from Quake3 source
 #ifdef _MSC_VER	// _WIN32
-//#define Q_vsnprintf _vsnprintf
-__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args) //TODO: mxd. Replace with vsnprintf?
+__inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list Args) //TODO: mxd. Replace with vsnprintf?
 {
-	int ret = _vsnprintf(Dest, Count, Format, Args);  
+	const int ret = _vsnprintf(Dest, Count, Format, Args);  
 	Dest[Count-1] = 0;	// null terminate
 	return ret;
 }
 #else
-// TODO: do we need Mac define?
-#define Q_vsnprintf vsnprintf
+	#define Q_vsnprintf vsnprintf
 #endif
 
 // Knightmare- whether to include new engine enhancements
@@ -138,16 +94,14 @@ __inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list 
 //#define NET_SERVER_BUILD
 
 #ifdef KMQUAKE2_ENGINE_MOD
-#ifndef ERASER_COMPAT_BUILD
-#define NEW_ENTITY_STATE_MEMBERS
-#endif
-#define NEW_PLAYER_STATE_MEMBERS
-// enable to build exe with 24-bit coordinate transmission
-// changes pmove origin size in game DLLs
-#define LARGE_MAP_SIZE
-// enable to include looping of attenuated sounds
-// changes entity_state_t struct
-#define LOOP_SOUND_ATTENUATION
+	#ifndef ERASER_COMPAT_BUILD
+		#define NEW_ENTITY_STATE_MEMBERS
+	#endif
+	#define NEW_PLAYER_STATE_MEMBERS
+	// Enable to build exe with 24-bit coordinate transmission. Changes pmove origin size in game DLLs.
+	#define LARGE_MAP_SIZE
+	// Enable to include looping of attenuated sounds. Changes entity_state_t struct
+	#define LOOP_SOUND_ATTENUATION
 #endif
 
 #define ROQ_SUPPORT // whether to use new cinematic system
@@ -167,10 +121,9 @@ __inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list 
 #define CLIENT_SPLIT_NETFRAME // whether to use split net and render frames in the client
 
 #define CLIENT_THIRDPERSON_CVAR "cg_thirdperson"
-//#define CLIENT_THIRDPERSON_CVAR "cl_3dcam"
 
 #define SAVEGAME_USE_FUNCTION_TABLE
-#define SAVEGAME_DLLNAME "Lazarus Quake II mod with CTF"
+#define SAVEGAME_DLLNAME "Lazarus Quake II mod with CTF" //TODO: mxd. Change name?
 #define SAVEGAME_VERSION 1
 
 // angle indexes
@@ -190,20 +143,20 @@ __inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list 
 //
 #define	MAX_CLIENTS			256		// absolute limit
 #ifdef KMQUAKE2_ENGINE_MOD		//Knightmare- increase MAX_EDICTS
-#define	MAX_EDICTS			8192	// must change protocol to increase more
+	#define	MAX_EDICTS		8192	// must change protocol to increase more
 #else
-#define	MAX_EDICTS			1024	// must change protocol to increase more
+	#define	MAX_EDICTS		1024	// must change protocol to increase more
 #endif
 #define	MAX_LIGHTSTYLES		256
 
 #ifdef KMQUAKE2_ENGINE_MOD		//Knightmare- Ding-Dong, Index: Overflow is dead!
-#define	MAX_MODELS			8192	// these are sent over the net as shorts
-#define	MAX_SOUNDS			8192	// so they cannot exceed 64K
-#define	MAX_IMAGES			2048
+	#define	MAX_MODELS		8192	// These are sent over the net as shorts
+	#define	MAX_SOUNDS		8192	// so they cannot exceed 64K
+	#define	MAX_IMAGES		2048
 #else
-#define	MAX_MODELS			256	// these are sent over the net as bytes
-#define	MAX_SOUNDS			256	// so they cannot be blindly increased
-#define	MAX_IMAGES			256
+	#define	MAX_MODELS		256	// These are sent over the net as bytes
+	#define	MAX_SOUNDS		256	// so they cannot be blindly increased
+	#define	MAX_IMAGES		256
 #endif
 
 //Knightmare- hacked offsets for old demos
@@ -214,46 +167,44 @@ __inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list 
 //end Knightmare
 
 #define	MAX_ITEMS			256
-#define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
+#define MAX_GENERAL			(MAX_CLIENTS * 2) // general config strings
 
 
 // game print flags
-#define	PRINT_LOW			0		// pickup messages
-#define	PRINT_MEDIUM		1		// death messages
-#define	PRINT_HIGH			2		// critical messages
-#define	PRINT_CHAT			3		// chat messages
+#define	PRINT_LOW			0	// pickup messages
+#define	PRINT_MEDIUM		1	// death messages
+#define	PRINT_HIGH			2	// critical messages
+#define	PRINT_CHAT			3	// chat messages
 
 
 
-#define	ERR_FATAL			0		// exit the entire game with a popup window
-#define	ERR_DROP			1		// print to console and disconnect from game
-#define	ERR_DISCONNECT		2		// don't kill server
+#define	ERR_FATAL			0	// exit the entire game with a popup window
+#define	ERR_DROP			1	// print to console and disconnect from game
+#define	ERR_DISCONNECT		2	// don't kill server
 
 #define	PRINT_ALL			0
-#define PRINT_DEVELOPER		      1		// only print when "developer 1"
-#define PRINT_ALERT			2		
+#define PRINT_DEVELOPER		1	// only print when "developer 1"
+#define PRINT_ALERT			2
 
 
-// destination class for gi.multicast()
+// Destination class for gi.multicast()
 typedef enum
 {
-MULTICAST_ALL,
-MULTICAST_PHS,
-MULTICAST_PVS,
-MULTICAST_ALL_R,
-MULTICAST_PHS_R,
-MULTICAST_PVS_R
+	MULTICAST_ALL,
+	MULTICAST_PHS,
+	MULTICAST_PVS,
+	MULTICAST_ALL_R,
+	MULTICAST_PHS_R,
+	MULTICAST_PVS_R
 } multicast_t;
 
-short	ShortSwap (short l);
-int		LongSwap (int l);
-float	FloatSwap (float f);
+short ShortSwap(short l);
+int LongSwap(int l);
+float FloatSwap(float f);
 
 /*
 ==============================================================
-
-MATHLIB
-
+	MATHLIB
 ==============================================================
 */
 
@@ -281,13 +232,10 @@ typedef	int	fixed16_t;
 #define M_PIHALF	1.57079632679489661923	// doesn't match anything in particular...
 #endif
 
-#define SqrtFast(x)				((x) * Q_rsqrt(x))
+#define SqrtFast(x)		((x) * Q_rsqrt(x))
 
-#define DEG2RAD(a)				(((a) * M_PI) / 180.0F)
-#define RAD2DEG(a)				(((a) * 180.0F) / M_PI)
-
-//#define	frand()					((rand() & 0x7FFF) * (1.0/0x7FFF))		// 0 to 1
-//#define crand()					((rand() & 0x7FFF) * (2.0/0x7FFF) - 1)	// -1 to 1
+#define DEG2RAD(a)		(((a) * M_PI) / 180.0F)
+#define RAD2DEG(a)		(((a) * 180.0F) / M_PI)
 
 struct cplane_s;
 
@@ -295,63 +243,54 @@ extern vec2_t vec2_origin;
 extern vec3_t vec3_origin;
 extern vec4_t vec4_origin;
 
-#define	nanmask (255<<23)
+#define nanmask (255 << 23)
 
-#define	IS_NAN(x) (((*(int *)&x)&nanmask)==nanmask)
+#define IS_NAN(x) (((*(int *)&x)&nanmask) == nanmask)
 
-// microsoft's fabs seems to be ungodly slow...
-//float Q_fabs (float f);
-//#define	fabs(f) Q_fabs(f)
-#if !defined C_ONLY && !defined __linux__ && !defined __sgi
-extern long Q_ftol( float f );
-#else
-#define Q_ftol( f ) ( long ) (f)
-#endif
+#define DotProduct(x, y)			(x[0] * y[0] + x[1] * y[1] + x[2] * y[2])
+#define VectorSubtract(a, b, c)		(c[0] = a[0] - b[0], c[1] = a[1] - b[1], c[2] = a[2] - b[2])
+#define VectorAdd(a, b, c)			(c[0] = a[0] + b[0], c[1] = a[1] + b[1], c[2] = a[2] + b[2])
+#define VectorCopy(a, b)			(b[0] = a[0], b[1] = a[1], b[2] = a[2])
+#define VectorClear(a)				(a[0] = a[1] = a[2] = 0)
+#define VectorNegate(a, b)			(b[0] = -a[0], b[1] = -a[1], b[2] = -a[2])
+#define VectorSet(v, x, y, z)		(v[0] = (x), v[1] = (y), v[2] = (z))
+#define VectorSetAll(v, x)			(v[0] = (x), v[1] = (x), v[2] = (x)) //mxd
+#define VectorLengthSquared(v)		(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])//mxd
 
-#define DotProduct(x,y)			(x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
-#define VectorSubtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2])
-#define VectorAdd(a,b,c)		(c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2])
-#define VectorCopy(a,b)			(b[0]=a[0],b[1]=a[1],b[2]=a[2])
-#define VectorClear(a)			(a[0]=a[1]=a[2]=0)
-#define VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
-#define VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))
-#define VectorSetAll(v, x)		(v[0]=(x), v[1]=(x), v[2]=(x)) //mxd
-#define VectorLengthSquared(v)	(v[0]*v[0]+v[1]*v[1]+v[2]*v[2])//mxd
+#define Vector2Subtract(a, b, c)	(c[0] = a[0] - b[0], c[1] = a[1] - b[1])
+#define Vector2Add(a, b, c)			(c[0] = a[0] + b[0], c[1] = a[1] + b[1])
+#define Vector2Copy(a, b)			(b[0] = a[0], b[1] = a[1])
+#define Vector2Clear(a)				(a[0] = a[1] = 0)
+#define Vector2Negate(a, b)			(b[0] = -a[0], b[1] = -a[1])
+#define Vector2Set(v, x, y)			(v[0] = (x), v[1] = (y))
 
-#define Vector2Subtract(a,b,c)		(c[0]=a[0]-b[0],c[1]=a[1]-b[1])
-#define Vector2Add(a,b,c)			(c[0]=a[0]+b[0],c[1]=a[1]+b[1])
-#define Vector2Copy(a, b)			(b[0]=a[0], b[1]=a[1])
-#define Vector2Clear(a)				(a[0]=a[1]=0)
-#define Vector2Negate(a,b)			(b[0]=-a[0],b[1]=-a[1])
-#define Vector2Set(v, x, y)			(v[0]=(x), v[1]=(y))
+#define Vector4Subtract(a, b, c)	(c[0] = a[0] - b[0], c[1] = a[1] - b[1], c[2] = a[2] - b[2], c[3] = a[3] - b[3])
+#define Vector4Add(a, b, c)			(c[0] = a[0] + b[0], c[1] = a[1] + b[1], c[2] = a[2] + b[2], c[3] = a[3] + b[3])
+#define Vector4Copy(a, b)			(b[0] = a[0], b[1] = a[1], b[2] = a[2], b[3] = a[3])
+#define Vector4Clear(a)				(a[0] = a[1] = a[2] = a[3] = 0)
+#define Vector4Negate(a, b)			(b[0] = -a[0], b[1] = -a[1], b[2] = -a[2], b[3] = -a[3])
+#define Vector4Set(v, w, x, y, z)	(v[0] = (w), v[1] = (x), v[2] = (y), v[3] = (z))
 
-#define Vector4Subtract(a,b,c)		(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2],c[3]=a[3]-b[3])
-#define Vector4Add(a,b,c)			(c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2],c[3]=a[3]+b[3])
-#define Vector4Copy(a, b)			(b[0]=a[0], b[1]=a[1], b[2]=a[2], b[3]=a[3])
-#define Vector4Clear(a)				(a[0]=a[1]=a[2]=a[3]=0)
-#define Vector4Negate(a,b)			(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2],b[3]=-a[3])
-#define Vector4Set(v, w, x, y, z)	(v[0]=(w), v[1]=(x), v[2]=(y), v[3]=(z))
+void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 
-void VectorMA (vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
-
-// just in case you do't want to use the macros
-vec_t _DotProduct (vec3_t v1, vec3_t v2);
-void _VectorSubtract (vec3_t veca, vec3_t vecb, vec3_t out);
-void _VectorAdd (vec3_t veca, vec3_t vecb, vec3_t out);
+// just in case you do't want to use the macros //TODO: mxd. Errr... remove?..
+vec_t _DotProduct(vec3_t v1, vec3_t v2);
+void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out);
+void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out);
 void _VectorCopy(vec3_t in, vec3_t out);
 
-void ClearBounds (vec3_t mins, vec3_t maxs);
-void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
-int VectorCompare (vec3_t v1, vec3_t v2);
-vec_t VectorLength (vec3_t v);
-void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross);
-vec_t VectorNormalize (vec3_t v);		// returns vector length
-vec_t VectorNormalize2 (vec3_t v, vec3_t out);
-void VectorNormalizeFast (vec3_t v);	// From Q2E
-void VectorInverse (vec3_t v);
-void VectorScale (vec3_t in, vec_t scale, vec3_t out);
+void ClearBounds(vec3_t mins, vec3_t maxs);
+void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs);
+int VectorCompare(vec3_t v1, vec3_t v2);
+vec_t VectorLength(vec3_t v);
+void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
+vec_t VectorNormalize(vec3_t v); // returns vector length
+vec_t VectorNormalize2(vec3_t v, vec3_t out);
+void VectorNormalizeFast(vec3_t v);	// From Q2E
+void VectorInverse(vec3_t v);
+void VectorScale(vec3_t in, vec_t scale, vec3_t out);
 int Q_log2(int val);
-float Q_rsqrt (float in);	// From Q2E
+float Q_rsqrt(float in); // From Q2E
 
 //mxd. Matrix ops
 void Matrix4Invert(float m[16]);
@@ -359,22 +298,21 @@ void Matrix4Multiply(const float m[16], const float v[4], float result[4]);
 void Matrix3Multiply(const float m[9], const float v[3], float result[3]);
 
 // From Q2E
-void VectorRotate (const vec3_t v, const vec3_t matrix[3], vec3_t out);
-void AnglesToAxis (const vec3_t angles, vec3_t axis[3]);
-void AxisClear (vec3_t axis[3]);
-void AxisCopy (const vec3_t in[3], vec3_t out[3]);
-qboolean AxisCompare (const vec3_t axis1[3], const vec3_t axis2[3]);
+void VectorRotate(const vec3_t v, const vec3_t matrix[3], vec3_t out);
+void AnglesToAxis(const vec3_t angles, vec3_t axis[3]);
+void AxisClear(vec3_t axis[3]);
+void AxisCopy(const vec3_t in[3], vec3_t out[3]);
+qboolean AxisCompare(const vec3_t axis1[3], const vec3_t axis2[3]);
 
+void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3]);
+void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4]);
 
-void R_ConcatRotations (float in1[3][3], float in2[3][3], float out[3][3]);
-void R_ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4]);
-
-void AngleVectors (vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
-void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up);
-void VecToAngleRolled (vec3_t value1, float angleyaw, vec3_t angles);
-int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *plane);
-float	anglemod(float a);
-float LerpAngle (float a1, float a2, float frac);
+void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
+void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
+void VecToAngleRolled(vec3_t value1, float angleyaw, vec3_t angles);
+int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *plane);
+float anglemod(float a);
+float LerpAngle(float a1, float a2, float frac);
 
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p)	\
 	(((p)->type < 3)?						\
@@ -392,9 +330,9 @@ float LerpAngle (float a1, float a2, float frac);
 	:										\
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
-void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
-void PerpendicularVector( vec3_t dst, const vec3_t src );
-void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
+void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal);
+void PerpendicularVector(vec3_t dst, const vec3_t src);
+void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees);
 
 
 //=============================================
@@ -406,9 +344,9 @@ void COM_FilePath(char *in, char *out);
 const char *COM_FileExtension(const char *in);
 void COM_DefaultExtension(char *path, char *extension);
 
-char *COM_Parse (char **data_p);
-// data is an in/out parm, returns a parsed out token
-char *COM_ParseExt (char **data_p, qboolean allowNewLines);
+char *COM_Parse(char **data_p);
+// Data is an in/out parm, returns a parsed out token
+char *COM_ParseExt(char **data_p, qboolean allowNewLines);
 
 void Com_sprintf(char *dest, int size, char *fmt, ...);
 long Com_HashFileName (const char *fname, int hashSize, qboolean sized);
@@ -445,11 +383,11 @@ void Com_PageInMemory(byte *buffer, int size);
 
 #define Q_COLOR_ESCAPE	'^'
 
-#define Q_IsColorString(p)	(p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE)
+#define Q_IsColorString(p)	(p && *(p) == Q_COLOR_ESCAPE && *((p) + 1) && *((p) + 1) != Q_COLOR_ESCAPE)
 
 //=============================================
 
-// portable case insensitive compare
+// Portable case insensitive compare
 int Q_stricmp(const char *s1, const char *s2);
 int Q_strcasecmp(char *s1, char *s2);
 int Q_strncasecmp(char *s1, char *s2, int n);
@@ -465,17 +403,15 @@ char *Q_strupr(char *string);
 
 //=============================================
 
-short	BigShort(short l);
-short	LittleShort(short l);
-int		BigLong (int l);
-int		LittleLong (int l);
-qint64	BigLong64 (qint64 l);
-qint64	LittleLong64 (qint64 l);
-float	BigFloat (float l);
-float	LittleFloat (float l);
+short BigShort(short l);
+short LittleShort(short l);
+int BigLong(int l);
+int LittleLong(int l);
+float BigFloat(float l);
+float LittleFloat(float l);
 
-void	Swap_Init (void);
-char	*va(char *format, ...);
+void Swap_Init(void);
+char *va(char *format, ...);
 
 //=============================================
 
@@ -493,9 +429,7 @@ qboolean Info_Validate(char *s);
 
 /*
 ==============================================================
-
-SYSTEM SPECIFIC
-
+	SYSTEM SPECIFIC
 ==============================================================
 */
 
@@ -505,12 +439,6 @@ int Sys_Milliseconds(void);
 void Sys_Mkdir(char *path);
 void Sys_Rmdir(char *path);
 
-// large block stack allocation routines
-/*void	*Hunk_Begin (int maxsize);
-void	*Hunk_Alloc (int size);
-void	Hunk_Free (void *buf);
-int		Hunk_End (void);*/
-
 // directory searching
 #define SFF_ARCH    0x01
 #define SFF_HIDDEN  0x02
@@ -518,9 +446,7 @@ int		Hunk_End (void);*/
 #define SFF_SUBDIR  0x08
 #define SFF_SYSTEM  0x10
 
-/*
-** pass in an attribute mask of things you wish to REJECT
-*/
+// Pass in an attribute mask of things you wish to REJECT
 char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave);
 char *Sys_FindNext(unsigned musthave, unsigned canthave);
 void Sys_FindClose(void);
@@ -532,69 +458,64 @@ unsigned Sys_TickCount(void);
 void Sys_TimerStart(int timerindex);
 double Sys_TimerGetElapsed(int timerindex);
 
-// this is only here so the functions in q_shared.c and q_shwin.c can link
+// This is only here so the functions in q_shwin.c can link
 void Sys_Error(char *error, ...);
 void Com_Printf(char *msg, ...);
 
 
 /*
 ==========================================================
-
-CVARS (console variables)
-
+	CVARS (console variables)
 ==========================================================
 */
 
 #ifndef CVAR
-#define	CVAR
+	#define	CVAR
 
-#define	CVAR_ARCHIVE	1	// set to cause it to be saved to vars.rc
-#define	CVAR_USERINFO	2	// added to userinfo  when changed
-#define	CVAR_SERVERINFO	4	// added to serverinfo when changed
-#define	CVAR_NOSET		8	// don't allow change from console at all,
-							// but can be set from the command line
-#define	CVAR_LATCH		16	// save changes until server restart
-#define CVAR_CHEAT		32	// cannot be changed from default in
-							// multiplayer games
-#define CVAR_SAVE_IGNORE	64	// a latched cvar that is not saved in server.ssv
+	#define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
+	#define	CVAR_USERINFO		2	// added to userinfo  when changed
+	#define	CVAR_SERVERINFO		4	// added to serverinfo when changed
+	#define	CVAR_NOSET			8	// don't allow change from console at all, but can be set from the command line
+	#define	CVAR_LATCH			16	// save changes until server restart
+	#define CVAR_CHEAT			32	// cannot be changed from default in multiplayer games
+	#define CVAR_SAVE_IGNORE	64	// a latched cvar that is not saved in server.ssv
 
-// nothing outside the Cvar_*() functions should modify these fields!
-typedef struct cvar_s
-{
-	char		*name;
-	char		*string;
-	char		*latched_string;	// for CVAR_LATCH vars
-	int			flags;
-	qboolean	modified;	// set each time the cvar is changed
-	float		value;
-	struct cvar_s *next;
-	// Knightmare- added cvar defaults
-#ifdef KMQUAKE2_ENGINE_MOD
-	char		*default_string;
-	int			integer;
-#endif
-} cvar_t;
+	// Nothing outside the Cvar_*() functions should modify these fields!
+	typedef struct cvar_s
+	{
+		char *name;
+		char *string;
+		char *latched_string; // For CVAR_LATCH vars
+		int flags;
+		qboolean modified; // Set each time the cvar is changed
+		float value;
+		struct cvar_s *next;
 
-#endif		// CVAR
+		// Knightmare- added cvar defaults
+	#ifdef KMQUAKE2_ENGINE_MOD
+		char *default_string;
+		int integer;
+	#endif
+	} cvar_t;
+#endif // CVAR
+
 
 /*
 ==============================================================
-
-COLLISION DETECTION
-
+	COLLISION DETECTION
 ==============================================================
 */
 
-// lower bits are stronger, and will eat weaker brushes completely
-#define	CONTENTS_SOLID			1		// an eye is never valid in a solid
-#define	CONTENTS_WINDOW			2		// translucent, but not watery
-#define	CONTENTS_AUX			4
-#define	CONTENTS_LAVA			8
-#define	CONTENTS_SLIME			16
-#define	CONTENTS_WATER			32
-#define	CONTENTS_MIST			64
-#define	LAST_VISIBLE_CONTENTS	64
-#define CONTENTS_MUD            128    // not a "real" content property - used only for watertype
+// Lower bits are stronger, and will eat weaker brushes completely
+#define CONTENTS_SOLID			1		// an eye is never valid in a solid
+#define CONTENTS_WINDOW			2		// translucent, but not watery
+#define CONTENTS_AUX			4
+#define CONTENTS_LAVA			8
+#define CONTENTS_SLIME			16
+#define CONTENTS_WATER			32
+#define CONTENTS_MIST			64
+#define LAST_VISIBLE_CONTENTS	64
+#define CONTENTS_MUD			128		// not a "real" content property - used only for watertype
 
 // remaining contents are non-visible, and don't eat brushes
 
@@ -620,11 +541,8 @@ COLLISION DETECTION
 #define	CONTENTS_LADDER			0x20000000
 
 
-
 #define	SURF_LIGHT		0x1		// value will hold the light strength
-
 #define	SURF_SLICK		0x2		// effects game physics
-
 #define	SURF_SKY		0x4		// don't draw, but add to skybox
 #define	SURF_WARP		0x8		// turbulent water warp
 #define	SURF_TRANS33	0x10
@@ -683,62 +601,50 @@ COLLISION DETECTION
 
 
 // plane_t structure
-// !!! if this is changed, it must be changed in asm code too !!!
 typedef struct cplane_s
 {
-	vec3_t	normal;
-	float	dist;
-	byte	type;			// for fast side tests
-	byte	signbits;		// signx + (signy<<1) + (signz<<1)
-	byte	pad[2];
+	vec3_t normal;
+	float dist;
+	byte type;		// for fast side tests
+	byte signbits;	// signx + (signy<<1) + (signz<<1)
+	byte pad[2];
 } cplane_t;
-
-// structure offset for asm code
-#define CPLANE_NORMAL_X		0
-#define CPLANE_NORMAL_Y		4
-#define CPLANE_NORMAL_Z		8
-#define CPLANE_DIST			12
-#define CPLANE_TYPE			16
-#define CPLANE_SIGNBITS		17
-#define CPLANE_PAD0			18
-#define CPLANE_PAD1			19
 
 typedef struct cmodel_s
 {
-	vec3_t		mins, maxs;
-	vec3_t		origin;		// for sounds or lights
-	int			headnode;
+	vec3_t mins, maxs;
+	vec3_t origin;		// for sounds or lights
+	int headnode;
 } cmodel_t;
 
 typedef struct csurface_s
 {
-	char		name[16];
-	int			flags;
-	int			value;
+	char name[16];
+	int flags;
+	int value;
 } csurface_t;
 
 typedef struct mapsurface_s  // used internally due to name len probs //ZOID
 {
-	csurface_t	c;
-	char		rname[32];
+	csurface_t c;
+	char rname[32];
 } mapsurface_t;
 
-// a trace is returned when a box is swept through the world
+// A trace is returned when a box is swept through the world
 typedef struct
 {
-	qboolean	allsolid;	// if true, plane is not valid
-	qboolean	startsolid;	// if true, the initial point was in a solid area
-	float		fraction;	// time completed, 1.0 = didn't hit anything
-	vec3_t		endpos;		// final position
-	cplane_t	plane;		// surface normal at impact
-	csurface_t	*surface;	// surface hit
-	int			contents;	// contents on other side of surface hit
-	struct edict_s	*ent;		// not set by CM_*() functions
+	qboolean allsolid;		// if true, plane is not valid
+	qboolean startsolid;	// if true, the initial point was in a solid area
+	float fraction;			// time completed, 1.0 = didn't hit anything
+	vec3_t endpos;			// final position
+	cplane_t plane;			// surface normal at impact
+	csurface_t *surface;	// surface hit
+	int contents;			// contents on other side of surface hit
+	struct edict_s *ent;	// not set by CM_*() functions
 } trace_t;
 
 
-// pmove_state_t is the information necessary for client side movement
-// prediction
+// pmove_state_t is the information necessary for client side movement prediction
 typedef enum 
 {
 	// can accelerate and turn
@@ -764,19 +670,19 @@ typedef enum
 // If any part of the game code modifies this struct, it will result in a prediction error of some degree.
 typedef struct
 {
-	pmtype_t	pm_type;
+	pmtype_t pm_type;
 
 #ifdef LARGE_MAP_SIZE	// Knightmare- larger coordinate range
-	int			origin[3];		// 20.3
+	int origin[3];		// 20.3
 #else
-	short		origin[3];		// 12.3
+	short origin[3];	// 12.3
 #endif	// end Knightmare
-	short		velocity[3];	// 12.3
-	byte		pm_flags;		// ducked, jump_held, etc
-	byte		pm_time;		// each unit = 8 ms
-	short		gravity;
-	short		delta_angles[3];	// add to command angles to get view direction
-									// changed by spawns, rotating objects, and teleporters
+	short velocity[3];	// 12.3
+	byte pm_flags;		// ducked, jump_held, etc
+	byte pm_time;		// each unit = 8 ms
+	short gravity;
+	short delta_angles[3];	// add to command angles to get view direction
+							// changed by spawns, rotating objects, and teleporters
 } pmove_state_t;
 
 
@@ -787,18 +693,18 @@ typedef struct
 #define	BUTTON_USE			2
 #define BUTTON_ATTACK2		4
 #define BUTTONS_ATTACK		(BUTTON_ATTACK | BUTTON_ATTACK2)
-#define	BUTTON_ANY			128			// any key whatsoever
+#define	BUTTON_ANY			128	// any key whatsoever
 
 
 // usercmd_t is sent to the server each client frame
 typedef struct usercmd_s
 {
-	byte	msec;
-	byte	buttons;
-	short	angles[3];
-	short	forwardmove, sidemove, upmove;
-	byte	impulse;		// remove?
-	byte	lightlevel;		// light level the player is standing on
+	byte msec;
+	byte buttons;
+	short angles[3];
+	short forwardmove, sidemove, upmove;
+	byte impulse;		// remove?
+	byte lightlevel;	// light level the player is standing on
 } usercmd_t;
 
 
@@ -806,51 +712,51 @@ typedef struct usercmd_s
 typedef struct
 {
 	// state (in / out)
-	pmove_state_t	s;
+	pmove_state_t s;
 
 	// command (in)
-	usercmd_t		cmd;
-	qboolean		snapinitial;	// if s has been changed outside pmove
+	usercmd_t cmd;
+	qboolean snapinitial; // if s has been changed outside pmove
 
 	// results (out)
-	int			numtouch;
-	struct edict_s	*touchents[MAXTOUCH];
+	int numtouch;
+	struct edict_s *touchents[MAXTOUCH];
 
-	vec3_t		viewangles;			// clamped
-	float		viewheight;
+	vec3_t viewangles; // clamped
+	float viewheight;
 
-	vec3_t		mins, maxs;			// bounding box size
+	vec3_t mins, maxs; // bounding box size
 
-	struct edict_s	*groundentity;
-	int			watertype;
-	int			waterlevel;
+	struct edict_s *groundentity;
+	int watertype;
+	int waterlevel;
 
 	// callbacks to test the world
-	trace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-	int			(*pointcontents) (vec3_t point);
+	trace_t (*trace)(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
+	int (*pointcontents)(vec3_t point);
 } pmove_t;
 
 
 // entity_state_t->effects
 // Effects are things handled on the client side (lights, particles, frame animations) that happen constantly on the given entity.
 // An entity that has effects will be sent to the client even if it has a zero index model.
-#define	EF_ROTATE			0x00000001		// rotate (bonus items)
-#define	EF_GIB				0x00000002		// leave a trail
-#define	EF_BLASTER			0x00000008		// redlight + trail
-#define	EF_ROCKET			0x00000010		// redlight + trail
+#define	EF_ROTATE			0x00000001	// rotate (bonus items)
+#define	EF_GIB				0x00000002	// leave a trail
+#define	EF_BLASTER			0x00000008	// redlight + trail
+#define	EF_ROCKET			0x00000010	// redlight + trail
 #define	EF_GRENADE			0x00000020
 #define	EF_HYPERBLASTER		0x00000040
 #define	EF_BFG				0x00000080
 #define EF_COLOR_SHELL		0x00000100
 #define EF_POWERSCREEN		0x00000200
-#define	EF_ANIM01			0x00000400		// automatically cycle between frames 0 and 1 at 2 hz
-#define	EF_ANIM23			0x00000800		// automatically cycle between frames 2 and 3 at 2 hz
-#define EF_ANIM_ALL			0x00001000		// automatically cycle through all frames at 2hz
-#define EF_ANIM_ALLFAST		0x00002000		// automatically cycle through all frames at 10hz
+#define	EF_ANIM01			0x00000400	// automatically cycle between frames 0 and 1 at 2 hz
+#define	EF_ANIM23			0x00000800	// automatically cycle between frames 2 and 3 at 2 hz
+#define EF_ANIM_ALL			0x00001000	// automatically cycle through all frames at 2hz
+#define EF_ANIM_ALLFAST		0x00002000	// automatically cycle through all frames at 10hz
 #define	EF_FLIES			0x00004000
 #define	EF_QUAD				0x00008000
 #define	EF_PENT				0x00010000
-#define	EF_TELEPORTER		0x00020000		// particle fountain
+#define	EF_TELEPORTER		0x00020000	// particle fountain
 #define EF_FLAG1			0x00040000
 #define EF_FLAG2			0x00080000
 // RAFAEL
@@ -871,11 +777,11 @@ typedef struct
 //ROGUE
 
 //mappack.h
-#define	EF_EDARK 			0x84000000  	// pulsing dynamic black light
-#define	EF_BLUEC			0x08208000		// violet or pale blue shell
-#define	EF_REDC 			0x30050001   	// ef_rotate, red shell, transparent and a redlight
-#define	EF_REDG 			0x22010107    	// ef_rotate, gib trail and a red shell
-#define	EF_YELLOW_CRUST		0x10300070 		// transparent with a yellow light
+#define	EF_EDARK 			0x84000000  // pulsing dynamic black light
+#define	EF_BLUEC			0x08208000	// violet or pale blue shell
+#define	EF_REDC 			0x30050001  // ef_rotate, red shell, transparent and a redlight
+#define	EF_REDG 			0x22010107  // ef_rotate, gib trail and a red shell
+#define	EF_YELLOW_CRUST		0x10300070 	// transparent with a yellow light
 
 // entity_state_t->renderfx flags
 #define	RF_MINLIGHT			1		// allways have some light (viewmodel)
@@ -895,8 +801,8 @@ typedef struct
 #define RF_MIRRORMODEL		16384
 
 //ROGUE
-#define RF_IR_VISIBLE		0x00008000		// 32768
-#define	RF_SHELL_DOUBLE		0x00010000		// 65536
+#define RF_IR_VISIBLE		0x00008000	// 32768
+#define	RF_SHELL_DOUBLE		0x00010000	// 65536
 #define	RF_SHELL_HALF_DAM	0x00020000
 #define RF_USE_DISGUISE		0x00040000
 //ROGUE
@@ -906,20 +812,19 @@ typedef struct
 
 #define RF_MASK_SHELL		(RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM)
 
-#define	RF2_NOSHADOW		0x00000001		//no shadow..
-#define RF2_FORCE_SHADOW	0x00000002		//forced shadow...
-#define RF2_CAMERAMODEL		0x00000004		//client camera model
+#define	RF2_NOSHADOW		0x00000001	//no shadow..
+#define RF2_FORCE_SHADOW	0x00000002	//forced shadow...
+#define RF2_CAMERAMODEL		0x00000004	//client camera model
 
 // player_state_t->refdef flags
-#define	RDF_UNDERWATER		1		// warp the screen as apropriate
-#define RDF_NOWORLDMODEL	2		// used for player configuration screen
-#define	RDF_IRGOGGLES		4		// ROGUE
-#define RDF_UVGOGGLES		8		// ROGUE
-#define RDF_CAMERAEFFECT	16		// Camera effect
-#define RDF_LETTERBOX		32		// Letterboxed view
+#define	RDF_UNDERWATER		1	// warp the screen as apropriate
+#define RDF_NOWORLDMODEL	2	// used for player configuration screen
+#define	RDF_IRGOGGLES		4	// ROGUE
+#define RDF_UVGOGGLES		8	// ROGUE
+#define RDF_CAMERAEFFECT	16	// Camera effect
+#define RDF_LETTERBOX		32	// Letterboxed view
 
 //Mappack - laser colors
-
 #define	LASER_RED		0xf2f2f0f0
 #define	LASER_GREEN		0xd0d1d2d3
 #define	LASER_BLUE		0xf3f3f1f1
@@ -950,7 +855,7 @@ typedef struct
 #define MZ_IONRIPPER		16
 #define MZ_BLUEHYPERBLASTER 17
 #define MZ_PHALANX			18
-#define MZ_SILENCED			128		// bit flag ORed with one of the above numbers
+#define MZ_SILENCED			128	// bit flag ORed with one of the above numbers
 
 //ROGUE
 #define MZ_ETF_RIFLE		30
@@ -1209,15 +1114,12 @@ typedef struct
 #define	MZ2_SUPERTANK_GRENADE_1		211
 #define	MZ2_SUPERTANK_GRENADE_2		212
 
-extern	vec3_t monster_flash_offset [];
+extern vec3_t monster_flash_offset[];
 
 
 // temp entity events
-//
-// Temp entity events are for things that happen
-// at a location seperate from any existing entity.
-// Temporary entity messages are explicitly constructed
-// and broadcast.
+// Temp entity events are for things that happen at a location seperate from any existing entity.
+// Temporary entity messages are explicitly constructed and broadcast.
 typedef enum
 {
 	TE_GUNSHOT,				//0
@@ -1376,111 +1278,59 @@ typedef enum
 #define DF_NO_STACK_DOUBLE	0x00040000
 #define DF_NO_NUKES			0x00080000
 #define DF_NO_SPHERES		0x00100000
-//ROGUE
 
-/*
-ROGUE - VERSIONS
-1234	08/13/1998		Activision
-1235	08/14/1998		Id Software
-1236	08/15/1998		Steve Tietze
-1237	08/15/1998		Phil Dobranski
-1238	08/15/1998		John Sheley
-1239	08/17/1998		Barrett Alexander
-1230	08/17/1998		Brandon Fish
-1245	08/17/1998		Don MacAskill
-1246	08/17/1998		David "Zoid" Kirsch
-1247	08/17/1998		Manu Smith
-1248	08/17/1998		Geoff Scully
-1249	08/17/1998		Andy Van Fossen
-1240	08/20/1998		Activision Build 2
-1256	08/20/1998		Ranger Clan
-1257	08/20/1998		Ensemble Studios
-1258	08/21/1998		Robert Duffy
-1259	08/21/1998		Stephen Seachord
-1250	08/21/1998		Stephen Heaslip
-1267	08/21/1998		Samir Sandesara
-1268	08/21/1998		Oliver Wyman
-1269	08/21/1998		Steven Marchegiano
-1260	08/21/1998		Build #2 for Nihilistic
-1278	08/21/1998		Build #2 for Ensemble
-1279	08/26/1998		Build for Ron Solo - DEFUNCT
-1270	08/26/1998		Build #3 for Activision
-1289	08/26/1998		Build for Don MacAskill
-1280	08/26/1998		Build for Robert Duffy
-1290	08/26/1998		Build #2 for Rangers
-1345	08/28/1998		Build #4 for Activision
-2345	08/26/1998		Build for Zoid
 
-9999	08/20/1998		Internal Use
-*/
-//#define ROGUE_VERSION_ID		1345
-
-//#define ROGUE_VERSION_STRING	"08/29/1998 Beta 4 for Activision"
-
-// ROGUE
 /*
 ==========================================================
-
-  ELEMENTS COMMUNICATED ACROSS THE NET
-
+	ELEMENTS COMMUNICATED ACROSS THE NET
 ==========================================================
 */
 
-#define	ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
-#define	SHORT2ANGLE(x)	((x)*(360.0/65536))
+#define	ANGLE2SHORT(x)	((int)((x) * 65536 / 360) & 65535)
+#define	SHORT2ANGLE(x)	((x) * (360.0 / 65536))
 
-
-//
-// config strings are a general means of communication from
-// the server to all connected clients.
+// Config strings are a general means of communication from the server to all connected clients.
 // Each config string can be at most MAX_QPATH characters.
-//
-#define	CS_NAME				0
-#define	CS_CDTRACK			1
-#define	CS_SKY				2
-#define	CS_SKYAXIS			3		// %f %f %f format
-#define	CS_SKYROTATE		4
-#define	CS_STATUSBAR		5		// display program string
+#define CS_NAME				0
+#define CS_CDTRACK			1
+#define CS_SKY				2
+#define CS_SKYAXIS			3	// %f %f %f format
+#define CS_SKYROTATE		4
+#define CS_STATUSBAR		5	// display program string
 
-#define CS_AIRACCEL			29		// air acceleration control
-#define	CS_MAXCLIENTS		30
-#define	CS_MAPCHECKSUM		31		// for catching cheater maps
+#define CS_AIRACCEL			29	// air acceleration control
+#define CS_MAXCLIENTS		30
+#define CS_MAPCHECKSUM		31	// for catching cheater maps
 
-#define	CS_MODELS			32
-#define	CS_SOUNDS			(CS_MODELS+MAX_MODELS)
-#define	CS_IMAGES			(CS_SOUNDS+MAX_SOUNDS)
-#define	CS_LIGHTS			(CS_IMAGES+MAX_IMAGES)
-#define	CS_ITEMS			(CS_LIGHTS+MAX_LIGHTSTYLES)
-#define	CS_PLAYERSKINS		(CS_ITEMS+MAX_ITEMS)
-#define CS_GENERAL			(CS_PLAYERSKINS+MAX_CLIENTS)
-#define	CS_PAKFILE			(CS_GENERAL+MAX_GENERAL)
-#define	MAX_CONFIGSTRINGS	(CS_PAKFILE+1)
-//#define	MAX_CONFIGSTRINGS	(CS_GENERAL+MAX_GENERAL)
-
+#define CS_MODELS			32
+#define CS_SOUNDS			(CS_MODELS + MAX_MODELS)
+#define CS_IMAGES			(CS_SOUNDS + MAX_SOUNDS)
+#define CS_LIGHTS			(CS_IMAGES + MAX_IMAGES)
+#define CS_ITEMS			(CS_LIGHTS + MAX_LIGHTSTYLES)
+#define CS_PLAYERSKINS		(CS_ITEMS + MAX_ITEMS)
+#define CS_GENERAL			(CS_PLAYERSKINS + MAX_CLIENTS)
+#define CS_PAKFILE			(CS_GENERAL + MAX_GENERAL)
+#define MAX_CONFIGSTRINGS	(CS_PAKFILE + 1)
 
 //Knightmare- hacked configstring offsets for old demos
-#define OLD_CS_SOUNDS			(CS_MODELS+OLD_MAX_MODELS)
-#define	OLD_CS_IMAGES			(OLD_CS_SOUNDS+OLD_MAX_SOUNDS)
-#define	OLD_CS_LIGHTS			(OLD_CS_IMAGES+OLD_MAX_IMAGES)
-#define	OLD_CS_ITEMS			(OLD_CS_LIGHTS+MAX_LIGHTSTYLES)
-#define	OLD_CS_PLAYERSKINS		(OLD_CS_ITEMS+OLD_MAX_ITEMS)
-#define OLD_CS_GENERAL			(OLD_CS_PLAYERSKINS+MAX_CLIENTS)
-#define	OLD_MAX_CONFIGSTRINGS	(OLD_CS_GENERAL+MAX_GENERAL)
+#define OLD_CS_SOUNDS			(CS_MODELS + OLD_MAX_MODELS)
+#define OLD_CS_IMAGES			(OLD_CS_SOUNDS + OLD_MAX_SOUNDS)
+#define OLD_CS_LIGHTS			(OLD_CS_IMAGES + OLD_MAX_IMAGES)
+#define OLD_CS_ITEMS			(OLD_CS_LIGHTS + MAX_LIGHTSTYLES)
+#define OLD_CS_PLAYERSKINS		(OLD_CS_ITEMS + OLD_MAX_ITEMS)
+#define OLD_CS_GENERAL			(OLD_CS_PLAYERSKINS + MAX_CLIENTS)
+#define OLD_MAX_CONFIGSTRINGS	(OLD_CS_GENERAL + MAX_GENERAL)
 //end Knightmare
 
-// From Q2Pro
-// Some mods actually exploit CS_STATUSBAR to take space up to CS_AIRACCEL
-#define CS_SIZE(cs) \
-    ((cs) >= CS_STATUSBAR && (cs) < CS_AIRACCEL ? \
-      MAX_QPATH * (CS_AIRACCEL - (cs)) : MAX_QPATH)
+// From Q2Pro. Some mods actually exploit CS_STATUSBAR to take space up to CS_AIRACCEL
+#define CS_SIZE(cs) (((cs) >= CS_STATUSBAR && (cs) < CS_AIRACCEL) ? (MAX_QPATH * (CS_AIRACCEL - (cs))) : MAX_QPATH)
 
 //==============================================
 
 
 // entity_state_t->event values
-// ertity events are for effects that take place reletive
-// to an existing entities origin.  Very network efficient.
-// All muzzle flashes really should be converted to events...
+// Entity events are for effects that take place reletive to an existing entities origin.
+// Very network efficient. All muzzle flashes really should be converted to events...
 typedef enum
 {
 	EV_NONE,
@@ -1491,94 +1341,92 @@ typedef enum
 	EV_FALLFAR,
 	EV_PLAYER_TELEPORT,
 	EV_OTHER_TELEPORT,
-	//Knightmare added
-	EV_LOUDSTEP, //loud footstep from landing
-	EV_SLOSH, //Sloshing in ankle-deep water
-	EV_WADE, //wading or treading water
-	EV_WADE_MUD, //wading in mud
-	EV_CLIMB_LADDER //climbing ladder
-	//end Knightmare
+
+	// Knightmare added
+	EV_LOUDSTEP,	// Loud footstep from landing
+	EV_SLOSH,		// Sloshing in ankle-deep water
+	EV_WADE,		// Wading or treading water
+	EV_WADE_MUD,	// Wading in mud
+	EV_CLIMB_LADDER	// Climbing ladder
 } entity_event_t;
 
 
-// entity_state_t is the information conveyed from the server
-// in an update message about entities that the client will
-// need to render in some way
+// entity_state_t is the information conveyed from the server in an update message
+// about entities that the client will need to render in some way
 typedef struct entity_state_s
 {
-	int		number;			// edict index
+	int number; // edict index
 
-	vec3_t	origin;
-	vec3_t	angles;
-	vec3_t	old_origin;		// for lerping
-	int		modelindex;
-	int		modelindex2, modelindex3, modelindex4;	// weapons, CTF flags, etc
+	vec3_t origin;
+	vec3_t angles;
+	vec3_t old_origin; // for lerping
+	int modelindex;
+	int modelindex2, modelindex3, modelindex4; // weapons, CTF flags, etc
+
 #ifdef NEW_ENTITY_STATE_MEMBERS // Knightmare- Privater wanted this
-	int		modelindex5, modelindex6; 	// more attached models
+	int modelindex5, modelindex6; // more attached models
 #endif
-	int		frame;
-	int		skinnum;
+
+	int frame;
+	int skinnum;
+
 #ifdef NEW_ENTITY_STATE_MEMBERS // Knightmare- allow the server to set this
-	float	alpha;	//entity transparency
+	float alpha; // entity transparency
 #endif
-	unsigned int		effects;		// PGM - we're filling it, so it needs to be unsigned
-	int		renderfx;
-	int		solid;			// for client side prediction, 8*(bits 0-4) is x/y radius
-							// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
-							// gi.linkentity sets this properly
-	int		sound;			// for looping sounds, to guarantee shutoff
+
+	unsigned int effects; // PGM - we're filling it, so it needs to be unsigned
+	int renderfx;
+	int solid;	// for client side prediction, 8*(bits 0-4) is x/y radius
+				// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
+				// gi.linkentity sets this properly
+	int sound;	// for looping sounds, to guarantee shutoff
+
 #ifdef NEW_ENTITY_STATE_MEMBERS // Knightmare- allow the server to set this
-#ifdef LOOP_SOUND_ATTENUATION // Knightmare- added sound attenuation
-	float	attenuation;
+	#ifdef LOOP_SOUND_ATTENUATION // Knightmare- added sound attenuation
+	float attenuation;
+	#endif
 #endif
-#endif
-	int		event;			// impulse events -- muzzle flashes, footsteps, etc
-							// events only go out for a single frame, they
-							// are automatically cleared each frame
+
+	int event;	// impulse events -- muzzle flashes, footsteps, etc.
+				// Events only go out for a single frame, they are automatically cleared each frame.
 } entity_state_t;
 
 //==============================================
 
 
-// player_state_t is the information needed in addition to pmove_state_t
-// to rendered a view.  There will only be 10 player_state_t sent each second,
-// but the number of pmove_state_t changes will be reletive to client
-// frame rates
+// player_state_t is the information needed in addition to pmove_state_t to rendered a view.
+// There will only be 10 player_state_t sent each second, but the number of pmove_state_t changes will be reletive to client frame rates.
 typedef struct
 {
-	pmove_state_t	pmove;		// for prediction
+	pmove_state_t pmove; // for prediction
 
-	// these fields do not need to be communicated bit-precise
+	// These fields do not need to be communicated bit-precise
 
-	vec3_t		viewangles;		// for fixed views
-	vec3_t		viewoffset;		// add to pmovestate->origin
-	vec3_t		kick_angles;	// add to view direction to get render angles
-								// set by weapon kicks, pain effects, etc
+	vec3_t viewangles;	// for fixed views
+	vec3_t viewoffset;	// add to pmovestate->origin
+	vec3_t kick_angles;	// add to view direction to get render angles. Set by weapon kicks, pain effects, etc.
 
-	vec3_t		gunangles;
-	vec3_t		gunoffset;
-	int			gunindex;
-	int			gunframe;
+	vec3_t gunangles;
+	vec3_t gunoffset;
+	int gunindex;
+	int gunframe;
 
 #ifdef NEW_PLAYER_STATE_MEMBERS // Knightmare added
-	int			gunskin;		// for animated weapon skins
-	int			gunindex2;		// for a second weapon model (boot)
-	int			gunframe2;
-	int			gunskin2;
+	int gunskin;	// for animated weapon skins
+	int gunindex2;	// for a second weapon model (boot)
+	int gunframe2;
+	int gunskin2;
 
-	// server-side speed control!
-	int			maxspeed;
-	int			duckspeed;
-	int			waterspeed;
-	int			accel;
-	int			stopspeed;
-#endif							//end Knightmare
+	// Server-side speed control!
+	int maxspeed;
+	int duckspeed;
+	int waterspeed;
+	int accel;
+	int stopspeed;
+#endif
 
-	float		blend[4];		// rgba full screen effect
-	
-	float		fov;			// horizontal field of view
-
-	int			rdflags;		// refdef flags
-
-	short		stats[MAX_STATS];		// fast status bar updates
+	float blend[4];	// rgba full screen effect
+	float fov;		// horizontal field of view
+	int rdflags;	// refdef flags
+	short stats[MAX_STATS];	// fast status bar updates
 } player_state_t;

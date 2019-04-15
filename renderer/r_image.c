@@ -119,11 +119,7 @@ gltmode_t gl_solid_modes[] =
 
 #define NUM_GL_SOLID_MODES (sizeof(gl_solid_modes) / sizeof (gltmode_t))
 
-/*
-===============
-GL_ApplyTextureMode (mxd)
-===============
-*/
+//mxd
 void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy)
 {
 	GL_Bind(texnum);
@@ -135,11 +131,6 @@ void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float aniso
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
 }
 
-/*
-===============
-GL_TextureMode
-===============
-*/
 void GL_TextureMode(char *string)
 {
 	unsigned mode;
@@ -157,7 +148,7 @@ void GL_TextureMode(char *string)
 	gl_filter_min = modes[mode].minimize;
 	gl_filter_max = modes[mode].maximize;
 
-	// clamp selected anisotropy
+	// Clamp selected anisotropy
 	if (glConfig.anisotropic)
 	{
 		if (r_anisotropic->value > glConfig.max_anisotropy)
@@ -166,7 +157,7 @@ void GL_TextureMode(char *string)
 			Cvar_SetValue("r_anisotropic", 1.0);
 	}
 
-	// change all the existing mipmap texture objects
+	// Change all the existing mipmap texture objects
 	image_t *glt = gltextures;
 	const int filter = (!strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR); //mxd
 
@@ -195,11 +186,6 @@ void GL_TextureMode(char *string)
 	}
 }
 
-/*
-===============
-GL_TextureAlphaMode
-===============
-*/
 void GL_TextureAlphaMode(char *string)
 {
 	unsigned mode;
@@ -217,11 +203,6 @@ void GL_TextureAlphaMode(char *string)
 	gl_tex_alpha_format = gl_alpha_modes[mode].mode;
 }
 
-/*
-===============
-GL_TextureSolidMode
-===============
-*/
 void GL_TextureSolidMode(char *string)
 {
 	unsigned mode;
@@ -239,11 +220,6 @@ void GL_TextureSolidMode(char *string)
 	gl_tex_solid_format = gl_solid_modes[mode].mode;
 }
 
-/*
-===============
-R_ImageList_f
-===============
-*/
 void R_ImageList_f (void)
 {
 	const char *palstrings[3] = { "RGB ", "RGBA", "PAL " }; //mxd. +RGBA
@@ -282,11 +258,9 @@ void R_ImageList_f (void)
 
 /*
 =============================================================================
+	Scrap allocation
 
-  scrap allocation
-
-  Allocate all the little status bar objects into a single texture to crutch up inefficient hardware / drivers
-
+Allocate all the little status bar objects into a single texture to crutch up inefficient hardware / drivers
 =============================================================================
 */
 
@@ -354,15 +328,6 @@ IMAGE FLOOD FILLING
 ====================================================================
 */
 
-
-/*
-=================
-Mod_FloodFillSkin
-
-Fill background pixels so mipmapping doesn't have haloes
-=================
-*/
-
 typedef struct
 {
 	short x, y;
@@ -387,6 +352,7 @@ typedef struct
 	} \
 }
 
+// Fill background pixels so mipmapping doesn't have haloes
 void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 {
 	const byte	fillcolor = *skin; // assume this is the pixel to fill
@@ -395,17 +361,17 @@ void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 	int			outpt = 0;
 	int			filledcolor = 0;
 
-	// attempt to find opaque black
+	// Attempt to find opaque black
 	for (int i = 0; i < 256; ++i)
 	{
-		if (d_8to24table[i] == 255) // alpha 1.0
+		if (d_8to24table[i] == 255) // Alpha 1.0
 		{
 			filledcolor = i;
 			break;
 		}
 	}
 
-	// can't fill to filled color or to transparent color (used as visited marker)
+	// Can't fill to filled color or to transparent color (used as visited marker)
 	if (fillcolor == filledcolor || fillcolor == 255)
 		return;
 
@@ -438,13 +404,7 @@ void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 
 //=======================================================
 
-/*
-================
-GL_LightScaleTexture
-
-Scale up the pixel values in a texture to increase the lighting range
-================
-*/
+// Scale up the pixel values in a texture to increase the lighting range
 void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboolean only_gamma)
 {
 	byte *p = (byte *)in;
@@ -464,14 +424,8 @@ void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboolean only
 	}
 }
 
-/*
-================
-GL_MipMap
-
-Operates in place, quartering the size of the texture
-================
-*/
 #ifdef USE_GLMIPMAP
+// Operates in place, quartering the size of the texture
 void GL_MipMap(byte *in, int width, int height)
 {
 	width <<= 2;
@@ -491,12 +445,6 @@ void GL_MipMap(byte *in, int width, int height)
 }
 #endif
 
-
-/*
-================
-GL_BuildPalettedTexture
-================
-*/
 void GL_BuildPalettedTexture(unsigned char *paletted_texture, unsigned char *scaled, int scaled_width, int scaled_height)
 {
 	for (int i = 0; i < scaled_width * scaled_height; i++ )
@@ -516,8 +464,7 @@ void GL_BuildPalettedTexture(unsigned char *paletted_texture, unsigned char *sca
 
 /*
 ===============
-here starts modified code
-by Heffo/changes by Nexus
+here starts modified code by Heffo/changes by Nexus
 ===============
 */
 
@@ -548,14 +495,7 @@ int nearest_power_of_2(int size)
 	}
 }
 
-/*
-===============
-GL_Upload32
-
-Returns has_alpha
-===============
-*/
-//#define USE_GLMIPMAP
+// Returns has_alpha
 qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 {
 	unsigned 	*scaled;
@@ -564,9 +504,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 
 	uploaded_paletted = false;
 
-	//
-	// scan the texture for any non-255 alpha
-	//
+	// Scan the texture for any non-255 alpha
 	const int size = width * height;
 	byte *scan = (byte *)data + 3;
 	int samples = GL_SOLID_FORMAT;
@@ -586,9 +524,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	else if (samples == GL_ALPHA_FORMAT)
 		comp = (glState.texture_compression ? GL_COMPRESSED_RGBA_ARB : gl_tex_alpha_format);
 
-	//
-	// find sizes to scale to
-	//
+	// Find sizes to scale to
 	if (glConfig.arbTextureNonPowerOfTwo && (!mipmap || r_nonpoweroftwo_mipmaps->value))
 	{
 		scaled_width = width;
@@ -603,9 +539,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	scaled_width =  min(glConfig.max_texsize, scaled_width);
 	scaled_height = min(glConfig.max_texsize, scaled_height);
 
-	//
-	// allow sampling down of the world textures for speed
-	//
+	// Allow sampling down of the world textures for speed
 	if (mipmap && (int)r_picmip->value > 0)
 	{
 		int maxsize;
@@ -627,9 +561,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 		}
 	}
 
-	//
-	// resample texture if needed
-	//
+	// Resample texture if needed
 	if (scaled_width != width || scaled_height != height) 
 	{
 		scaled = malloc(scaled_width * scaled_height * 4);
@@ -645,9 +577,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	if (!glState.gammaRamp)
 		GL_LightScaleTexture(scaled, scaled_width, scaled_height, !mipmap);
 
-	//
-	// generate mipmaps and upload
-	//
+	// Generate mipmaps and upload
 #ifdef USE_GLMIPMAP
 	qglTexImage2D (GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
 	if (mipmap)
@@ -699,13 +629,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	return (samples == GL_ALPHA_FORMAT || samples == GL_COMPRESSED_RGBA_ARB);
 }
 
-/*
-===============
-GL_Upload8
-
-Returns has_alpha
-===============
-*/
+// Returns has_alpha
 qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
 {
 	unsigned trans[512 * 256];
@@ -734,7 +658,7 @@ qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
 			else
 				p = 0;
 
-			// copy rgb components
+			// Copy rgb components
 			for(int c = 0; c < 3; c++)
 				((byte *)&trans[i])[c] = ((byte *)&d_8to24table[p])[c];
 		}
@@ -743,15 +667,8 @@ qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
 	return GL_Upload32(trans, width, height, mipmap);
 }
 
-
-/*
-================
-R_LoadPic
-
-This is also used as an entry point for the generated notexture
-Nexus  - changes for hires-textures
-================
-*/
+// This is also used as an entry point for the generated notexture
+// Nexus - changes for hires-textures
 image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t type, int bits)
 {
 	image_t	*image;
@@ -779,18 +696,10 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 
 	//mxd. Store hash of name without extension
 	const char *ext = COM_FileExtension(name);
-	const int extlen = strlen(ext);
 
-	char namewe[MAX_QPATH]; //mxd
-	if(extlen > 0)
-	{
-		memset(namewe, 0, MAX_QPATH);
-		memcpy(namewe, name, len - (extlen + 1));
-	}
-	else
-	{
-		strcpy(namewe, name); //mxd. Some texture names don't have extension, like "***notexture***"
-	}
+	//mxd. Strip extension
+	char namewe[MAX_QPATH];
+	COM_StripExtension(name, namewe);
 
 	image->hash = Com_HashFileName(namewe, 0, false); // Knightmare added
 	image->width = width;
@@ -821,7 +730,7 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 		}
 	}
 
-	// load little pics into the scrap
+	// Load little pics into the scrap
 	if (image->type == it_pic && bits == 8 && image->width < 64 && image->height < 64)
 	{
 		int x, y;
@@ -831,7 +740,7 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 
 		scrap_dirty = true;
 
-		// copy the texels into the scrap block
+		// Copy the texels into the scrap block
 		int k = 0;
 		for (int i = 0; i < image->height; i++)
 			for (int j = 0; j < image->width; j++, k++)
@@ -857,7 +766,7 @@ nonscrap:
 		else
 			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, (image->type != it_pic && image->type != it_sky));
 
-		image->upload_width = upload_width;		// after power of 2 and scales
+		image->upload_width = upload_width; // After power of 2 and scales
 		image->upload_height = upload_height;
 		image->paletted = uploaded_paletted;
 		image->sl = 0;
@@ -869,42 +778,26 @@ nonscrap:
 	return image;
 }
 
-
 // Store the names of last images that failed to load
 #define NUM_FAIL_IMAGES 512 //mxd. Was 256
 static long failedImageHashes[NUM_FAIL_IMAGES];
 static unsigned failedImgListIndex;
 
-/*
-===============
-R_InitFailedImgList
-===============
-*/
 void R_InitFailedImgList(void)
 {
 	memset(failedImageHashes, 0, sizeof(long) * NUM_FAIL_IMAGES); //mxd
 	failedImgListIndex = 0;
 }
 
-/*
-===============
-R_CheckImgFailed
-===============
-*/
 qboolean R_CheckImgFailed(long namehash) //mxd. Check hash instead of name
 {
 	for (int i = 0; i < NUM_FAIL_IMAGES; i++)
 		if (namehash == failedImageHashes[i])
-			return true; // we already tried to load this image, didn't find it
+			return true; // We already tried to load this image, didn't find it
 
 	return false;
 }
 
-/*
-===============
-R_AddToFailedImgList
-===============
-*/
 void R_AddToFailedImgList(char *name)
 {
 	if (!strncmp(name, "save/", 5)) // Don't add saveshots
@@ -918,14 +811,7 @@ void R_AddToFailedImgList(char *name)
 		failedImgListIndex = 0;
 }
 
-
-/*
-===============
-R_FindImage
-
-Finds or loads the given image
-===============
-*/
+// Finds or loads the given image
 image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 {
 	if (!name)
@@ -954,19 +840,10 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 
 	// Get extension (mxd. From YQ2)
 	const char *ext = COM_FileExtension(name);
-	const int extlen = strlen(ext);
 
-	//mxd. Strip extension?
+	//mxd. Strip extension
 	char namewe[MAX_QPATH];
-	if(extlen > 0)
-	{
-		memset(namewe, 0, MAX_QPATH);
-		memcpy(namewe, name, len - (extlen + 1));
-	}
-	else
-	{
-		strcpy(namewe, name); //mxd. Some texture names don't have extension, like "***notexture***"
-	}
+	COM_StripExtension(name, namewe);
 	
 	//mxd. Hash it
 	const long namehash = Com_HashFileName(namewe, 0, false);
@@ -982,8 +859,8 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 		}
 	}
 
-	//mxd. All internal textures should be already loaded, all external ones mist have an extension
-	if(extlen == 0)
+	//mxd. All internal textures should be already loaded, all external ones must have an extension
+	if(strlen(ext) == 0)
 	{
 		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: failed to load internal texture '%s'\n", __func__, name); //mxd
 		return NULL;
@@ -1043,25 +920,12 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 	return image;
 }
 
-
-/*
-===============
-R_RegisterSkin
-===============
-*/
 struct image_s *R_RegisterSkin(char *name)
 {
 	return R_FindImage(name, it_skin, false);
 }
 
-
-/*
-================
-R_FreeUnusedImages
-
-Any image that was not touched on this registration sequence will be freed.
-================
-*/
+// Any image that was not touched on this registration sequence will be freed.
 void R_FreeUnusedImages(void)
 {
 	// Never free notexture or particle textures
@@ -1079,7 +943,7 @@ void R_FreeUnusedImages(void)
 	glMedia.particlebeam->registration_sequence = registration_sequence;
 
 	for (int i = 0; i < PARTICLE_TYPES; i++)
-		if (glMedia.particletextures[i]) // dont mess with null ones silly :p
+		if (glMedia.particletextures[i]) // Don't mess with null ones silly :p
 			glMedia.particletextures[i]->registration_sequence = registration_sequence;
 
 	image_t *image = gltextures;
@@ -1095,23 +959,17 @@ void R_FreeUnusedImages(void)
 			continue; // Don't free pics
 
 		// Free it
-		qglDeleteTextures(1, &image->texnum);
+		qglDeleteTextures(1, (const GLuint*)&image->texnum);
 		memset(image, 0, sizeof(*image));
 	}
 }
 
-
-/*
-===============
-Draw_GetPalette
-===============
-*/
 void Draw_GetPalette()
 {
 	byte *pic, *pal;
 	int width, height;
 
-	// get the palette
+	// Get the palette
 	LoadPCX("pics/colormap.pcx", &pic, &pal, &width, &height);
 	if (!pal)
 		VID_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
@@ -1132,12 +990,6 @@ void Draw_GetPalette()
 	free(pal);
 }
 
-
-/*
-===============
-R_InitImages
-===============
-*/
 void R_InitImages(void)
 {
 	registration_sequence = 1;
@@ -1155,7 +1007,7 @@ void R_InitImages(void)
 
 	if (qglColorTableEXT)
 	{
-		FS_LoadFile("pics/16to8.dat", &glState.d_16to8table);
+		FS_LoadFile("pics/16to8.dat", (void**)&glState.d_16to8table);
 		if (!glState.d_16to8table)
 			VID_Error(ERR_FATAL, "Couldn't load pics/16to8.pcx");
 	}
@@ -1184,13 +1036,7 @@ void R_InitImages(void)
 	R_InitBloomTextures(); // BLOOMS
 }
 
-/*
-===============
-R_FreePic
-by Knightmare
-Frees a single pic
-===============
-*/
+// Frees a single pic. By Knightmare
 void R_FreePic(char *name)
 {
 	//mxd. Compare hash instead of name
@@ -1202,47 +1048,37 @@ void R_FreePic(char *name)
 	for (int i = 0; i < numgltextures; i++, image++)
 	{
 		if (!image->registration_sequence)
-			continue; // free image_t slot
+			continue; // Free image_t slot
 
 		if (image->type != it_pic)
-			continue; // only free pics
+			continue; // Only free pics
 
 		if(hash == image->hash) //mxd
 		{
 			// Free it
-			qglDeleteTextures(1, &image->texnum);
+			qglDeleteTextures(1, (const GLuint*)&image->texnum);
 			memset(image, 0, sizeof(*image));
 
-			return; //we're done here
+			return; // We're done here
 		}
 	}
 }
 
-/*
-===============
-R_ShutdownImages
-===============
-*/
 void R_ShutdownImages(void)
 {
 	image_t *image = gltextures;
 	for (int i = 0; i < numgltextures; i++, image++)
 	{
 		if (!image->registration_sequence)
-			continue; // free image_t slot
+			continue; // Free image_t slot
 
 		// Free it
-		qglDeleteTextures(1, &image->texnum);
+		qglDeleteTextures(1, (const GLuint*)&image->texnum);
 		memset(image, 0, sizeof(*image));
 	}
 }
 
-
-/*
-=================
-R_LoadNormalmap (mxd)
-=================
-*/
+//mxd
 void R_LoadNormalmap(const char *texture, mtexinfo_t *tex)
 {
 	// Try to load image...

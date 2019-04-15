@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "q_shared.h"
-//#include "laz_misc.h"
 
 #ifdef _WIN32
 	#include "../win32/winquake.h"
@@ -30,11 +29,6 @@ vec2_t vec2_origin = { 0, 0 };
 vec3_t vec3_origin = { 0, 0, 0 };
 vec4_t vec4_origin = { 0, 0, 0, 0 };
 
-//============================================================================
-
-/*#ifdef _WIN32
-#pragma optimize( "", off )
-#endif*/
 
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
@@ -88,30 +82,22 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, f
 		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 }
 
-/*#ifdef _WIN32
-#pragma optimize( "", on )
-#endif*/
-
-
 void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
-	static float sr, sp, sy, cr, cp, cy;
-	// static to help MS compiler fp bugs
-
 	if (!angles)
 		return;
 
 	float angle = angles[YAW] * (M_PI2 / 360);
-	sy = sinf(angle);
-	cy = cosf(angle);
+	const float sy = sinf(angle);
+	const float cy = cosf(angle);
 
 	angle = angles[PITCH] * (M_PI2 / 360);
-	sp = sinf(angle);
-	cp = cosf(angle);
+	const float sp = sinf(angle);
+	const float cp = cosf(angle);
 
 	angle = angles[ROLL] * (M_PI2 / 360);
-	sr = sinf(angle);
-	cr = cosf(angle);
+	const float sr = sinf(angle);
+	const float cr = cosf(angle);
 
 	if (forward)
 	{
@@ -137,7 +123,7 @@ void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 
 void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 {
-	// this rotate and negate guarantees a vector not colinear with the original
+	// This rotate and negate guarantees a vector not colinear with the original
 	right[1] = -forward[0];
 	right[2] = forward[1];
 	right[0] = forward[2];
@@ -181,7 +167,7 @@ void PerpendicularVector(vec3_t dst, const vec3_t src)
 	float minelem = 1.0f;
 	vec3_t tempvec;
 
-	// find the smallest magnitude axially aligned vector
+	// Find the smallest magnitude axially aligned vector
 	for (int i = 0; i < 3; i++)
 	{
 		if (fabs(src[i]) < minelem)
@@ -194,19 +180,13 @@ void PerpendicularVector(vec3_t dst, const vec3_t src)
 	VectorClear(tempvec);
 	tempvec[pos] = 1.0f;
 
-	// project the point onto the plane defined by src
+	// Project the point onto the plane defined by src
 	ProjectPointOnPlane(dst, tempvec, src);
 
-	// normalize the result
+	// Normalize the result
 	VectorNormalize(dst);
 }
 
-
-/*
-================
-R_ConcatRotations
-================
-*/
 void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3])
 {
 	for(int c = 0; c < 3; c++)
@@ -217,12 +197,6 @@ void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3])
 	}
 }
 
-
-/*
-================
-R_ConcatTransforms
-================
-*/
 void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4])
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0];
@@ -244,40 +218,13 @@ void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4])
 
 //============================================================================
 
-
-float Q_fabs(float f)
+float LerpAngle(float a1, float a2, float frac)
 {
-	int tmp = *(int *)&f;
-	tmp &= 0x7FFFFFFF;
-	return *(float *)&tmp;
-}
-
-#if defined _M_IX86 && !defined C_ONLY
-#pragma warning (disable:4035)
-__declspec(naked) long Q_ftol(float f)
-{
-	static int tmp;
-	__asm fld dword ptr [esp+4]
-	__asm fistp tmp
-	__asm mov eax, tmp
-	__asm ret
-}
-#pragma warning (default:4035)
-#endif
-
-
-/*
-===============
-LerpAngle
-===============
-*/
-float LerpAngle(float a2, float a1, float frac)
-{
-	if (a1 - a2 > 180)
-		a1 -= 360;
-	if (a1 - a2 < -180)
-		a1 += 360;
-	return a2 + frac * (a1 - a2);
+	if (a2 - a1 > 180)
+		a2 -= 360;
+	else if (a2 - a1 < -180)
+		a2 += 360;
+	return a1 + frac * (a2 - a1);
 }
 
 
@@ -287,8 +234,6 @@ float anglemod(float a)
 	return a;
 }
 
-
-// this is the slow, general version
 int BoxOnPlaneSide2(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 {
 	vec3_t corners[2];
@@ -319,71 +264,62 @@ int BoxOnPlaneSide2(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 	return sides;
 }
 
-/*
-==================
-BoxOnPlaneSide
-
-Returns 1, 2, or 1 + 2
-==================
-*/
-//#if !id386 || defined __linux__ 
-//#ifndef id386
-#ifndef _WIN32
-int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
+// Returns 1, 2, or 1 + 2
+int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *plane)
 {
 	float dist1, dist2;
 
-	// fast axial cases
-	if (p->type < 3)
+	// Fast axial cases
+	if (plane->type < 3)
 	{
-		if (p->dist <= emins[p->type])
+		if (plane->dist <= emins[plane->type])
 			return 1;
-		if (p->dist >= emaxs[p->type])
+		if (plane->dist >= emaxs[plane->type])
 			return 2;
 		return 3;
 	}
 	
-	// general case
-	switch (p->signbits)
+	// General case
+	switch (plane->signbits)
 	{
 	case 0:
-		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
-		dist2 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
+		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
+		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
 		break;
 
 	case 1:
-		dist1 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
-		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
+		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
+		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
 		break;
 
 	case 2:
-		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
-		dist2 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
+		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
+		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
 		break;
 
 	case 3:
-		dist1 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
-		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
+		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
+		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
 		break;
 
 	case 4:
-		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
-		dist2 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
+		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
+		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
 		break;
 
 	case 5:
-		dist1 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
-		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
+		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
+		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
 		break;
 
 	case 6:
-		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
-		dist2 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
+		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
+		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
 		break;
 
 	case 7:
-		dist1 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
-		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
+		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
+		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
 		break;
 
 	default:
@@ -392,249 +328,13 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 	}
 
 	int sides = 0;
-	if (dist1 >= p->dist)
+	if (dist1 >= plane->dist)
 		sides = 1;
-	if (dist2 < p->dist)
+	if (dist2 < plane->dist)
 		sides |= 2;
-
-	assert(sides != 0);
 
 	return sides;
 }
-#else
-#pragma warning( disable: 4035 )
-
-__declspec(naked) int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
-{
-	static int bops_initialized;
-	static int Ljmptab[8];
-
-	__asm {
-
-		push ebx
-			
-		cmp bops_initialized, 1
-		je  initialized
-		mov bops_initialized, 1
-		
-		mov Ljmptab[0*4], offset Lcase0
-		mov Ljmptab[1*4], offset Lcase1
-		mov Ljmptab[2*4], offset Lcase2
-		mov Ljmptab[3*4], offset Lcase3
-		mov Ljmptab[4*4], offset Lcase4
-		mov Ljmptab[5*4], offset Lcase5
-		mov Ljmptab[6*4], offset Lcase6
-		mov Ljmptab[7*4], offset Lcase7
-			
-initialized:
-
-		mov edx,ds:dword ptr[4+12+esp]
-		mov ecx,ds:dword ptr[4+4+esp]
-		xor eax,eax
-		mov ebx,ds:dword ptr[4+8+esp]
-		mov al,ds:byte ptr[17+edx]
-		cmp al,8
-		jge Lerror
-		fld ds:dword ptr[0+edx]
-		fld st(0)
-		jmp dword ptr[Ljmptab+eax*4]
-Lcase0:
-		fmul ds:dword ptr[ebx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ebx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase1:
-		fmul ds:dword ptr[ecx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ebx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase2:
-		fmul ds:dword ptr[ebx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ecx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase3:
-		fmul ds:dword ptr[ecx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ecx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase4:
-		fmul ds:dword ptr[ebx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ebx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase5:
-		fmul ds:dword ptr[ecx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ebx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase6:
-		fmul ds:dword ptr[ebx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ecx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase7:
-		fmul ds:dword ptr[ecx]
-		fld ds:dword ptr[0+4+edx]
-		fxch st(2)
-		fmul ds:dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[4+ecx]
-		fld ds:dword ptr[0+8+edx]
-		fxch st(2)
-		fmul ds:dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul ds:dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul ds:dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-LSetSides:
-		faddp st(2),st(0)
-		fcomp ds:dword ptr[12+edx]
-		xor ecx,ecx
-		fnstsw ax
-		fcomp ds:dword ptr[12+edx]
-		and ah,1
-		xor ah,1
-		add cl,ah
-		fnstsw ax
-		and ah,1
-		add ah,ah
-		add cl,ah
-		pop ebx
-		mov eax,ecx
-		ret
-Lerror:
-		int 3
-	}
-}
-#pragma warning( default: 4035 )
-#endif
 
 void ClearBounds(vec3_t mins, vec3_t maxs)
 {
@@ -651,7 +351,6 @@ void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
 	}
 }
 
-
 int VectorCompare(vec3_t v1, vec3_t v2)
 {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2])
@@ -659,7 +358,6 @@ int VectorCompare(vec3_t v1, vec3_t v2)
 			
 	return 1;
 }
-
 
 vec_t VectorNormalize(vec3_t v)
 {
@@ -687,12 +385,7 @@ vec_t VectorNormalize2(vec3_t v, vec3_t out)
 	return length;
 }
 
-/*
-=================
-VectorNormalizeFast
-From Q2E
-=================
-*/
+// From Q2E
 void VectorNormalizeFast(vec3_t v)
 {
 	const float ilength = Q_rsqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -706,7 +399,6 @@ void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
 	for(int c = 0; c < 3; c++)
 		vecc[c] = veca[c] + scale * vecb[c];
 }
-
 
 vec_t _DotProduct(vec3_t v1, vec3_t v2)
 {
@@ -759,24 +451,19 @@ void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 		out[c] = in[c] * scale;
 }
 
-/*
-=================
-VectorRotate
-From Q2E
-=================
-*/
+// From Q2E
 void VectorRotate(const vec3_t v, const vec3_t matrix[3], vec3_t out)
 {
 	for (int c = 0; c < 3; c++)
 		out[c] = v[0] * matrix[c][0] + v[1] * matrix[c][1] + v[2] * matrix[c][2];
 }
 
-
 /*
-=================
-Matrix operations (mxd)
-=================
+=======================================================================
+	Matrix operations (mxd)
+=======================================================================
 */
+
 void Matrix4Invert(float m[16])
 {
 	float inv[16];
@@ -840,13 +527,7 @@ void Matrix3Multiply(const float m[9], const float v[3], float result[3])
 			result[i] += m[j * 3 + i] * v[j];
 }
 
-
-/*
-=================
-Q_rsqrt
-From Q2E
-=================
-*/
+// From Q2E
 float Q_rsqrt(float in)
 {
 	const float x = in * 0.5f;
@@ -867,12 +548,7 @@ int Q_log2(int val)
 	return answer;
 }
 
-/*
-=================
-AnglesToAxis
-From Q2E
-=================
-*/
+// From Q2E
 void AnglesToAxis(const vec3_t angles, vec3_t axis[3])
 {
 	static float sp, sy, sr, cp, cy, cr;
@@ -902,12 +578,7 @@ void AnglesToAxis(const vec3_t angles, vec3_t axis[3])
 	axis[2][2] = cr * cp;
 }
 
-/*
-=================
-AxisClear
-From Q2E
-=================
-*/
+// From Q2E
 void AxisClear(vec3_t axis[3])
 {
 	axis[0][0] = 1;
@@ -923,12 +594,7 @@ void AxisClear(vec3_t axis[3])
 	axis[2][2] = 1;
 }
 
-/*
-=================
-AxisCopy
-From Q2E
-=================
-*/
+// From Q2E
 void AxisCopy(const vec3_t in[3], vec3_t out[3])
 {
 	for(int i = 0; i < 3; i++)
@@ -936,12 +602,7 @@ void AxisCopy(const vec3_t in[3], vec3_t out[3])
 			out[i][c] = in[i][c];
 }
 
-/*
-=================
-AxisCompare
-From Q2E
-=================
-*/
+// From Q2E
 qboolean AxisCompare(const vec3_t axis1[3], const vec3_t axis2[3])
 {
 	if (axis1[0][0] != axis2[0][0] || axis1[0][1] != axis2[0][1] || axis1[0][2] != axis2[0][2])
@@ -959,11 +620,6 @@ qboolean AxisCompare(const vec3_t axis1[3], const vec3_t axis2[3])
 
 //====================================================================================
 
-/*
-============
-COM_SkipPath
-============
-*/
 char *COM_SkipPath(char *pathname)
 {
 	char *last = pathname;
@@ -978,24 +634,15 @@ char *COM_SkipPath(char *pathname)
 	return last;
 }
 
-/*
-============
-COM_StripExtension
-============
-*/
 void COM_StripExtension(char *in, char *out)
 {
-	while (*in && *in != '.')
-		*out++ = *in++;
-
-	*out = 0;
+	//mxd. Let's find the last dot instead of first...
+	strcpy(out, in);
+	char *ext = strrchr(out, '.');
+	if(ext && ext != out)
+		*ext = 0;
 }
 
-/*
-============
-COM_FileExtension
-============
-*/
 const char *COM_FileExtension(const char *in)
 {
 	//mxd. YQ2 implementation
@@ -1003,11 +650,6 @@ const char *COM_FileExtension(const char *in)
 	return ((!ext || ext == in) ? "" : ext + 1);
 }
 
-/*
-============
-COM_FileBase
-============
-*/
 void COM_FileBase(char *in, char *out)
 {
 	char *s2;
@@ -1031,13 +673,7 @@ void COM_FileBase(char *in, char *out)
 	}
 }
 
-/*
-============
-COM_FilePath
-
-Returns the path up to, but not including the last /
-============
-*/
+// Returns the path up to, but not including the last /
 void COM_FilePath(char *in, char *out)
 {
 	char *s = in + strlen(in) - 1;
@@ -1049,12 +685,6 @@ void COM_FilePath(char *in, char *out)
 	out[s - in] = 0;
 }
 
-
-/*
-==================
-COM_DefaultExtension
-==================
-*/
 void COM_DefaultExtension(char *path, char *extension)
 {
 	// if path doesn't have a .EXT, append extension (extension should include the .)
@@ -1079,25 +709,21 @@ void COM_DefaultExtension(char *path, char *extension)
 
 qboolean bigendien;
 
-// can't just use function pointers, or dll linkage can mess up when qcommon is included in multiple places
+// Can't just use function pointers, or dll linkage can mess up when qcommon is included in multiple places
 // Knightmare- made these static
 static short	(*_BigShort) (short l);
 static short	(*_LittleShort) (short l);
 static int		(*_BigLong) (int l);
 static int		(*_LittleLong) (int l);
-static qint64	(*_BigLong64) (qint64 l);
-static qint64	(*_LittleLong64) (qint64 l);
 static float	(*_BigFloat) (float l);
 static float	(*_LittleFloat) (float l);
 
-short	BigShort(short l){return _BigShort(l);}
-short	LittleShort(short l) {return _LittleShort(l);}
-int		BigLong (int l) {return _BigLong(l);}
-int		LittleLong (int l) {return _LittleLong(l);}
-qint64	BigLong64 (qint64 l) {return _BigLong64(l);}
-qint64	LittleLong64 (qint64 l) {return _LittleLong64(l);}
-float	BigFloat (float l) {return _BigFloat(l);}
-float	LittleFloat (float l) {return _LittleFloat(l);}
+short	BigShort(short l) { return _BigShort(l); }
+short	LittleShort(short l) { return _LittleShort(l); }
+int		BigLong(int l) { return _BigLong(l); }
+int		LittleLong(int l) { return _LittleLong(l); }
+float	BigFloat(float l) { return _BigFloat(l); }
+float	LittleFloat(float l) { return _LittleFloat(l); }
 
 short ShortSwap(short l)
 {
@@ -1127,26 +753,6 @@ int LongNoSwap(int l)
 	return l;
 }
 
-qint64 Long64Swap(qint64 ll)
-{
-	const byte b1 = ll & 255;
-	const byte b2 = (ll >> 8) & 255;
-	const byte b3 = (ll >> 16) & 255;
-	const byte b4 = (ll >> 24) & 255;
-	const byte b5 = (ll >> 32) & 255;
-	const byte b6 = (ll >> 40) & 255;
-	const byte b7 = (ll >> 48) & 255;
-	const byte b8 = (ll >> 56) & 255;
-
-	return ((qint64)b1 << 56) + ((qint64)b2 << 48) + ((qint64)b3 << 40) + ((qint64)b4 << 32)
-		 + ((qint64)b5 << 24) + ((qint64)b6 << 16) + ((qint64)b7 << 8) + (qint64)b8;
-}
-
-qint64 Long64NoSwap(qint64 ll)
-{
-	return ll;
-}
-
 float FloatSwap(float f)
 {
 	union
@@ -1170,16 +776,11 @@ float FloatNoSwap(float f)
 	return f;
 }
 
-/*
-================
-Swap_Init
-================
-*/
 void Swap_Init(void)
 {
 	byte swaptest[2] = { 1, 0 };
 
-	// set the byte swapping variables in a portable manner	
+	// Set the byte swapping variables in a portable manner	
 	if (*(short *)swaptest == 1)
 	{
 		bigendien = false;
@@ -1187,8 +788,6 @@ void Swap_Init(void)
 		_LittleShort = ShortNoSwap;
 		_BigLong = LongSwap;
 		_LittleLong = LongNoSwap;
-		_BigLong64 = Long64Swap;
-		_LittleLong64 = Long64NoSwap;
 		_BigFloat = FloatSwap;
 		_LittleFloat = FloatNoSwap;
 	}
@@ -1199,21 +798,12 @@ void Swap_Init(void)
 		_LittleShort = ShortSwap;
 		_BigLong = LongNoSwap;
 		_LittleLong = LongSwap;
-		_BigLong64 = Long64NoSwap;
-		_LittleLong64 = Long64Swap;
 		_BigFloat = FloatNoSwap;
 		_LittleFloat = FloatSwap;
 	}
 }
 
-
-/*
-============
-va
-
-does a varargs printf into a temp buffer, so I don't need to have varargs versions of all text functions.
-============
-*/
+// Does a varargs printf into a temp buffer, so I don't need to have varargs versions of all text functions.
 char *va(char *format, ...)
 {
 	va_list		argptr;
@@ -1234,11 +824,6 @@ char *va(char *format, ...)
 
 char com_token[MAX_TOKEN_CHARS];
 
-/*
-=================
-COM_SkipWhiteSpace
-=================
-*/
 char *COM_SkipWhiteSpace(char *data_p, qboolean *hasNewLines)
 {
 	int	c;
@@ -1257,15 +842,8 @@ char *COM_SkipWhiteSpace(char *data_p, qboolean *hasNewLines)
 	return data_p;
 }
 
-
-/*
-=================
-COM_SkipBracedSection
-
-Skips until a matching close brace is found.
-Internal brace depths are properly skipped.
-=================
-*/
+// Skips until a matching close brace is found.
+// Internal brace depths are properly skipped.
 void COM_SkipBracedSection(char **data_p, int depth)
 {
 	do
@@ -1281,14 +859,7 @@ void COM_SkipBracedSection(char **data_p, int depth)
 	} while (depth && *data_p);
 }
 
-
-/*
-=================
-COM_SkipRestOfLine
-
-Skips until a new line is found
-=================
-*/
+// Skips until a new line is found
 void COM_SkipRestOfLine(char **data_p)
 {
 	while (true)
@@ -1299,14 +870,7 @@ void COM_SkipRestOfLine(char **data_p)
 	}
 }
 
-
-/*
-==============
-COM_Parse
-
-Parse a token out of a string
-==============
-*/
+// Parses a token out of a string
 char *COM_Parse(char **data_p)
 {
 	int c;
@@ -1321,7 +885,7 @@ char *COM_Parse(char **data_p)
 		return "";
 	}
 		
-	// skip whitespace
+	// Skip whitespace
 skipwhite:
 	while ((c = *data) <= ' ')
 	{
@@ -1334,7 +898,7 @@ skipwhite:
 		data++;
 	}
 	
-	// skip // comments
+	// Skip // comments
 	if (c == '/' && data[1] == '/')
 	{
 		while (*data && *data != '\n')
@@ -1343,7 +907,7 @@ skipwhite:
 		goto skipwhite;
 	}
 
-	// handle quoted strings specially
+	// Handle quoted strings specially
 	if (c == '\"')
 	{
 		data++;
@@ -1369,7 +933,7 @@ skipwhite:
 		}
 	}
 
-	// parse a regular word
+	// Parse a regular word
 	do
 	{
 		if (len < MAX_TOKEN_CHARS)
@@ -1391,15 +955,7 @@ skipwhite:
 	return com_token;
 }
 
-
-/*
-=================
-Com_ParseExt
-
-Parse a token out of a string
-From Quake2Evolved
-=================
-*/
+// Parse a token out of a string. From Q2E
 char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 {
 	int c;
@@ -1450,7 +1006,7 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 			if (*data)
 				data += 2;
 		}
-		else	// An actual token
+		else // An actual token
 		{
 			break;
 		}
@@ -1499,12 +1055,6 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 	return com_token;
 }
 
-
-/*
-===============
-Com_PageInMemory
-===============
-*/
 int paged_total;
 
 void Com_PageInMemory(byte *buffer, int size)
@@ -1512,8 +1062,6 @@ void Com_PageInMemory(byte *buffer, int size)
 	for (int i = size - 1; i > 0; i -= 4096)
 		paged_total += buffer[i];
 }
-
-
 
 /*
 ============================================================================
@@ -1531,11 +1079,10 @@ int Q_stricmp(const char *s1, const char *s2)
 #endif
 }
 
-
 //mxd. Case-insensitive version of strstr. https://stackoverflow.com/questions/27303062/strstr-function-like-that-ignores-upper-or-lower-case
 char *Q_strcasestr(const char *haystack, const char *needle)
 {
-#if defined(WIN32)
+#ifdef WIN32
 	const int c = tolower((unsigned char)*needle);
 
 	if (c == '\0')
@@ -1561,7 +1108,6 @@ char *Q_strcasestr(const char *haystack, const char *needle)
 	return strcasestr(s1, s2); // Never tested...
 #endif
 }
-
 
 int Q_strncasecmp(char *s1, char *s2, int n)
 {
@@ -1591,20 +1137,12 @@ int Q_strncasecmp(char *s1, char *s2, int n)
 	return 0;		// strings are equal
 }
 
-
 int Q_strcasecmp(char *s1, char *s2)
 {
 	return Q_strncasecmp(s1, s2, 99999);
 }
 
-
-/*
-=================
-Q_strncpyz
-
-Safe strncpy that ensures a trailing zero
-=================
-*/
+// Safe strncpy that ensures a trailing zero
 void Q_strncpyz(char *dst, const char *src, int dstSize)
 {
 	if (!src || !dst || dstSize < 1) 
@@ -1614,14 +1152,7 @@ void Q_strncpyz(char *dst, const char *src, int dstSize)
 	dst[dstSize - 1] = 0;
 }
 
-
-/*
-=================
-Q_strncatz
-
-Safe strncat that ensures a trailing zero
-=================
-*/
+// Safe strncat that ensures a trailing zero
 void Q_strncatz(char *dst, const char *src, int dstSize)
 {
 	if (!src || !dst || dstSize < 1) 
@@ -1639,14 +1170,7 @@ void Q_strncatz(char *dst, const char *src, int dstSize)
 	}
 }
 
-
-/*
-=================
-Q_snprintfz
-
-Safe snprintf that ensures a trailing zero
-=================
-*/
+// Safe snprintf that ensures a trailing zero
 void Q_snprintfz(char *dst, int dstSize, const char *fmt, ...)
 {
 	if (!dst || dstSize < 1) 
@@ -1659,7 +1183,6 @@ void Q_snprintfz(char *dst, int dstSize, const char *fmt, ...)
 
 	dst[dstSize - 1] = 0;
 }
-
 
 char *Q_strlwr(char *string)
 {
@@ -1674,8 +1197,7 @@ char *Q_strlwr(char *string)
 	return string;
 }
 
-
-char *Q_strupr (char *string)
+char *Q_strupr(char *string)
 {
 	char *s = string;
 
@@ -1687,7 +1209,6 @@ char *Q_strupr (char *string)
 
 	return string;
 }
-
 
 void Com_sprintf(char *dest, int size, char *fmt, ...)
 {
@@ -1707,30 +1228,25 @@ void Com_sprintf(char *dest, int size, char *fmt, ...)
 	dest[size - 1] = 0;
 }
 
-
-/*
-=============
-Com_HashFileName
-=============
-*/
 long Com_HashFileName(const char *fname, int hashSize, qboolean sized)
 {
 	int		i = 0;
 	long	hash = 0;
 
 	if (fname[0] == '/' || fname[0] == '\\')
-		i++; // skip leading slash
+		i++; // Skip leading slash
 
 	while (fname[i] != '\0')
 	{
 		char letter = tolower(fname[i]);
 
 		if (letter == '\\')
-			letter = '/'; // fix filepaths
+			letter = '/'; // Fix filepaths
 
 		hash += (long)letter * (i + 119);
 		i++;
 	}
+
 	hash = (hash ^ (hash >> 10) ^ (hash >> 20));
 
 	if (sized) 
@@ -1745,18 +1261,12 @@ long Com_HashFileName(const char *fname, int hashSize, qboolean sized)
 =====================================================================
 */
 
-/*
-===============
-Info_ValueForKey
-
-Searches the string for the given key and returns the associated value, or an empty string.
-===============
-*/
+// Searches the string for the given key and returns the associated value, or an empty string.
 char *Info_ValueForKey(char *s, char *key)
 {
-	char	pkey[512];
-	static	char value[2][512];	// use two buffers so compares work without stomping on each other
-	static	int	valueindex;
+	char pkey[512];
+	static char value[2][512];	// Use two buffers so compares work without stomping on each other
+	static int valueindex;
 
 	valueindex ^= 1;
 	if (*s == '\\')
@@ -1829,9 +1339,9 @@ void Info_RemoveKey(char *s, char *key)
 		}
 		*o = 0;
 
-		if (!strcmp(key, pkey) )
+		if (!strcmp(key, pkey))
 		{
-			strcpy(start, s);	// remove this part
+			strcpy(start, s); // Remove this part
 			return;
 		}
 
@@ -1840,14 +1350,7 @@ void Info_RemoveKey(char *s, char *key)
 	}
 }
 
-
-/*
-==================
-Info_Validate
-
-Some characters are illegal in info strings because they can mess up the server's parsing
-==================
-*/
+// Some characters are illegal in info strings because they can mess up the server's parsing
 qboolean Info_Validate(char *s)
 {
 	if (strstr (s, "\""))
@@ -1899,13 +1402,13 @@ void Info_SetValueForKey(char *s, char *key, char *value)
 		return;
 	}
 
-	// only copy ascii values
+	// Only copy ascii values
 	s += strlen(s);
 	char *v = newi;
 	while (*v)
 	{
 		int c = *v++;
-		c &= 127; // strip high bits
+		c &= 127; // Strip high bits
 
 		if (c >= 32 && c < 127)
 			*s++ = c;
