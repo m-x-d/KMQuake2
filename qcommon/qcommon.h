@@ -814,6 +814,7 @@ void Com_DPrintf(char *fmt, ...);
 void Com_CPrintf(char *fmt, ...); //mxd
 void Com_Error(int code, char *fmt, ...);
 void Com_Quit(void);
+void Com_CloseLogfile(void); //mxd
 
 int Com_ServerState(void);		// this should have just been a cvar...
 void Com_SetServerState(int state);
@@ -841,10 +842,10 @@ extern	cvar_t *fs_basedir;
 extern	FILE *log_stats_file;
 
 // host_speeds times
-extern	int		time_before_game;
-extern	int		time_after_game;
-extern	int		time_before_ref;
-extern	int		time_after_ref;
+extern int time_before_game;
+extern int time_after_game;
+extern int time_before_ref;
+extern int time_after_ref;
 
 void Z_Free(void *ptr);
 void *Z_Malloc(int size);			// returns 0 filled memory
@@ -877,9 +878,9 @@ void *Sys_GetGameAPI(void *parms);
 // loads the game dll and calls the api init function
 
 char *Sys_ConsoleInput(void);
-void Sys_ConsoleOutput(char *string);
+void Sys_ConsoleOutput(char *text);
 void Sys_SendKeyEvents(void);
-void Sys_Quit(void);
+void Sys_Quit(qboolean error); //mxd. +error
 char *Sys_GetClipboardData(void);
 
 

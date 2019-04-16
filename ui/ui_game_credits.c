@@ -21,25 +21,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // ui_game_credits.c -- the credits scroll
 
 #include <ctype.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "../client/client.h"
 #include "ui_local.h"
 
 /*
 =============================================================================
-
-CREDITS MENU
-
+	CREDITS MENU
 =============================================================================
 */
+
 static int credits_start_time;
 // Knigthtmare added- allow credits to scroll past top of screen
 static int credits_start_line;
 static const char **credits;
 static char *creditsIndex[256];
-//static char *creditsBuffer;
+
 static const char *idcredits[] =
 {
 	S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"QUAKE II BY ID SOFTWARE",
@@ -387,15 +383,11 @@ static const char *roguecredits[] =
 };
 
 
-int stringLengthExtra (const char *string);
-void M_Credits_MenuDraw (void)
+void M_Credits_MenuDraw(void)
 {
-	float		alpha; //, time = (cls.realtime - credits_start_time) * 0.05;
-	int			i, y, x, len, stringoffset;
-	//qboolean	bold;
+	const int ystart = (SCREEN_HEIGHT - ((cls.realtime - credits_start_time) / 40.0f) + credits_start_line * MENU_LINE_SIZE);
 
-	if ((SCREEN_HEIGHT - ((cls.realtime - credits_start_time)/40.0F)
-		+ credits_start_line * MENU_LINE_SIZE) < 0)
+	if (ystart < 0)
 	{
 		credits_start_line++;
 		if (!credits[credits_start_line])
@@ -405,93 +397,66 @@ void M_Credits_MenuDraw (void)
 		}
 	}
 
-	//
-	// draw the credits
-	//
-	for (i=credits_start_line, y=SCREEN_HEIGHT - ((cls.realtime - credits_start_time)/40.0F) + credits_start_line * MENU_LINE_SIZE;
-		credits[i] && y < SCREEN_HEIGHT; y += MENU_LINE_SIZE, i++)
+	// Draw the credits
+	int i = credits_start_line;
+	int y = ystart;
+
+	for ( ; credits[i] && y < SCREEN_HEIGHT; y += MENU_LINE_SIZE, i++)
 	{
-		//stringoffset = 0;
-		//bold = false;
-
-		if (y <= -MENU_FONT_SIZE)
-			continue;
-		if (y > SCREEN_HEIGHT)
+		if (y <= -MENU_FONT_SIZE || y > SCREEN_HEIGHT)
 			continue;
 
-		if (credits[i][0] == '+')
+		float alpha = 1.0f;
+
+		if (y > SCREEN_HEIGHT * (7.0 / 8.0))
 		{
-			//bold = true;
-			stringoffset = 1;
+			const float y_test = y - SCREEN_HEIGHT * (7.0 / 8.0);
+			const float h_test = SCREEN_HEIGHT / 8;
+
+			alpha = 1 - (y_test / h_test);
 		}
-		else
+		else if (y < SCREEN_HEIGHT / 8)
 		{
-			//bold = false;
-			stringoffset = 0;
+			const float y_test = y;
+			const float h_test = SCREEN_HEIGHT / 8;
+
+			alpha = y_test / h_test;
 		}
 
-		if (y > SCREEN_HEIGHT*(7.0/8.0))
-		{
-			float y_test, h_test;
-			y_test = y - SCREEN_HEIGHT*(7.0/8.0);
-			h_test = SCREEN_HEIGHT/8;
+		alpha = clamp(alpha, 0, 1);
 
-			alpha = 1 - (y_test/h_test);
+		const int len = CL_UnformattedStringLength(credits[i]);
+		const int stringoffset = (credits[i][0] == '+' ? 1 : 0);
+		const int x = (SCREEN_WIDTH - len * MENU_FONT_SIZE - stringoffset * MENU_FONT_SIZE ) / 2 + stringoffset * MENU_FONT_SIZE;
 
-			alpha = max(min(alpha, 1), 0);
-		}
-		else if (y < SCREEN_HEIGHT/8)
-		{
-			float y_test, h_test;
-			y_test = y;
-			h_test = SCREEN_HEIGHT/8;
-
-			alpha = y_test/h_test;
-
-			alpha = max(min(alpha, 1), 0);
-		}
-		else
-			alpha = 1;
-
-		len = strlen(credits[i]) - stringLengthExtra(credits[i]);
-
-		x = ( SCREEN_WIDTH - len * MENU_FONT_SIZE - stringoffset * MENU_FONT_SIZE ) / 2
-			+ stringoffset * MENU_FONT_SIZE;
-		Menu_DrawString (x, y, credits[i], alpha*255);
+		Menu_DrawString(x, y, credits[i], alpha * 255);
 	}
 }
 
-
-const char *M_Credits_Key (int key)
+const char *M_Credits_Key(int key)
 {
-	char *sound = NULL;
-
-	switch (key)
+	if(key == K_ESCAPE)
 	{
-	case K_ESCAPE:
-	//case K_MOUSE2
 		if (creditsBuffer)
-			FS_FreeFile (creditsBuffer);
-		UI_PopMenu ();
-		sound = menu_out_sound;
-		break;
+			FS_FreeFile(creditsBuffer);
+		UI_PopMenu();
+
+		return menu_out_sound;
 	}
 
-	return sound;
+	return NULL;
 }
 
-
-void M_Menu_Credits_f (void)
+void M_Menu_Credits_f(void)
 {
-	int		n;
-	int		count;
-	char	*p;
-
 	creditsBuffer = NULL;
-	count = FS_LoadFile ("credits", &creditsBuffer);
+	int count = FS_LoadFile("credits", (void**)&creditsBuffer);
+
 	if (count != -1)
 	{
-		p = creditsBuffer;
+		char *p = creditsBuffer;
+
+		int n;
 		for (n = 0; n < 255; n++)
 		{
 			creditsIndex[n] = p;
@@ -501,16 +466,19 @@ void M_Menu_Credits_f (void)
 				if (--count == 0)
 					break;
 			}
+
 			if (*p == '\r')
 			{
 				*p++ = 0;
 				if (--count == 0)
 					break;
 			}
+
 			*p++ = 0;
 			if (--count == 0)
 				break;
 		}
+
 		creditsIndex[++n] = 0;
 		credits = creditsIndex;
 	}
@@ -525,6 +493,6 @@ void M_Menu_Credits_f (void)
 	}
 
 	credits_start_time = cls.realtime;
-	credits_start_line = 0; // allow credits to scroll past top of screen
-	UI_PushMenu (M_Credits_MenuDraw, M_Credits_Key);
+	credits_start_line = 0; // Allow credits to scroll past top of screen
+	UI_PushMenu(M_Credits_MenuDraw, M_Credits_Key);
 }

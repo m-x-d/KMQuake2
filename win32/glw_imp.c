@@ -101,9 +101,9 @@ qboolean modType(char *name);
 /*
 ** VID_CreateWindow
 */
-#define	WINDOW_CLASS_NAME	"KMQuake 2 SBE" // changed
-#define	WINDOW_CLASS_NAME2	"KMQuake 2 SBE - The Reckoning" // changed
-#define	WINDOW_CLASS_NAME3	"KMQuake 2 SBE - Ground Zero" // changed
+#define	WINDOW_CLASS_NAME	ENGINE_NAME // changed
+#define	WINDOW_CLASS_NAME2	ENGINE_NAME" - The Reckoning" // changed
+#define	WINDOW_CLASS_NAME3	ENGINE_NAME" - Ground Zero" // changed
 
 qboolean VID_CreateWindow (int width, int height, qboolean fullscreen)
 {
@@ -174,7 +174,7 @@ qboolean VID_CreateWindow (int width, int height, qboolean fullscreen)
 	glw_state.hWnd = CreateWindowEx(
 		 exstyle, 
 		 WINDOW_CLASS_NAME,
-		 "KMQuake 2 SBE",		//Knightmare changed
+		 ENGINE_NAME,		//Knightmare changed //mxd. Changed to ENGINE_NAME
 		 stylebits,
 		 x, y, w, h,
 		 NULL,

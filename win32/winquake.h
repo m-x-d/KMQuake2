@@ -26,6 +26,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	WINDOW_STYLE (WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE)
 
+#define MAXPRINTMSG		8192 // was 4096, fix for nVidia 191.xx crash //mxd. Moved from common.c / sys_console.c
+
 extern HINSTANCE global_hInstance;
 
 extern LPDIRECTSOUND pDS;

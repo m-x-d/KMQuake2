@@ -349,7 +349,7 @@ char *COM_Parse(char **data_p);
 char *COM_ParseExt(char **data_p, qboolean allowNewLines);
 
 void Com_sprintf(char *dest, int size, char *fmt, ...);
-long Com_HashFileName (const char *fname, int hashSize, qboolean sized);
+long Com_HashFileName(const char *fname, int hashSize, qboolean sized);
 
 void Com_PageInMemory(byte *buffer, int size);
 
@@ -382,8 +382,6 @@ void Com_PageInMemory(byte *buffer, int size);
 #define S_COLOR_ITALIC	"^i"
 
 #define Q_COLOR_ESCAPE	'^'
-
-#define Q_IsColorString(p)	(p && *(p) == Q_COLOR_ESCAPE && *((p) + 1) && *((p) + 1) != Q_COLOR_ESCAPE)
 
 //=============================================
 

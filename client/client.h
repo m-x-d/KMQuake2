@@ -1033,8 +1033,11 @@ int	color8red(int color8);
 int	color8green(int color8);
 int	color8blue(int color8);
 void color8_to_vec3(int color8, vec3_t v); //mxd
-void vectoangles(vec3_t value1, vec3_t angles);
-void vectoangles2(vec3_t value1, vec3_t angles); //mxd. Identical to vectoangles //TODO: remove?
+void vectoangles(vec3_t vec, vec3_t angles);
+void vectoangles2(vec3_t vec, vec3_t angles); //mxd. Identical to vectoangles //TODO: remove?
+int CL_UnformattedStringLength(const char *string); //mxd
+char *CL_UnformattedString(const char *string); //mxd
+int CL_StringLengthExtra(const char *string); //mxd
 
 
 #ifdef LOC_SUPPORT	// Xile/NiceAss LOC

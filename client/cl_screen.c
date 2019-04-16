@@ -785,7 +785,6 @@ void SCR_GetPicPosWidth(char *pic, int *x, int *w)
 
 
 char *load_saveshot;
-int stringLen(char *string);
 
 void SCR_DrawLoading(void)
 {
@@ -867,7 +866,7 @@ void SCR_DrawLoading(void)
 			else
 				loadMsg = va("Downloading ["S_COLOR_ALT"%s"S_COLOR_WHITE"]: %3d%%", cls.downloadname, cls.downloadpercent);
 
-			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * CL_UnformattedStringLength(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + (plaqueOffset + 48), ALIGN_CENTER, loadMsg, 255);
 
 			SCR_DrawLoadingTagProgress("downloading_bar", plaqueOffset, cls.downloadpercent);
@@ -877,7 +876,7 @@ void SCR_DrawLoading(void)
 			plaqueOffset = -130;
 			loadMsg = va("Downloading ["S_COLOR_ALT"%s"S_COLOR_WHITE"]", cls.downloadname);
 
-			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * CL_UnformattedStringLength(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + MENU_FONT_SIZE * 4.5, ALIGN_CENTER, loadMsg, 255);
 
 			if (cls.downloadrate > 0.0f)
@@ -885,7 +884,7 @@ void SCR_DrawLoading(void)
 			else
 				loadMsg = va("%3d%%", cls.downloadpercent);
 
-			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * CL_UnformattedStringLength(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + MENU_FONT_SIZE * 6, ALIGN_CENTER, loadMsg, 255);
 
 			SCR_DrawLoadingBar(SCREEN_WIDTH * 0.5 - 180, SCREEN_HEIGHT*0.5 + 60, 360, 24, cls.downloadpercent, 0.75);
@@ -917,14 +916,14 @@ void SCR_DrawLoading(void)
 		if (drawMapName)
 		{
 			loadMsg = va(S_COLOR_SHADOW S_COLOR_WHITE"Loading Map ["S_COLOR_ALT"%s"S_COLOR_WHITE"]", cl.configstrings[CS_NAME]);
-			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * CL_UnformattedStringLength(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + (plaqueOffset + 48), ALIGN_CENTER, loadMsg, 255);	// was - MENU_FONT_SIZE*7.5
 		}
 
 		if (drawLoadingMsg)
 		{
 			loadMsg = va(S_COLOR_SHADOW"%s", loadingMessages);
-			SCR_DrawString ((SCREEN_WIDTH - MENU_FONT_SIZE * stringLen(loadMsg)) * 0.5,
+			SCR_DrawString((SCREEN_WIDTH - MENU_FONT_SIZE * CL_UnformattedStringLength(loadMsg)) * 0.5,
 							SCREEN_HEIGHT * 0.5 + (plaqueOffset + 72), ALIGN_CENTER, loadMsg, 255);	// was - MENU_FONT_SIZE*4.5
 		}
 
@@ -934,7 +933,7 @@ void SCR_DrawLoading(void)
 		}
 		else
 		{
-			SCR_DrawLoadingBar(SCREEN_WIDTH * 0.5 - 180, SCREEN_HEIGHT - 20, 360, 15, (int)loadingPercent, 0.6);
+			SCR_DrawLoadingBar(SCREEN_WIDTH * 0.5f - 180, SCREEN_HEIGHT - 20, 360.0f, 15.0f, (int)loadingPercent, 0.6);
 			SCR_DrawAlertMessagePicture("loading", false, plaqueOffset);
 		}
 	}

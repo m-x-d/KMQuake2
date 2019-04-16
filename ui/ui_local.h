@@ -18,8 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#ifndef __UI_LOCAL_H__
-#define __UI_LOCAL_H__
+#pragma once
 
 #define MAXMENUITEMS	64
 
@@ -35,8 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	K_ESCAPE		27
 #define	K_SPACE			32
 
-// normal keys should be passed as lowercased ascii
-
+// Normal keys should be passed as lowercased ascii
 #define	K_BACKSPACE		127
 #define	K_UPARROW		128
 #define	K_DOWNARROW		129
@@ -49,12 +47,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //#define QMF_SKINLIST		0x00000008 //mxd. Why did skinlist require special handling?
 #define QMF_HIDDEN			0x00000010
 
-//
 #define RCOLUMN_OFFSET  (MENU_FONT_SIZE * 2)	// was 16
 #define LCOLUMN_OFFSET (-MENU_FONT_SIZE * 2)	// was -16
 
 #define SLIDER_RANGE 10
-//
 
 
 typedef struct _tag_menuframework
@@ -132,13 +128,15 @@ typedef struct
 	menucommon_s generic;
 } menuseparator_s;
 
-typedef enum {
+typedef enum
+{
 	LISTBOX_TEXT,
 	LISTBOX_IMAGE,
 	LISTBOX_TEXTIMAGE
 } listboxtype_t;
 
-typedef enum {
+typedef enum
+{
 	SCROLL_X,
 	SCROLL_Y
 } scrolltype_t;
@@ -174,29 +172,28 @@ typedef struct
 	void (*OpenMenu)(void);
 } mainmenuobject_t;
 
-qboolean Field_Key( menufield_s *field, int key );
+qboolean Field_Key(menufield_s *field, int key);
 
-void	Menu_AddItem (menuframework_s *menu, void *item);
-void	Menu_AdjustCursor (menuframework_s *menu, int dir);
-void	Menu_Center (menuframework_s *menu);
-void	Menu_Draw (menuframework_s *menu);
-void	*Menu_ItemAtCursor (menuframework_s *m);
-qboolean Menu_SelectItem (menuframework_s *s);
-qboolean Menu_MouseSelectItem (menucommon_s *item);
-void	Menu_SetStatusBar (menuframework_s *s, const char *string);
-void	Menu_SlideItem (menuframework_s *s, int dir);
-int		Menu_TallySlots (menuframework_s *menu);
+void Menu_AddItem(menuframework_s *menu, void *item);
+void Menu_AdjustCursor(menuframework_s *menu, int dir);
+void Menu_Center(menuframework_s *menu);
+void Menu_Draw(menuframework_s *menu);
+void *Menu_ItemAtCursor(menuframework_s *m);
+qboolean Menu_SelectItem(menuframework_s *s);
+qboolean Menu_MouseSelectItem(menucommon_s *item);
+void Menu_SetStatusBar(menuframework_s *s, const char *string);
+void Menu_SlideItem(menuframework_s *s, int dir);
+int Menu_TallySlots(menuframework_s *menu);
 
-void	Menu_DrawString (int x, int y, const char *string, int alpha);
-void	Menu_DrawStringDark (int x, int y, const char *string, int alpha);
-void	Menu_DrawStringR2L (int x, int y, const char *string, int alpha);
-void	Menu_DrawStringR2LDark (int x, int y, const char *string, int alpha);
+void Menu_DrawString(int x, int y, const char *string, int alpha);
+void Menu_DrawStringDark(int x, int y, const char *string, int alpha);
+void Menu_DrawStringR2L(int x, int y, const char *string, int alpha);
+void Menu_DrawStringR2LDark(int x, int y, const char *string, int alpha);
 
-void	Menu_DrawTextBox (int x, int y, int width, int lines);
-void	Menu_DrawBanner (char *name);
+void Menu_DrawTextBox(int x, int y, int width, int lines);
+void Menu_DrawBanner(char *name);
 
-void	UI_Draw_Cursor (void);
-
+void UI_Draw_Cursor(void);
 
 //=======================================================
 
@@ -219,7 +216,7 @@ void	UI_Draw_Cursor (void);
 
 #define UI_MOUSECURSOR_PIC			"/gfx/ui/cursors/m_mouse_cursor.pcx"
 
-extern	cvar_t	*ui_cursor_scale;
+extern cvar_t *ui_cursor_scale;
 
 static char *menu_in_sound		= "misc/menu1.wav";
 static char *menu_move_sound	= "misc/menu2.wav";
@@ -233,70 +230,66 @@ int MainMenuMouseHover;
 
 cursor_t cursor;
 
-void M_Menu_Main_f (void);
-	void M_Menu_Game_f (void);
-		void M_Menu_LoadGame_f (void);
-		void M_Menu_SaveGame_f (void);
-		void M_Menu_PlayerConfig_f (void);
-			void M_Menu_DownloadOptions_f (void);
-		void M_Menu_Credits_f( void );
-	void M_Menu_Multiplayer_f( void );
-		void M_Menu_JoinServer_f (void);
-			void M_Menu_AddressBook_f( void );
-		void M_Menu_StartServer_f (void);
-			void M_Menu_DMOptions_f (void);
-		void M_Menu_PlayerConfig_f (void);
-		void M_Menu_DownloadOptions_f (void);
-	void M_Menu_Video_f (void);
-		void M_Menu_Video_Advanced_f (void);
-	void M_Menu_Options_f (void);
-		void M_Menu_Options_Sound_f (void);
-		void M_Menu_Options_Controls_f (void);
-			void M_Menu_Keys_f (void);
-		void M_Menu_Options_Screen_f (void);
-		void M_Menu_Options_Effects_f (void);
-		void M_Menu_Options_Interface_f (void);
-	void M_Menu_Quit_f (void);
+void M_Menu_Main_f(void);
+	void M_Menu_Game_f(void);
+		void M_Menu_LoadGame_f(void);
+		void M_Menu_SaveGame_f(void);
+		void M_Menu_PlayerConfig_f(void);
+			void M_Menu_DownloadOptions_f(void);
+		void M_Menu_Credits_f(void);
+	void M_Menu_Multiplayer_f(void);
+		void M_Menu_JoinServer_f(void);
+			void M_Menu_AddressBook_f(void);
+		void M_Menu_StartServer_f(void);
+			void M_Menu_DMOptions_f(void);
+		void M_Menu_PlayerConfig_f(void);
+		void M_Menu_DownloadOptions_f(void);
+	void M_Menu_Video_f(void);
+		void M_Menu_Video_Advanced_f(void);
+	void M_Menu_Options_f(void);
+		void M_Menu_Options_Sound_f(void);
+		void M_Menu_Options_Controls_f(void);
+			void M_Menu_Keys_f(void);
+		void M_Menu_Options_Screen_f(void);
+		void M_Menu_Options_Effects_f(void);
+		void M_Menu_Options_Interface_f(void);
+	void M_Menu_Quit_f(void);
 
-	//void M_Menu_Credits( void ); //mxd. Missing definition
+	//void M_Menu_Credits(void); //mxd. Missing definition
 
 static char *creditsBuffer;
 
-//void ActionStartMod (char *mod); //mxd. Missing definition
-
 // ui_subsystem.c
-void UI_AddButton (buttonmenuobject_t *thisObj, int index, float x, float y, float w, float h);
-void UI_AddMainButton (mainmenuobject_t *thisObj, int index, int x, int y, char *name);
-void UI_RefreshCursorMenu (void);
-void UI_RefreshCursorLink (void);
-void UI_RefreshCursorButtons (void);
-void UI_PushMenu ( void (*draw) (void), const char *(*key) (int k) );
-//void UI_ForceMenuOff (void); //mxd. Redundant declaration
-void UI_PopMenu (void);
-void UI_BackMenu (void *unused);
-const char *Default_MenuKey( menuframework_s *m, int key );
+void UI_AddButton(buttonmenuobject_t *thisObj, int index, float x, float y, float w, float h);
+void UI_AddMainButton(mainmenuobject_t *thisObj, int index, int x, int y, char *name);
+void UI_RefreshCursorMenu(void);
+void UI_RefreshCursorLink(void);
+void UI_RefreshCursorButtons(void);
+void UI_PushMenu(void (*draw)(void), const char *(*key)(int k));
+//void UI_ForceMenuOff(void); //mxd. Redundant declaration
+void UI_PopMenu(void);
+void UI_BackMenu(void *unused);
+const char *Default_MenuKey(menuframework_s *m, int key);
 
 // ui_main.c
-void M_Main_Draw (void);
-void UI_CheckMainMenuMouse (void);
+void M_Main_Draw(void);
+void UI_CheckMainMenuMouse(void);
 
 // ui_game_saveload.c
-void UI_InitSavegameData (void);
+void UI_InitSavegameData(void);
 
 // ui_credits.c
-void M_Credits_MenuDraw (void);
+void M_Credits_MenuDraw(void);
 
 // ui_options_screen.c
-void Options_Screen_MenuDraw (void);
-void MenuCrosshair_MouseClick (void);
+void Options_Screen_MenuDraw(void);
+void MenuCrosshair_MouseClick(void);
 
 // ui_mp_startserver.c
-void UI_LoadArenas (void);
-void UI_LoadMapList (void);
+void UI_LoadArenas(void);
+void UI_LoadMapList(void);
 
 // ui_mp_playersetup.c
-void PlayerConfig_MenuDraw (void);
-void PlayerConfig_MouseClick (void);
-void PConfigAccept (void);
-
-#endif
+void PlayerConfig_MenuDraw(void);
+void PlayerConfig_MouseClick(void);
+void PConfigAccept(void);

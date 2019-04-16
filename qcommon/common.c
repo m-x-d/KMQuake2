@@ -25,8 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../win32/winquake.h"
 #endif
 
-#define MAXPRINTMSG		8192 // was 4096, fix for nVidia 191.xx crash
-
 #define MAX_NUM_ARGVS	50
 
 
@@ -99,6 +97,8 @@ void Com_EndRedirect(void)
 }
 
 // Both client and server can use this, and it will output to the apropriate place.
+extern char *CL_UnformattedString(const char *string); //mxd
+
 void Com_Printf(char *fmt, ...)
 {
 	va_list	argptr;
@@ -110,7 +110,7 @@ void Com_Printf(char *fmt, ...)
 
 	if (rd_target)
 	{
-		if (strlen(msg) + strlen(rd_buffer) > rd_buffersize - 1)
+		if ((int)(strlen(msg) + strlen(rd_buffer)) > rd_buffersize - 1)
 		{
 			rd_flush(rd_target, rd_buffer);
 			*rd_buffer = 0;
@@ -121,19 +121,27 @@ void Com_Printf(char *fmt, ...)
 	}
 
 	Con_Print(msg);
-		
-	// Also echo to debugging console
-	if (msg[strlen(msg) - 1] != '\r') // Skip overwritten outputs
-		Sys_ConsoleOutput(msg);
 
-	// logfile
+	//mxd. Skip colored text marker
+	char *text = msg;
+	if (text[0] == 1 || text[0] == 2) 
+		text++;
+
+	// Remove color escapes and special font chars
+	text = CL_UnformattedString(text);
+	const unsigned len = strlen(text);
+
+	// Echo to debugging console
+	if (text[len - 1] != '\r') // Skip overwritten outputs
+		Sys_ConsoleOutput(text);
+
+	// Save to logfile?
 	if (logfile_active && logfile_active->integer)
 	{
-		char name[MAX_QPATH];
-		
 		if (!logfile)
 		{
-			Com_sprintf(name, sizeof(name), "%s/kmq2console.log", FS_Gamedir());
+			char name[MAX_QPATH];
+			Com_sprintf(name, sizeof(name), "%s/sbe_console.log", FS_Gamedir());
 			if (logfile_active->integer > 2)
 				logfile = fopen(name, "a");
 			else
@@ -141,10 +149,10 @@ void Com_Printf(char *fmt, ...)
 		}
 
 		if (logfile)
-			fprintf(logfile, "%s", msg);
+			fprintf(logfile, "%s", text);
 
 		if (logfile_active->integer > 1)
-			fflush(logfile); // force it to save every time
+			fflush(logfile); // Force it to save every time
 	}
 }
 
@@ -186,11 +194,11 @@ void Com_CPrintf(char *fmt, ...)
 void Com_Error(int code, char *fmt, ...)
 {
 	va_list argptr;
-	static char msg[MAXPRINTMSG];
+	static char msg[MAXPRINTMSG]; //mxd. +static
 	static qboolean	recursive;
 
 	if (recursive)
-		Sys_Error("recursive error after: %s", msg);
+		Sys_Error("%s: recursive error after: %s", __func__, msg);
 	recursive = true;
 
 	va_start(argptr, fmt);
@@ -199,7 +207,7 @@ void Com_Error(int code, char *fmt, ...)
 	
 	if (code == ERR_DISCONNECT)
 	{
-		CL_Drop ();
+		CL_Drop();
 		recursive = false;
 		longjmp(abortframe, -1);
 	}
@@ -216,13 +224,7 @@ void Com_Error(int code, char *fmt, ...)
 	}
 
 	SV_Shutdown(va("Server fatal crashed: %s\n", msg), false);
-	CL_Shutdown();
-
-	if (logfile)
-	{
-		fclose(logfile);
-		logfile = NULL;
-	}
+	//CL_Shutdown(); //mxd. Called from Sys_Error()
 
 	Sys_Error("%s", msg);
 }
@@ -231,15 +233,17 @@ void Com_Error(int code, char *fmt, ...)
 void Com_Quit(void)
 {
 	SV_Shutdown("Server quit\n", false);
-	CL_Shutdown();
+	Sys_Quit(false);
+}
 
+//mxd
+void Com_CloseLogfile(void)
+{
 	if (logfile)
 	{
 		fclose(logfile);
 		logfile = NULL;
 	}
-
-	Sys_Quit();
 }
 
 int Com_ServerState(void)
@@ -1134,16 +1138,6 @@ void COM_AddParm(char *parm)
 	com_argv[com_argc++] = parm;
 }
 
-// just for debugging
-/*int	memsearch(byte *start, int count, int search)
-{
-	for (int i = 0; i < count; i++)
-		if (start[i] == search)
-			return i;
-
-	return -1;
-}*/
-
 char *CopyString(char *in)
 {
 	char *out = Z_Malloc(strlen(in) + 1);
@@ -1400,7 +1394,8 @@ void SCR_EndLoadingPlaque(void);
 // Throws a fatal error to test error shutdown procedures
 void Com_Error_f(void)
 {
-	Com_Error(ERR_FATAL, "%s", Cmd_Argv(1));
+	char *msg = (Cmd_Argc() == 2 ? Cmd_Argv(1) : "Something happened and everything was lost!");
+	Com_Error(ERR_FATAL, "%s", msg);
 }
 
 void Qcommon_Init(int argc, char **argv)
@@ -1459,7 +1454,7 @@ void Qcommon_Init(int argc, char **argv)
 	// end Knightmare
 	
 	s = va("%4.2f %s %s %s", VERSION, CPUSTRING, __DATE__, BUILDSTRING);
-	Cvar_Get("version", s, CVAR_SERVERINFO|CVAR_NOSET);
+	Cvar_Get("version", s, CVAR_SERVERINFO | CVAR_NOSET);
 
 	if (dedicated->value)
 		Cmd_AddCommand("quit", Com_Quit);
@@ -1494,7 +1489,7 @@ void Qcommon_Init(int argc, char **argv)
 		SCR_EndLoadingPlaque();
 	}
 
-	Com_Printf("====== KMQuake 2 SBE Initialized ======\n\n");
+	Com_Printf("=== %s %s v%4.2f Initialized ===\n\n", ENGINE_NAME, CPUSTRING, VERSION);
 }
 
 void Qcommon_Frame(int msec)

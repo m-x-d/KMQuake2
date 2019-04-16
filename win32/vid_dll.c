@@ -83,11 +83,10 @@ static void WIN_EnableAltTab(void)
 ==========================================================================
 */
 
-#define	MAXPRINTMSG	8192 // was 4096
 void VID_Printf(int print_level, char *fmt, ...)
 {
 	va_list	argptr;
-	char	msg[MAXPRINTMSG];
+	static char msg[MAXPRINTMSG]; //mxd. +static
 	
 	va_start(argptr, fmt);
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
@@ -111,7 +110,7 @@ void VID_Printf(int print_level, char *fmt, ...)
 void VID_Error(int err_level, char *fmt, ...)
 {
 	va_list	argptr;
-	char	msg[MAXPRINTMSG];
+	static char msg[MAXPRINTMSG]; //mxd. +static
 	
 	va_start(argptr, fmt);
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);

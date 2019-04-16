@@ -37,12 +37,6 @@ extern int edit_line;
 extern int key_linepos;
 
 
-int stringLengthExtra(const char *string);
-int stringLen(const char *string)
-{
-	return strlen(string) - stringLengthExtra(string);
-}
-
 void Con_DrawString(int x, int y, char *string, int alpha)
 {
 	DrawStringGeneric(x, y, string, alpha, SCALETYPE_CONSOLE, false);
@@ -112,15 +106,21 @@ void Con_Dump_f(void)
 	char buffer[1024];
 	char name[MAX_OSPATH];
 
-	if (Cmd_Argc() != 2)
+	if (Cmd_Argc() > 2)
 	{
 		Com_Printf("Usage: condump <filename>\n");
 		return;
 	}
 
-	Com_sprintf(name, sizeof(name), "%s/%s.txt", FS_Gamedir(), Cmd_Argv(1));
+	if (con.linewidth >= 1024) //mxd. From YQ2
+	{
+		Com_Printf("%s: con.linewidth too large!\n", __func__);
+		return;
+	}
 
-	Com_Printf("Dumped console text to %s.\n", name);
+	char *filename = (Cmd_Argc() == 1 ? "condump" : Cmd_Argv(1)); //mxd. +Default filename
+	Com_sprintf(name, sizeof(name), "%s/%s.txt", FS_Gamedir(), filename);
+
 	FS_CreatePath(name);
 	FILE *f = fopen(name, "w");
 	if (!f)
@@ -157,13 +157,13 @@ void Con_Dump_f(void)
 				break;
 		}
 
-		for (x = 0; buffer[x]; x++)
-			buffer[x] &= 0x7f;
-
-		fprintf(f, "%s\n", buffer);
+		fprintf(f, "%s\n", CL_UnformattedString(buffer)); //mxd. Strip color markers...
 	}
 
 	fclose(f);
+
+	// Done
+	Com_Printf("Dumped console text to %s.\n", name);
 }
 
 void Con_ClearNotify(void)
@@ -573,7 +573,7 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 	// Changed to "KMQuake2 vx.xx"
 	char version[64];
 	Com_sprintf(version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"%s v%4.2f%s", ENGINE_NAME, VERSION, ENGINE_BUILD); //mxd. +ENGINE_NAME, +VERSION, +ENGINE_BUILD
-	Con_DrawString((int)(viddef.width - FONT_SIZE * (stringLen((const char *)&version)) - 3), y - (int)(1.25f * FONT_SIZE), version, 255);
+	Con_DrawString((int)(viddef.width - FONT_SIZE * (CL_UnformattedStringLength((const char *)&version)) - 3), y - (int)(1.25f * FONT_SIZE), version, 255);
 
 	if ((newconback_found && con_newconback->value) || con_oldconbar->value) // Q3-style console bottom bar
 		R_DrawFill(0, y, (int)barwidth, (int)barheight, red, green, blue, 255);
@@ -625,7 +625,7 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 		memset(dlbar, 0, sizeof(dlbar)); // Clear dlbar
 
 		// Make this a little shorter in case of longer version string
-		x = con.linewidth - ((con.linewidth * 7) / 40) - (stringLen((const char *)&version) - 14);
+		x = con.linewidth - ((con.linewidth * 7) / 40) - (CL_UnformattedStringLength((const char *)&version) - 14);
 		y = x - strlen(text) - (cls.downloadrate > 0.0f ? 19 : 8);
 
 		const int maxchars = con.linewidth / 3;

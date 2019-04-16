@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define MAX_OUTPUT		32768
 #define MAX_INPUT		256
-#define	MAX_PRINTMSG	8192
 
 typedef struct
 {
@@ -81,21 +80,16 @@ char *Sys_ConsoleInput(void)
 
 void Sys_ConsoleOutput(char *text)
 {
-	char buffer[MAX_PRINTMSG];
+	static char buffer[MAXPRINTMSG]; //mxd. +static
 	int len = 0;
 
-	// Change \n to \r\n so it displays properly in the edit box and
-	// remove color escapes
+	// Change \n to \r\n so it displays properly in the edit box
 	while (*text)
 	{
 		if (*text == '\n')
 		{
 			buffer[len++] = '\r';
 			buffer[len++] = '\n';
-		}
-		else if (Q_IsColorString(text))
-		{
-			text++;
 		}
 		else
 		{
@@ -136,15 +130,15 @@ void Sys_Error(char *error, ...)
 	// Make sure all subsystems are down
 	CL_Shutdown();
 	Qcommon_Shutdown();
-
+	
 	va_start(argPtr, error);
 	Q_vsnprintf(string, sizeof(string), error, argPtr);
 	va_end(argPtr);
 
 	// Echo to console
-	Sys_ConsoleOutput("\n");
+	Sys_ConsoleOutput("\n*************************************\nERROR: ");
 	Sys_ConsoleOutput(string);
-	Sys_ConsoleOutput("\n");
+	Sys_ConsoleOutput("\n*************************************\n");
 
 	// Display the message and set a timer so we can flash the text
 	SetWindowText(sys_console.hWndMsg, string);
@@ -164,7 +158,10 @@ void Sys_Error(char *error, ...)
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
 		{
 			if (!GetMessage(&msg, NULL, 0, 0))
-				Sys_Quit();
+			{
+				//Sys_Quit(); //mxd. Avoid recursive shutdowns! Console windows calls Sys_Quit when closing.
+				return;
+			}
 
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -209,7 +206,7 @@ static LONG WINAPI Sys_ConsoleProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		break;
 
 	case WM_CLOSE:
-		Sys_Quit();
+		Sys_Quit(sys_console.timerActive);
 		break;
 
 	case WM_COMMAND:
@@ -227,7 +224,7 @@ static LONG WINAPI Sys_ConsoleProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			}
 			else if ((HWND)lParam == sys_console.hWndQuit)
 			{
-				Sys_Quit();
+				Sys_Quit(sys_console.timerActive);
 			}
 		}
 		else if (HIWORD(wParam) == EN_VSCROLL)
@@ -304,10 +301,10 @@ static LONG WINAPI Sys_ConsoleEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		}
 		break;
 
-	case WM_VSCROLL:
+	/*case WM_VSCROLL: //mxd. This was preventing the console window scrolling when dragging the scrollbar. Why? 
 		if (LOWORD(wParam) == SB_THUMBTRACK)
 			return 0;
-		break;
+		break;*/
 	}
 
 	if (hWnd == sys_console.hWndOutput)
@@ -408,11 +405,11 @@ void Sys_InitDedConsole(void)
 	}
 
 	sys_console.hWndMsg = CreateWindowEx(0, "STATIC", "", WS_CHILD | SS_SUNKEN, 5, 5, 530, 30, sys_console.hWnd, NULL, global_hInstance, NULL); // was 5, 5, 530, 30
-	sys_console.hWndOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE, 5, 40+LOGO_OFFSET, 530, 350, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndInput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 5, 395+LOGO_OFFSET, 530, 20, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndCopy = CreateWindowEx(0, "BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 422+LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 422+LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndQuit = CreateWindowEx(0, "BUTTON", "Quit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 445, 422+LOGO_OFFSET, 90, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE, 5, 40 + LOGO_OFFSET, 530, 350, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndInput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 5, 395 + LOGO_OFFSET, 530, 20, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndCopy = CreateWindowEx(0, "BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 422 + LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 422 + LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndQuit = CreateWindowEx(0, "BUTTON", "Quit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 445, 422 + LOGO_OFFSET, 90, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
 
 	// splash logo
 	sys_console.hWndLogo = CreateWindowEx(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_CENTERIMAGE, 0, 0, 540, 160, sys_console.hWnd, NULL, global_hInstance, NULL);
@@ -441,7 +438,7 @@ void Sys_InitDedConsole(void)
 	sys_console.defInputProc = (WNDPROC)SetWindowLong(sys_console.hWndInput, GWL_WNDPROC, (LONG)Sys_ConsoleEditProc);
 
 	// Set text limit for input edit box
-	SendMessage(sys_console.hWndInput, EM_SETLIMITTEXT, (WPARAM)(MAX_INPUT-1), 0);
+	SendMessage(sys_console.hWndInput, EM_SETLIMITTEXT, (WPARAM)(MAX_INPUT - 1), 0);
 
 	// Hide it to start
 	Sys_ShowConsole(true);

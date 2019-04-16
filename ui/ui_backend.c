@@ -42,54 +42,14 @@ static void SpinControl_DoSlide(menulist_s *s, int dir);
 #define VID_WIDTH viddef.width
 #define VID_HEIGHT viddef.height
 
-// added Psychospaz's menu mouse support
+// Added Psychospaz's menu mouse support
 //======================================================
-int stringLen (const char *string);
-int stringLengthExtra (const char *string)
-{
-	unsigned i, j;
-	const float len = strlen(string);
 
-	for (i = 0, j = 0; i < len; i++)
-	{
-		if ((string[i] == '^') || (i > 0 && string[i - 1] == '^'))
-			j++;
-	}
-
-	return j;
-}
-
-char *unformattedString (const char *string)
-{
-	char *newstring = "";
-	const unsigned len = strlen(string);
-
-	for (unsigned i = 0; i < len; i++)
-	{
-		char c = string[i];
-
-		if (c & 128)
-			c &= ~128;
-
-		if (c == '^')
-		{
-			i++;
-			continue;
-		}
-
-		c = string[i];
-
-		va("%s%c", newstring, c);
-	}
-
-	return newstring;
-}
-
-int mouseOverAlpha (menucommon_s *m)
+int mouseOverAlpha(menucommon_s *m)
 {
 	if (cursor.menuitem == m)
 	{
-		const int alpha = 125 + 25 * cosf(anglemod(cl.time * 0.005));
+		const int alpha = 125 + 25 * cosf(anglemod(cl.time * 0.005f));
 		return clamp(alpha, 0, 255);
 	}
 
@@ -98,13 +58,13 @@ int mouseOverAlpha (menucommon_s *m)
 //======================================================
 
 
-void Action_DoEnter (menuaction_s *a)
+void Action_DoEnter(menuaction_s *a)
 {
 	if (a->generic.callback)
 		a->generic.callback(a);
 }
 
-void Action_Draw (menuaction_s *a)
+void Action_Draw(menuaction_s *a)
 {
 	const int alpha = mouseOverAlpha(&a->generic);
 
@@ -139,7 +99,7 @@ void Action_Draw (menuaction_s *a)
 		a->generic.ownerdraw(a);
 }
 
-qboolean Field_DoEnter (menufield_s *f)
+qboolean Field_DoEnter(menufield_s *f)
 {
 	if (f->generic.callback)
 	{
@@ -150,7 +110,7 @@ qboolean Field_DoEnter (menufield_s *f)
 	return false;
 }
 
-void Field_Draw (menufield_s *f)
+void Field_Draw(menufield_s *f)
 {
 	const int alpha = mouseOverAlpha(&f->generic);
 	char tempbuffer[128] = "";
@@ -161,7 +121,7 @@ void Field_Draw (menufield_s *f)
 							   f->generic.y + f->generic.parent->y, f->generic.name, 255);
 	}
 
-	const int xtra = stringLengthExtra(f->buffer);
+	const int xtra = CL_StringLengthExtra(f->buffer);
 	if (xtra > 0)
 	{
 		strncpy(tempbuffer, f->buffer + f->visible_offset, f->visible_length);
@@ -203,7 +163,7 @@ void Field_Draw (menufield_s *f)
 					f->generic.y + f->generic.parent->y, tempbuffer, alpha);
 }
 
-qboolean Field_Key (menufield_s *f, int key)
+qboolean Field_Key(menufield_s *f, int key)
 {
 	extern int keydown[];
 
@@ -253,19 +213,7 @@ qboolean Field_Key (menufield_s *f, int key)
 		break;
 	}
 
-	/*if (key > 127) //mxd. Ths blocked Shift-Ins combo in the next block
-	{
-		switch (key)
-		{
-		case K_DEL:
-		default:
-			return false;
-		}
-	}*/
-
-	//
-	// support pasting from the clipboard
-	//
+	// Support pasting from the clipboard
 	if ((toupper(key) == 'V' && keydown[K_CTRL]) ||
 		((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
 	{
@@ -278,9 +226,7 @@ qboolean Field_Key (menufield_s *f, int key)
 			strncpy(f->buffer, cbd, f->length - 1);
 			f->cursor = strlen(f->buffer);
 			f->visible_offset = f->cursor - f->visible_length;
-
-			if (f->visible_offset < 0)
-				f->visible_offset = 0;
+			f->visible_offset = max(f->visible_offset, 0);
 
 			free(cbd);
 		}
@@ -336,7 +282,7 @@ qboolean Field_Key (menufield_s *f, int key)
 	return true;
 }
 
-void Menulist_DoEnter (menulist_s *l)
+void Menulist_DoEnter(menulist_s *l)
 {
 	const int start = l->generic.y / 10 + 1;
 	l->curvalue = l->generic.parent->cursor - start;
@@ -345,7 +291,7 @@ void Menulist_DoEnter (menulist_s *l)
 		l->generic.callback(l);
 }
 
-void MenuList_Draw (menulist_s *l)
+void MenuList_Draw(menulist_s *l)
 {
 	int y = 0;
 	const int alpha = mouseOverAlpha(&l->generic);
@@ -355,7 +301,7 @@ void MenuList_Draw (menulist_s *l)
 
 	const char** n = l->itemnames;
 
-	SCR_DrawFill (l->generic.parent->x + l->generic.x - 112, l->generic.parent->y + l->generic.y + (l->curvalue + 1) * MENU_LINE_SIZE,
+	SCR_DrawFill(l->generic.parent->x + l->generic.x - 112, l->generic.parent->y + l->generic.y + (l->curvalue + 1) * MENU_LINE_SIZE,
 				128, MENU_LINE_SIZE, ALIGN_CENTER, color8red(16), color8green(16), color8blue(16), 255);
 
 	while (*n)
@@ -367,7 +313,7 @@ void MenuList_Draw (menulist_s *l)
 	}
 }
 
-void Separator_Draw (menuseparator_s *s)
+void Separator_Draw(menuseparator_s *s)
 {
 	const int alpha = mouseOverAlpha(&s->generic);
 
@@ -378,7 +324,7 @@ void Separator_Draw (menuseparator_s *s)
 	}
 }
 
-void Slider_DoSlide (menuslider_s *s, int dir)
+void Slider_DoSlide(menuslider_s *s, int dir)
 {
 	s->curvalue += dir;
 	s->curvalue = clamp(s->curvalue, s->minvalue, s->maxvalue);
@@ -389,7 +335,7 @@ void Slider_DoSlide (menuslider_s *s, int dir)
 
 #define SLIDER_RANGE 10
 
-void Slider_Draw (menuslider_s *s)
+void Slider_Draw(menuslider_s *s)
 {
 	int	i;
 	const int alpha = mouseOverAlpha(&s->generic);
@@ -416,7 +362,7 @@ void Slider_Draw (menuslider_s *s)
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 131, 255, 255, 255, 255, false, true);
 }
 
-void SpinControl_DoEnter (menulist_s *s)
+void SpinControl_DoEnter(menulist_s *s)
 {
 	if (!s->itemnames || !s->numitemnames)
 		return;
@@ -429,7 +375,7 @@ void SpinControl_DoEnter (menulist_s *s)
 		s->generic.callback(s);
 }
 
-void SpinControl_DoSlide (menulist_s *s, int dir)
+void SpinControl_DoSlide(menulist_s *s, int dir)
 {
 	if (!s->itemnames || !s->numitemnames)
 		return;
@@ -445,7 +391,7 @@ void SpinControl_DoSlide (menulist_s *s, int dir)
 		s->generic.callback(s);
 }
  
-void SpinControl_Draw (menulist_s *s)
+void SpinControl_Draw(menulist_s *s)
 {
 	const int alpha = mouseOverAlpha(&s->generic);
 	char buffer[100];
@@ -474,13 +420,7 @@ void SpinControl_Draw (menulist_s *s)
 	}
 }
 
-
-/*
-==========================
-Menu_AddItem
-==========================
-*/
-void Menu_AddItem (menuframework_s *menu, void *item)
+void Menu_AddItem(menuframework_s *menu, void *item)
 {
 	if (menu->nitems == 0)
 		menu->nslots = 0;
@@ -505,14 +445,8 @@ void Menu_AddItem (menuframework_s *menu, void *item)
 	}
 }
 
-
-/*
-==========================
-Menu_ItemIsValidCursorPosition
-Checks if an item can be used as a cursor position.
-==========================
-*/
-qboolean Menu_ItemIsValidCursorPosition (void *item)
+// Checks if an item can be used as a cursor position.
+qboolean Menu_ItemIsValidCursorPosition(void *item)
 {
 	if (!item)
 		return false;
@@ -525,15 +459,8 @@ qboolean Menu_ItemIsValidCursorPosition (void *item)
 	return (citem->type != MTYPE_SEPARATOR);
 }
 
-
-/*
-==========================
-Menu_AdjustCursor
-
-This function takes the given menu, the direction, and attempts
-to adjust the menu's cursor so that it's at the next available slot.
-==========================
-*/
+// This function takes the given menu, the direction, and attempts
+// to adjust the menu's cursor so that it's at the next available slot.
 void Menu_AdjustCursor (menuframework_s *m, int dir)
 {
 	// See if it's in a valid spot
@@ -554,25 +481,13 @@ void Menu_AdjustCursor (menuframework_s *m, int dir)
 	}
 }
 
-
-/*
-==========================
-Menu_Center
-==========================
-*/
-void Menu_Center (menuframework_s *menu)
+void Menu_Center(menuframework_s *menu)
 {
 	const int height = ((menucommon_s *) menu->items[menu->nitems-1])->y + 10;
 	menu->y = (SCREEN_HEIGHT - height) * 0.5;
 }
 
-
-/*
-==========================
-Menu_Draw
-==========================
-*/
-void Menu_Draw (menuframework_s *menu)
+void Menu_Draw(menuframework_s *menu)
 {
 	// Draw contents
 	for (int i = 0; i < menu->nitems; i++)
@@ -721,7 +636,7 @@ void Menu_Draw (menuframework_s *menu)
 
 		//mxd. Reset menu mouse clicks when mouse moved away from an item (some interactive menu elements aren't added as items, 
 		// so buttonclicks from a prevoiusly clicked menu item are applied to them on hover...)
-		//TODO: redo those items as menuitems, remove explicit calls to PlayerConfig_MouseClick and MenuCrosshair_MouseClick in UI_ThinkMouseCursor (Knightmare laready did this in his current build?)
+		//TODO: redo those items as menuitems, remove explicit calls to PlayerConfig_MouseClick and MenuCrosshair_MouseClick in UI_ThinkMouseCursor (Knightmare already did this in his current build?)
 		if(lastitem != NULL && cursor.menuitem == NULL)
 		{
 			for (int i = 0; i < MENU_CURSOR_BUTTON_MAX; i++)
@@ -776,7 +691,7 @@ void Menu_Draw (menuframework_s *menu)
 	}
 }
 
-void Menu_DrawStatusBar (const char *string)
+void Menu_DrawStatusBar(const char *string)
 {
 	if (string)
 	{
@@ -790,39 +705,33 @@ void Menu_DrawStatusBar (const char *string)
 	}
 }
 
-void Menu_DrawString (int x, int y, const char *string, int alpha)
+void Menu_DrawString(int x, int y, const char *string, int alpha)
 {
 	SCR_DrawString(x, y, ALIGN_CENTER, string, alpha);
 }
 
-void Menu_DrawStringDark (int x, int y, const char *string, int alpha)
+void Menu_DrawStringDark(int x, int y, const char *string, int alpha)
 {
 	char newstring[1024];
 	Com_sprintf(newstring, sizeof(newstring), S_COLOR_ALT"%s", string);
 	SCR_DrawString(x, y, ALIGN_CENTER, newstring, alpha);
 }
 
-void Menu_DrawStringR2L (int x, int y, const char *string, int alpha)
+void Menu_DrawStringR2L(int x, int y, const char *string, int alpha)
 {
-	x -= stringLen(string) * MENU_FONT_SIZE;
+	x -= CL_UnformattedStringLength(string) * MENU_FONT_SIZE;
 	SCR_DrawString(x, y, ALIGN_CENTER, string, alpha);
 }
 
-void Menu_DrawStringR2LDark (int x, int y, const char *string, int alpha)
+void Menu_DrawStringR2LDark(int x, int y, const char *string, int alpha)
 {
 	char newstring[1024];
 	Com_sprintf(newstring, sizeof(newstring), S_COLOR_ALT"%s", string);
-	x -= stringLen(string) * MENU_FONT_SIZE;
+	x -= CL_UnformattedStringLength(string) * MENU_FONT_SIZE;
 	SCR_DrawString(x, y, ALIGN_CENTER, newstring, alpha);
 }
 
-
-/*
-=============
-Menu_DrawTextBox
-=============
-*/
-void Menu_DrawTextBox (int x, int y, int width, int lines)
+void Menu_DrawTextBox(int x, int y, int width, int lines)
 {
 	// Draw left side
 	int cx = x;
@@ -863,13 +772,7 @@ void Menu_DrawTextBox (int x, int y, int width, int lines)
 	SCR_DrawChar(cx, cy + MENU_FONT_SIZE, ALIGN_CENTER, 9, 255, 255, 255, 255, false, true);
 }
 
-
-/*
-=================
-Menu_DrawBanner
-=================
-*/
-void Menu_DrawBanner (char *name)
+void Menu_DrawBanner(char *name)
 {
 	int w, h;
 	R_DrawGetPicSize(&w, &h, name);
@@ -877,7 +780,7 @@ void Menu_DrawBanner (char *name)
 }
 
 
-void *Menu_ItemAtCursor (menuframework_s *m)
+void *Menu_ItemAtCursor(menuframework_s *m)
 {
 	if (m->cursor < 0 || m->cursor >= m->nitems)
 		return 0;
@@ -885,7 +788,7 @@ void *Menu_ItemAtCursor (menuframework_s *m)
 	return m->items[m->cursor];
 }
 
-qboolean Menu_SelectItem (menuframework_s *s)
+qboolean Menu_SelectItem(menuframework_s *s)
 {
 	menucommon_s *item = (menucommon_s *)Menu_ItemAtCursor(s);
 
@@ -913,7 +816,7 @@ qboolean Menu_SelectItem (menuframework_s *s)
 	return false;
 }
 
-qboolean Menu_MouseSelectItem (menucommon_s *item)
+qboolean Menu_MouseSelectItem(menucommon_s *item)
 {
 	if (item)
 	{
@@ -935,12 +838,12 @@ qboolean Menu_MouseSelectItem (menucommon_s *item)
 	return false;
 }
 
-void Menu_SetStatusBar (menuframework_s *m, const char *string)
+void Menu_SetStatusBar(menuframework_s *m, const char *string)
 {
 	m->statusbar = string;
 }
 
-void Menu_SlideItem (menuframework_s *s, int dir)
+void Menu_SlideItem(menuframework_s *s, int dir)
 {
 	menucommon_s *item = (menucommon_s *)Menu_ItemAtCursor(s);
 
@@ -959,7 +862,7 @@ void Menu_SlideItem (menuframework_s *s, int dir)
 	}
 }
 
-int Menu_TallySlots (menuframework_s *menu)
+int Menu_TallySlots(menuframework_s *menu)
 {
 	int total = 0;
 
@@ -990,30 +893,19 @@ int Menu_TallySlots (menuframework_s *menu)
 
 /*
 =======================================================================
-
-Menu Mouse Cursor - psychospaz
-
+	Menu Mouse Cursor - psychospaz
 =======================================================================
 */
-extern void (*m_drawfunc) (void);
-extern const char *(*m_keyfunc) (int key);
 
-/*
-=================
-UI_RefreshCursorMenu
-=================
-*/
-void UI_RefreshCursorMenu (void)
+extern void (*m_drawfunc)(void);
+extern const char *(*m_keyfunc)(int key);
+
+void UI_RefreshCursorMenu(void)
 {
 	cursor.menu = NULL;
 }
 
-/*
-=================
-UI_RefreshCursorLink
-=================
-*/
-void UI_RefreshCursorLink (void)
+void UI_RefreshCursorLink(void)
 {
 	cursor.menuitem = NULL;
 }
@@ -1114,12 +1006,7 @@ void Menu_ClickSlideItem (menuframework_s *menu, void *menuitem)
 }
 #endif
 
-/*
-=================
-UI_Think_MouseCursor
-=================
-*/
-void UI_Think_MouseCursor (void)
+void UI_Think_MouseCursor(void)
 {
 	char *sound = NULL;
 	menuframework_s *m = (menuframework_s *)cursor.menu;
@@ -1229,19 +1116,14 @@ void UI_Think_MouseCursor (void)
 		S_StartLocalSound(sound);
 }
 
-
-/*
-=================
-UI_Draw_Cursor
-=================
-*/
 #if 1
-void UI_Draw_Cursor (void)
+
+void UI_Draw_Cursor(void) //TODO: mxd. Switch to "hover" cursor when hovering over items?
 {
 	const float scale = SCR_ScaledVideo(ui_cursor_scale->value); // 0.4
 	char *cur_img = UI_MOUSECURSOR_PIC;
 
-	//get sizing vars
+	// Get sizing vars
 	int w, h;
 	R_DrawGetPicSize(&w, &h, UI_MOUSECURSOR_PIC);
 	const float ofs_x = SCR_ScaledVideo(w) * ui_cursor_scale->value * 0.5;
@@ -1249,7 +1131,9 @@ void UI_Draw_Cursor (void)
 	
 	R_DrawScaledPic(cursor.x - ofs_x, cursor.y - ofs_y, scale, 1.0f, cur_img);
 }
+
 #else
+
 void UI_Draw_Cursor (void)
 {
 	float	alpha = 1, scale = SCR_ScaledVideo(0.66);
@@ -1319,4 +1203,5 @@ void UI_Draw_Cursor (void)
 		}
 	}
 }
+
 #endif

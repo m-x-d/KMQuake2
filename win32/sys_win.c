@@ -56,7 +56,7 @@ void Sys_SendKeyEvents(void)
 	while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
 	{
 		if (!GetMessage(&msg, NULL, 0, 0))
-			Sys_Quit();
+			Sys_Quit(false);
 
 		sys_msg_time = msg.time;
 		TranslateMessage(&msg);
@@ -94,23 +94,26 @@ char *Sys_GetClipboardData(void)
 
 #pragma region ======================= SYSTEM IO
 
-void Sys_Quit(void)
+void Sys_Quit(qboolean error) //mxd. +error
 {
 	timeEndPeriod(1);
 
-	CL_Shutdown();
-	Qcommon_Shutdown();
+	if(!error) //mxd. Otherwise those were already called
+	{
+		CL_Shutdown();
+		Qcommon_Shutdown();
+	}
 
 	if (dedicated && dedicated->value)
 		FreeConsole();
 
 	Sys_ShutdownConsole();
+	Com_CloseLogfile(); //mxd. Make it the last thing closed
 
 	exit(0);
 }
 
-
-void WinError(void)
+/*void WinError(void) //mxd. Never called
 {
 	LPVOID lpMsgBuf;
 
@@ -129,7 +132,7 @@ void WinError(void)
 
 	// Free the buffer.
 	LocalFree(lpMsgBuf);
-}
+}*/
 
 #pragma endregion
 
@@ -326,7 +329,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// Init console window
 	Sys_InitDedConsole();
-	Com_Printf("KMQuake 2 SBE %4.2f %s %s %s\n", VERSION, CPUSTRING, BUILDSTRING, __DATE__); //mxd. Version
+	Com_Printf("%s %4.2f %s %s %s\n", ENGINE_NAME, VERSION, CPUSTRING, BUILDSTRING, __DATE__); //mxd. ENGINE_NAME, Version
 
 	// Knightmare- scan for cd command line option
 	for (int i = 0; i < argc; i++)
