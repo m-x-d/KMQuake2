@@ -1822,7 +1822,7 @@ void CL_Shutdown(void)
 
 	if (isdown)
 	{
-		Com_Printf(S_COLOR_RED"recursive shutdown\n");
+		Com_Printf(S_COLOR_RED"%s: recursive shutdown\n", __func__);
 		return;
 	}
 	isdown = true;
