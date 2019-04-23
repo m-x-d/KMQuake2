@@ -24,17 +24,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../client/client.h"
 #include "ui_local.h"
 
-/*
-=============================================================================
-	CREDITS MENU
-=============================================================================
-*/
 
 static int credits_start_time;
 // Knigthtmare added- allow credits to scroll past top of screen
 static int credits_start_line;
 static const char **credits;
 static char *creditsIndex[256];
+
+#pragma region ======================= Credits strings
 
 static const char *idcredits[] =
 {
@@ -382,6 +379,7 @@ static const char *roguecredits[] =
 	0
 };
 
+#pragma endregion 
 
 void M_Credits_MenuDraw(void)
 {

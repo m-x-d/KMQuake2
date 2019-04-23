@@ -21,282 +21,248 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // ui_options_keys.c -- the key binding menu
 
 #include <ctype.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "../client/client.h"
 #include "ui_local.h"
 
-/*
-=======================================================================
-
-KEYS MENU
-
-=======================================================================
-*/
-
 char *bindnames[][2] =
 {
-{"+attack", 		"attack"},
-{"+attack2", 		"alternate attack"},
-{"+use", 			"activate"},
-{"weapprev", 		"prev weapon"},
-{"weapnext", 		"next weapon"},
-{"+forward", 		"walk forward"},
-{"+back", 			"backpedal"},
-{"+left", 			"turn left"},
-{"+right", 			"turn right"},
-{"+speed", 			"run"},
-{"+moveleft", 		"step left"},
-{"+moveright", 		"step right"},
-{"+strafe", 		"sidestep"},
-{"+lookup", 		"look up"},
-{"+lookdown", 		"look down"},
-{"centerview", 		"center view"},
-{"+mlook", 			"mouse look"},
-{"+klook", 			"keyboard look"},
-{"+moveup",			"up / jump"},
-{"+movedown",		"down / crouch"},
-{"inven",			"inventory"},
-{"invuse",			"use item"},
-{"invdrop",			"drop item"},
-{"invprev",			"prev item"},
-{"invnext",			"next item"},
-{"cmd help", 		"help computer" }, 
-{ 0, 0 }
+	{"+forward",	"Forward"},
+	{"+back",		"Back"},
+	{"+moveleft",	"Move left"},
+	{"+moveright",	"Move right"},
+	{"+moveup",		"Jump"},
+	{"+movedown",	"Crouch"},
+	{"+speed", 		"Run (hold)"},
+
+	{"+attack",		"Attack"},
+	{"+attack2",	"Secondary attack"},
+	{"weapnext",	"Next weapon"},
+	{"weapprev",	"Previous weapon"},
+
+	{"+use",		"Activate"},
+
+	{"inven",		"Inventory"},
+	{"invnext",		"Next item"},
+	{"invprev",		"Previous item"},
+	{"invuse",		"Use item"},
+	{"invdrop",		"Drop item"},
+	
+	{"+left",		"Turn left"},
+	{"+right",		"Turn right"},
+	{"+strafe",		"Sidestep (hold)"},
+
+	{"+lookup",		"Look up"},
+	{"+lookdown",	"Look down"},
+	{"centerview",	"Center view"},
+
+	{"+mlook",		"Mouse look"},
+	{"+klook",		"Keyboard look"},
+	
+	{"cmd help",	"Help computer"},
+	{0, 0}
 };
 
-int				keys_cursor;
-static int		bind_grab;
-
-static menuframework_s	s_keys_menu;
+static menuframework_s s_keys_menu;
 static menuaction_s s_keys_binds[64];
-static menuaction_s		s_keys_back_action;
+static menuaction_s s_keys_back_action;
 
-static void M_UnbindCommand (char *command)
+static menuaction_s *bind_target = NULL; //mxd
+
+static void M_UnbindCommand(char *command)
 {
-	int		j;
-	int		l;
-	char	*b;
-
-	l = strlen(command);
-
-	for (j=0 ; j<256 ; j++)
+	for (int i = 0; i < NUM_KEYBINDINGS; i++)
 	{
-		b = keybindings[j];
-		if (!b)
-			continue;
-		// Knightmare- fix bug with key bound to +attack2 being confused with +attack
-		if (!strncmp(b, "+attack2", 8) && strncmp(command, "+attack2", 8))
-			continue;
-		if (!strncmp(b, command, l) )
-			Key_SetBinding (j, "");
+		char* binding = keybindings[i];
+
+		if (binding && !Q_stricmp(binding, command)) //mxd. strncmp -> Q_stricmp
+			Key_SetBinding(i, "");
 	}
 }
 
-static void M_FindKeysForCommand (char *command, int *twokeys)
+static void M_FindKeysForCommand(char *command, int *twokeys)
 {
-	int		count;
-	int		j;
-	int	 	l;
-	char	*b;
+	int count = 0;
 
-	twokeys[0] = twokeys[1] = -1;
-	l = strlen(command);
-	count = 0;
+	twokeys[0] = -1;
+	twokeys[1] = -1;
 
-	for (j=0 ; j<256 ; j++)
+	for (int i = 0; i < NUM_KEYBINDINGS; i++)
 	{
-		b = keybindings[j];
-		if (!b)
-			continue;
-		// Knightmare- fix bug with key bound to +attack2 being confused with +attack
-		if (!strncmp(b, "+attack2", 8) && strncmp(command, "+attack2", 8))
-			continue;
-		if (!strncmp(b, command, l))
+		char* binding = keybindings[i];
+
+		if (binding && !Q_stricmp(binding, command)) //mxd. strncmp -> Q_stricmp
 		{
-			twokeys[count] = j;
+			twokeys[count] = i;
 			count++;
+
 			if (count == 2)
 				break;
 		}
 	}
 }
 
-int listSize (char* list[][2])
+//mxd
+static void KeyStatusBarFunc(void *unused)
 {
-	int i=0;
-	while (list[i][1])
-		i++;
-
-	return i;	
+	if (bind_target) // Awaiting key press?
+		Menu_DrawStatusBar("Press a key or a mouse button for this action");
+	else // Default hint
+		Menu_DrawStatusBar("Enter or LMB to change, Backspace or Delete to clear");
 }
 
-
-static void KeysBackCursorDrawFunc ( menuaction_s *self ) // back action
+//mxd. Clear bind_target before closing the menu.
+static void KeyBackMenuFunc(void *self)
 {
-	SCR_DrawChar (SCREEN_WIDTH*0.5 - 24, s_keys_menu.y + self->generic.y, ALIGN_CENTER,
-					12+((int)(Sys_Milliseconds()/250)&1), 255,255,255,255, false, true);
+	bind_target = NULL;
+	UI_BackMenu(self);
 }
 
-static void KeyCursorDrawFunc( menuframework_s *menu )
+// Selection cursor draw for keybind items
+static void KeyCursorDrawFunc(menuaction_s *self)
 {
-	if (bind_grab)
-		SCR_DrawChar (menu->x, menu->y + menu->cursor * MENU_LINE_SIZE, ALIGN_CENTER,
-						'=', 255,255,255,255, false, true);
-	else
-		SCR_DrawChar (menu->x, menu->y + menu->cursor * MENU_LINE_SIZE, ALIGN_CENTER,
-						12+((int)(Sys_Milliseconds()/250)&1), 255,255,255,255, false, true);
-}
-
-static void DrawKeyBindingFunc( void *self )
-{
-	int keys[2];
-	menuaction_s *a = ( menuaction_s * ) self;
-
-	M_FindKeysForCommand( bindnames[a->generic.localdata[0]][0], keys);
-		
-	if (keys[0] == -1)
+	//mxd. If awaiting input, draw selection for bind_target instead of hovered item
+	if(bind_target)
 	{
-		Menu_DrawString (a->generic.x + a->generic.parent->x + 16,
-						a->generic.y + a->generic.parent->y, "???", 255);
+		SCR_DrawChar(s_keys_menu.x + bind_target->generic.x, s_keys_menu.y + bind_target->generic.y, ALIGN_CENTER, '=', 255, 255, 255, 255, false, true);
 	}
 	else
 	{
-		int x;
-		const char *name;
-
-		name = Key_KeynumToString (keys[0]);
-
-		Menu_DrawString (a->generic.x + a->generic.parent->x + 16,
-						a->generic.y + a->generic.parent->y, name , 255);
-
-		x = strlen(name) * MENU_FONT_SIZE;
-
-		if (keys[1] != -1)
-		{
-			Menu_DrawString (a->generic.x + a->generic.parent->x + MENU_FONT_SIZE*3 + x,
-							a->generic.y + a->generic.parent->y, "or", 255);
-			Menu_DrawString (a->generic.x + a->generic.parent->x + MENU_FONT_SIZE*6 + x,
-							a->generic.y + a->generic.parent->y, Key_KeynumToString(keys[1]), 255);
-		}
+		const int num = 12 + ((Sys_Milliseconds() / 250) & 1); // Alternate between char 12 (empty Q2 font char) and char 13 ('>' Q2 font char)
+		SCR_DrawChar(s_keys_menu.x + self->generic.x, s_keys_menu.y + self->generic.y, ALIGN_CENTER, num, 255, 255, 255, 255, false, true);
 	}
 }
 
-static void KeyBindingFunc( void *self )
+static void DrawKeyBindingFunc(void *self)
 {
-	menuaction_s *a = ( menuaction_s * ) self;
+	menuaction_s *a = (menuaction_s *)self;
+
 	int keys[2];
+	M_FindKeysForCommand(bindnames[a->generic.localdata[0]][0], keys);
 
-	M_FindKeysForCommand( bindnames[a->generic.localdata[0]][0], keys );
+	char* name;
+	if (keys[0] == -1) // No keys bound
+		name = "???";
+	else if (keys[1] == -1) // Single key is bound 
+		name = Key_KeynumToString(keys[0]);
+	else // Both keys are bound
+		name = va("%s or %s", Key_KeynumToString(keys[0]), Key_KeynumToString(keys[1]));
 
-	if (keys[1] != -1)
-		M_UnbindCommand( bindnames[a->generic.localdata[0]][0]);
-
-	bind_grab = true;
-
-	Menu_SetStatusBar( &s_keys_menu, "press a key or button for this action" );
+	Menu_DrawString(a->generic.x + a->generic.parent->x + 16,
+					a->generic.y + a->generic.parent->y, name, 255);
 }
 
-void addBindOption (int i, char* list[][2])
-{		
-	s_keys_binds[i].generic.type	= MTYPE_ACTION;
-	s_keys_binds[i].generic.flags  = QMF_GRAYED;
-	s_keys_binds[i].generic.x		= 0;
-	s_keys_binds[i].generic.y		= i*MENU_LINE_SIZE;
-	s_keys_binds[i].generic.ownerdraw = DrawKeyBindingFunc;
-	s_keys_binds[i].generic.localdata[0] = i;
-	s_keys_binds[i].generic.name	= list[s_keys_binds[i].generic.localdata[0]][1];
-	s_keys_binds[i].generic.callback = KeyBindingFunc;
-
-	if (strstr ("MENUSPACE", list[i][0]))
-		s_keys_binds[i].generic.type	= MTYPE_SEPARATOR;
-}
-
-static void Keys_MenuInit( void )
+static void KeyBindingFunc(void *self)
 {
-	int BINDS_MAX;
+	bind_target = (menuaction_s *)self;
+}
 
-	s_keys_menu.x = SCREEN_WIDTH*0.5;
-	s_keys_menu.y = SCREEN_HEIGHT*0.5 - 72;
+void AddBindOption(int index, char* list[][2])
+{
+	s_keys_binds[index].generic.type			= MTYPE_ACTION;
+	s_keys_binds[index].generic.flags			= QMF_GRAYED;
+	s_keys_binds[index].generic.x				= 0;
+	s_keys_binds[index].generic.y				= index * MENU_LINE_SIZE;
+	s_keys_binds[index].generic.ownerdraw		= DrawKeyBindingFunc;
+	s_keys_binds[index].generic.localdata[0]	= index;
+	s_keys_binds[index].generic.name			= list[s_keys_binds[index].generic.localdata[0]][1];
+	s_keys_binds[index].generic.callback		= KeyBindingFunc;
+	s_keys_binds[index].generic.cursordraw		= KeyCursorDrawFunc; //mxd
+	s_keys_binds[index].generic.statusbarfunc	= KeyStatusBarFunc; //mxd
+}
+
+static void Keys_MenuInit(void)
+{
+	s_keys_menu.x = SCREEN_WIDTH * 0.5f;
+	s_keys_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5f - 72;
 	s_keys_menu.nitems = 0;
-	s_keys_menu.cursordraw = KeyCursorDrawFunc;
 
-	BINDS_MAX = listSize(bindnames);
-	for (int i=0;i<BINDS_MAX;i++)
-		addBindOption(i, bindnames);
+	// Count number of binds
+	int maxbinds = 0;
+	while (bindnames[maxbinds][1])
+		maxbinds++;
 
-	s_keys_back_action.generic.type = MTYPE_ACTION;
-	s_keys_back_action.generic.flags = QMF_LEFT_JUSTIFY;
-	s_keys_back_action.generic.x	= 0;
-	s_keys_back_action.generic.y	= (BINDS_MAX+2)*MENU_LINE_SIZE;
-	s_keys_back_action.generic.name	= " back";
-	s_keys_back_action.generic.callback = UI_BackMenu;
-	s_keys_back_action.generic.cursordraw = KeysBackCursorDrawFunc;
+	for (int i = 0; i < maxbinds; i++)
+		AddBindOption(i, bindnames);
 
-	for (int i=0;i<BINDS_MAX;i++)
-		Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_binds[i] );
+	s_keys_back_action.generic.type			= MTYPE_ACTION;
+	s_keys_back_action.generic.name			= (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_CONTROLS); //mxd
+	s_keys_back_action.generic.flags		= QMF_LEFT_JUSTIFY;
+	s_keys_back_action.generic.x			= UI_CenteredX(&s_keys_back_action.generic, s_keys_menu.x); //mxd. Was 0;
+	s_keys_back_action.generic.y			= (maxbinds + 1) * MENU_LINE_SIZE;
+	s_keys_back_action.generic.callback		= KeyBackMenuFunc; //mxd. Was UI_BackMenu;
 
-	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_back_action );
+	for (int i = 0; i < maxbinds; i++)
+		Menu_AddItem(&s_keys_menu, (void *)&s_keys_binds[i]);
 
-	Menu_SetStatusBar( &s_keys_menu, "enter or mouse1 to change, backspace to clear" );
-	// Don't center it- it's too large
-	//Menu_Center( &s_keys_menu );
+	Menu_AddItem(&s_keys_menu, (void *)&s_keys_back_action);
 }
 
-static void Keys_MenuDraw (void)
+static void Keys_MenuDraw(void)
 {
-	Menu_DrawBanner( "m_banner_customize" ); // Knightmare added
-	Menu_AdjustCursor( &s_keys_menu, 1 );
-	Menu_Draw( &s_keys_menu );
+	Menu_DrawBanner("m_banner_customize"); // Knightmare added
+	Menu_AdjustCursor(&s_keys_menu, 1);
+	Menu_Draw(&s_keys_menu);
 }
 
-static const char *Keys_MenuKey( int key )
+static const char *Keys_MenuKey(int key)
 {
-	menuaction_s *item = ( menuaction_s * ) Menu_ItemAtCursor( &s_keys_menu );
-
-	//pressing mouse1 to pick a new bind wont force bind/unbind itself - spaz
-	if ( bind_grab && !(cursor.buttonused[MOUSEBUTTON1]&&key==K_MOUSE1))
-	{	
-		if ( key != K_ESCAPE && key != '`' )
+	menuaction_s *item = (menuaction_s *)Menu_ItemAtCursor(&s_keys_menu);
+	
+	// Pressing mouse1 to pick a new bind won't force bind/unbind itself - spaz
+	if (bind_target && item != &s_keys_back_action && !(cursor.buttonused[MOUSEBUTTON1] && key == K_MOUSE1))
+	{
+		if (key != K_ESCAPE && key != '`')
 		{
-			char cmd[1024];
+			//mxd. If both keys are already bound, unbind them first...
+			int keys[2];
+			M_FindKeysForCommand(bindnames[bind_target->generic.localdata[0]][0], keys);
 
-			Com_sprintf(cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[item->generic.localdata[0]][0]);
-			Cbuf_InsertText (cmd);
+			if (keys[1] != -1)
+				M_UnbindCommand(bindnames[bind_target->generic.localdata[0]][0]);
+			
+			// Bind command to key
+			char cmd[1024];
+			Com_sprintf(cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[bind_target->generic.localdata[0]][0]);
+			Cbuf_InsertText(cmd);
 		}
 		
-		//  Knightmare- added Psychospaz's mouse support
-		//dont let selecting with mouse buttons screw everything up
+		// Knightmare- added Psychospaz's mouse support
+		// Don't let selecting with mouse buttons screw everything up
 		UI_RefreshCursorButtons();
-		if (key==K_MOUSE1)
+		if (key == K_MOUSE1)
 			cursor.buttonclicks[MOUSEBUTTON1] = -1;
 
-		Menu_SetStatusBar( &s_keys_menu, "enter to change, backspace to clear" );
-		bind_grab = false;
+		//mxd. Clear bind target
+		bind_target = NULL;
+
 		return menu_out_sound;
 	}
 
-	switch ( key )
+	switch (key)
 	{
-	case K_KP_ENTER:
-	case K_ENTER:
-		if (item == &s_keys_back_action) { // back action hack
-			UI_BackMenu(item); return NULL; }
-		KeyBindingFunc( item );
-		return menu_in_sound;
-	case K_BACKSPACE:		// delete bindings
-	case K_DEL:				// delete bindings
-	case K_KP_DEL:
-		M_UnbindCommand( bindnames[item->generic.localdata[0]][0] );
-		return menu_out_sound;
-	default:
-		return Default_MenuKey( &s_keys_menu, key );
+		case K_KP_ENTER:
+		case K_ENTER:
+			if (item == &s_keys_back_action) // Back action hack
+			{
+				UI_BackMenu(item);
+				return NULL;
+			}
+			KeyBindingFunc(item);
+			return menu_in_sound;
+
+		case K_BACKSPACE: // Delete bindings
+		case K_DEL:
+		case K_KP_DEL:
+			M_UnbindCommand(bindnames[item->generic.localdata[0]][0]);
+			return menu_out_sound;
+
+		default:
+			return Default_MenuKey(&s_keys_menu, key);
 	}
 }
 
-void M_Menu_Keys_f (void)
+void M_Menu_Keys_f(void)
 {
 	Keys_MenuInit();
-	UI_PushMenu( Keys_MenuDraw, Keys_MenuKey );
+	UI_PushMenu(Keys_MenuDraw, Keys_MenuKey);
 }

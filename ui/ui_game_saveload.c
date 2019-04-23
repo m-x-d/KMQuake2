@@ -36,11 +36,7 @@ static menuaction_s		s_savegame_actions[MAX_SAVEGAMES];
 static menuaction_s		s_savegame_back_action;
 
 
-/*
-=============================================================================
-	SAVESHOT HANDLING
-=============================================================================
-*/
+#pragma region ======================= SAVESHOT HANDLING
 
 char		m_savestrings[MAX_SAVEGAMES][32];
 qboolean	m_savevalid[MAX_SAVEGAMES];
@@ -182,34 +178,34 @@ void DrawSaveshot(qboolean loadmenu)
 	else
 		i = s_savegame_actions[s_savegame_menu.cursor].generic.localdata[0];
 
-	SCR_DrawFill(SCREEN_WIDTH / 2 + 44, SCREEN_HEIGHT / 2 - 60, 244, 184, ALIGN_CENTER, 60, 60, 60, 255);
+	const int x = SCREEN_WIDTH / 2 + 44;
+	const int y = DEFAULT_MENU_Y + 2;
+
+	SCR_DrawFill(x, y, 244, 184, ALIGN_CENTER, 60, 60, 60, 255);
 
 	if (loadmenu && i == 0 && m_savevalid[i] && m_saveshotvalid[i])
 	{
 		Com_sprintf(mapshotname, sizeof(mapshotname), "/levelshots/%s.pcx", m_mapname);
-		SCR_DrawPic(SCREEN_WIDTH / 2 + 46, SCREEN_HEIGHT / 2 - 58, 240, 180, ALIGN_CENTER, mapshotname, 1.0);
+		SCR_DrawPic(x + 2, y + 2, 240, 180, ALIGN_CENTER, mapshotname, 1.0f);
 	}
 	else if (m_savevalid[i] && m_saveshotvalid[i])
 	{
 		Com_sprintf(shotname, sizeof(shotname), "/save/kmq2save%i/shot.jpg", i);
-		SCR_DrawPic(SCREEN_WIDTH / 2 + 46, SCREEN_HEIGHT / 2 - 58, 240, 180, ALIGN_CENTER, shotname, 1.0);
+		SCR_DrawPic(x + 2, y + 2, 240, 180, ALIGN_CENTER, shotname, 1.0f);
 	}
 	else if (m_saveshotvalid[MAX_SAVEGAMES])
 	{
-		SCR_DrawPic(SCREEN_WIDTH / 2 + 46, SCREEN_HEIGHT / 2 - 58, 240, 180, ALIGN_CENTER, "/gfx/ui/noscreen.pcx", 1.0);
+		SCR_DrawPic(x + 2, y + 2, 240, 180, ALIGN_CENTER, "/gfx/ui/noscreen.pcx", 1.0f);
 	}
 	else
 	{
-		SCR_DrawFill(SCREEN_WIDTH / 2 + 46, SCREEN_HEIGHT / 2 - 58, 240, 180, ALIGN_CENTER, 0, 0, 0, 255);
+		SCR_DrawFill(x + 2, y + 2, 240, 180, ALIGN_CENTER, 0, 0, 0, 255);
 	}
 }
 
+#pragma endregion 
 
-/*
-=============================================================================
-	LOADGAME MENU
-=============================================================================
-*/
+#pragma region ======================= LOADGAME MENU
 
 extern char *load_saveshot;
 char loadshotname[MAX_QPATH];
@@ -239,8 +235,8 @@ void LoadGame_MenuInit(void)
 {
 	UI_UpdateSavegameData();
 
-	s_loadgame_menu.x = SCREEN_WIDTH * 0.5 - 240;
-	s_loadgame_menu.y = SCREEN_HEIGHT * 0.5 - 58;
+	s_loadgame_menu.x = SCREEN_WIDTH * 0.5f - 240;
+	s_loadgame_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5 - 58;
 	s_loadgame_menu.nitems = 0;
 
 	for (int i = 0; i < MAX_SAVEGAMES; i++)
@@ -265,7 +261,7 @@ void LoadGame_MenuInit(void)
 	s_loadgame_back_action.generic.flags = QMF_LEFT_JUSTIFY;
 	s_loadgame_back_action.generic.x = 0;
 	s_loadgame_back_action.generic.y = (MAX_SAVEGAMES + 3) * MENU_LINE_SIZE;
-	s_loadgame_back_action.generic.name = " back";
+	s_loadgame_back_action.generic.name = (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_GAME); //mxd
 	s_loadgame_back_action.generic.callback = UI_BackMenu;
 
 	Menu_AddItem(&s_loadgame_menu, &s_loadgame_back_action);
@@ -294,12 +290,9 @@ void M_Menu_LoadGame_f(void)
 	UI_PushMenu(LoadGame_MenuDraw, LoadGame_MenuKey);
 }
 
+#pragma endregion 
 
-/*
-=============================================================================
-	SAVEGAME MENU
-=============================================================================
-*/
+#pragma region ======================= SAVEGAME MENU
 
 void SaveGameCallback(void *self)
 {
@@ -319,12 +312,12 @@ void SaveGame_MenuDraw(void)
 		DrawSaveshot(false);
 }
 
-void SaveGame_MenuInit( void )
+void SaveGame_MenuInit(void)
 {
 	UI_UpdateSavegameData();
 
-	s_savegame_menu.x = SCREEN_WIDTH * 0.5 - 240;
-	s_savegame_menu.y = SCREEN_HEIGHT * 0.5 - 58;
+	s_savegame_menu.x = SCREEN_WIDTH * 0.5f - 240;
+	s_savegame_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5 - 58;
 	s_savegame_menu.nitems = 0;
 
 	// Don't include the autosave slot
@@ -347,7 +340,7 @@ void SaveGame_MenuInit( void )
 	s_savegame_back_action.generic.flags = QMF_LEFT_JUSTIFY;
 	s_savegame_back_action.generic.x = 0;
 	s_savegame_back_action.generic.y = (MAX_SAVEGAMES + 1) * MENU_LINE_SIZE;
-	s_savegame_back_action.generic.name = " back";
+	s_savegame_back_action.generic.name = (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_GAME); //mxd
 	s_savegame_back_action.generic.callback = UI_BackMenu;
 
 	Menu_AddItem(&s_savegame_menu, &s_savegame_back_action);
@@ -369,3 +362,5 @@ void M_Menu_SaveGame_f(void)
 	SaveGame_MenuInit();
 	UI_PushMenu(SaveGame_MenuDraw, SaveGame_MenuKey);
 }
+
+#pragma endregion 

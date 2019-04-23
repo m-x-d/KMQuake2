@@ -30,13 +30,6 @@ static int m_main_cursor;
 #define QUAD_CURSOR_MODEL "models/ui/quad_cursor.md2"
 qboolean quadModel_loaded;
 
-
-/*
-=======================================================================
-	MAIN MENU
-=======================================================================
-*/
-
 #define	MAIN_ITEMS 5
 
 char *main_names[] =
@@ -49,12 +42,6 @@ char *main_names[] =
 	0
 };
 
-
-/*
-=============
-FindMenuCoords
-=============
-*/
 void FindMenuCoords(int *xoffset, int *ystart, int *totalheight, int *widest)
 {
 	int w, h;
@@ -71,24 +58,18 @@ void FindMenuCoords(int *xoffset, int *ystart, int *totalheight, int *widest)
 		*totalheight += (h + 12);
 	}
 
-	*xoffset = (SCREEN_WIDTH - *widest + 70) * 0.5;
-	*ystart = SCREEN_HEIGHT * 0.5 - 100;
+	*xoffset = (SCREEN_WIDTH - *widest + 70) * 0.5f;
+	*ystart = SCREEN_HEIGHT * 0.5f - 100;
 }
 
-
-/*
-=============
-UI_DrawMainCursor
-
-Draws an animating cursor with the point at x, y.
-The pic will extend to the left of x, and both above and below y.
-=============
-*/
+// Draws an animating cursor with the point at x, y.
+// The pic will extend to the left of x, and both above and below y.
+// Used only if quad damage model isn't loaded.
 void UI_DrawMainCursor(const int x, const int y, const int f)
 {
-	char	cursorname[80];
-	static	qboolean cached;
-	int		w, h;
+	static qboolean cached = false;
+	char cursorname[80];
+	int w, h;
 
 	if (!cached)
 	{
@@ -106,14 +87,7 @@ void UI_DrawMainCursor(const int x, const int y, const int f)
 	SCR_DrawPic(x, y, w, h, ALIGN_CENTER, cursorname, 1.0);
 }
 
-
-/*
-=============
-UI_DrawMainCursor3D
-
-Draws a rotating quad damage model.
-=============
-*/
+// Draws a rotating quad damage model.
 void UI_DrawMainCursor3D(const int x, const int y)
 {
 	refdef_t refdef;
@@ -158,26 +132,13 @@ void UI_DrawMainCursor3D(const int x, const int y)
 	R_RenderFrame(&refdef);
 }
 
-
-/*
-=============
-UI_CheckQuadModel
-
-Checks for quad damage model.
-=============
-*/
+// Checks for quad damage model.
 void UI_CheckQuadModel(void)
 {
 	struct model_s* quadModel = R_RegisterModel(QUAD_CURSOR_MODEL);
 	quadModel_loaded = (quadModel != NULL);
 }
 
-
-/*
-=============
-M_Main_Draw
-=============
-*/
 void M_Main_Draw(void)
 {
 	int w, h;
@@ -194,69 +155,45 @@ void M_Main_Draw(void)
 		if (i != m_main_cursor)
 		{
 			R_DrawGetPicSize(&w, &h, main_names[i]);
-			SCR_DrawPic(xoffset, (ystart + i * 40 + 3), w, h, ALIGN_CENTER, main_names[i], 1.0);
+			SCR_DrawPic(xoffset, (ystart + i * 40 + 3), w, h, ALIGN_CENTER, main_names[i], 1.0f);
 		}
 	}
 
 	Q_strncpyz(litname, main_names[m_main_cursor], sizeof(litname));
 	Q_strncatz(litname, "_sel", sizeof(litname));
 	R_DrawGetPicSize(&w, &h, litname);
-	SCR_DrawPic(xoffset - 1, (ystart + m_main_cursor * 40 + 2), w + 2, h + 2, ALIGN_CENTER, litname, 1.0);
+	SCR_DrawPic(xoffset - 1, (ystart + m_main_cursor * 40 + 2), w + 2, h + 2, ALIGN_CENTER, litname, 1.0f);
 
 	// Draw our nifty quad damage model as a cursor if it's loaded.
 	if (quadModel_loaded)
 		UI_DrawMainCursor3D(xoffset - 27, ystart + (m_main_cursor * 40 + 1));
 	else
-		UI_DrawMainCursor(xoffset - 25, ystart + (m_main_cursor * 40 + 1), (int)(cls.realtime / 100)%NUM_MAINMENU_CURSOR_FRAMES);
+		UI_DrawMainCursor(xoffset - 25, ystart + (m_main_cursor * 40 + 1), (int)(cls.realtime / 100) % NUM_MAINMENU_CURSOR_FRAMES);
 
 	R_DrawGetPicSize(&w, &h, "m_main_plaque");
-	SCR_DrawPic(xoffset - (w / 2 + 50), ystart, w, h, ALIGN_CENTER, "m_main_plaque", 1.0);
+	SCR_DrawPic(xoffset - (w / 2 + 50), ystart, w, h, ALIGN_CENTER, "m_main_plaque", 1.0f);
 	const int last_h = h;
 
 	R_DrawGetPicSize(&w, &h, "m_main_logo");
-	SCR_DrawPic(xoffset - (w / 2 + 50), ystart + last_h + 20, w, h, ALIGN_CENTER, "m_main_logo", 1.0);
+	SCR_DrawPic(xoffset - (w / 2 + 50), ystart + last_h + 20, w, h, ALIGN_CENTER, "m_main_logo", 1.0f);
 }
 
-
-/*
-=============
-OpenMenuFromMain
-=============
-*/
 void OpenMenuFromMain(void)
 {
 	switch (m_main_cursor)
 	{
-		case 0:
-			M_Menu_Game_f();
-			break;
-
-		case 1:
-			M_Menu_Multiplayer_f();
-			break;
-
-		case 2:
-			M_Menu_Options_f();
-			break;
-
-		case 3:
-			M_Menu_Video_f();
-			break;
-
-		case 4:
-			M_Menu_Quit_f();
-			break;
+		case 0: M_Menu_Game_f(); break;
+		case 1: M_Menu_Multiplayer_f(); break;
+		case 2: M_Menu_Options_f(); break;
+		case 3: M_Menu_Video_f(); break;
+		case 4: M_Menu_Quit_f(); break;
 	}
 }
 
-
-/*
-=============
-UI_CheckMainMenuMouse
-=============
-*/
 void UI_CheckMainMenuMouse(void)
 {
+	static int hover = 0; //mxd
+	
 	int ystart;
 	int	xoffset;
 	int widest;
@@ -264,8 +201,8 @@ void UI_CheckMainMenuMouse(void)
 	char *sound = NULL;
 	mainmenuobject_t buttons[MAIN_ITEMS];
 
-	const int oldhover = MainMenuMouseHover;
-	MainMenuMouseHover = 0;
+	const int oldhover = hover;
+	hover = 0;
 
 	FindMenuCoords(&xoffset, &ystart, &totalheight, &widest);
 	for (int i = 0; main_names[i] != 0; i++)
@@ -288,9 +225,9 @@ void UI_CheckMainMenuMouse(void)
 			if (cursor.mouseaction)
 				m_main_cursor = i;
 
-			MainMenuMouseHover = 1 + i;
+			hover = i + 1;
 
-			if (oldhover == MainMenuMouseHover && MainMenuMouseHover - 1 == m_main_cursor
+			if (oldhover == hover && hover - 1 == m_main_cursor
 				&& !cursor.buttonused[MOUSEBUTTON1] && cursor.buttonclicks[MOUSEBUTTON1] == 1)
 			{
 				OpenMenuFromMain();
@@ -303,7 +240,7 @@ void UI_CheckMainMenuMouse(void)
 		}
 	}
 
-	if (!MainMenuMouseHover)
+	if (hover == 0)
 	{
 		cursor.buttonused[MOUSEBUTTON1] = false;
 		cursor.buttonclicks[MOUSEBUTTON1] = 0;
@@ -316,12 +253,6 @@ void UI_CheckMainMenuMouse(void)
 		S_StartLocalSound(sound);
 }
 
-
-/*
-=============
-M_Main_Key
-=============
-*/
 const char *M_Main_Key(int key)
 {
 	const char *sound = menu_move_sound;
@@ -334,7 +265,7 @@ const char *M_Main_Key(int key)
 			M_Menu_Quit_f();
 		else
 			UI_PopMenu();
-#else	// can't exit menu if disconnected, so restart demo loop
+#else	// Can't exit menu if disconnected, so restart demo loop
 		if (cls.state == ca_disconnected)
 			Cbuf_AddText("d1\n");
 		UI_PopMenu();
@@ -356,40 +287,12 @@ const char *M_Main_Key(int key)
 	case K_KP_ENTER:
 	case K_ENTER:
 		m_entersound = true;
-
-		switch (m_main_cursor)
-		{
-		case 0:
-			M_Menu_Game_f();
-			break;
-
-		case 1:
-			M_Menu_Multiplayer_f();
-			break;
-
-		case 2:
-			M_Menu_Options_f();
-			break;
-
-		case 3:
-			M_Menu_Video_f();
-			break;
-
-		case 4:
-			M_Menu_Quit_f();
-			break;
-		}
+		OpenMenuFromMain();
 	}
 
 	return NULL;
 }
 
-
-/*
-=============
-M_Menu_Main_f
-=============
-*/
 void M_Menu_Main_f(void)
 {
 	UI_CheckQuadModel();

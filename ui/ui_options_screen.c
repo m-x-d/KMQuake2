@@ -24,12 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../client/client.h"
 #include "ui_local.h"
 
-/*
-=======================================================================
-	SCREEN MENU
-=======================================================================
-*/
-
 static menuframework_s	s_options_screen_menu;
 static menuseparator_s	s_options_screen_header;
 static menulist_s		s_options_screen_crosshair_box;
@@ -43,21 +37,27 @@ static menulist_s		s_options_screen_fps_box;
 static menuaction_s		s_options_screen_defaults_action;
 static menuaction_s		s_options_screen_back_action;
 
+//mxd. Crosshair preview size and position...
+static const int crosshair_size = 36;
+static int crosshair_x;
+static int crosshair_y;
+
+#pragma region ======================= Menu item callbacks
 
 // Psychospaz's changeable size crosshair
 static void CrosshairSizeFunc(void *unused)
 {
-	Cvar_SetValue("crosshair_scale", s_options_screen_crosshairscale_slider.curvalue * 0.25);
+	Cvar_SetValue("crosshair_scale", s_options_screen_crosshairscale_slider.curvalue * 0.25f);
 }
 
 static void CrosshairAlphaFunc(void *unused)
 {
-	Cvar_SetValue("crosshair_alpha", s_options_screen_crosshairalpha_slider.curvalue * 0.05);
+	Cvar_SetValue("crosshair_alpha", s_options_screen_crosshairalpha_slider.curvalue * 0.05f);
 }
 
 static void CrosshairPulseFunc(void *unused)
 {
-	Cvar_SetValue("crosshair_pulse", s_options_screen_crosshairpulse_slider.curvalue * 0.05);
+	Cvar_SetValue("crosshair_pulse", s_options_screen_crosshairpulse_slider.curvalue * 0.05f);
 }
 
 // hud scaling option
@@ -84,12 +84,9 @@ static void FPSFunc(void *unused)
 	Cvar_SetValue("cl_drawfps", s_options_screen_fps_box.curvalue);
 }
 
+#pragma endregion
 
-/*
-=======================================================================
-Crosshair loading
-=======================================================================
-*/
+#pragma region ======================= Crosshair loading
 
 #define MAX_CROSSHAIRS 100
 char **crosshair_names;
@@ -100,7 +97,7 @@ static void CrosshairFunc(void *unused)
 	if (s_options_screen_crosshair_box.curvalue == 0)
 		Cvar_SetValue("crosshair", 0);
 	else
-		Cvar_SetValue("crosshair", atoi(strdup(crosshair_names[s_options_screen_crosshair_box.curvalue] + 2)));
+		Cvar_SetValue("crosshair", atoi(crosshair_names[s_options_screen_crosshair_box.curvalue] + 2));
 }
 
 void SetCrosshairCursor(void)
@@ -120,12 +117,12 @@ void SetCrosshairCursor(void)
 	}
 }
 
-void sortCrosshairs(char **list, int len)
+void SortCrosshairs(char **list, int len)
 {
 	if (!list || len < 2)
 		return;
 
-	for (int i = (len - 1); i > 0; i--)
+	for (int i = len - 1; i > 0; i--)
 	{
 		qboolean moved = false;
 		for (int j = 0; j < i; j++)
@@ -143,11 +140,11 @@ void sortCrosshairs(char **list, int len)
 		}
 
 		if (!moved)
-			break; // done sorting
+			break; // Done sorting
 	}
 }
 
-qboolean isNumeric(char ch)
+qboolean IsNumeric(char ch)
 {
 	return (ch >= '0' && ch <= '9');
 }
@@ -188,18 +185,18 @@ char **SetCrosshairNames(void)
 			if (!strstr(p, ".tga") && !strstr(p, ".png") && !strstr(p, ".jpg") && !strstr(p, ".pcx"))
 				continue;
 
-			// filename must be chxxx
-			if (strncmp(p, "ch", 2)) 
+			// Filename must be chxxx
+			if (Q_strncasecmp(p, "ch", 2)) 
 				continue;
 
-			const int namelen = strlen(p); //strlen(strdup(p));
+			const int namelen = strlen(p);
 			if (namelen < 7 || namelen > 9)
 				continue;
 
-			if (!isNumeric(p[2]))
+			if (!IsNumeric(p[2]))
 				continue;
 
-			if (namelen >= 8 && !isNumeric(p[3]))
+			if (namelen >= 8 && !IsNumeric(p[3]))
 				continue;
 
 			// ch100 is only valid 5-char name
@@ -207,13 +204,13 @@ char **SetCrosshairNames(void)
 				continue;
 
 			const int num = strlen(p) - 4;
-			p[num] = 0; //NULL;
+			p[num] = 0;
 
 			curCrosshair = p;
 
 			if (!FS_ItemInList(curCrosshair, ncrosshairnames, list))
 			{
-				FS_InsertInList(list, strdup(curCrosshair), ncrosshairnames, 1);	//i=1 so none stays first!
+				FS_InsertInList(list, curCrosshair, ncrosshairnames, 1);	// i = 1 so none stays first!
 				ncrosshairnames++;
 			}
 			
@@ -227,7 +224,7 @@ char **SetCrosshairNames(void)
 		path = FS_NextPath(path);
 	}
 
-	// check pak after
+	// Check pak after
 	crosshairfiles = FS_ListPak("pics/", &ncrosshairs);
 	if (crosshairfiles)
 	{
@@ -242,18 +239,18 @@ char **SetCrosshairNames(void)
 			if (!strstr(p, ".tga") && !strstr(p, ".png") && !strstr(p, ".jpg") && !strstr(p, ".pcx"))
 				continue;
 
-			// filename must be chxxx
-			if (strncmp(p, "ch", 2))
+			// Filename must be chxxx
+			if (Q_strncasecmp(p, "ch", 2))
 				continue;
 
-			const int namelen = strlen(p); //strlen(strdup(p));
+			const int namelen = strlen(p); //mxd. Was strlen(strdup(p));
 			if (namelen < 7 || namelen > 9)
 				continue;
 
-			if (!isNumeric(p[2]))
+			if (!IsNumeric(p[2]))
 				continue;
 
-			if (namelen >= 8 && !isNumeric(p[3]))
+			if (namelen >= 8 && !IsNumeric(p[3]))
 				continue;
 
 			// ch100 is only valid 5-char name
@@ -267,7 +264,7 @@ char **SetCrosshairNames(void)
 
 			if (!FS_ItemInList(curCrosshair, ncrosshairnames, list))
 			{
-				FS_InsertInList(list, strdup(curCrosshair), ncrosshairnames, 1); //i=1 so none stays first!
+				FS_InsertInList(list, curCrosshair, ncrosshairnames, 1); // i = 1 so none stays first!
 				ncrosshairnames++;
 			}
 			
@@ -277,7 +274,7 @@ char **SetCrosshairNames(void)
 	}
 
 	// Sort the list
-	sortCrosshairs(list, ncrosshairnames);
+	SortCrosshairs(list, ncrosshairnames);
 
 	if (ncrosshairs)
 		FS_FreeFileList(crosshairfiles, ncrosshairs);
@@ -287,7 +284,7 @@ char **SetCrosshairNames(void)
 	return list;
 }
 
-//=======================================================================
+#pragma endregion
 
 static void ScreenSetMenuItemValues(void)
 {
@@ -333,17 +330,10 @@ static void ScreenResetDefaultsFunc(void *unused)
 
 void Options_Screen_MenuInit(void)
 {
-	static const char *yesno_names[] =
-	{
-		"no",
-		"yes",
-		0
-	};
+	int y = MENU_LINE_SIZE * 3;
 
-	int y = 3 * MENU_LINE_SIZE;
-
-	s_options_screen_menu.x = SCREEN_WIDTH * 0.5;
-	s_options_screen_menu.y = SCREEN_HEIGHT * 0.5 - 58;
+	s_options_screen_menu.x = SCREEN_WIDTH * 0.5f;
+	s_options_screen_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5f - 58;
 	s_options_screen_menu.nitems = 0;
 
 	s_options_screen_header.generic.type	= MTYPE_SEPARATOR;
@@ -355,67 +345,67 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_crosshair_box.generic.type				= MTYPE_SPINCONTROL;
 	s_options_screen_crosshair_box.generic.x				= 0;
 	s_options_screen_crosshair_box.generic.y				= y;
-	s_options_screen_crosshair_box.generic.name				= "crosshair";
+	s_options_screen_crosshair_box.generic.name				= "Crosshair";
 	s_options_screen_crosshair_box.generic.callback			= CrosshairFunc;
 	s_options_screen_crosshair_box.itemnames				= crosshair_names;
-	s_options_screen_crosshair_box.generic.statusbar		= "changes crosshair";
+	s_options_screen_crosshair_box.generic.statusbar		= "Changes crosshair";
 
 	// Psychospaz's changeable size crosshair
 	s_options_screen_crosshairscale_slider.generic.type		= MTYPE_SLIDER;
 	s_options_screen_crosshairscale_slider.generic.x		= 0;
-	s_options_screen_crosshairscale_slider.generic.y		= y += 5 * MENU_LINE_SIZE;
-	s_options_screen_crosshairscale_slider.generic.name		= "crosshair scale";
+	s_options_screen_crosshairscale_slider.generic.y		= y += 3 * MENU_LINE_SIZE;
+	s_options_screen_crosshairscale_slider.generic.name		= "Crosshair scale";
 	s_options_screen_crosshairscale_slider.generic.callback = CrosshairSizeFunc;
 	s_options_screen_crosshairscale_slider.minvalue			= 1;
 	s_options_screen_crosshairscale_slider.maxvalue			= 12;
-	s_options_screen_crosshairscale_slider.generic.statusbar = "changes size of crosshair";
+	s_options_screen_crosshairscale_slider.generic.statusbar = "Changes size of crosshair";
 
 	s_options_screen_crosshairalpha_slider.generic.type		= MTYPE_SLIDER;
 	s_options_screen_crosshairalpha_slider.generic.x		= 0;
 	s_options_screen_crosshairalpha_slider.generic.y		= y += MENU_LINE_SIZE;
-	s_options_screen_crosshairalpha_slider.generic.name		= "crosshair alpha";
+	s_options_screen_crosshairalpha_slider.generic.name		= "Crosshair alpha";
 	s_options_screen_crosshairalpha_slider.generic.callback = CrosshairAlphaFunc;
 	s_options_screen_crosshairalpha_slider.minvalue			= 1;
 	s_options_screen_crosshairalpha_slider.maxvalue			= 20;
-	s_options_screen_crosshairalpha_slider.generic.statusbar = "changes opacity of crosshair";
+	s_options_screen_crosshairalpha_slider.generic.statusbar = "Changes opacity of crosshair";
 
 	s_options_screen_crosshairpulse_slider.generic.type		= MTYPE_SLIDER;
 	s_options_screen_crosshairpulse_slider.generic.x		= 0;
 	s_options_screen_crosshairpulse_slider.generic.y		= y += MENU_LINE_SIZE;
-	s_options_screen_crosshairpulse_slider.generic.name		= "crosshair pulse";
+	s_options_screen_crosshairpulse_slider.generic.name		= "Crosshair pulse";
 	s_options_screen_crosshairpulse_slider.generic.callback = CrosshairPulseFunc;
 	s_options_screen_crosshairpulse_slider.minvalue			= 0;
 	s_options_screen_crosshairpulse_slider.maxvalue			= 10;
-	s_options_screen_crosshairpulse_slider.generic.statusbar = "changes pulse amplitude of crosshair";
+	s_options_screen_crosshairpulse_slider.generic.statusbar = "Changes pulse amplitude of crosshair";
 
 	// hud scaling option
 	s_options_screen_hudscale_slider.generic.type			= MTYPE_SLIDER;
 	s_options_screen_hudscale_slider.generic.x				= 0;
 	s_options_screen_hudscale_slider.generic.y				= y += 2 * MENU_LINE_SIZE;
-	s_options_screen_hudscale_slider.generic.name			= "status bar scale";
+	s_options_screen_hudscale_slider.generic.name			= "Status bar scale";
 	s_options_screen_hudscale_slider.generic.callback		= HudScaleFunc;
 	s_options_screen_hudscale_slider.minvalue				= 1;
 	s_options_screen_hudscale_slider.maxvalue				= 7;
-	s_options_screen_hudscale_slider.generic.statusbar		= "changes size of HUD elements";
+	s_options_screen_hudscale_slider.generic.statusbar		= "Changes size of HUD elements";
 
 	// hud trans option
 	s_options_screen_hudalpha_slider.generic.type			= MTYPE_SLIDER;
 	s_options_screen_hudalpha_slider.generic.x				= 0;
 	s_options_screen_hudalpha_slider.generic.y				= y += MENU_LINE_SIZE;
-	s_options_screen_hudalpha_slider.generic.name			= "status bar transparency";
+	s_options_screen_hudalpha_slider.generic.name			= "Status bar transparency";
 	s_options_screen_hudalpha_slider.generic.callback		= HudAlphaFunc;
 	s_options_screen_hudalpha_slider.minvalue				= 1;
 	s_options_screen_hudalpha_slider.maxvalue				= 11;
-	s_options_screen_hudalpha_slider.generic.statusbar		= "changes opacity of HUD elements";
+	s_options_screen_hudalpha_slider.generic.statusbar		= "Changes opacity of HUD elements";
 
 	// hud squeeze digits option
 	s_options_screen_hudsqueezedigits_box.generic.type		= MTYPE_SPINCONTROL;
 	s_options_screen_hudsqueezedigits_box.generic.x			= 0;
 	s_options_screen_hudsqueezedigits_box.generic.y			= y += MENU_LINE_SIZE;
-	s_options_screen_hudsqueezedigits_box.generic.name		= "status bar digit squeezing";
+	s_options_screen_hudsqueezedigits_box.generic.name		= "Status bar digit squeezing";
 	s_options_screen_hudsqueezedigits_box.generic.callback	= HudSqueezeDigitsFunc;
 	s_options_screen_hudsqueezedigits_box.itemnames			= yesno_names;
-	s_options_screen_hudsqueezedigits_box.generic.statusbar	= "enables showing of longer numbers on HUD";
+	s_options_screen_hudsqueezedigits_box.generic.statusbar	= "Enables showing of longer numbers on HUD";
 
 	s_options_screen_fps_box.generic.type				= MTYPE_SPINCONTROL;
 	s_options_screen_fps_box.generic.x					= 0;
@@ -423,20 +413,26 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_fps_box.generic.name				= "FPS counter";
 	s_options_screen_fps_box.generic.callback			= FPSFunc;
 	s_options_screen_fps_box.itemnames					= yesno_names;
-	s_options_screen_fps_box.generic.statusbar			= "enables FPS counter";
+	s_options_screen_fps_box.generic.statusbar			= "Enables FPS counter";
 
 	s_options_screen_defaults_action.generic.type		= MTYPE_ACTION;
-	s_options_screen_defaults_action.generic.x			= MENU_FONT_SIZE;
+	s_options_screen_defaults_action.generic.flags		= QMF_LEFT_JUSTIFY; //mxd
+	s_options_screen_defaults_action.generic.name		= "Reset to defaults";
+	s_options_screen_defaults_action.generic.x			= -MENU_FONT_SIZE * strlen(s_options_screen_defaults_action.generic.name); //mxd. Was MENU_FONT_SIZE;
 	s_options_screen_defaults_action.generic.y			= y += 2 * MENU_LINE_SIZE;
-	s_options_screen_defaults_action.generic.name		= "reset defaults";
 	s_options_screen_defaults_action.generic.callback	= ScreenResetDefaultsFunc;
-	s_options_screen_defaults_action.generic.statusbar	= "resets all screen settings to internal defaults";
+	s_options_screen_defaults_action.generic.statusbar	= "Resets all screen settings to internal defaults";
 
 	s_options_screen_back_action.generic.type			= MTYPE_ACTION;
-	s_options_screen_back_action.generic.x				= MENU_FONT_SIZE;
+	s_options_screen_back_action.generic.flags			= QMF_LEFT_JUSTIFY; //mxd
+	s_options_screen_back_action.generic.name			= (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_OPTIONS); //mxd
+	s_options_screen_back_action.generic.x				= UI_CenteredX(&s_options_screen_back_action.generic, s_options_screen_menu.x); //mxd. Was MENU_FONT_SIZE;
 	s_options_screen_back_action.generic.y				= y += 2 * MENU_LINE_SIZE;
-	s_options_screen_back_action.generic.name			= "back to options";
 	s_options_screen_back_action.generic.callback		= UI_BackMenu;
+
+	//mxd. Crosshair preview position
+	crosshair_x = s_options_screen_menu.x + MENU_FONT_SIZE * 7;
+	crosshair_y = s_options_screen_menu.y + s_options_screen_crosshair_box.generic.y - 18 + MENU_LINE_SIZE * 0.5f;
 
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_header);
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_crosshair_box);
@@ -455,61 +451,56 @@ void Options_Screen_MenuInit(void)
 
 void MenuCrosshair_MouseClick(void)
 {
-	char *sound;
 	buttonmenuobject_t crosshairbutton;
 
-	const int button_size = 36;
-
-	const int button_x = SCREEN_WIDTH * 0.5 - 14;
-	const int button_y = s_options_screen_menu.y + 42;
-
-	UI_AddButton(&crosshairbutton, 0, button_x, button_y, button_size, button_size);
+	UI_AddButton(&crosshairbutton, 0, crosshair_x, crosshair_y, crosshair_size, crosshair_size);
 
 	if (   cursor.x >= crosshairbutton.min[0] && cursor.x <= crosshairbutton.max[0]
 		&& cursor.y >= crosshairbutton.min[1] && cursor.y <= crosshairbutton.max[1])
 	{
-		if (!cursor.buttonused[MOUSEBUTTON1] && (cursor.buttonclicks[MOUSEBUTTON1] == 1) )
+		char *sound = NULL;
+		
+		if (!cursor.buttonused[MOUSEBUTTON1] && cursor.buttonclicks[MOUSEBUTTON1] == 1)
 		{
 			s_options_screen_crosshair_box.curvalue++;
 			if (s_options_screen_crosshair_box.curvalue > numcrosshairs - 1)
-				s_options_screen_crosshair_box.curvalue = 0; // wrap around
+				s_options_screen_crosshair_box.curvalue = 0; // Wrap around
 			CrosshairFunc(NULL);
 
 			cursor.buttonused[MOUSEBUTTON1] = true;
 			cursor.buttonclicks[MOUSEBUTTON1] = 0;
 			sound = menu_move_sound;
-			if (sound)
-				S_StartLocalSound(sound);
 		}
-
-		if (!cursor.buttonused[MOUSEBUTTON2] && (cursor.buttonclicks[MOUSEBUTTON2] == 1) )
+		else if (!cursor.buttonused[MOUSEBUTTON2] && cursor.buttonclicks[MOUSEBUTTON2] == 1)
 		{
 			s_options_screen_crosshair_box.curvalue--;
 			if (s_options_screen_crosshair_box.curvalue < 0)
-				s_options_screen_crosshair_box.curvalue = numcrosshairs - 1; // wrap around
+				s_options_screen_crosshair_box.curvalue = numcrosshairs - 1; // Wrap around
 			CrosshairFunc(NULL);
 
 			cursor.buttonused[MOUSEBUTTON2] = true;
 			cursor.buttonclicks[MOUSEBUTTON2] = 0;
 			sound = menu_move_sound;
-			if (sound)
-				S_StartLocalSound(sound);
 		}
+
+		if (sound)
+			S_StartLocalSound(sound);
 
 		//mxd. Mark "crosshair" spin control as selected item
 		s_options_screen_menu.cursor = 1;
 	}
 }
 
+//TODO: mxd. Use crosshair_scale, crosshair_alpha and crosshair_pulse cvars when drawing preview
 void DrawMenuCrosshair(void)
 {
-	SCR_DrawFill(SCREEN_WIDTH * 0.5 - 18, s_options_screen_menu.y + 42, 36, 36, ALIGN_CENTER, 60, 60, 60, 255);
-	SCR_DrawFill(SCREEN_WIDTH * 0.5 - 17, s_options_screen_menu.y + 43, 34, 34, ALIGN_CENTER, 0, 0, 0, 255);
+	SCR_DrawFill(crosshair_x + 0, crosshair_y + 0, crosshair_size - 0, crosshair_size - 0, ALIGN_CENTER, 60, 60, 60, 255);
+	SCR_DrawFill(crosshair_x + 1, crosshair_y + 1, crosshair_size - 2, crosshair_size - 2, ALIGN_CENTER, 0, 0, 0, 255);
 
 	if (s_options_screen_crosshair_box.curvalue < 1)
 		return;
 
-	SCR_DrawPic(SCREEN_WIDTH * 0.5 - 16, s_options_screen_menu.y + 44, 32, 32, ALIGN_CENTER, crosshair_names[s_options_screen_crosshair_box.curvalue], 1.0);
+	SCR_DrawPic(crosshair_x + 2, crosshair_y + 2, crosshair_size - 4, crosshair_size - 4, ALIGN_CENTER, crosshair_names[s_options_screen_crosshair_box.curvalue], 1.0f);
 }
 
 void Options_Screen_MenuDraw(void)

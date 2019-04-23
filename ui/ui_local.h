@@ -20,26 +20,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-#define MAXMENUITEMS	64
+#define MAXMENUITEMS		64
 
 #define MTYPE_SLIDER		0
 #define MTYPE_LIST			1
 #define MTYPE_ACTION		2
 #define MTYPE_SPINCONTROL	3
-#define MTYPE_SEPARATOR  	4
+#define MTYPE_SEPARATOR		4
 #define MTYPE_FIELD			5
 
-#define	K_TAB			9
-#define	K_ENTER			13
-#define	K_ESCAPE		27
-#define	K_SPACE			32
+#define	K_TAB				9
+#define	K_ENTER				13
+#define	K_ESCAPE			27
+#define	K_SPACE				32
 
 // Normal keys should be passed as lowercased ascii
-#define	K_BACKSPACE		127
-#define	K_UPARROW		128
-#define	K_DOWNARROW		129
-#define	K_LEFTARROW		130
-#define	K_RIGHTARROW	131
+#define	K_BACKSPACE			127
+#define	K_UPARROW			128
+#define	K_DOWNARROW			129
+#define	K_LEFTARROW			130
+#define	K_RIGHTARROW		131
 
 #define QMF_LEFT_JUSTIFY	0x00000001
 #define QMF_GRAYED			0x00000002
@@ -47,18 +47,32 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //#define QMF_SKINLIST		0x00000008 //mxd. Why did skinlist require special handling?
 #define QMF_HIDDEN			0x00000010
 
-#define RCOLUMN_OFFSET  (MENU_FONT_SIZE * 2)	// was 16
-#define LCOLUMN_OFFSET (-MENU_FONT_SIZE * 2)	// was -16
+#define RCOLUMN_OFFSET  (MENU_FONT_SIZE * 2) // was 16
+#define LCOLUMN_OFFSET (-MENU_FONT_SIZE * 2) // was -16
 
 #define SLIDER_RANGE 10
 
+#define DEFAULT_MENU_Y 140 //mxd
+
+//mxd. "Back" button titles
+#define MENU_BACK_CLOSE "Close menu"
+#define MENU_BACK_TO_MAIN "Back to Main menu"
+#define MENU_BACK_TO_GAME "Back to Game menu"
+#define MENU_BACK_TO_CONTROLS "Back to Controls menu"
+#define MENU_BACK_TO_MULTIPLAYER "Back to Multiplayer menu"
+#define MENU_BACK_TO_JOINSERVER "Back to Join server menu"
+#define MENU_BACK_TO_STARTSERVER "Back to Start server menu"
+#define MENU_BACK_TO_OPTIONS "Back to Options menu"
+#define MENU_BACK_TO_VIDEO "Back to Video menu"
+
+static const char *yesno_names[] = { "No", "Yes", 0 }; //mxd. Used in almost every menu
 
 typedef struct _tag_menuframework
 {
 	int x, y;
-	int	cursor;
+	int cursor;
 
-	int	nitems;
+	int nitems; // Number of menu items. Increased automatically when adding items via Menu_AddItem. Initialize to 0.
 	int nslots;
 	void *items[64];
 
@@ -75,26 +89,26 @@ typedef struct
 	int x, y;
 	menuframework_s *parent;
 	int cursor_offset;
-	int	localdata[4];
+	int localdata[4];
 	unsigned flags;
 
 	const char *statusbar;
 
-	void (*callback)( void *self );
-	void (*statusbarfunc)( void *self );
-	void (*ownerdraw)( void *self );
-	void (*cursordraw)( void *self );
+	void (*callback)(void *self);
+	void (*statusbarfunc)(void *self);
+	void (*ownerdraw)(void *self);
+	void (*cursordraw)(void *self);
 } menucommon_s;
 
 typedef struct
 {
 	menucommon_s generic;
 
-	char		buffer[80];
-	int			cursor;
-	int			length;
-	int			visible_length;
-	int			visible_offset;
+	char buffer[80];
+	int cursor;
+	int length;
+	int visible_length;
+	int visible_offset;
 } menufield_s;
 
 typedef struct 
@@ -110,12 +124,12 @@ typedef struct
 
 typedef struct
 {
-	menucommon_s	generic;
+	menucommon_s generic;
 
-	int			curvalue;
+	int curvalue;
 
-	const char	**itemnames;
-	int			numitemnames;
+	const char **itemnames;
+	int numitemnames;
 } menulist_s;
 
 typedef struct
@@ -143,24 +157,24 @@ typedef enum
 
 typedef struct
 {
-	menucommon_s	generic;
+	menucommon_s generic;
 
-	listboxtype_t	type;
-	scrolltype_t	scrolltype;
-	int			items_x;
-	int			items_y;
-	int			item_width;
-	int			item_height;
-	int			scrollpos;
-	int			curvalue;
+	listboxtype_t type;
+	scrolltype_t scrolltype;
+	int items_x;
+	int items_y;
+	int item_width;
+	int item_height;
+	int scrollpos;
+	int curvalue;
 
-	const char	**itemnames;
-	int			numitemnames;
+	const char **itemnames;
+	int numitemnames;
 } menulistbox_s;
 
 typedef struct
 {
-	float	min[2];
+	float min[2];
 	float max[2];
 	int index;
 } buttonmenuobject_t;
@@ -181,7 +195,7 @@ void Menu_Draw(menuframework_s *menu);
 void *Menu_ItemAtCursor(menuframework_s *m);
 qboolean Menu_SelectItem(menuframework_s *s);
 qboolean Menu_MouseSelectItem(menucommon_s *item);
-void Menu_SetStatusBar(menuframework_s *s, const char *string);
+//void Menu_SetStatusBar(menuframework_s *s, const char *string);
 void Menu_SlideItem(menuframework_s *s, int dir);
 int Menu_TallySlots(menuframework_s *menu);
 
@@ -192,8 +206,12 @@ void Menu_DrawStringR2LDark(int x, int y, const char *string, int alpha);
 
 void Menu_DrawTextBox(int x, int y, int width, int lines);
 void Menu_DrawBanner(char *name);
+void Menu_DrawStatusBar(const char *string); //mxd
 
 void UI_Draw_Cursor(void);
+
+int UI_CenteredX(const menucommon_s *generic, const int menux); //mxd
+int UI_MenuDepth(); //mxd. Returns current menu depth
 
 //=======================================================
 
@@ -208,27 +226,22 @@ void UI_Draw_Cursor(void);
 #define UI_BACKGROUND_NAME	"/gfx/ui/menu_background.pcx"
 #define UI_NOSCREEN_NAME	"/gfx/ui/noscreen.pcx"
 
-#define UI_MOUSECURSOR_MAIN_PIC		"/gfx/ui/cursors/m_cur_main.pcx"
+/*#define UI_MOUSECURSOR_MAIN_PIC		"/gfx/ui/cursors/m_cur_main.pcx"
 #define UI_MOUSECURSOR_HOVER_PIC	"/gfx/ui/cursors/m_cur_hover.pcx"
 #define UI_MOUSECURSOR_CLICK_PIC	"/gfx/ui/cursors/m_cur_click.pcx"
 #define UI_MOUSECURSOR_OVER_PIC		"/gfx/ui/cursors/m_cur_over.pcx"
-#define UI_MOUSECURSOR_TEXT_PIC		"/gfx/ui/cursors/m_cur_text.pcx"
+#define UI_MOUSECURSOR_TEXT_PIC		"/gfx/ui/cursors/m_cur_text.pcx"*/
 
 #define UI_MOUSECURSOR_PIC			"/gfx/ui/cursors/m_mouse_cursor.pcx"
 
 extern cvar_t *ui_cursor_scale;
+cursor_t cursor;
 
 static char *menu_in_sound		= "misc/menu1.wav";
 static char *menu_move_sound	= "misc/menu2.wav";
 static char *menu_out_sound		= "misc/menu3.wav";
 
-qboolean	m_entersound;		// play after drawing a frame, so caching
-								// won't disrupt the sound
-
-int MainMenuMouseHover;
-
-
-cursor_t cursor;
+qboolean m_entersound; // Played after drawing a frame, so caching won't disrupt the sound
 
 void M_Menu_Main_f(void);
 	void M_Menu_Game_f(void);
@@ -286,7 +299,7 @@ void Options_Screen_MenuDraw(void);
 void MenuCrosshair_MouseClick(void);
 
 // ui_mp_startserver.c
-void UI_LoadArenas(void);
+//void UI_LoadArenas(void); //mxd. Used in ui_mp_startserver.c only
 void UI_LoadMapList(void);
 
 // ui_mp_playersetup.c

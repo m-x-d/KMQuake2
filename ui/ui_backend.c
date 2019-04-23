@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 static void Action_DoEnter(menuaction_s *a);
 static void Action_Draw(menuaction_s *a);
-static void Menu_DrawStatusBar(const char *string);
 //static void Menulist_DoEnter(menulist_s *l); //mxd. Never used
 static void MenuList_Draw(menulist_s *l);
 static void Separator_Draw(menuseparator_s *s);
@@ -45,7 +44,7 @@ static void SpinControl_DoSlide(menulist_s *s, int dir);
 // Added Psychospaz's menu mouse support
 //======================================================
 
-int mouseOverAlpha(menucommon_s *m)
+int MouseOverAlpha(menucommon_s *m)
 {
 	if (cursor.menuitem == m)
 	{
@@ -66,7 +65,7 @@ void Action_DoEnter(menuaction_s *a)
 
 void Action_Draw(menuaction_s *a)
 {
-	const int alpha = mouseOverAlpha(&a->generic);
+	const int alpha = MouseOverAlpha(&a->generic);
 
 	if (a->generic.flags & QMF_LEFT_JUSTIFY)
 	{
@@ -112,7 +111,7 @@ qboolean Field_DoEnter(menufield_s *f)
 
 void Field_Draw(menufield_s *f)
 {
-	const int alpha = mouseOverAlpha(&f->generic);
+	const int alpha = MouseOverAlpha(&f->generic);
 	char tempbuffer[128] = "";
 
 	if (f->generic.name)
@@ -294,7 +293,7 @@ void Menulist_DoEnter(menulist_s *l)
 void MenuList_Draw(menulist_s *l)
 {
 	int y = 0;
-	const int alpha = mouseOverAlpha(&l->generic);
+	const int alpha = MouseOverAlpha(&l->generic);
 
 	Menu_DrawStringR2LDark(l->generic.x + l->generic.parent->x - 2 * MENU_FONT_SIZE,
 						   l->generic.y + l->generic.parent->y, l->generic.name, alpha);
@@ -315,9 +314,17 @@ void MenuList_Draw(menulist_s *l)
 
 void Separator_Draw(menuseparator_s *s)
 {
-	const int alpha = mouseOverAlpha(&s->generic);
+	if (!s->generic.name)
+		return;
 
-	if (s->generic.name)
+	const int alpha = MouseOverAlpha(&s->generic);
+
+	if (s->generic.flags & QMF_LEFT_JUSTIFY) //mxd. Added QMF_LEFT_JUSTIFY support
+	{
+		Menu_DrawStringDark(s->generic.x + s->generic.parent->x,
+							s->generic.y + s->generic.parent->y, s->generic.name, alpha);
+	}
+	else
 	{
 		Menu_DrawStringR2LDark(s->generic.x + s->generic.parent->x,
 							   s->generic.y + s->generic.parent->y, s->generic.name, alpha);
@@ -338,7 +345,7 @@ void Slider_DoSlide(menuslider_s *s, int dir)
 void Slider_Draw(menuslider_s *s)
 {
 	int	i;
-	const int alpha = mouseOverAlpha(&s->generic);
+	const int alpha = MouseOverAlpha(&s->generic);
 
 	Menu_DrawStringR2LDark(s->generic.x + s->generic.parent->x + LCOLUMN_OFFSET,
 						   s->generic.y + s->generic.parent->y, s->generic.name, alpha);
@@ -393,7 +400,7 @@ void SpinControl_DoSlide(menulist_s *s, int dir)
  
 void SpinControl_Draw(menulist_s *s)
 {
-	const int alpha = mouseOverAlpha(&s->generic);
+	const int alpha = MouseOverAlpha(&s->generic);
 	char buffer[100];
 
 	if (s->generic.name)
@@ -483,8 +490,8 @@ void Menu_AdjustCursor (menuframework_s *m, int dir)
 
 void Menu_Center(menuframework_s *menu)
 {
-	const int height = ((menucommon_s *) menu->items[menu->nitems-1])->y + 10;
-	menu->y = (SCREEN_HEIGHT - height) * 0.5;
+	const int height = ((menucommon_s *)menu->items[menu->nitems - 1])->y + 10;
+	menu->y = (SCREEN_HEIGHT - height) * 0.5f;
 }
 
 void Menu_Draw(menuframework_s *menu)
@@ -498,24 +505,29 @@ void Menu_Draw(menuframework_s *menu)
 
 		switch (((menucommon_s *)menu->items[i])->type)
 		{
-		case MTYPE_FIELD:
-			Field_Draw((menufield_s *)menu->items[i]);
-			break;
-		case MTYPE_SLIDER:
-			Slider_Draw((menuslider_s *)menu->items[i]);
-			break;
-		case MTYPE_LIST:
-			MenuList_Draw((menulist_s *)menu->items[i]);
-			break;
-		case MTYPE_SPINCONTROL:
-			SpinControl_Draw((menulist_s *)menu->items[i]);
-			break;
-		case MTYPE_ACTION:
-			Action_Draw((menuaction_s *)menu->items[i]);
-			break;
-		case MTYPE_SEPARATOR:
-			Separator_Draw((menuseparator_s *)menu->items[i]);
-			break;
+			case MTYPE_FIELD:
+				Field_Draw((menufield_s *)menu->items[i]);
+				break;
+
+			case MTYPE_SLIDER:
+				Slider_Draw((menuslider_s *)menu->items[i]);
+				break;
+
+			case MTYPE_LIST:
+				MenuList_Draw((menulist_s *)menu->items[i]);
+				break;
+
+			case MTYPE_SPINCONTROL:
+				SpinControl_Draw((menulist_s *)menu->items[i]);
+				break;
+
+			case MTYPE_ACTION:
+				Action_Draw((menuaction_s *)menu->items[i]);
+				break;
+
+			case MTYPE_SEPARATOR:
+				Separator_Draw((menuseparator_s *)menu->items[i]);
+				break;
 		}
 	}
 
@@ -603,7 +615,7 @@ void Menu_Draw(menuframework_s *menu)
 
 						const int len = text->visible_length + 2;
 
-						max[0] += SCR_ScaledVideo(len*MENU_FONT_SIZE);
+						max[0] += SCR_ScaledVideo(len * MENU_FONT_SIZE);
 						type = MENUITEM_TEXT;
 					}
 					break;
@@ -615,7 +627,7 @@ void Menu_Draw(menuframework_s *menu)
 			if (   cursor.x >= min[0] && cursor.x <= max[0]
 				&& cursor.y >= min[1] && cursor.y <= max[1])
 			{
-				// new item
+				// New item
 				if (lastitem != item)
 				{
 					for (int j = 0; j < MENU_CURSOR_BUTTON_MAX; j++)
@@ -776,7 +788,7 @@ void Menu_DrawBanner(char *name)
 {
 	int w, h;
 	R_DrawGetPicSize(&w, &h, name);
-	SCR_DrawPic(SCREEN_WIDTH / 2 - w / 2, SCREEN_HEIGHT / 2 - 150, w, h, ALIGN_CENTER, name, 1.0);
+	SCR_DrawPic(SCREEN_WIDTH / 2 - w / 2, SCREEN_HEIGHT / 2 - 150, w, h, ALIGN_CENTER, name, 1.0f);
 }
 
 
@@ -791,11 +803,11 @@ void *Menu_ItemAtCursor(menuframework_s *m)
 qboolean Menu_SelectItem(menuframework_s *s)
 {
 	menucommon_s *item = (menucommon_s *)Menu_ItemAtCursor(s);
+	if (!item)
+		return false;
 
-	if (item)
+	switch (item->type)
 	{
-		switch (item->type)
-		{
 		case MTYPE_FIELD:
 			return Field_DoEnter((menufield_s *)item);
 
@@ -804,24 +816,25 @@ qboolean Menu_SelectItem(menuframework_s *s)
 			return true;
 
 		case MTYPE_LIST:
-			//	Menulist_DoEnter ( (menulist_s *)item );
+			//Menulist_DoEnter((menulist_s *)item);
 			return false;
 
 		case MTYPE_SPINCONTROL:
-			//	SpinControl_DoEnter ( (menulist_s *)item );
+			//SpinControl_DoEnter((menulist_s *)item);
 			return false;
-		}
-	}
 
-	return false;
+		default:
+			return false;
+	}
 }
 
 qboolean Menu_MouseSelectItem(menucommon_s *item)
 {
-	if (item)
+	if (!item)
+		return false;
+	
+	switch (item->type)
 	{
-		switch (item->type)
-		{
 		case MTYPE_FIELD:
 			return Field_DoEnter((menufield_s *)item);
 
@@ -831,35 +844,21 @@ qboolean Menu_MouseSelectItem(menucommon_s *item)
 
 		case MTYPE_LIST:
 		case MTYPE_SPINCONTROL:
+		default:
 			return false;
-		}
 	}
-
-	return false;
-}
-
-void Menu_SetStatusBar(menuframework_s *m, const char *string)
-{
-	m->statusbar = string;
 }
 
 void Menu_SlideItem(menuframework_s *s, int dir)
 {
 	menucommon_s *item = (menucommon_s *)Menu_ItemAtCursor(s);
+	if (!item)
+		return;
 
-	if (item)
-	{
-		switch (item->type)
-		{
-		case MTYPE_SLIDER:
-			Slider_DoSlide((menuslider_s *)item, dir);
-			break;
-
-		case MTYPE_SPINCONTROL:
-			SpinControl_DoSlide((menulist_s *)item, dir);
-			break;
-		}
-	}
+	if(item->type == MTYPE_SLIDER)
+		Slider_DoSlide((menuslider_s *)item, dir);
+	else if(item->type == MTYPE_SPINCONTROL)
+		SpinControl_DoSlide((menulist_s *)item, dir);
 }
 
 int Menu_TallySlots(menuframework_s *menu)
@@ -890,12 +889,7 @@ int Menu_TallySlots(menuframework_s *menu)
 	return total;
 }
 
-
-/*
-=======================================================================
-	Menu Mouse Cursor - psychospaz
-=======================================================================
-*/
+#pragma region ======================= Menu Mouse Cursor - psychospaz
 
 extern void (*m_drawfunc)(void);
 extern const char *(*m_keyfunc)(int key);
@@ -1126,8 +1120,8 @@ void UI_Draw_Cursor(void) //TODO: mxd. Switch to "hover" cursor when hovering ov
 	// Get sizing vars
 	int w, h;
 	R_DrawGetPicSize(&w, &h, UI_MOUSECURSOR_PIC);
-	const float ofs_x = SCR_ScaledVideo(w) * ui_cursor_scale->value * 0.5;
-	const float ofs_y = SCR_ScaledVideo(h) * ui_cursor_scale->value * 0.5;
+	const float ofs_x = SCR_ScaledVideo(w) * ui_cursor_scale->value * 0.5f;
+	const float ofs_y = SCR_ScaledVideo(h) * ui_cursor_scale->value * 0.5f;
 	
 	R_DrawScaledPic(cursor.x - ofs_x, cursor.y - ofs_y, scale, 1.0f, cur_img);
 }
@@ -1205,3 +1199,5 @@ void UI_Draw_Cursor (void)
 }
 
 #endif
+
+#pragma endregion

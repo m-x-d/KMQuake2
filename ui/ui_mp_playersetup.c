@@ -21,20 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // ui_playersetup.c -- the player setup menu 
 
 #include <ctype.h>
-/*#ifdef _WIN32
-#include <io.h>
-#endif*/
 #include "../client/client.h"
 #include "ui_local.h"
 
-
-/*
-=============================================================================
-
-PLAYER CONFIG MENU
-
-=============================================================================
-*/
 extern menuframework_s	s_multiplayer_menu;
 
 static menuframework_s	s_player_config_menu;
@@ -47,10 +36,9 @@ static menuseparator_s	s_player_skin_title;
 static menuseparator_s	s_player_model_title;
 static menuseparator_s	s_player_hand_title;
 static menuseparator_s	s_player_rate_title;
-//static menuaction_s		s_player_download_action;
 static menuaction_s		s_player_back_action;
 
-// save skins and models here so as to not have to re-register every frame
+// Save skins and models here so as to not have to re-register every frame
 struct model_s *playermodel;
 struct model_s *weaponmodel;
 struct image_s *playerskin;
@@ -73,41 +61,44 @@ static char *s_pmnames[MAX_PLAYERMODELS];
 static int s_numplayermodels;
 
 static int rate_tbl[] = { 2500, 3200, 5000, 10000, 15000, 25000, 0 };
-static const char *rate_names[] = { "28.8 Modem", "33.6 Modem", "56K/Single ISDN",
-	"Dual ISDN", "Cable/DSL", "T1/LAN", "User defined", 0 };
+static const char *rate_names[] = { "28.8 Modem", "33.6 Modem", "56K/Single ISDN", "Dual ISDN", "Cable/DSL", "T1/LAN", "User defined", 0 };
 
 
-static void HandednessCallback (void *unused)
+static void HandednessCallback(void *unused)
 {
-	Cvar_SetValue ("hand", s_player_handedness_box.curvalue);
+	Cvar_SetValue("hand", s_player_handedness_box.curvalue);
 }
 
-
-static void RateCallback (void *unused)
+static void RateCallback(void *unused)
 {
 	if (s_player_rate_box.curvalue != sizeof(rate_tbl) / sizeof(*rate_tbl) - 1)
-		Cvar_SetValue ("rate", rate_tbl[s_player_rate_box.curvalue]);
+		Cvar_SetValue("rate", rate_tbl[s_player_rate_box.curvalue]);
 }
 
-
-static void ModelCallback (void *unused)
+static void ModelCallback(void *unused)
 {
 	char scratch[MAX_QPATH];
 
 	s_player_skin_box.itemnames = s_pmi[s_player_model_box.curvalue].skindisplaynames;
 	s_player_skin_box.curvalue = 0;
 
-	// only register model and skin on starup or when changed
-	Com_sprintf( scratch, sizeof(scratch), "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory );
+	// Only register model and skin on starup or when changed
+	Com_sprintf(scratch, sizeof(scratch), "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory);
 	playermodel = R_RegisterModel(scratch);
 
-	Com_sprintf( scratch, sizeof(scratch), "players/%s/%s.pcx", s_pmi[s_player_model_box.curvalue].directory, s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
+	Com_sprintf(scratch, sizeof(scratch), "players/%s/%s.pcx", 
+		s_pmi[s_player_model_box.curvalue].directory, 
+		s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue]);
+
 	playerskin = R_RegisterSkin(scratch);
 
-	// show current weapon model (if any)
+	// Show current weapon model (if any)
 	if (currentweaponmodel && strlen(currentweaponmodel))
 	{
-		Com_sprintf(scratch, sizeof(scratch), "players/%s/%s", s_pmi[s_player_model_box.curvalue].directory, currentweaponmodel);
+		Com_sprintf(scratch, sizeof(scratch), "players/%s/%s", 
+			s_pmi[s_player_model_box.curvalue].directory, 
+			currentweaponmodel);
+
 		weaponmodel = R_RegisterModel(scratch);
 		if (!weaponmodel)
 		{
@@ -123,17 +114,19 @@ static void ModelCallback (void *unused)
 }
 
 
-// only register skin on starup and when changed
-static void SkinCallback (void *unused)
+// Only register skin on starup and when changed
+static void SkinCallback(void *unused)
 {
 	char scratch[MAX_QPATH];
 
-	Com_sprintf(scratch, sizeof(scratch), "players/%s/%s.pcx", s_pmi[s_player_model_box.curvalue].directory, s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue]);
+	Com_sprintf(scratch, sizeof(scratch), "players/%s/%s.pcx", 
+		s_pmi[s_player_model_box.curvalue].directory,
+		s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue]);
+
 	playerskin = R_RegisterSkin(scratch);
 }
 
-
-static qboolean IconOfSkinExists (char *skin, char **files, int nfiles, char *suffix)
+static qboolean IconOfSkinExists(char *skin, char **files, int nfiles, char *suffix)
 {
 	char scratch[1024];
 
@@ -142,17 +135,14 @@ static qboolean IconOfSkinExists (char *skin, char **files, int nfiles, char *su
 	Q_strncatz(scratch, suffix, sizeof(scratch));
 
 	for (int i = 0; i < nfiles; i++)
-	{
 		if (strcmp(files[i], scratch) == 0)
 			return true;
-	}
 
 	return false;
 }
 
-
-// adds menu support for TGA and JPG skins
-static qboolean IsValidSkin (char **filelist, int numFiles, int index)
+// Adds menu support for TGA, PNG and JPG skins
+static qboolean IsValidSkin(char **filelist, int numFiles, int index)
 {
 	const int len = strlen(filelist[index]);
 
@@ -179,8 +169,7 @@ static qboolean IsValidSkin (char **filelist, int numFiles, int index)
 	return false;
 }
 
-
-static qboolean PlayerConfig_ScanDirectories (void)
+static qboolean PlayerConfig_ScanDirectories(void)
 {
 	char findname[1024];
 	char scratch[1024];
@@ -190,10 +179,10 @@ static qboolean PlayerConfig_ScanDirectories (void)
 
 	s_numplayermodels = 0;
 
-	// loop back to here if there were no valid player models found in the selected path
+	// Loop back to here if there were no valid player models found in the selected path
 	do
 	{
-		// get a list of directories
+		// Get a list of directories
 		do 
 		{
 			path = FS_NextPath(path);
@@ -207,29 +196,23 @@ static qboolean PlayerConfig_ScanDirectories (void)
 		if (!dirnames)
 			return false;
 
-		// go through the subdirectories
-		int npms = ndirs;
-		if (npms > MAX_PLAYERMODELS)
-			npms = MAX_PLAYERMODELS;
+		// Go through the subdirectories
+		int npms = min(ndirs, MAX_PLAYERMODELS);
 		if (s_numplayermodels + npms > MAX_PLAYERMODELS)
 			npms = MAX_PLAYERMODELS - s_numplayermodels;
 
 		for (int i = 0; i < npms; i++)
 		{
-			int			k, s;
-			int			nimagefiles;
-			int			nskins = 0;
-			qboolean	already_added = false;	
-
 			if (dirnames[i] == 0)
 				continue;
 
-			// check if dirnames[i] is already added to the s_pmi[i].directory list
+			// Check if dirnames[i] is already added to the s_pmi[i].directory list
 			char *a = strrchr(dirnames[i], '/');
 			char *b = strrchr(dirnames[i], '\\');
-			char *c = (a > b ? a : b);
+			char *c = max(a, b);
 
-			for (k = 0; k < s_numplayermodels; k++)
+			qboolean already_added = false;
+			for (int k = 0; k < s_numplayermodels; k++)
 			{
 				if (!strcmp(s_pmi[k].directory, c + 1))
 				{
@@ -241,7 +224,7 @@ static qboolean PlayerConfig_ScanDirectories (void)
 			if (already_added)
 				continue; // todo: add any skins for this model not already listed to skindisplaynames
 
-			// verify the existence of tris.md2
+			// Verify the existence of tris.md2
 			Q_strncpyz(scratch, dirnames[i], sizeof(scratch));
 			Q_strncatz(scratch, "/tris.md2", sizeof(scratch));
 			if (!Sys_FindFirst(scratch, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM))
@@ -249,24 +232,28 @@ static qboolean PlayerConfig_ScanDirectories (void)
 				free(dirnames[i]);
 				dirnames[i] = 0;
 				Sys_FindClose();
+
 				continue;
 			}
 			Sys_FindClose();
 
-			// verify the existence of at least one skin
+			// Verify the existence of at least one skin
+			int nimagefiles;
 			Q_strncpyz(scratch, va("%s%s", dirnames[i], "/*.*"), sizeof(scratch)); // was "/*.pcx"
-			char **imagenames = FS_ListFiles (scratch, &nimagefiles, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM);
+			char **imagenames = FS_ListFiles(scratch, &nimagefiles, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM);
 
 			if (!imagenames)
 			{
 				free(dirnames[i]);
 				dirnames[i] = 0;
+
 				continue;
 			}
 
-			// count valid skins, which consist of a skin with a matching "_i" icon
-			for (k = 0; k < nimagefiles-1; k++)
-				if ( IsValidSkin(imagenames, nimagefiles, k) )
+			// Count valid skins, which consist of a skin with a matching "_i" icon
+			int nskins = 0;
+			for (int k = 0; k < nimagefiles - 1; k++) //TODO: mxd. Why nimagefiles - 1, not nimagefiles?
+				if (IsValidSkin(imagenames, nimagefiles, k))
 					nskins++;
 
 			if (!nskins)
@@ -275,62 +262,61 @@ static qboolean PlayerConfig_ScanDirectories (void)
 			char **skinnames = malloc(sizeof(char *) * (nskins + 1));
 			memset(skinnames, 0, sizeof(char *) * (nskins + 1));
 
-			// copy the valid skins
-			if (nimagefiles)
+			// Copy the valid skins
+			if (nimagefiles > 0)
 			{
-				for (s = 0, k = 0; k < nimagefiles - 1; k++)
+				int skinindex = 0;
+				for (int k = 0; k < nimagefiles - 1; k++)
 				{
 					if (IsValidSkin(imagenames, nimagefiles, k))
 					{
-						char *a = strrchr(imagenames[k], '/');
-						char *b = strrchr(imagenames[k], '\\');
-						char *c = (a > b ? a : b);
+						char *a2 = strrchr(imagenames[k], '/');
+						char *b2 = strrchr(imagenames[k], '\\');
+						char *c2 = max(a2, b2);
 
-						Q_strncpyz(scratch, c + 1, sizeof(scratch));
+						Q_strncpyz(scratch, c2 + 1, sizeof(scratch));
 
 						if (strrchr(scratch, '.'))
 							*strrchr(scratch, '.') = 0;
 
-						skinnames[s] = strdup(scratch);
-						s++;
+						skinnames[skinindex] = strdup(scratch);
+						skinindex++;
 					}
 				}
 			}
 
-			// at this point we have a valid player model
+			// At this point we have a valid player model
 			s_pmi[s_numplayermodels].nskins = nskins;
 			s_pmi[s_numplayermodels].skindisplaynames = skinnames;
 
-			// make short name for the model
+			// Make short name for the model
 			a = strrchr(dirnames[i], '/');
 			b = strrchr(dirnames[i], '\\');
-
-			c = (a > b) ? a : b;
+			c = max(a, b);
 
 			strncpy(s_pmi[s_numplayermodels].displayname, c + 1, MAX_DISPLAYNAME - 1);
 			Q_strncpyz(s_pmi[s_numplayermodels].directory, c + 1, sizeof(s_pmi[s_numplayermodels].directory));
 
-			FS_FreeFileList (imagenames, nimagefiles);
+			FS_FreeFileList(imagenames, nimagefiles);
 
 			s_numplayermodels++;
 		}
 		
 		if (dirnames)
-			FS_FreeFileList (dirnames, ndirs);
+			FS_FreeFileList(dirnames, ndirs);
 
-	// if no valid player models found in path, try next path, if there is one
+	// If no valid player models found in path, try next path, if there is one
 	} while (path);	// (s_numplayermodels == 0 && path);
 
-	return true;	//** DMP warning fix
+	return true; //** DMP warning fix
 }
 
-
-static int pmicmpfnc (const void *_a, const void *_b)
+static int pmicmpfnc(const void *_a, const void *_b)
 {
 	const playermodelinfo_s *a = (const playermodelinfo_s *) _a;
 	const playermodelinfo_s *b = (const playermodelinfo_s *) _b;
 
-	// sort by male, female, then alphabetical
+	// Sort by male, female, then alphabetical
 	if (strcmp(a->directory, "male") == 0)
 		return -1;
 	if (strcmp(b->directory, "male") == 0)
@@ -344,9 +330,10 @@ static int pmicmpfnc (const void *_a, const void *_b)
 	return strcmp(a->directory, b->directory);
 }
 
-
-qboolean PlayerConfig_MenuInit (void)
+qboolean PlayerConfig_MenuInit(void)
 {
+	static const char *handedness[] = { "Right", "Left", "Center", 0 };
+	
 	char currentdirectory[1024];
 	char currentskin[1024];
 	char scratch[MAX_QPATH];
@@ -356,8 +343,6 @@ qboolean PlayerConfig_MenuInit (void)
 	int currentskinindex = 0;
 
 	cvar_t *hand = Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
-
-	static const char *handedness[] = { "right", "left", "center", 0 };
 
 	PlayerConfig_ScanDirectories();
 
@@ -388,7 +373,7 @@ qboolean PlayerConfig_MenuInit (void)
 	qsort(s_pmi, s_numplayermodels, sizeof(s_pmi[0]), pmicmpfnc);
 
 	memset(s_pmnames, 0, sizeof(s_pmnames));
-	for (int i = 0; i < s_numplayermodels; i++ )
+	for (int i = 0; i < s_numplayermodels; i++)
 	{
 		s_pmnames[i] = s_pmi[i].displayname;
 		if (Q_stricmp(s_pmi[i].directory, currentdirectory) == 0)
@@ -406,13 +391,13 @@ qboolean PlayerConfig_MenuInit (void)
 		}
 	}
 	
-	s_player_config_menu.x = SCREEN_WIDTH * 0.5 - 210;
-	s_player_config_menu.y = SCREEN_HEIGHT * 0.5 - 70;
+	s_player_config_menu.x = SCREEN_WIDTH * 0.5f - 210;
+	s_player_config_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5 - 70;
 	s_player_config_menu.nitems = 0;
 
 	s_player_name_field.generic.type = MTYPE_FIELD;
 	s_player_name_field.generic.flags = QMF_LEFT_JUSTIFY;
-	s_player_name_field.generic.name = "name";
+	s_player_name_field.generic.name = "Name";
 	s_player_name_field.generic.callback = 0;
 	s_player_name_field.generic.x = -MENU_FONT_SIZE;
 	s_player_name_field.generic.y = y;
@@ -423,8 +408,8 @@ qboolean PlayerConfig_MenuInit (void)
 
 	s_player_model_title.generic.type = MTYPE_SEPARATOR;
 	s_player_model_title.generic.flags = QMF_LEFT_JUSTIFY;
-	s_player_model_title.generic.name = "model";
-	s_player_model_title.generic.x = -MENU_FONT_SIZE;
+	s_player_model_title.generic.name = "Model";
+	s_player_model_title.generic.x = -7 * MENU_FONT_SIZE;
 	s_player_model_title.generic.y = y += 3 * MENU_LINE_SIZE;
 
 	s_player_model_box.generic.type = MTYPE_SPINCONTROL;
@@ -437,8 +422,8 @@ qboolean PlayerConfig_MenuInit (void)
 
 	s_player_skin_title.generic.type = MTYPE_SEPARATOR;
 	s_player_skin_title.generic.flags = QMF_LEFT_JUSTIFY;
-	s_player_skin_title.generic.name = "skin";
-	s_player_skin_title.generic.x = -2 * MENU_FONT_SIZE;
+	s_player_skin_title.generic.name = "Skin";
+	s_player_skin_title.generic.x = -7 * MENU_FONT_SIZE;
 	s_player_skin_title.generic.y = y += 2 * MENU_LINE_SIZE;
 
 	s_player_skin_box.generic.type = MTYPE_SPINCONTROL;
@@ -452,8 +437,8 @@ qboolean PlayerConfig_MenuInit (void)
 
 	s_player_hand_title.generic.type = MTYPE_SEPARATOR;
 	s_player_hand_title.generic.flags = QMF_LEFT_JUSTIFY;
-	s_player_hand_title.generic.name = "handedness";
-	s_player_hand_title.generic.x = 4 * MENU_FONT_SIZE;
+	s_player_hand_title.generic.name = "Handedness";
+	s_player_hand_title.generic.x = -7 * MENU_FONT_SIZE;
 	s_player_hand_title.generic.y = y += 2 * MENU_LINE_SIZE;
 
 	s_player_handedness_box.generic.type = MTYPE_SPINCONTROL;
@@ -472,8 +457,8 @@ qboolean PlayerConfig_MenuInit (void)
 		
 	s_player_rate_title.generic.type = MTYPE_SEPARATOR;
 	s_player_rate_title.generic.flags = QMF_LEFT_JUSTIFY;
-	s_player_rate_title.generic.name = "connect speed";
-	s_player_rate_title.generic.x = 7 * MENU_FONT_SIZE;
+	s_player_rate_title.generic.name = "Connection speed";
+	s_player_rate_title.generic.x = -7 * MENU_FONT_SIZE;
 	s_player_rate_title.generic.y = y += 2 * MENU_LINE_SIZE;
 
 	s_player_rate_box.generic.type = MTYPE_SPINCONTROL;
@@ -486,21 +471,23 @@ qboolean PlayerConfig_MenuInit (void)
 	s_player_rate_box.itemnames = rate_names;
 
 	s_player_back_action.generic.type = MTYPE_ACTION;
-	s_player_back_action.generic.name = "back to multiplayer";
+	s_player_back_action.generic.name = (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_MULTIPLAYER); //mxd
 	s_player_back_action.generic.flags = QMF_LEFT_JUSTIFY;
 	s_player_back_action.generic.x = -5 * MENU_FONT_SIZE;
 	s_player_back_action.generic.y = y += 2 * MENU_LINE_SIZE;
 	s_player_back_action.generic.statusbar = NULL;
 	s_player_back_action.generic.callback = UI_BackMenu;
 
-	// only register model and skin on starup or when changed
+	// Only register model and skin on starup or when changed
 	Com_sprintf(scratch, sizeof(scratch), "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory);
 	playermodel = R_RegisterModel(scratch);
 
-	Com_sprintf(scratch, sizeof(scratch), "players/%s/%s.pcx", s_pmi[s_player_model_box.curvalue].directory, s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue]);
+	Com_sprintf(scratch, sizeof(scratch), "players/%s/%s.pcx", 
+		s_pmi[s_player_model_box.curvalue].directory, 
+		s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue]);
 	playerskin = R_RegisterSkin(scratch);
 
-	// show current weapon model (if any)
+	// Show current weapon model (if any)
 	if (currentweaponmodel && strlen(currentweaponmodel))
 	{
 		Com_sprintf(scratch, sizeof(scratch), "players/%s/%s", s_pmi[s_player_model_box.curvalue].directory, currentweaponmodel);
@@ -536,8 +523,7 @@ qboolean PlayerConfig_MenuInit (void)
 	return true;
 }
 
-
-qboolean PlayerConfig_CheckIncerement (int dir, float x, float y, float w, float h)
+qboolean PlayerConfig_CheckIncerement(int dir, float x, float y, float w, float h)
 {
 	float min[2], max[2];
 
@@ -547,6 +533,7 @@ qboolean PlayerConfig_CheckIncerement (int dir, float x, float y, float w, float
 	float h1 = h;
 
 	SCR_AdjustFrom640(&x1, &y1, &w1, &h1, ALIGN_CENTER);
+
 	min[0] = x1;
 	max[0] = x1 + w1;
 	min[1] = y1;
@@ -583,8 +570,7 @@ qboolean PlayerConfig_CheckIncerement (int dir, float x, float y, float w, float
 	return false;
 }
 
-
-void PlayerConfig_MouseClick (void)
+void PlayerConfig_MouseClick(void)
 {
 	const float icon_x = SCREEN_WIDTH * 0.5 - 5;
 	const float icon_y = SCREEN_HEIGHT - 108;
@@ -616,6 +602,7 @@ void PlayerConfig_MouseClick (void)
 	}
 
 	icon_offset = NUM_SKINBOX_ITEMS * 34;
+
 	// Skins list right arrow click
 	if (PlayerConfig_CheckIncerement(0, icon_x + icon_offset + 5, icon_y, 32, 32))
 		return;
@@ -647,14 +634,13 @@ void PlayerConfig_MouseClick (void)
 	}
 }
 
-
-void PlayerConfig_DrawSkinSelection (void)
+void PlayerConfig_DrawSkinSelection(void)
 {
-	char	scratch[MAX_QPATH];
-	const float	icon_x = SCREEN_WIDTH*0.5 - 5; //width - 325
+	char scratch[MAX_QPATH];
+	const float	icon_x = SCREEN_WIDTH * 0.5 - 5; //width - 325
 	const float	icon_y = SCREEN_HEIGHT - 108;
-	float	icon_offset = 0;
-	int		color[3];
+	float icon_offset = 0;
+	int color[3];
 
 	TextColor((int)Cvar_VariableValue("alt_text_color"), &color[0], &color[1], &color[2]);
 
@@ -666,11 +652,11 @@ void PlayerConfig_DrawSkinSelection (void)
 	else
 		skinindex = s_player_skin_box.curvalue - 3;
 
-	// left arrow
+	// Left arrow
 	Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_left.pcx");
-	SCR_DrawPic(icon_x - 39, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0);
+	SCR_DrawPic(icon_x - 39, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0f);
 
-	// background
+	// Background
 	SCR_DrawFill(icon_x - 3, icon_y - 3, NUM_SKINBOX_ITEMS * 34 + 4, 38, ALIGN_CENTER, 0, 0, 0, 255);
 	if (R_DrawFindPic("/gfx/ui/listbox_background.pcx"))
 	{
@@ -698,18 +684,17 @@ void PlayerConfig_DrawSkinSelection (void)
 		if (skinindex == s_player_skin_box.curvalue)
 			SCR_DrawFill(icon_x + icon_offset - 1, icon_y - 1, 34, 34, ALIGN_CENTER, color[0], color[1], color[2], 255);
 
-		SCR_DrawPic(icon_x + icon_offset, icon_y, 32, 32,  ALIGN_CENTER, scratch, 1.0);
+		SCR_DrawPic(icon_x + icon_offset, icon_y, 32, 32,  ALIGN_CENTER, scratch, 1.0f);
 		icon_offset += 34;
 	}
 
-	// right arrow
+	// Right arrow
 	icon_offset = NUM_SKINBOX_ITEMS * 34;
 	Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_right.pcx");
-	SCR_DrawPic(icon_x + icon_offset + 5, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0);
+	SCR_DrawPic(icon_x + icon_offset + 5, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0f);
 }
 
-
-void PlayerConfig_MenuDraw (void)
+void PlayerConfig_MenuDraw(void)
 {
 	Menu_DrawBanner("m_banner_plauer_setup"); // typo for image name is id's fault
 
@@ -720,24 +705,28 @@ void PlayerConfig_MenuDraw (void)
 	float ry = 0;
 	float rw = SCREEN_WIDTH;
 	float rh = SCREEN_HEIGHT;
+
 	SCR_AdjustFrom640(&rx, &ry, &rw, &rh, ALIGN_CENTER);
+
 	refdef.x = rx;
 	refdef.y = ry;
 	refdef.width = rw;
 	refdef.height = rh;
 	refdef.fov_x = 50;
 	refdef.fov_y = CalcFov(refdef.fov_x, refdef.width, refdef.height);
-	refdef.time = cls.realtime * 0.001;
+	refdef.time = cls.realtime * 0.001f;
  
 	if (s_pmi[s_player_model_box.curvalue].skindisplaynames)
 	{
-		vec3_t		modelOrg;
-		entity_t	entity[2]; // Psychopspaz's support for showing weapon model
+		vec3_t modelOrg;
+		entity_t entity[2]; // Psychopspaz's support for showing weapon model
 
 		refdef.num_entities = 0;
 		refdef.entities = entity;
 
-		const int yaw = anglemod(cl.time / 10.0f);
+		float yaw = anglemod(cl.time / 10.0f);
+		if (hand->value == 1)
+			yaw -= 90; //mxd. Fixes model facing when switching handedness
 
 		VectorSet(modelOrg, 150, -25, 0);
 
@@ -745,7 +734,7 @@ void PlayerConfig_MenuDraw (void)
 		entity_t *ent = &entity[0];
 		memset(&entity[0], 0, sizeof(entity[0]));
 
-		// moved registration code to init and change only
+		// Moved registration code to init and change only
 		ent->model = playermodel;
 		ent->skin = playerskin;
 
@@ -758,11 +747,8 @@ void PlayerConfig_MenuDraw (void)
 
 		ent->frame = 0;
 		ent->oldframe = 0;
-		ent->backlerp = 0.0;
+		ent->backlerp = 0.0f;
 		ent->angles[1] = yaw;
-		
-		if (hand->value == 1)
-			ent->angles[1] -= 90; //mxd
 
 		refdef.num_entities++;
 
@@ -770,7 +756,7 @@ void PlayerConfig_MenuDraw (void)
 		ent = &entity[1];
 		memset(&entity[1], 0, sizeof(entity[1]));
 
-		// moved registration code to init and change only
+		// Moved registration code to init and change only
 		ent->model = weaponmodel;
 
 		if (ent->model)
@@ -788,9 +774,6 @@ void PlayerConfig_MenuDraw (void)
 			ent->oldframe = 0;
 			ent->backlerp = 0.0;
 			ent->angles[1] = yaw;
-			
-			if (hand->value == 1)
-				ent->angles[1] -= 90; //mxd
 
 			refdef.num_entities++;
 		}
@@ -801,15 +784,14 @@ void PlayerConfig_MenuDraw (void)
 
 		Menu_Draw(&s_player_config_menu);
 
-		// skin selection preview
+		// Skin selection preview
 		PlayerConfig_DrawSkinSelection();
 
 		R_RenderFrame(&refdef);
 	}
 }
 
-
-void PConfigAccept (void)
+void PConfigAccept(void)
 {
 	char scratch[1024];
 
@@ -846,14 +828,15 @@ const char *PlayerConfig_MenuKey(int key)
 }
 
 
-void M_Menu_PlayerConfig_f (void)
+void M_Menu_PlayerConfig_f(void)
 {
 	if (!PlayerConfig_MenuInit())
 	{
-		Menu_SetStatusBar(&s_multiplayer_menu, "No valid player models found");
-		return;
+		s_multiplayer_menu.statusbar = "No valid player models found";
 	}
-
-	Menu_SetStatusBar(&s_multiplayer_menu, NULL);
-	UI_PushMenu(PlayerConfig_MenuDraw, PlayerConfig_MenuKey);
+	else
+	{
+		s_multiplayer_menu.statusbar = NULL;
+		UI_PushMenu(PlayerConfig_MenuDraw, PlayerConfig_MenuKey);
+	}
 }

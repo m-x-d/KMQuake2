@@ -39,23 +39,15 @@ static menuaction_s		s_joinserver_address_book_action;
 static menuaction_s		s_joinserver_server_actions[MAX_LOCAL_SERVERS];
 static menuaction_s		s_joinserver_back_action;
 
-int		m_num_servers;
-#define	NO_SERVER_STRING	"<no server>"
+int m_num_servers;
+
+#define	NO_SERVER_STRING "<no server>"
 
 // User readable information
 char local_server_names[MAX_LOCAL_SERVERS][80];
 
 // Network address
 netadr_t local_server_netadr[MAX_LOCAL_SERVERS];
-
-
-extern void SearchLocalGames(void);
-
-//Knightmare- client compatibility option
-static void ClientCompatibilityFunc(void *unused)
-{
-	Cvar_SetValue("cl_servertrick", s_joinserver_compatibility_box.curvalue);
-}
 
 //<serverping> Added code for compute ping time of server broadcasted
 // The server is displayed like : 
@@ -141,8 +133,6 @@ static void JoinserverSetMenuItemValues(void)
 	s_joinserver_compatibility_box.curvalue = Cvar_VariableValue("cl_servertrick");
 }
 
-void NullCursorDraw(void *self) { }
-
 void SearchLocalGames(void)
 {
 	m_num_servers = 0;
@@ -161,6 +151,12 @@ void SearchLocalGames(void)
 	CL_PingServers_f();
 }
 
+//Knightmare- client compatibility option
+static void ClientCompatibilityFunc(void *unused)
+{
+	Cvar_SetValue("cl_servertrick", s_joinserver_compatibility_box.curvalue);
+}
+
 void SearchLocalGamesFunc(void *self)
 {
 	SearchLocalGames();
@@ -172,31 +168,31 @@ void JoinServer_MenuInit(void)
 
 	static const char *compatibility_names[] =
 	{
-		"version 56 (KMQuake 2)", // was 35
-		"version 34 (stock Quake 2)",
+		"Version 56 (KMQuake 2)", // was 35
+		"Version 34 (vanilla Quake 2)",
 		0
 	};
 
-	JoinserverSetMenuItemValues(); // init item values
+	JoinserverSetMenuItemValues(); // Init item values
 
-	s_joinserver_menu.x = SCREEN_WIDTH * 0.5 - 160;
-	s_joinserver_menu.y = SCREEN_HEIGHT * 0.5 - 80;
+	s_joinserver_menu.x = SCREEN_WIDTH * 0.5f - 160;
+	s_joinserver_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5f - 80;
 	s_joinserver_menu.nitems = 0;
 
 	// Init client compatibility menu option
-	s_joinserver_compat_title.generic.type = MTYPE_SEPARATOR;
-	s_joinserver_compat_title.generic.name = "Client protocol compatibility";
-	s_joinserver_compat_title.generic.x    = 200;
-	s_joinserver_compat_title.generic.y	   = y;
+	s_joinserver_compat_title.generic.type	= MTYPE_SEPARATOR;
+	s_joinserver_compat_title.generic.name	= "Client protocol compatibility";
+	s_joinserver_compat_title.generic.x		= 24 * MENU_FONT_SIZE; //mxd. Was 200
+	s_joinserver_compat_title.generic.y		= y;
 
-	s_joinserver_compatibility_box.generic.type = MTYPE_SPINCONTROL;
-	s_joinserver_compatibility_box.generic.name	= "";
-	s_joinserver_compatibility_box.generic.x	= -32;
-	s_joinserver_compatibility_box.generic.y	= y += MENU_LINE_SIZE;
-	s_joinserver_compatibility_box.generic.cursor_offset = -24;
-	s_joinserver_compatibility_box.generic.callback = ClientCompatibilityFunc;
-	s_joinserver_compatibility_box.generic.statusbar = "Set to version 34 to ping non-KMQuake 2 servers";
-	s_joinserver_compatibility_box.itemnames = compatibility_names;
+	s_joinserver_compatibility_box.generic.type				= MTYPE_SPINCONTROL;
+	s_joinserver_compatibility_box.generic.name				= "";
+	s_joinserver_compatibility_box.generic.x				= -4 * MENU_FONT_SIZE; //mxd. Was -32
+	s_joinserver_compatibility_box.generic.y				= y += MENU_LINE_SIZE;
+	s_joinserver_compatibility_box.generic.cursor_offset	= -24;
+	s_joinserver_compatibility_box.generic.callback			= ClientCompatibilityFunc;
+	s_joinserver_compatibility_box.generic.statusbar		= "Set to version 34 to ping non-KMQuake 2 servers";
+	s_joinserver_compatibility_box.itemnames				= compatibility_names;
 
 	s_joinserver_address_book_action.generic.type	= MTYPE_ACTION;
 	s_joinserver_address_book_action.generic.name	= "Address book";
@@ -210,13 +206,13 @@ void JoinServer_MenuInit(void)
 	s_joinserver_search_action.generic.flags	= QMF_LEFT_JUSTIFY;
 	s_joinserver_search_action.generic.x		= 0;
 	s_joinserver_search_action.generic.y		= y += MENU_LINE_SIZE;
-	s_joinserver_search_action.generic.callback = SearchLocalGamesFunc;
+	s_joinserver_search_action.generic.callback	= SearchLocalGamesFunc;
 	s_joinserver_search_action.generic.statusbar = "Search for servers";
 
-	s_joinserver_server_title.generic.type = MTYPE_SEPARATOR;
-	s_joinserver_server_title.generic.name = "Connect to...";
-	s_joinserver_server_title.generic.x    = 80;
-	s_joinserver_server_title.generic.y	   = y += 2 * MENU_LINE_SIZE;
+	s_joinserver_server_title.generic.type		= MTYPE_SEPARATOR;
+	s_joinserver_server_title.generic.name		= "Connect to...";
+	s_joinserver_server_title.generic.x			= 8 * MENU_FONT_SIZE;
+	s_joinserver_server_title.generic.y			= y += 2 * MENU_LINE_SIZE;
 
 	y += MENU_LINE_SIZE;
 	for (int i = 0; i < MAX_LOCAL_SERVERS; i++)
@@ -228,14 +224,14 @@ void JoinServer_MenuInit(void)
 		s_joinserver_server_actions[i].generic.flags	= QMF_LEFT_JUSTIFY;
 		s_joinserver_server_actions[i].generic.x		= 0;
 		s_joinserver_server_actions[i].generic.y		= y + i * MENU_LINE_SIZE;
-		s_joinserver_server_actions[i].generic.callback = JoinServerFunc;
+		s_joinserver_server_actions[i].generic.callback	= JoinServerFunc;
 		s_joinserver_server_actions[i].generic.statusbar = "Press ENTER to connect";
 	}
 
 	s_joinserver_back_action.generic.type		= MTYPE_ACTION;
-	s_joinserver_back_action.generic.name		= "Back to multiplayer";
+	s_joinserver_back_action.generic.name		= (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_MULTIPLAYER); //mxd
 	s_joinserver_back_action.generic.flags		= QMF_LEFT_JUSTIFY;
-	s_joinserver_back_action.generic.x			= 0;
+	s_joinserver_back_action.generic.x			= UI_CenteredX(&s_joinserver_back_action.generic, s_joinserver_menu.x); //mxd. Draw centered
 	s_joinserver_back_action.generic.y			= y += (MAX_LOCAL_SERVERS + 2) * MENU_LINE_SIZE;
 	s_joinserver_back_action.generic.callback	= UI_BackMenu;
 
