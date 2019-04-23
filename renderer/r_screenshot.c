@@ -126,7 +126,7 @@ void R_ScaledScreenshot(char *filename)
 	int saveshotwidth = 256;
 	int saveshotheight = saveshotwidth;
 
-	if (r_saveshotsize->value)
+	if (r_saveshotsize->value) //TODO: mxd. Always save HQ saveshots. Use screen resolution?
 	{
 		if (grab_width >= 1024)
 			saveshotwidth = 1024;

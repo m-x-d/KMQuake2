@@ -18,41 +18,40 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-//
-// console
-//
+// Console
 
-#ifndef CONSOLE_H
-#define CONSOLE_H
+#pragma once
 
-#define	NUM_CON_TIMES 8	// was 4
+#define	NUM_CON_TIMES	8 // was 4
 #define CON_TEXTSIZE	32768
+#define MAXCMDLINE		1024 // Max length of console command line
+							 // Increased from 256, fixes buffer overflow if vert res > 2048
+							 // Allows max vert res of 8192 for fullscreen console 
 
 typedef struct
 {
 	qboolean initialized;
 
 	char	text[CON_TEXTSIZE];
-	int		current;		// line where next message will be printed
-	int		x;				// offset in current line for next print
-	int		display;		// bottom of console displays this line
+	int		current;		// Line where next message will be printed
+	int		x;				// Offset in current line for next print
+	int		display;		// Bottom of console displays this line
 
-	int		ormask;			// high bit mask for colored characters
+	int		ormask;			// High bit mask for colored characters
 
-	int 	linewidth;		// characters across screen
-	int		totallines;		// total lines in console scrollback
+	int 	linewidth;		// Characters across screen
+	int		totallines;		// Total lines in console scrollback
 	int		backedit;
 
 	float	cursorspeed;
 
 	int		vislines;
 
-	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated
-									// for transparent notify lines
+	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated. Used to draw transparent notify lines
 } console_t;
 
 extern console_t con;
-extern qboolean halfconback;	// whether to draw Q3-style console
+//extern qboolean halfconback;	// whether to draw Q3-style console //mxd. Unused
 
 void Con_CheckResize(void);
 void Con_Init(void);
@@ -64,5 +63,3 @@ void Con_Clear_f(void);
 void Con_DrawNotify(void);
 void Con_ClearNotify(void);
 void Con_ToggleConsole_f(void);
-
-#endif // CONSOLE_H

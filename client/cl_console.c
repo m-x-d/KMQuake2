@@ -26,11 +26,9 @@ console_t con;
 
 cvar_t *con_notifytime;
 cvar_t *con_alpha;		// Knightare- Psychospaz's transparent console
-cvar_t *con_newconback;	// whether to use new console background
-cvar_t *con_oldconbar;	// whether to draw bottom bar on old console
-qboolean newconback_found = false; // whether to draw Q3-style console
-
-#define MAXCMDLINE 256
+cvar_t *con_newconback;	// Whether to use new console background
+cvar_t *con_oldconbar;	// Whether to draw bottom bar on old console
+qboolean newconback_found = false; // Whether to draw Q3-style console
 
 extern char key_lines[32][MAXCMDLINE];
 extern int edit_line;
@@ -54,7 +52,7 @@ void Con_ToggleConsole_f(void)
 	// Knightmare- allow disconnected menu
 	if (cls.state == ca_disconnected && cls.key_dest != key_menu)
 	{
-		// start the demo loop again
+		// Start the demo loop again
 		Cbuf_AddText("d1\n");
 		return;
 	}

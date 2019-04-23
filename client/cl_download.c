@@ -23,21 +23,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-extern	cvar_t *allow_download;
-extern	cvar_t *allow_download_players;
-extern	cvar_t *allow_download_models;
-extern	cvar_t *allow_download_sounds;
-extern	cvar_t *allow_download_maps;
-// Knightmare- whether to allow downloading 24-bit textures
-extern	cvar_t *allow_download_textures_24bit;
+extern cvar_t *allow_download;
+extern cvar_t *allow_download_players;
+extern cvar_t *allow_download_models;
+extern cvar_t *allow_download_sounds;
+extern cvar_t *allow_download_maps;
+extern cvar_t *allow_download_textures_24bit; // Knightmare- whether to allow downloading 24-bit textures
 
-int precache_check; // for autodownload of precache items
+int precache_check; // For autodownload of precache items
 int precache_spawncount;
 int precache_tex;
 int precache_model_skin;
 int precache_pak;	// Knightmare added
 
-byte *precache_model; // used for skin checking in alias models
+byte *precache_model; // Used for skin checking in alias models
 
 #define PLAYER_MULT 5
 
@@ -49,8 +48,7 @@ byte *precache_model; // used for skin checking in alias models
 #define OLD_ENV_CNT (OLD_CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
 #define OLD_TEXTURE_CNT (OLD_ENV_CNT + 13)
 
-
-static const char *env_suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
+#pragma region ======================= CL_RequestNextDownload
 
 void CL_InitFailedDownloadList(void);
 
@@ -68,7 +66,7 @@ void CL_RequestNextDownload(void)
 
 	// Clear failed download list
 	if (precache_check == CS_MODELS)
-		CL_InitFailedDownloadList ();
+		CL_InitFailedDownloadList();
 
 	// Knightmare- hack for connected to server using old protocol
 	// Changed config strings require different parsing
@@ -205,7 +203,7 @@ void CL_RequestNextDownload(void)
 						if (!CL_CheckOrDownloadFile(skinname))
 						{
 							precache_model_skin++;
-							return; // started a download
+							return; // Started a download
 						}
 
 						precache_model_skin++;
@@ -225,7 +223,7 @@ void CL_RequestNextDownload(void)
 							skinname = (char *)precache_model + LittleLong(md3mesh->ofs_skins) + (precache_model_skin - 1) * MD3_MAX_PATH;
 
 							// r1ch: spam warning for models that are broken
-							if (strchr (skinname, '\\'))
+							if (strchr(skinname, '\\'))
 								Com_Printf("Warning, model %s with incorrectly linked skin: %s\n", cl.configstrings[precache_check], skinname);
 							else if (strlen(skinname) > MD3_MAX_PATH - 1)
 								Com_Error(ERR_DROP, "Model %s has too long a skin path: %s", cl.configstrings[precache_check], skinname);
@@ -233,7 +231,7 @@ void CL_RequestNextDownload(void)
 							if (!CL_CheckOrDownloadFile(skinname))
 							{
 								precache_model_skin++;
-								return; // started a download
+								return; // Started a download
 							}
 
 							precache_model_skin++;
@@ -258,7 +256,7 @@ void CL_RequestNextDownload(void)
 						if (!CL_CheckOrDownloadFile(skinname))
 						{
 							precache_model_skin++;
-							return; // started a download
+							return; // Started a download
 						}
 
 						precache_model_skin++;
@@ -284,7 +282,7 @@ void CL_RequestNextDownload(void)
 		if (allow_download_sounds->value)
 		{
 			if (precache_check == cs_sounds)
-				precache_check++; // zero is blank
+				precache_check++; // Zero is blank
 
 			while (precache_check < cs_sounds + max_sounds && cl.configstrings[precache_check][0])
 			{
@@ -296,7 +294,7 @@ void CL_RequestNextDownload(void)
 
 				Com_sprintf(fn, sizeof(fn), "sound/%s", cl.configstrings[precache_check++]);
 				if (!CL_CheckOrDownloadFile(fn))
-					return; // started a download
+					return; // Started a download
 			}
 		}
 
@@ -306,19 +304,19 @@ void CL_RequestNextDownload(void)
 	if (precache_check >= cs_images && precache_check < cs_images + max_images)
 	{
 		if (precache_check == cs_images)
-			precache_check++; // zero is blank
+			precache_check++; // Zero is blank
 
 		while (precache_check < cs_images + max_images && cl.configstrings[precache_check][0])
 		{	
 			Com_sprintf(fn, sizeof(fn), "pics/%s.pcx", cl.configstrings[precache_check++]);
 			if (!CL_CheckOrDownloadFile(fn))
-				return; // started a download
+				return; // Started a download
 		}
 
 		precache_check = cs_playerskins;
 	}
 
-	// skins are special, since a player has three things to download:
+	// Skins are special, since a player has three things to download:
 	// model, weapon model and skin, so precache_check is now *3
 	if (precache_check >= cs_playerskins && precache_check < cs_playerskins + MAX_CLIENTS * PLAYER_MULT)
 	{
@@ -328,26 +326,25 @@ void CL_RequestNextDownload(void)
 			{
 				char model[MAX_QPATH], skin[MAX_QPATH], *p;
 
-				const int i = (precache_check - cs_playerskins)/PLAYER_MULT;
-				int n = (precache_check - cs_playerskins) % PLAYER_MULT;
+				const int playerindex = (precache_check - cs_playerskins) / PLAYER_MULT;
 
 				// from R1Q2- skip invalid player skins data
-				if (i >= cl.maxclients)
+				if (playerindex >= cl.maxclients)
 				{
 					precache_check = env_cnt;
 					continue;
 				}
 
-				if (!cl.configstrings[cs_playerskins + i][0])
+				if (!cl.configstrings[cs_playerskins + playerindex][0])
 				{
-					precache_check = cs_playerskins + (i + 1) * PLAYER_MULT;
+					precache_check = cs_playerskins + (playerindex + 1) * PLAYER_MULT;
 					continue;
 				}
 
-				if ((p = strchr(cl.configstrings[cs_playerskins + i], '\\')) != NULL)
+				if ((p = strchr(cl.configstrings[cs_playerskins + playerindex], '\\')) != NULL)
 					p++;
 				else
-					p = cl.configstrings[cs_playerskins + i];
+					p = cl.configstrings[cs_playerskins + playerindex];
 
 				Q_strncpyz(model, p, sizeof(model));
 				p = strchr(model, '/');
@@ -364,62 +361,61 @@ void CL_RequestNextDownload(void)
 					*skin = 0;
 				}
 
-				switch (n)
+				const int downloadtype = (precache_check - cs_playerskins) % PLAYER_MULT;
+
+				switch (downloadtype)
 				{
-				case 0: // model
+				case 0: // Model
 					Com_sprintf(fn, sizeof(fn), "players/%s/tris.md2", model);
 					if (!CL_CheckOrDownloadFile(fn))
 					{
-						precache_check = cs_playerskins + i * PLAYER_MULT + 1;
-						return; // started a download
+						precache_check = cs_playerskins + playerindex * PLAYER_MULT + 1;
+						return; // Started a download
 					}
-					n++;
 					/*FALL THROUGH*/
 
-				case 1: // weapon model
+				case 1: // Weapon model
 					Com_sprintf(fn, sizeof(fn), "players/%s/weapon.md2", model);
 					if (!CL_CheckOrDownloadFile(fn))
 					{
-						precache_check = cs_playerskins + i * PLAYER_MULT + 2;
-						return; // started a download
+						precache_check = cs_playerskins + playerindex * PLAYER_MULT + 2;
+						return; // Started a download
 					}
-					n++;
 					/*FALL THROUGH*/
 
-				case 2: // weapon skin
+				case 2: // Weapon skin
 					Com_sprintf(fn, sizeof(fn), "players/%s/weapon.pcx", model);
 					if (!CL_CheckOrDownloadFile(fn))
 					{
-						precache_check = cs_playerskins + i * PLAYER_MULT + 3;
-						return; // started a download
+						precache_check = cs_playerskins + playerindex * PLAYER_MULT + 3;
+						return; // Started a download
 					}
-					n++;
 					/*FALL THROUGH*/
 
-				case 3: // skin
+				case 3: // Skin
 					Com_sprintf(fn, sizeof(fn), "players/%s/%s.pcx", model, skin);
 					if (!CL_CheckOrDownloadFile(fn))
 					{
-						precache_check = cs_playerskins + i * PLAYER_MULT + 4;
-						return; // started a download
+						precache_check = cs_playerskins + playerindex * PLAYER_MULT + 4;
+						return; // Started a download
 					}
-					n++;
 					/*FALL THROUGH*/
 
 				case 4: // skin_i
 					Com_sprintf(fn, sizeof(fn), "players/%s/%s_i.pcx", model, skin);
 					if (!CL_CheckOrDownloadFile(fn))
 					{
-						precache_check = cs_playerskins + i * PLAYER_MULT + 5;
-						return; // started a download
+						precache_check = cs_playerskins + playerindex * PLAYER_MULT + 5;
+						return; // Started a download
 					}
-					// move on to next model
-					precache_check = cs_playerskins + (i + 1) * PLAYER_MULT;
+					// Move on to next model
+					precache_check = cs_playerskins + (playerindex + 1) * PLAYER_MULT;
+					break;
 				}
 			}
 		}
 
-		// precache phase completed
+		// Precache phase completed
 		precache_check = env_cnt;
 	}
 
@@ -431,7 +427,7 @@ void CL_RequestNextDownload(void)
 
 	if (precache_check == env_cnt)
 	{
-		if (Com_ServerState()) // if on local server, skip checking textures
+		if (Com_ServerState()) // If on local server, skip checking textures
 			precache_check = texture_cnt + 999;
 		else
 			precache_check = env_cnt + 1;
@@ -440,7 +436,7 @@ void CL_RequestNextDownload(void)
 
 		if (map_checksum != (unsigned)atoi(cl.configstrings[CS_MAPCHECKSUM]))
 		{
-			Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
+			Com_Error(ERR_DROP, "Local map version differs from server: '%i' != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
 			return;
 		}
 	}
@@ -451,12 +447,14 @@ void CL_RequestNextDownload(void)
 		{
 			while (precache_check < texture_cnt)
 			{
+				static const char *env_suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
+
 				const int n = precache_check++ - env_cnt - 1;
 				char* format = (n & 1 ? "env/%s%s.pcx" : "env/%s%s.tga"); //mxd
 				Com_sprintf(fn, sizeof(fn), format, cl.configstrings[CS_SKY], env_suf[n / 2]);
 				
 				if (!CL_CheckOrDownloadFile(fn))
-					return; // started a download
+					return; // Started a download
 			}
 		}
 
@@ -469,11 +467,11 @@ void CL_RequestNextDownload(void)
 		precache_tex = 0;
 	}
 
-	// from qcommon/cmodel.c
-	extern int			numtexinfo;
-	extern mapsurface_t	map_surfaces[];
+	// From qcommon/cmodel.c
+	extern int numtexinfo;
+	extern mapsurface_t map_surfaces[];
 
-	// confirm existance of .wal textures, download any that don't exist
+	// Confirm existance of .wal textures, download any that don't exist
 	if (precache_check == texture_cnt + 1)
 	{
 		if (allow_download->value && allow_download_maps->value)
@@ -482,7 +480,7 @@ void CL_RequestNextDownload(void)
 			{
 				Com_sprintf(fn, sizeof(fn), "textures/%s.wal", map_surfaces[precache_tex++].rname);
 				if (!CL_CheckOrDownloadFile(fn))
-					return; // started a download
+					return; // Started a download
 			}
 		}
 
@@ -490,7 +488,7 @@ void CL_RequestNextDownload(void)
 		precache_tex = 0;
 	}
 
-	// confirm existance of .tga textures, try to download any that don't exist
+	// Confirm existance of .tga textures, try to download any that don't exist
 	if (precache_check == texture_cnt + 2)
 	{
 		if (allow_download->value && allow_download_maps->value && allow_download_textures_24bit->value)
@@ -499,13 +497,15 @@ void CL_RequestNextDownload(void)
 			{
 				Com_sprintf(fn, sizeof(fn), "textures/%s.tga", map_surfaces[precache_tex++].rname);
 				if (!CL_CheckOrDownloadFile(fn))
-					return; // started a download
+					return; // Started a download
 			}
 		}
+
 		precache_check = texture_cnt + 3;
+		precache_tex = 0; //mxd. Was missing in KMQ2
 	}
 
-	// confirm existance of .png textures, try to download any that don't exist
+	// Confirm existance of .png textures, try to download any that don't exist
 	if (precache_check == texture_cnt + 3)
 	{
 		if (allow_download->value && allow_download_maps->value && allow_download_textures_24bit->value)
@@ -514,7 +514,7 @@ void CL_RequestNextDownload(void)
 			{
 				Com_sprintf(fn, sizeof(fn), "textures/%s.png", map_surfaces[precache_tex++].rname);
 				if (!CL_CheckOrDownloadFile(fn))
-					return; // started a download
+					return; // Started a download
 			}
 		}
 
@@ -522,7 +522,7 @@ void CL_RequestNextDownload(void)
 		precache_tex = 0;
 	}
 
-	// confirm existance of .jpg textures, try to download any that don't exist
+	// Confirm existance of .jpg textures, try to download any that don't exist
 	if (precache_check == texture_cnt + 4)
 	{
 		if (allow_download->value && allow_download_maps->value && allow_download_textures_24bit->value)
@@ -531,7 +531,7 @@ void CL_RequestNextDownload(void)
 			{
 				Com_sprintf(fn, sizeof(fn), "textures/%s.jpg", map_surfaces[precache_tex++].rname);
 				if (!CL_CheckOrDownloadFile(fn))
-					return; // started a download
+					return; // Started a download
 			}
 		}
 
@@ -541,7 +541,7 @@ void CL_RequestNextDownload(void)
 //ZOID
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
-	// pending downloads (possibly textures), let's wait here.
+	// Pending downloads (possibly textures), let's wait here.
 	if (CL_PendingHTTPDownloads())
 		return;
 #endif	// USE_CURL
@@ -554,8 +554,48 @@ void CL_RequestNextDownload(void)
 	cls.forcePacket = true;
 }
 
+#pragma endregion
 
-//=============================================================================
+#pragma region ======================= Failed downloads list
+
+// Knightmare- store the names of last downloads that failed
+#define NUM_FAILED_DOWNLOADS 1024 //mxd. Was 64
+char lastfaileddownload[NUM_FAILED_DOWNLOADS][MAX_OSPATH];
+static unsigned failedDlListIndex;
+
+void CL_InitFailedDownloadList(void)
+{
+	for (int i = 0; i < NUM_FAILED_DOWNLOADS; i++)
+		Com_sprintf(lastfaileddownload[i], sizeof(lastfaileddownload[i]), "\0");
+
+	failedDlListIndex = 0;
+}
+
+qboolean CL_CheckDownloadFailed(char *name) //TODO: use hashing, like in R_CheckImgFailed
+{
+	for (int i = 0; i < NUM_FAILED_DOWNLOADS; i++)
+		if (strlen(lastfaileddownload[i]) && !strcmp(name, lastfaileddownload[i]))
+			return true; // We already tried downloading this, server didn't have it
+
+	return false;
+}
+
+void CL_AddToFailedDownloadList(char *name)
+{
+	// Check if this name is already in the table
+	for (int i = 0; i < NUM_FAILED_DOWNLOADS; i++)
+		if (strlen(lastfaileddownload[i]) && !strcmp(name, lastfaileddownload[i]))
+			return;
+
+	// If it isn't already in the table, then we need to add it
+	Com_sprintf(lastfaileddownload[failedDlListIndex++], sizeof(lastfaileddownload[failedDlListIndex]), "%s", name);
+
+	// Wrap around to start of list
+	if (failedDlListIndex >= NUM_FAILED_DOWNLOADS)
+		failedDlListIndex = 0;
+}
+
+#pragma endregion
 
 void CL_DownloadFileName(char *dest, int destlen, char *fn)
 {
@@ -563,77 +603,8 @@ void CL_DownloadFileName(char *dest, int destlen, char *fn)
 	Com_sprintf(dest, destlen, "%s/%s", dir, fn);
 }
 
-
-// Knightmare- store the names of last downloads that failed
-#define NUM_FAIL_DLDS 64
-char lastfaileddownload[NUM_FAIL_DLDS][MAX_OSPATH];
-static unsigned failedDlListIndex;
-
-/*
-===============
-CL_InitFailedDownloadList
-===============
-*/
-void CL_InitFailedDownloadList (void)
-{
-	for (int i = 0; i < NUM_FAIL_DLDS; i++)
-		Com_sprintf(lastfaileddownload[i], sizeof(lastfaileddownload[i]), "\0");
-
-	failedDlListIndex = 0;
-}
-
-/*
-===============
-CL_CheckDownloadFailed
-===============
-*/
-qboolean CL_CheckDownloadFailed (char *name)
-{
-	for (int i = 0; i < NUM_FAIL_DLDS; i++)
-		if (strlen(lastfaileddownload[i]) && !strcmp(name, lastfaileddownload[i]))
-			return true; // we already tried downloading this, server didn't have it
-
-	return false;
-}
-
-/*
-===============
-CL_AddToFailedDownloadList
-===============
-*/
-void CL_AddToFailedDownloadList (char *name)
-{
-	qboolean	found = false;
-
-	// check if this name is already in the table
-	for (int i = 0; i < NUM_FAIL_DLDS; i++)
-	{
-		if (strlen(lastfaileddownload[i]) && !strcmp(name, lastfaileddownload[i]))
-		{
-			found = true;
-			break;
-		}
-	}
-
-	// if it isn't already in the table, then we need to add it
-	if (!found)
-	{
-		Com_sprintf(lastfaileddownload[failedDlListIndex++], sizeof(lastfaileddownload[failedDlListIndex]), "%s", name);
-
-		// wrap around to start of list
-		if (failedDlListIndex >= NUM_FAIL_DLDS)
-			failedDlListIndex = 0;
-	}	
-}
-
-/*
-===============
-CL_CheckOrDownloadFile
-
-Returns true if the file exists, otherwise it attempts to start a download from the server.
-===============
-*/
-qboolean CL_CheckOrDownloadFile (char *filename)
+// Returns true if the file exists, otherwise it attempts to start a download from the server.
+qboolean CL_CheckOrDownloadFile(char *filename)
 {
 	FILE *fp;
 	char name[MAX_OSPATH];
@@ -641,48 +612,48 @@ qboolean CL_CheckOrDownloadFile (char *filename)
 
 	if (strstr(filename, ".."))
 	{
-		Com_Printf("Refusing to download a path with \"..\": \"%s\"\n", filename);
+		Com_Printf("Refusing to download a file with relative path: \"%s\"\n", filename);
 		return true;
 	}
 
-	if (FS_LoadFile(filename, NULL) != -1)
-		return true; // it exists, no need to download
+	if (FS_FileExists(filename)) //mxd. FS_LoadFile -> FS_FileExists
+		return true; // It exists, no need to download
 
-	// don't try again to download a file that just failed
+	// Don't try again to download a file that just failed
 	if (CL_CheckDownloadFailed(filename))
 		return true;
 
-	// don't download a .png texture which already has a .tga counterpart
-	const int len = strlen(filename); 
+	// Don't download a .png texture which already has a .tga counterpart
+	const int len = strlen(filename);
 	Q_strncpyz(s, filename, sizeof(s));
-	if (strstr(s, "textures/") && !strcmp(s + len - 4, ".png")) // look if we have a .png texture 
+	if (strstr(s, "textures/") && !strcmp(s + len - 4, ".png")) // Look if we have a .png texture 
 	{
-		// replace extension
-		s[len - 3] = 't'; 
-		s[len - 2] = 'g'; 
-		s[len - 1] = 'a'; 
-
-		if (FS_LoadFile(s, NULL) != -1)	// check for .tga counterpart
-			return true;
-	}
-
-	// don't download a .jpg texture which already has a .tga counterpart
-	if (strstr(s, "textures/") && !strcmp(s + len - 4, ".jpg")) // look if we have a .jpg texture 
-	{ 
-		// replace extension 
+		// Replace extension
 		s[len - 3] = 't';
 		s[len - 2] = 'g';
 		s[len - 1] = 'a';
 
-		if (FS_LoadFile(s, NULL) != -1)	// check for .tga counterpart
+		if (FS_FileExists(s)) // Check for .tga counterpart //mxd. FS_LoadFile -> FS_FileExists
+			return true;
+	}
+
+	// Don't download a .jpg texture which already has a .tga or .png counterpart
+	if (strstr(s, "textures/") && !strcmp(s + len - 4, ".jpg")) // Look if we have a .jpg texture 
+	{ 
+		// Replace extension 
+		s[len - 3] = 't';
+		s[len - 2] = 'g';
+		s[len - 1] = 'a';
+
+		if (FS_FileExists(s)) // Check for .tga counterpart //mxd. FS_LoadFile -> FS_FileExists
 			return true;
 
-		// replace extension 
+		// Replace extension 
 		s[len - 3] = 'p';
 		s[len - 2] = 'n';
 		s[len - 1] = 'g';
 
-		if (FS_LoadFile(s, NULL) != -1)	// check for .png counterpart
+		if (FS_FileExists(s)) // Check for .png counterpart //mxd. FS_LoadFile -> FS_FileExists
 			return true;
 	}
 
@@ -699,23 +670,22 @@ qboolean CL_CheckOrDownloadFile (char *filename)
 
 	Q_strncpyz(cls.downloadname, filename, sizeof(cls.downloadname));
 
-	// download to a temp name, and only rename to the real name when done, so if interrupted a runt file wont be left
+	// Download to a temp name, and only rename to the real name when done, so if interrupted a runt file won't be left
 	COM_StripExtension(cls.downloadname, cls.downloadtempname);
 	Q_strncatz(cls.downloadtempname, ".tmp", sizeof(cls.downloadtempname));
 
-//ZOID
-	// check to see if we already have a tmp for this file, if so, try to resume / open the file if not opened yet
+	//ZOID. Check to see if we already have a tmp for this file, if so, try to resume / open the file if not opened yet
 	CL_DownloadFileName(name, sizeof(name), cls.downloadtempname);
 
 	fp = fopen(name, "r+b");
-	if (fp) // it exists
+	if (fp) // It exists
 	{
 		fseek(fp, 0, SEEK_END);
 		const int flen = ftell(fp);
 
 		cls.download = fp;
 
-		// give the server an offset to start the download
+		// Give the server an offset to start the download
 		Com_Printf("Resuming %s\n", cls.downloadname);
 		MSG_WriteByte(&cls.netchan.message, clc_stringcmd);
 		MSG_WriteString(&cls.netchan.message, va("download %s %i", cls.downloadname, flen));
@@ -733,14 +703,8 @@ qboolean CL_CheckOrDownloadFile (char *filename)
 	return false;
 }
 
-/*
-===============
-CL_Download_f
-
-Request a download from the server
-===============
-*/
-void CL_Download_f (void)
+// Request a download from the server
+void CL_Download_f(void)
 {
 	char filename[MAX_OSPATH];
 
@@ -754,13 +718,13 @@ void CL_Download_f (void)
 
 	if (strstr(filename, ".."))
 	{
-		Com_Printf("Refusing to download a path with ..\n");
+		Com_Printf("Refusing to download a file with relative path.\n");
 		return;
 	}
 
-	if (FS_LoadFile(filename, NULL) != -1)
+	if (FS_FileExists(filename)) //mxd. FS_LoadFile -> FS_FileExists
 	{
-		// it exists, no need to download
+		// It exists, no need to download
 		Com_Printf("File already exists.\n");
 		return;
 	}
@@ -768,7 +732,7 @@ void CL_Download_f (void)
 	Q_strncpyz(cls.downloadname, filename, sizeof(cls.downloadname));
 	Com_Printf("Downloading %s\n", cls.downloadname);
 
-	// download to a temp name, and only rename to the real name when done, so if interrupted a runt file wont be left
+	// Download to a temp name, and only rename to the real name when done, so if interrupted a runt file wont be left
 	COM_StripExtension(cls.downloadname, cls.downloadtempname);
 	Q_strncatz(cls.downloadtempname, ".tmp", sizeof(cls.downloadtempname));
 
@@ -780,16 +744,10 @@ void CL_Download_f (void)
 
 //=============================================================================
 
-/*
-=====================
-CL_ParseDownload
-
-A download message has been received from the server
-=====================
-*/
-void CL_ParseDownload (void)
+// A download message has been received from the server
+void CL_ParseDownload(void)
 {
-	// read the data
+	// Read the data
 	const int size = MSG_ReadShort(&net_message);
 	const int percent = MSG_ReadByte(&net_message);
 	if (size == -1)
@@ -801,7 +759,7 @@ void CL_ParseDownload (void)
 
 		if (cls.download)
 		{
-			// if here, we tried to resume a file but the server said no
+			// If here, we tried to resume a file but the server said no
 			fclose(cls.download);
 			cls.download = NULL;
 		}
@@ -810,12 +768,12 @@ void CL_ParseDownload (void)
 		return;
 	}
 
-	// open the file if not opened yet
+	// Open the file if not opened yet
 	if (!cls.download)
 	{
 		char name[MAX_OSPATH];
 
-		CL_Download_Reset_KBps_counter();	// Knightmare- for KB/s counter
+		CL_Download_Reset_KBps_counter(); // Knightmare- for KB/s counter
 		CL_DownloadFileName(name, sizeof(name), cls.downloadtempname);
 		FS_CreatePath(name);
 
@@ -835,7 +793,7 @@ void CL_ParseDownload (void)
 
 	if (percent != 100)
 	{
-		// request next block
+		// Request next block
 		// change display routines by zoid
 		CL_Download_Calculate_KBps(size, 0); // Knightmare- for KB/s counter
 		cls.downloadpercent = percent;
@@ -856,13 +814,13 @@ void CL_ParseDownload (void)
 		CL_DownloadFileName(newn, sizeof(newn), cls.downloadname);
 		const int r = rename(oldn, newn);
 		if (r)
-			Com_Printf("failed to rename.\n");
+			Com_Printf("Failed to rename downloaded file '%s'.\n", oldn);
 
 		cls.download = NULL;
 		cls.downloadpercent = 0;
 
 		// Add new pk3s to search paths, hack by Jay Dolan
-		if (strstr(newn, ".pk3")) 
+		if (strstr(newn, ".pk3"))
 			FS_AddPK3File(newn);
 
 		// Get another file if needed
@@ -870,9 +828,7 @@ void CL_ParseDownload (void)
 	}
 }
 
-//=============================================================================
-
-// Download speed counter
+#pragma region ======================= Download speed counter
 
 typedef struct
 {
@@ -884,7 +840,7 @@ typedef struct
 	float	startTime;
 } dlSpeedInfo_t;
 
-dlSpeedInfo_t	dlSpeedInfo;
+static dlSpeedInfo_t dlSpeedInfo;
 
 
 void CL_Download_Reset_KBps_counter(void)
@@ -917,3 +873,5 @@ void CL_Download_Calculate_KBps(int byteDistance, int totalSize)
 
 	dlSpeedInfo.prevTime = cls.realtime;
 }
+
+#pragma endregion

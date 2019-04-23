@@ -451,7 +451,7 @@ typedef struct walsize_s
 	int		height;
 } walsize_t;
 
-#define NUM_WALSIZES 512 //mxd. Was 256
+#define NUM_WALSIZES 1024 //mxd. Was 256
 walsize_t walSizeList[NUM_WALSIZES];
 static unsigned walSizeListIndex;
 

@@ -21,11 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-/*
-================
-CL_ParseInventory
-================
-*/
 void CL_ParseInventory(void)
 {
 	for (int i = 0; i < MAX_ITEMS; i++)
@@ -33,12 +28,7 @@ void CL_ParseInventory(void)
 }
 
 
-/*
-================
-Inv_DrawString
-================
-*/
-void Hud_DrawString(int x, int y, const char *string, int alpha, qboolean isStatusBar);
+extern void Hud_DrawString(int x, int y, const char *string, int alpha, qboolean isStatusBar);
 
 void Inv_DrawString(int x, int y, char *string)
 {
@@ -51,12 +41,7 @@ void SetStringHighBit(char *s)
 		*s++ |= 128;
 }
 
-/*
-================
-CL_DrawInventory
-================
-*/
-#define DISPLAY_ITEMS	17
+#define DISPLAY_ITEMS 17
 
 void CL_DrawInventory(void)
 {
@@ -81,12 +66,11 @@ void CL_DrawInventory(void)
 		}
 	}
 
-	// determine scroll point
+	// Determine scroll point
 	int top = selected_num - DISPLAY_ITEMS / 2;
 	if (num - top < DISPLAY_ITEMS)
 		top = num - DISPLAY_ITEMS;
-	if (top < 0)
-		top = 0;
+	top = max(top, 0);
 
 	int x = SCREEN_WIDTH / 2 - 128;
 	int y = SCREEN_HEIGHT / 2 - 116;
@@ -106,12 +90,12 @@ void CL_DrawInventory(void)
 	{
 		const int item = index[i];
 
-		// search for a binding
+		// Search for a binding
 		const int cs_items = (LegacyProtocol() ? OLD_CS_ITEMS : CS_ITEMS); // Knightmare- BIG UGLY HACK for connected to server using old protocol. Changed config strings require different parsing
 		Com_sprintf(binding, sizeof(binding), "use %s", cl.configstrings[cs_items + item]);
 
 		char *bind = "";
-		for (int j = 0; j < 256; j++)
+		for (int j = 0; j < NUM_KEYBINDINGS; j++)
 		{
 			if (keybindings[j] && !Q_stricmp(keybindings[j], binding))
 			{
@@ -121,7 +105,7 @@ void CL_DrawInventory(void)
 		}
 
 		char *text;
-		if (item == selected) // draw a blinky cursor by the selected item
+		if (item == selected) // Draw a blinky cursor by the selected item
 			text = S_COLOR_BOLD">"S_COLOR_ITALIC"%3s %3i %7s";
 		else 
 			text = " "S_COLOR_BOLD S_COLOR_ALT"%3s %3i %7s";

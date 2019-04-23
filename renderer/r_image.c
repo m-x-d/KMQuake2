@@ -29,7 +29,7 @@ int		base_textureid; // gltextures[i] = base_textureid + i
 static byte			 intensitytable[256];
 static unsigned char gammatable[256];
 
-cvar_t		*r_intensity;
+cvar_t *r_intensity;
 
 unsigned	d_8to24table[256];
 float		d_8to24tablef[256][3]; //Knightmare- MrG's Vertex array stuff
@@ -779,7 +779,7 @@ nonscrap:
 }
 
 // Store the names of last images that failed to load
-#define NUM_FAIL_IMAGES 512 //mxd. Was 256
+#define NUM_FAIL_IMAGES 1024 //mxd. Was 256
 static long failedImageHashes[NUM_FAIL_IMAGES];
 static unsigned failedImgListIndex;
 

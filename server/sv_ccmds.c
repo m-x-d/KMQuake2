@@ -428,7 +428,6 @@ void SV_ReadServerFile (void)
 {
 	fileHandle_t f;
 	char fileName[MAX_OSPATH];
-	char varName[128];
 	char string[128];
 	char comment[32];
 	char mapcmd[MAX_TOKEN_CHARS];
@@ -452,7 +451,8 @@ void SV_ReadServerFile (void)
 	// Read all CVAR_LATCH cvars. These will be things like coop, skill, deathmatch, etc
 	while (true)
 	{
-		if (!FS_FRead(varName, 1, sizeof(varName), f))
+		char varName[128];
+		if (!FS_Read(varName, sizeof(varName), f)) //mxd. Was FS_FRead. Why?
 			break;
 
 		FS_Read(string, sizeof(string), f);

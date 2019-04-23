@@ -451,10 +451,10 @@ void CL_SendConnectPacket(void)
 	Netchan_OutOfBandPrint(NS_CLIENT, adr, "connect %i %i %i \"%s\"\n", protocolversion, port, cls.challenge, Cvar_Userinfo());
 }
 
-void CL_ForcePacket(void)
+/*void CL_ForcePacket(void) //mxd. Never used
 {
 	cls.forcePacket = true;
-}
+}*/
 
 // Resend a connect message if the last one has timed out
 void CL_CheckForResend(void)
@@ -521,7 +521,6 @@ void CL_Connect_f(void)
 // Send the rest of the command line over as an unconnected command.
 void CL_Rcon_f(void)
 {
-	char message[1024];
 	netadr_t to;
 
 	if (!rcon_client_password->string)
@@ -530,14 +529,9 @@ void CL_Rcon_f(void)
 		return;
 	}
 
-	message[0] = (char)255;
-	message[1] = (char)255;
-	message[2] = (char)255;
-	message[3] = (char)255;
-	message[4] = 0;
-
 	NET_Config(true); // Allow remote
 
+	char message[1024] = { 255, 255, 255, 255, 0 };
 	Q_strncatz(message, "rcon ", sizeof(message));
 	Q_strncatz(message, rcon_client_password->string, sizeof(message));
 	Q_strncatz(message, " ", sizeof(message));
@@ -598,7 +592,7 @@ void CL_Disconnect(void)
 	{
 		const int time = Sys_Milliseconds() - cl.timedemo_start;
 		if (time > 0)
-			Com_Printf("%i frames, %3.1f seconds: %3.1f fps\n", cl.timedemo_frames, time / 1000.0, cl.timedemo_frames * 1000.0 / time);
+			Com_Printf("%i frames, %3.1f seconds: %3.1f fps\n", cl.timedemo_frames, time / 1000.0f, cl.timedemo_frames * 1000.0f / time);
 	}
 
 	VectorClear(cl.refdef.blend);
@@ -849,7 +843,7 @@ void CL_AACSkey_f(void)
 void CL_ConnectionlessPacket(void)
 {
 	MSG_BeginReading(&net_message);
-	MSG_ReadLong(&net_message);	// skip the -1
+	MSG_ReadLong(&net_message); // Skip the -1
 
 	char *s = MSG_ReadStringLine(&net_message);
 	Cmd_TokenizeString(s, false);
@@ -862,7 +856,7 @@ void CL_ConnectionlessPacket(void)
 	{
 		if (cls.state == ca_connected)
 		{
-			Com_Printf("Dup connect received.  Ignored.\n");
+			Com_Printf("Dup connect received. Ignored.\n");
 			return;
 		}
 
@@ -873,7 +867,7 @@ void CL_ConnectionlessPacket(void)
 		for (int i = 1; i < Cmd_Argc(); i++)
 		{
 			char *p = Cmd_Argv(i);
-			if ( !strncmp(p, "dlserver=", 9) )
+			if (!strncmp(p, "dlserver=", 9))
 			{
 #ifdef USE_CURL
 				p += 9;
@@ -909,7 +903,7 @@ void CL_ConnectionlessPacket(void)
 	{
 		if (!NET_IsLocalAddress(net_from))
 		{
-			Com_Printf("Command packet from remote host.  Ignored.\n");
+			Com_Printf("Command packet from remote host. Ignored.\n");
 			return;
 		}
 
@@ -956,11 +950,11 @@ void CL_ConnectionlessPacket(void)
 }
 
 // A vain attempt to help bad TCP stacks that cause problems when they overflow
-void CL_DumpPackets(void)
+/*void CL_DumpPackets(void)
 {
 	while (NET_GetPacket(NS_CLIENT, &net_from, &net_message))
 		Com_Printf("dumnping a packet\n");
-}
+}*/
 
 void CL_ReadPackets(void)
 {
@@ -978,14 +972,14 @@ void CL_ReadPackets(void)
 
 		if (net_message.cursize < 8)
 		{
-			Com_Printf("%s: Runt packet\n", NET_AdrToString(net_from));
+			Com_Printf("%s: runt packet\n", NET_AdrToString(net_from));
 			continue;
 		}
 
 		// Packet from server
 		if (!NET_CompareAdr(net_from, cls.netchan.remote_address))
 		{
-			Com_DPrintf ("%s:sequenced packet without connection\n", NET_AdrToString(net_from));
+			Com_DPrintf ("%s: sequenced packet without connection\n", NET_AdrToString(net_from));
 			continue;
 		}
 
@@ -1014,31 +1008,31 @@ void CL_ReadPackets(void)
 
 void CL_FixUpGender(void)
 {
-	char *p;
-	char sk[80];
+	if (!gender_auto->integer)
+		return;
 
-	if (gender_auto->value)
+	if (gender->modified)
 	{
-		if (gender->modified)
-		{
-			// Was set directly, don't override the user
-			gender->modified = false;
-			return;
-		}
-
-		strncpy(sk, skin->string, sizeof(sk) - 1);
-		if ((p = strchr(sk, '/')) != NULL)
-			*p = 0;
-
-		if (Q_stricmp(sk, "male") == 0 || Q_stricmp(sk, "cyborg") == 0)
-			Cvar_Set("gender", "male");
-		else if (Q_stricmp(sk, "female") == 0 || Q_stricmp(sk, "crackhor") == 0)
-			Cvar_Set("gender", "female");
-		else
-			Cvar_Set("gender", "none");
-
+		// Was set directly, don't override the user
 		gender->modified = false;
+		return;
 	}
+
+	char sk[80];
+	strncpy(sk, skin->string, sizeof(sk) - 1);
+	char *p = strchr(sk, '/');
+
+	if (p != NULL)
+		*p = 0;
+
+	if (Q_stricmp(sk, "male") == 0 || Q_stricmp(sk, "cyborg") == 0)
+		Cvar_Set("gender", "male");
+	else if (Q_stricmp(sk, "female") == 0 || Q_stricmp(sk, "crackhor") == 0)
+		Cvar_Set("gender", "female");
+	else
+		Cvar_Set("gender", "none");
+
+	gender->modified = false;
 }
 
 void CL_Userinfo_f(void)
@@ -1065,7 +1059,6 @@ extern int precache_pak;	// Knightmare added
 void CL_ResetPrecacheCheck(void)
 {
 	precache_check = CS_MODELS;
-//	precache_spawncount = atoi(Cmd_Argv(1));
 	precache_model = 0;
 	precache_model_skin = 0;
 	precache_pak = 0; // Knightmare added
@@ -1077,7 +1070,7 @@ void CL_Precache_f(void)
 	// Yet another hack to let old demos work the old precache sequence
 	if (Cmd_Argc() < 2)
 	{
-		unsigned map_checksum; // for detecting cheater maps
+		unsigned map_checksum; // For detecting cheater maps
 
 		CM_LoadMap(cl.configstrings[CS_MODELS + 1], true, &map_checksum);
 		CL_RegisterSounds();
@@ -1116,7 +1109,7 @@ void CL_DeleteLoc_f(void)
 	CL_LocDelete();
 }
 
-void CL_SaveLoc_f (void)
+void CL_SaveLoc_f(void)
 {
 	CL_LocWrite();
 }
@@ -1251,7 +1244,7 @@ void CL_InitLocal(void)
 	cl_lightlevel = Cvar_Get("r_lightlevel", "0", 0);
 
 	//
-	// userinfo
+	// Userinfo
 	//
 	info_password = Cvar_Get("password", "", CVAR_USERINFO);
 	info_spectator = Cvar_Get("spectator", "0", CVAR_USERINFO);
@@ -1286,7 +1279,7 @@ void CL_InitLocal(void)
 #endif	// USE_CURL
 
 	//
-	// register our commands
+	// Register our commands
 	//
 	Cmd_AddCommand("cmd", CL_ForwardToServer_f);
 	Cmd_AddCommand("pause", CL_Pause_f);
@@ -1593,7 +1586,7 @@ void CL_Frame_Async(int msec)
 				{
 					lasttimecalled = Sys_Milliseconds();
 					if (log_stats_file)
-						fprintf( log_stats_file, "0\n" );
+						fprintf(log_stats_file, "0\n");
 				}
 				else
 				{

@@ -18,13 +18,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#ifndef KEYS_H
-#define KEYS_H
+#pragma once
 
-//
-// these are the key numbers that should be passed to Key_Event
-//
+#define NUM_KEYBINDINGS 256 //mxd
 
+// These are the key numbers that should be passed to Key_Event
 typedef enum
 {
 	K_TAB		= 9,
@@ -32,9 +30,7 @@ typedef enum
 	K_ESCAPE	= 27,
 	K_SPACE		= 32,
 
-//
-// normal keys should be passed as lowercased ascii
-//
+	// Normal keys should be passed as lowercased ascii
 	K_BACKSPACE	= 127,
 	K_UPARROW,
 	K_DOWNARROW,
@@ -86,26 +82,20 @@ typedef enum
 
 	K_PAUSE		= 255,
 
-//
-// mouse buttons generate virtual keys
-//
+	// Mouse buttons generate virtual keys
 	K_MOUSE1	= 200,
 	K_MOUSE2,
 	K_MOUSE3,
 	K_MOUSE4,
 	K_MOUSE5,
 
-//
-// joystick buttons
-//
+	// Joystick buttons
 	K_JOY1,
 	K_JOY2,
 	K_JOY3,
 	K_JOY4,
 
-//
-// aux keys are for multi-buttoned joysticks to generate so they can use the normal binding process
-//
+	// Aux keys are for multi-buttoned joysticks to generate so they can use the normal binding process
 	K_AUX1,	
 	K_AUX2,
 	K_AUX3,
@@ -143,8 +133,8 @@ typedef enum
 	K_MWHEELUP,
 } keynum_t;
 
-extern char *keybindings[256];
-extern int key_repeats[256];
+extern char *keybindings[NUM_KEYBINDINGS];
+extern int key_repeats[NUM_KEYBINDINGS];
 
 extern int anykeydown;
 extern char chat_buffer[];
@@ -158,5 +148,3 @@ void Key_WriteBindings(FILE *f);
 void Key_SetBinding(int keynum, char *binding);
 void Key_ClearStates(void);
 int Key_GetKey(void);
-
-#endif // KEYS_H
