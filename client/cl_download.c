@@ -32,7 +32,6 @@ extern cvar_t *allow_download_textures_24bit; // Knightmare- whether to allow do
 
 int precache_check; // For autodownload of precache items
 int precache_spawncount;
-int precache_tex;
 int precache_model_skin;
 int precache_pak;	// Knightmare added
 
@@ -420,7 +419,7 @@ void CL_RequestNextDownload(void)
 	}
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
-	// pending downloads (possibly the map), let's wait here.
+	// Pending downloads (possibly the map), let's wait here.
 	if (CL_PendingHTTPDownloads())
 		return;
 #endif	// USE_CURL
@@ -460,6 +459,9 @@ void CL_RequestNextDownload(void)
 
 		precache_check = texture_cnt;
 	}
+
+	// Keeps track of already checked items in download texture blocks between CL_RequestNextDownload() calls.
+	static int precache_tex = 0; //mxd. Made local
 
 	if (precache_check == texture_cnt)
 	{
