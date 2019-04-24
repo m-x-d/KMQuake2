@@ -21,39 +21,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "server.h"
 #include "../client/ref.h"
 
+#pragma region ======================= OPERATOR CONSOLE COMMANDS
+// These commands can only be entered from stdin or by a remote operator datagram
 
-/*
-===============================================================================
-
-OPERATOR CONSOLE ONLY COMMANDS
-
-These commands can only be entered from stdin or by a remote operator datagram
-===============================================================================
-*/
-
-/*
-====================
-SV_SetMaster_f
-
-Specify a list of master servers
-====================
-*/
-void SV_SetMaster_f (void)
+// Specify a list of master servers
+void SV_SetMaster_f(void)
 {
-	// only dedicated servers send heartbeats
+	// Only dedicated servers send heartbeats
 	if (!dedicated->value)
 	{
 		Com_Printf("Only dedicated servers use masters.\n");
 		return;
 	}
 
-	// make sure the server is listed public
+	// Make sure the server is listed public
 	Cvar_Set("public", "1"); // Vic's fix
 
 	for (int i = 1; i < MAX_MASTERS; i++)
 		memset(&master_adr[i], 0, sizeof(master_adr[i]));
 
-	int slot = 1; // slot 0 will always contain the id master
+	int slot = 1; // Slot 0 will always contain the id master
 	for (int i = 1; i < Cmd_Argc(); i++)
 	{
 		if (slot == MAX_MASTERS)
@@ -79,22 +66,15 @@ void SV_SetMaster_f (void)
 	svs.last_heartbeat = -9999999;
 }
 
-
-/*
-==================
-SV_SetPlayer
-
-Sets sv_client and sv_player to the player with idnum Cmd_Argv(1)
-==================
-*/
-qboolean SV_SetPlayer (void)
+// Sets sv_client and sv_player to the player with idnum Cmd_Argv(1)
+qboolean SV_SetPlayer(void)
 {
 	if (Cmd_Argc() < 2)
 		return false;
 
 	char *s = Cmd_Argv(1);
 
-	// numeric values are just slot numbers
+	// Numeric values are just slot numbers
 	if (s[0] >= '0' && s[0] <= '9')
 	{
 		const int idnum = atoi(Cmd_Argv(1));
@@ -134,26 +114,16 @@ qboolean SV_SetPlayer (void)
 	return false;
 }
 
+#pragma endregion
 
-/*
-===============================================================================
+#pragma region ======================= SAVEGAME FILES
 
-SAVEGAME FILES
-
-===============================================================================
-*/
 void R_GrabScreen(void); // Knightmare- screenshots for savegames
 void R_ScaledScreenshot(char *filename); // Knightmare- screenshots for savegames
 void R_FreePic(char *name); // Knightmare- unregisters an image
 
-/*
-=====================
-SV_WipeSavegame
-
-Delete save/<XXX>/
-=====================
-*/
-void SV_WipeSavegame (char *savename)
+// Delete save/<XXX>/
+void SV_WipeSavegame(char *savename)
 {
 	char name[MAX_OSPATH];
 
@@ -187,13 +157,7 @@ void SV_WipeSavegame (char *savename)
 	Sys_FindClose();
 }
 
-
-/*
-================
-CopyFile
-================
-*/
-void CopyFile (char *src, char *dst)
+void CopyFile(char *src, char *dst)
 {
 	Com_DPrintf("CopyFile (%s, %s)\n", src, dst);
 
@@ -222,18 +186,12 @@ void CopyFile (char *src, char *dst)
 	fclose(f2);
 }
 
-
-/*
-================
-SV_CopySaveGame
-================
-*/
-void SV_CopySaveGame (char *src, char *dst)
+void SV_CopySaveGame(char *src, char *dst)
 {
 	Com_DPrintf("SV_CopySaveGame(%s, %s)\n", src, dst);
 	SV_WipeSavegame(dst);
 
-	// copy the savegame over
+	// Copy the savegame over
 	char name[MAX_OSPATH];
 	char name2[MAX_OSPATH];
 	Com_sprintf(name,  sizeof(name),  "%s/save/%s/server.ssv", FS_Gamedir(), src);
@@ -246,7 +204,7 @@ void SV_CopySaveGame (char *src, char *dst)
 	CopyFile(name, name2);
 
 	// Knightmare- copy screenshot
-	if (strcmp(dst, "kmq2save0")) // no screenshot for start of level autosaves
+	if (strcmp(dst, "kmq2save0")) // No screenshot for start of level autosaves
 	{
 		Com_sprintf(name,  sizeof(name),  "%s/save/%s/shot.jpg", FS_Gamedir(), src);
 		Com_sprintf(name2, sizeof(name2), "%s/save/%s/shot.jpg", FS_Gamedir(), dst);
@@ -263,7 +221,7 @@ void SV_CopySaveGame (char *src, char *dst)
 		Com_sprintf(name2, sizeof(name2), "%s/save/%s/%s", FS_Gamedir(), dst, found + len);
 		CopyFile(name, name2);
 
-		// change sav to sv2
+		// Change sav to sv2
 		int l = strlen(name);
 		Q_strncpyz(name + l - 3, "sv2", sizeof(name) - l + 3);
 		l = strlen(name2);
@@ -276,13 +234,7 @@ void SV_CopySaveGame (char *src, char *dst)
 	Sys_FindClose();
 }
 
-
-/*
-==============
-SV_WriteLevelFile
-==============
-*/
-void SV_WriteLevelFile (void)
+void SV_WriteLevelFile(void)
 {
 	Com_DPrintf("SV_WriteLevelFile()\n");
 
@@ -303,15 +255,9 @@ void SV_WriteLevelFile (void)
 	ge->WriteLevel(name);
 }
 
+extern void CM_ReadPortalState(fileHandle_t f);
 
-void CM_ReadPortalState (fileHandle_t f);
-/*
-==============
-SV_ReadLevelFile
-
-==============
-*/
-void SV_ReadLevelFile (void)
+void SV_ReadLevelFile(void)
 {
 	Com_DPrintf("SV_ReadLevelFile()\n");
 
@@ -333,12 +279,7 @@ void SV_ReadLevelFile (void)
 	ge->ReadLevel(name);
 }
 
-/*
-==============
-SV_WriteServerFile
-==============
-*/
-void SV_WriteServerFile (qboolean autosave)
+void SV_WriteServerFile(qboolean autosave)
 {
 	char fileName[MAX_OSPATH];
 	char varName[128];
@@ -402,14 +343,9 @@ void SV_WriteServerFile (qboolean autosave)
 	ge->WriteGame(fileName, autosave);
 }
 
-/*
-==============
-SV_WriteScreenshot
-==============
-*/
-void SV_WriteScreenshot (void)
+void SV_WriteScreenshot(void)
 {
-	if (dedicated->value) // can't do this in dedicated mode
+	if (dedicated->integer) // can't do this in dedicated mode
 		return;
 
 	Com_DPrintf("SV_WriteScreenshot()\n");
@@ -419,12 +355,7 @@ void SV_WriteScreenshot (void)
 	R_ScaledScreenshot(name);
 }
 
-/*
-==============
-SV_ReadServerFile
-==============
-*/
-void SV_ReadServerFile (void)
+void SV_ReadServerFile(void)
 {
 	fileHandle_t f;
 	char fileName[MAX_OSPATH];
@@ -472,18 +403,12 @@ void SV_ReadServerFile (void)
 	ge->ReadGame(fileName);
 }
 
+#pragma endregion
 
-//=========================================================
+#pragma region ======================= DEMOMAP / GAMEMAP / MAP CONSOLE COMMANDS
 
-
-/*
-==================
-SV_DemoMap_f
-
-Puts the server in demo mode on a specific map/cinematic
-==================
-*/
-void SV_DemoMap_f (void)
+// Puts the server in demo mode on a specific map/cinematic
+void SV_DemoMap_f(void)
 {
 	// Knightmare- force off DM, CTF mode
 	Cvar_SetValue("ttctf", 0);
@@ -493,24 +418,15 @@ void SV_DemoMap_f (void)
 	SV_Map(true, Cmd_Argv(1), false);
 }
 
-/*
-==================
-SV_GameMap_f
+// Saves the state of the map just being exited and goes to a new map.
 
-Saves the state of the map just being exited and goes to a new map.
+// If the initial character of the map string is '*', the next map is
+// in a new unit, so the current savegame directory is cleared of map files.
 
-If the initial character of the map string is '*', the next map is
-in a new unit, so the current savegame directory is cleared of
-map files.
+// Example: *inter.cin+jail
 
-Example:
-
-*inter.cin+jail
-
-Clears the archived maps, plays the inter.cin cinematic, then goes to map jail.bsp.
-==================
-*/
-void SV_GameMap_f (void)
+// Clears the archived maps, plays the inter.cin cinematic, then goes to map jail.bsp.
+void SV_GameMap_f(void)
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -564,22 +480,15 @@ void SV_GameMap_f (void)
 	// Copy off the level to the autosave slot
 	// Knightmare- don't do this in deathmatch or for cinematics
 	char *ext = (char *)COM_FileExtension(map); //mxd
-	if (!dedicated->value && !Cvar_VariableValue("deathmatch") && Q_strcasecmp(ext, "cin") && Q_strcasecmp(ext, "roq") && Q_strcasecmp(ext, "pcx"))
+	if (!dedicated->integer && !Cvar_VariableValue("deathmatch") && Q_strcasecmp(ext, "cin") && Q_strcasecmp(ext, "roq") && Q_strcasecmp(ext, "pcx"))
 	{
 		SV_WriteServerFile(true);
 		SV_CopySaveGame("current", "kmq2save0");
 	}
 }
 
-/*
-==================
-SV_Map_f
-
-Goes directly to a given map without any savegame archiving.
-For development work
-==================
-*/
-void SV_Map_f (void)
+// Goes directly to a given map without any savegame archiving.
+void SV_Map_f(void)
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -587,39 +496,32 @@ void SV_Map_f (void)
 		return;
 	}
 
-	// if not a pcx, demo, or cinematic, check to make sure the level exists
+	// If not a pcx, demo, or cinematic, check to make sure the level exists
 	char *map = Cmd_Argv(1);
-	if (!strstr (map, "."))
+	if (!strstr(map, "."))
 	{
 		char expanded[MAX_QPATH];
 		Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", map);
 
-		if (FS_LoadFile (expanded, NULL) == -1)
+		if (FS_LoadFile(expanded, NULL) == -1)
 		{
 			Com_Printf("Can't find %s\n", expanded);
 			return;
 		}
 	}
 
-	sv.state = ss_dead; // don't save current level when changing
+	sv.state = ss_dead; // Don't save current level when changing
 	SV_WipeSavegame("current");
 	SV_GameMap_f();
 }
 
-/*
-=====================================================================
-	SAVEGAMES
-=====================================================================
-*/
+#pragma endregion
 
-/*
-==============
-SV_Loadgame_f
-==============
-*/
+#pragma region ======================= SAVEGAMES
+
 extern char *load_saveshot;
 
-void SV_Loadgame_f (void)
+void SV_Loadgame_f(void)
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -662,15 +564,9 @@ void SV_Loadgame_f (void)
 	SV_Map(false, svs.mapcmd, true);
 }
 
-
-/*
-==============
-SV_Savegame_f
-==============
-*/
 extern char fs_gamedir[MAX_OSPATH];
 
-void SV_Savegame_f (void)
+void SV_Savegame_f(void)
 {
 	if (sv.state != ss_game)
 	{
@@ -712,8 +608,8 @@ void SV_Savegame_f (void)
 	}
 
 	char *dir = Cmd_Argv(1);
-	if (strstr (dir, "..") || strstr (dir, "/") || strstr (dir, "\\") )
-		Com_Printf("Bad savedir.\n");
+	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\") )
+		Com_Printf("Invalid savedir path: '%s'.\n", dir);
 
 	Com_Printf(S_COLOR_CYAN"Saving game \"%s\"...\n", dir);
 
@@ -733,16 +629,12 @@ void SV_Savegame_f (void)
 	Com_Printf(S_COLOR_CYAN"Done.\n");
 }
 
-//===============================================================
+#pragma endregion
 
-/*
-==================
-SV_Kick_f
+#pragma region ======================= SERVER CONSOLE COMMANDS
 
-Kick a user off of the server
-==================
-*/
-void SV_Kick_f (void)
+// Kick a user off of the server
+void SV_Kick_f(void)
 {
 	if (!svs.initialized)
 	{
@@ -767,13 +659,7 @@ void SV_Kick_f (void)
 	sv_client->lastmessage = svs.realtime;	// min case there is a funny zombie
 }
 
-
-/*
-================
-SV_Status_f
-================
-*/
-void SV_Status_f (void)
+void SV_Status_f(void)
 {
 	if (!svs.clients)
 	{
@@ -796,18 +682,11 @@ void SV_Status_f (void)
 		Com_Printf("%5i ", cl->edict->client->ps.stats[STAT_FRAGS]);
 
 		if (cl->state == cs_connected)
-		{
 			Com_Printf("CNCT ");
-		}
 		else if (cl->state == cs_zombie)
-		{
 			Com_Printf("ZMBI ");
-		}
 		else
-		{
-			const int ping = (cl->ping < 9999 ? cl->ping : 9999);
-			Com_Printf("%4i ", ping);
-		}
+			Com_Printf("%4i ", min(cl->ping, 9999));
 
 		Com_Printf("%s", cl->name);
 		int len = 16 - strlen(cl->name);
@@ -830,11 +709,6 @@ void SV_Status_f (void)
 	Com_Printf("\n");
 }
 
-/*
-==================
-SV_ConSay_f
-==================
-*/
 void SV_ConSay_f(void)
 {
 	if (Cmd_Argc() < 2)
@@ -858,40 +732,20 @@ void SV_ConSay_f(void)
 			SV_ClientPrintf(client, PRINT_CHAT, "%s\n", text);
 }
 
-
-/*
-==================
-SV_Heartbeat_f
-==================
-*/
-void SV_Heartbeat_f (void)
+void SV_Heartbeat_f(void)
 {
 	svs.last_heartbeat = -9999999;
 }
 
-
-/*
-===========
-SV_Serverinfo_f
-
-Examine or change the serverinfo string
-===========
-*/
+// Examine or change the serverinfo string
 void SV_Serverinfo_f (void)
 {
 	Com_Printf("Server info settings:\n");
 	Info_Print(Cvar_Serverinfo());
 }
 
-
-/*
-===========
-SV_DumpUser_f
-
-Examine all a users info strings
-===========
-*/
-void SV_DumpUser_f (void)
+// Examine all a users info strings
+void SV_DumpUser_f(void)
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -907,13 +761,7 @@ void SV_DumpUser_f (void)
 	Info_Print(sv_client->userinfo);
 }
 
-
-/*
-===================
-SV_StartMod
-===================
-*/
-void SV_StartMod (char *mod)
+void SV_StartMod(char *mod)
 {
 	// killserver, start mod, unbind keys, exec configs, and start demos
 	Cbuf_AddText("killserver\n");
@@ -925,35 +773,21 @@ void SV_StartMod (char *mod)
 	Cbuf_AddText("d1\n");
 }
 
-
-/*
-===================
-SV_ChangeGame_f
-
-switch to a different mod
-===================
-*/
-void SV_ChangeGame_f (void)
+// Switch to a different mod
+void SV_ChangeGame_f(void)
 {
 	if (Cmd_Argc() < 2)
 	{
-		Com_Printf("changegame <gamedir> : change game directory\n");
+		Com_Printf("Usage: changegame <gamedir> : change game directory\n");
 		return;
 	}
 
 	SV_StartMod(Cmd_Argv(1));
 }
 
-
-/*
-==============
-SV_ServerRecord_f
-
-Begins server demo recording.  Every entity and every message will be
-recorded, but no playerinfo will be stored.  Primarily for demo merging.
-==============
-*/
-void SV_ServerRecord_f (void)
+// Begins server demo recording.
+// Every entity and every message will be recorded, but no playerinfo will be stored. Primarily for demo merging.
+void SV_ServerRecord_f(void)
 {
 	char name[MAX_OSPATH];
 	byte buf_data[32768];
@@ -977,9 +811,7 @@ void SV_ServerRecord_f (void)
 		return;
 	}
 
-	//
-	// open the demo file
-	//
+	// Open the demo file
 	Com_sprintf(name, sizeof(name), "%s/demos/%s.dm2", FS_Gamedir(), Cmd_Argv(1));
 
 	Com_Printf("recording to \"%s\".\n", name);
@@ -991,29 +823,22 @@ void SV_ServerRecord_f (void)
 		return;
 	}
 
-	// setup a buffer to catch all multicasts
+	// Setup a buffer to catch all multicasts
 	SZ_Init(&svs.demo_multicast, svs.demo_multicast_buf, sizeof(svs.demo_multicast_buf));
 
-	//
-	// write a single giant fake message with all the startup info
-	//
+	// Write a single giant fake message with all the startup info
 	SZ_Init(&buf, buf_data, sizeof(buf_data));
 
-	//
-	// serverdata needs to go over for all types of servers
-	// to make sure the protocol is right, and to set the gamedir
-	//
+	// serverdata needs to go over for all types of servers to make sure the protocol is right, and to set the gamedir
 
-	// send the serverdata
+	// Send the serverdata
 	MSG_WriteByte(&buf, svc_serverdata);
 	MSG_WriteLong(&buf, PROTOCOL_VERSION);
 	MSG_WriteLong(&buf, svs.spawncount);
-	// 2 means server demo
-	MSG_WriteByte(&buf, 2);	// demos are always attract loops
-	MSG_WriteString(&buf, Cvar_VariableString ("gamedir"));
+	MSG_WriteByte(&buf, 2); // 2 means server demo. Demos are always attract loops
+	MSG_WriteString(&buf, Cvar_VariableString("gamedir"));
 	MSG_WriteShort(&buf, -1);
-	// send full levelname
-	MSG_WriteString(&buf, sv.configstrings[CS_NAME]);
+	MSG_WriteString(&buf, sv.configstrings[CS_NAME]); // Send full levelname
 
 	for (int i = 0 ; i < MAX_CONFIGSTRINGS; i++)
 	{
@@ -1025,24 +850,17 @@ void SV_ServerRecord_f (void)
 		}
 	}
 
-	// write it to the demo file
+	// Write it to the demo file
 	Com_DPrintf("signon message length: %i\n", buf.cursize);
 	int len = LittleLong(buf.cursize);
 	fwrite(&len, 4, 1, svs.demofile);
 	fwrite(buf.data, buf.cursize, 1, svs.demofile);
 
-	// the rest of the demo file will be individual frames
+	// The rest of the demo file will be individual frames
 }
 
-
-/*
-==============
-SV_ServerStop_f
-
-Ends server demo recording
-==============
-*/
-void SV_ServerStop_f (void)
+// Ends server demo recording
+void SV_ServerStop_f(void)
 {
 	if (!svs.demofile)
 	{
@@ -1055,50 +873,28 @@ void SV_ServerStop_f (void)
 	Com_Printf("Recording completed.\n");
 }
 
-
-/*
-===============
-SV_KillServer_f
-
-Kick everyone off, possibly in preparation for a new game
-
-===============
-*/
-void SV_KillServer_f (void)
+// Kick everyone off, possibly in preparation for a new game
+void SV_KillServer_f(void)
 {
 	if (svs.initialized)
 	{
 		SV_Shutdown("Server was killed.\n", false);
-		NET_Config(false); // close network sockets
+		NET_Config(false); // Close network sockets
 	}
 }
 
-/*
-===============
-SV_ServerCommand_f
-
-Let the game dll handle a command
-===============
-*/
-void SV_ServerCommand_f (void)
+// Lets the game dll handle a command
+void SV_ServerCommand_f(void)
 {
-	if (!ge)
-	{
+	if (ge)
+		ge->ServerCommand();
+	else
 		Com_Printf("No game loaded.\n");
-		return;
-	}
-
-	ge->ServerCommand();
 }
 
-//===========================================================
+#pragma endregion
 
-/*
-==================
-SV_InitOperatorCommands
-==================
-*/
-void SV_InitOperatorCommands (void)
+void SV_InitOperatorCommands(void)
 {
 	Cmd_AddCommand("heartbeat", SV_Heartbeat_f);
 	Cmd_AddCommand("kick", SV_Kick_f);
