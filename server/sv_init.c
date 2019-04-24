@@ -20,15 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "server.h"
 
-server_static_t	svs;	// persistant server info
-server_t		sv;		// local server
+server_static_t	svs; // Persistant server info
+server_t		sv;	 // Local server
 
-/*
-================
-SV_FindIndex
-================
-*/
-int SV_FindIndex (char *name, int start, int max)
+int SV_FindIndex(char *name, int start, int max)
 {
 	int index;
 	
@@ -41,7 +36,7 @@ int SV_FindIndex (char *name, int start, int max)
 
 	// Knightmare 12/23/2001
 	// Output a more useful error message to tell user what overflowed
-	// And don't bomb out, either- instead, return last possible index
+	// And don't bomb out, either - instead, return last possible index
 	if (index == max)
 	{
 		if (start == CS_MODELS)
@@ -51,7 +46,7 @@ int SV_FindIndex (char *name, int start, int max)
 		else if (start == CS_IMAGES)
 			Com_Printf(S_COLOR_YELLOW"Warning: Index overflow for images\n");
 
-		return max - 1; // return the last possible index
+		return max - 1; // Return the last possible index
 	}
 	// end Knightmare
 
@@ -59,7 +54,7 @@ int SV_FindIndex (char *name, int start, int max)
 
 	if (sv.state != ss_loading)
 	{
-		// send the update to everyone
+		// Send the update to everyone
 		SZ_Clear(&sv.multicast);
 		MSG_WriteChar(&sv.multicast, svc_configstring);
 		MSG_WriteShort(&sv.multicast, start + index);
@@ -71,31 +66,24 @@ int SV_FindIndex (char *name, int start, int max)
 }
 
 
-int SV_ModelIndex (char *name)
+int SV_ModelIndex(char *name)
 {
 	return SV_FindIndex(name, CS_MODELS, MAX_MODELS);
 }
 
-int SV_SoundIndex (char *name)
+int SV_SoundIndex(char *name)
 {
 	return SV_FindIndex(name, CS_SOUNDS, MAX_SOUNDS);
 }
 
-int SV_ImageIndex (char *name)
+int SV_ImageIndex(char *name)
 {
 	return SV_FindIndex(name, CS_IMAGES, MAX_IMAGES);
 }
 
-
-/*
-================
-SV_CreateBaseline
-
-Entity baselines are used to compress the update messages to the clients 
- -- only the fields that differ from the baseline will be transmitted.
-================
-*/
-void SV_CreateBaseline (void)
+// Entity baselines are used to compress the update messages to the clients 
+// -- only the fields that differ from the baseline will be transmitted.
+void SV_CreateBaseline(void)
 {
 	for (int entnum = 1; entnum < ge->num_edicts; entnum++)
 	{
@@ -108,39 +96,33 @@ void SV_CreateBaseline (void)
 
 		svent->s.number = entnum;
 
-		// take current state as baseline
+		// Take current state as baseline
 		VectorCopy(svent->s.origin, svent->s.old_origin);
 		sv.baselines[entnum] = svent->s;
 	}
 }
 
-
-/*
-=================
-SV_CheckForSavegame
-=================
-*/
-void SV_CheckForSavegame (void)
+void SV_CheckForSavegame(void)
 {
-	if (sv_noreload->value || Cvar_VariableValue("deathmatch"))
+	if (sv_noreload->integer || Cvar_VariableInteger("deathmatch"))
 		return;
 
 	char name[MAX_OSPATH];
 	Com_sprintf(name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
 	FILE *f = fopen(name, "rb");
 	if (!f)
-		return;		// no savegame
+		return; // No savegame
 
 	fclose(f);
 
 	SV_ClearWorld();
 
-	// get configstrings and areaportals
+	// Get configstrings and areaportals
 	SV_ReadLevelFile();
 
 	if (!sv.loadgame)
 	{
-		// coming back to a level after being in a different level, so run it for ten seconds
+		// Coming back to a level after being in a different level, so run it for ten seconds.
 
 		// rlava2 was sending too many lightstyles, and overflowing the reliable data.
 		// Temporarily changing the server state to loading prevents these from being passed down.
@@ -154,15 +136,8 @@ void SV_CheckForSavegame (void)
 	}
 }
 
-
-/*
-================
-SV_SpawnServer
-
-Change the server to a new map, taking all connected clients along with it.
-================
-*/
-void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
+// Change the server to a new map, taking all connected clients along with it.
+void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	unsigned checksum;
 	fileHandle_t f;
@@ -176,17 +151,17 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	if (sv.demofile)
 		FS_FCloseFile(sv.demofile);
 
-	svs.spawncount++;		// any partially connected client will be restarted
+	svs.spawncount++; // Any partially connected client will be restarted
 	sv.state = ss_dead;
 	Com_SetServerState(sv.state);
 
-	// wipe the entire per-level structure
+	// Wipe the entire per-level structure
 	memset(&sv, 0, sizeof(sv));
 	svs.realtime = 0;
 	sv.loadgame = loadgame;
 	sv.attractloop = attractloop;
 
-	// save name for levels that don't set message
+	// Save name for levels that don't set message
 	Q_strncpyz(sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[CS_NAME]));
 	if (Cvar_VariableValue("deathmatch"))
 	{
@@ -203,10 +178,10 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	Q_strncpyz(sv.name, server, sizeof(sv.name));
 
-	// leave slots at start for clients only
+	// Leave slots at start for clients only
 	for (int i = 0; i < maxclients->value; i++)
 	{
-		// needs to reconnect
+		// Needs to reconnect
 		if (svs.clients[i].state > cs_connected)
 			svs.clients[i].state = cs_connected;
 
@@ -220,13 +195,13 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	if (serverstate != ss_game)
 	{
-		sv.models[1] = CM_LoadMap ("", false, &checksum);	// no real map
+		sv.models[1] = CM_LoadMap ("", false, &checksum); // No real map
 	}
 	else
 	{
 		Com_sprintf(sv.configstrings[CS_MODELS + 1],sizeof(sv.configstrings[CS_MODELS + 1]), "maps/%s.bsp", server);
 	
-		// resolve CS_PAKFILE, hack by Jay Dolan
+		// Resolve CS_PAKFILE, hack by Jay Dolan
 		FS_FOpenFile(sv.configstrings[CS_MODELS + 1], &f, FS_READ);
 		Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name[0] ? last_pk3_name : ""), sizeof(sv.configstrings[CS_PAKFILE])); //mxd. Address of array 'last_pk3_name' will always evaluate to 'true'
 		FS_FCloseFile(f);
@@ -237,7 +212,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Com_sprintf(sv.configstrings[CS_MAPCHECKSUM], sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
 	//
-	// clear physics interaction links
+	// Clear physics interaction links
 	//
 	SV_ClearWorld();
 	
@@ -248,62 +223,54 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	}
 
 	//
-	// spawn the rest of the entities on the map
+	// Spawn the rest of the entities on the map
 	//
 
-	// precache and static commands can be issued during map initialization
+	// Precache and static commands can be issued during map initialization
 	sv.state = ss_loading;
 	Com_SetServerState(sv.state);
 
-	// load and spawn all other entities
+	// Load and spawn all other entities
 	ge->SpawnEntities(sv.name, CM_EntityString(), spawnpoint);
 
-	// run two frames to allow everything to settle
+	// Run two frames to allow everything to settle
 	ge->RunFrame();
 	ge->RunFrame();
 
-	// all precaches are complete
+	// All precaches are complete
 	sv.state = serverstate;
 	Com_SetServerState(sv.state);
 	
-	// create a baseline for more efficient communications
+	// Create a baseline for more efficient communications
 	SV_CreateBaseline();
 
-	// check for a savegame
+	// Check for a savegame
 	SV_CheckForSavegame();
 
-	// set serverinfo variable
+	// Set serverinfo variable
 	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET);
 
 	Com_Printf("-------------------------------------\n");
 }
 
-/*
-==============
-SV_InitGame
-
-A brand new game has been started
-==============
-*/
-void PF_Configstring (int index, char *val);
-
-void SV_InitGame (void)
+// A brand new game has been started
+void SV_InitGame(void)
 {
 	char idmaster[32];
 
 	if (svs.initialized)
 	{
-		// cause any connected clients to reconnect
+		// Cause any connected clients to reconnect
 		SV_Shutdown("Server restarted\n", true);
 	}
 	else
 	{
-		// make sure the client is down
+		// Make sure the client is down
 		CL_Drop();
 		SCR_BeginLoadingPlaque();
 	}
 
-	// get any latched variable changes (maxclients, etc)
+	// Get any latched variable changes (maxclients, etc)
 	Cvar_GetLatchedVars();
 
 	svs.initialized = true;
@@ -314,27 +281,24 @@ void SV_InitGame (void)
 		Cvar_FullSet("coop", "0",  CVAR_SERVERINFO | CVAR_LATCH);
 	}
 
-	// dedicated servers can't be single player and are usually DM, so unless they explicity set coop, force it to deathmatch
-	if (dedicated->value)
-	{
-		if (!Cvar_VariableValue("coop"))
-			Cvar_FullSet("deathmatch", "1",  CVAR_SERVERINFO | CVAR_LATCH);
-	}
+	// Dedicated servers can't be single player and are usually DM, so unless they explicity set coop, force it to deathmatch
+	if (dedicated->integer && !Cvar_VariableInteger("coop"))
+		Cvar_FullSet("deathmatch", "1",  CVAR_SERVERINFO | CVAR_LATCH);
 
-	// init clients
-	if (Cvar_VariableValue("deathmatch"))
+	// Init clients
+	if (Cvar_VariableInteger("deathmatch"))
 	{
 		if (maxclients->value <= 1)
 			Cvar_FullSet("maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
 		else if (maxclients->value > MAX_CLIENTS)
 			Cvar_FullSet("maxclients", va("%i", MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH);
 	}
-	else if (Cvar_VariableValue("coop"))
+	else if (Cvar_VariableInteger("coop"))
 	{
 		if (maxclients->value <= 1 || maxclients->value > 4)
 			Cvar_FullSet("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
 	}
-	else // non-deathmatch, non-coop is one player
+	else // Non-deathmatch, non-coop is singleplayer
 	{
 		Cvar_FullSet("maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH);
 	}
@@ -344,15 +308,15 @@ void SV_InitGame (void)
 	svs.num_client_entities = maxclients->value * UPDATE_BACKUP * 64;
 	svs.client_entities = Z_Malloc(sizeof(entity_state_t) * svs.num_client_entities);
 
-	// init network stuff
+	// Init network stuff
 	NET_Config(maxclients->value > 1);
 
-	// heartbeats will always be sent to the id master
-	svs.last_heartbeat = -99999; // send immediately
+	// Heartbeats will always be sent to the id master
+	svs.last_heartbeat = -99999; // Send immediately
 	Com_sprintf(idmaster, sizeof(idmaster), "192.246.40.37:%i", PORT_MASTER);
 	NET_StringToAdr(idmaster, &master_adr[0]);
 
-	// init game
+	// Init game
 	SV_InitGameProgs();
 	for (int i = 0; i < maxclients->value; i++)
 	{
@@ -363,23 +327,13 @@ void SV_InitGame (void)
 	}
 }
 
-
-/*
-======================
-SV_Map
-
-  the full syntax is:
-
-  map [*]<map>$<startspot>+<nextserver>
-
-command from the console or progs.
-Map can also be a.cin, .pcx, or .dm2 file
-Nextserver is used to allow a cinematic to play, then proceed to another level:
-
-	map tram.cin+jail_e3
-======================
-*/
-void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
+// The full syntax is:
+//		map [*]<map>$<startspot>+<nextserver>
+// command from the console or progs.
+// Map can also be a.cin, .pcx, or .dm2 file
+// Nextserver is used to allow a cinematic to play, then proceed to another level:
+//		map tram.cin+jail_e3
+void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 {
 	char level[MAX_QPATH];
 	char spawnpoint[MAX_QPATH];
@@ -388,7 +342,7 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 	sv.attractloop = attractloop;
 
 	if (sv.state == ss_dead && !sv.loadgame)
-		SV_InitGame();	// the game is just starting
+		SV_InitGame(); // The game is just starting
 
 	// r1ch fix: buffer overflow
 	if (levelstring[0] == '*')
@@ -396,12 +350,12 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 	else
 		Q_strncpyz(level, levelstring, sizeof(level));
 
-	// if there is a + in the map, set nextserver to the remainder
+	// If there is a + in the map, set nextserver to the remainder
 	char *ch = strstr(level, "+");
 	if (ch)
 	{
 		*ch = 0;
-		Cvar_Set ("nextserver", va("gamemap \"%s\"", ch + 1));
+		Cvar_Set("nextserver", va("gamemap \"%s\"", ch + 1));
 	}
 	else
 	{
@@ -409,10 +363,10 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 	}
 
 	//ZOID special hack for end game screen in coop mode
-	if (Cvar_VariableValue("coop") && !Q_stricmp(level, "victory.pcx"))
+	if (Cvar_VariableInteger("coop") && !Q_stricmp(level, "victory.pcx"))
 		Cvar_Set("nextserver", "gamemap \"*base1\"");
 
-	// if there is a $, use the remainder as a spawnpoint
+	// If there is a $, use the remainder as a spawnpoint
 	ch = strstr(level, "$");
 	if (ch)
 	{
@@ -424,17 +378,17 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 		spawnpoint[0] = 0;
 	}
 
-	if (!dedicated->value)
-		SCR_BeginLoadingPlaque(); // for local system
+	if (!dedicated->integer)
+		SCR_BeginLoadingPlaque(); // For local system
 
 	SV_BroadcastCommand("changing\n");
 
 	const int len = strlen(level);
 
-#ifdef	ROQ_SUPPORT
-	if (len > 4 && (!strcmp (level + len - 4, ".cin") || !strcmp (level + len - 4, ".roq")) )
+#ifdef ROQ_SUPPORT
+	if (len > 4 && (!strcmp(level + len - 4, ".cin") || !strcmp(level + len - 4, ".roq")))
 #else
-	if (len > 4 && !strcmp (level + len - 4, ".cin") )
+	if (len > 4 && !strcmp(level + len - 4, ".cin"))
 #endif // ROQ_SUPPORT
 	{
 		SV_SpawnServer(level, spawnpoint, ss_cinematic, attractloop, loadgame);
@@ -443,7 +397,7 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 	{
 		SV_SpawnServer(level, spawnpoint, ss_demo, attractloop, loadgame);
 	}
-	else if (len > 4 && !strcmp (level + len - 4, ".pcx"))
+	else if (len > 4 && !strcmp(level + len - 4, ".pcx"))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_pic, attractloop, loadgame);
 	}
