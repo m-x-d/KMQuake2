@@ -584,7 +584,7 @@ static void CL_ReVerifyHTTPQueue(void)
 		q = q->next;
 		if (q->state == DLQ_STATE_NOT_STARTED)
 		{
-			if (FS_LoadFile(q->quakePath, NULL) != -1)
+			if (FS_FileExists(q->quakePath)) //mxd. FS_LoadFile -> FS_FileExists
 				q->state = DLQ_STATE_DONE;
 			else
 				pendingCount++;

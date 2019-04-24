@@ -737,15 +737,16 @@ int FS_Tell(fileHandle_t f)
 	return -1; //mxd. Let's actually return -1 :)
 }
 
+// Returns true when file exists and has non-zero size
 qboolean FS_FileExists(char *path)
 {
 	fileHandle_t f;
-	FS_FOpenFile(path, &f, FS_READ);
+	const int size = FS_FOpenFile(path, &f, FS_READ);
 
 	if (f)
 	{
 		FS_FCloseFile(f);
-		return true;
+		return (size > 0); //mxd. Was return true
 	}
 
 	return false;

@@ -510,7 +510,7 @@ void SV_Map_f(void)
 		char expanded[MAX_QPATH];
 		Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", map);
 
-		if (FS_LoadFile(expanded, NULL) == -1)
+		if (FS_FileExists(expanded)) //mxd. FS_LoadFile -> FS_FileExists
 		{
 			Com_Printf("Can't find %s\n", expanded);
 			return;

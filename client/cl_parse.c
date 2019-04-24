@@ -385,7 +385,7 @@ void CL_PlayBackgroundTrack(void)
 	if (strlen(cl.configstrings[CS_CDTRACK]) > 2)
 	{
 		Com_sprintf(name, sizeof(name), "music/%s.ogg", cl.configstrings[CS_CDTRACK]);
-		if (FS_LoadFile(name, NULL) != -1)
+		if (FS_FileExists(name)) //mxd. FS_LoadFile -> FS_FileExists
 		{
 			CDAudio_Stop();
 			S_StartBackgroundTrack(name, name);
@@ -407,7 +407,7 @@ void CL_PlayBackgroundTrack(void)
 
 	// If an OGG file exists play it, otherwise fall back to CD audio
 	Com_sprintf(name, sizeof(name), "music/track%02i.ogg", CL_MissionPackCDTrack(track));
-	if (FS_LoadFile(name, NULL) != -1 && cl_ogg_music->value)
+	if (FS_FileExists(name) && cl_ogg_music->value) //mxd. FS_LoadFile -> FS_FileExists
 		S_StartBackgroundTrack(name, name);
 	else
 		CDAudio_Play(track, true);

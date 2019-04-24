@@ -244,11 +244,9 @@ void Con_Init(void)
 	con_oldconbar = Cvar_Get("con_oldconbar", "1", CVAR_ARCHIVE);	// whether to draw bottom bar on old console
 
 	// Whether to use new-style console background
-	newconback_found = false;
-	if (   (FS_LoadFile("gfx/ui/newconback.tga", NULL) != -1)
-		|| (FS_LoadFile("gfx/ui/newconback.png", NULL) != -1)
-		|| (FS_LoadFile("gfx/ui/newconback.jpg", NULL) != -1))
-		newconback_found = true;
+	newconback_found = (FS_FileExists("gfx/ui/newconback.tga")
+					 || FS_FileExists("gfx/ui/newconback.png")
+					 || FS_FileExists("gfx/ui/newconback.jpg")); //mxd. FS_LoadFile -> FS_FileExists
 
 	Cmd_AddCommand("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand("togglechat", Con_ToggleChat_f);
