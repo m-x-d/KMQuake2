@@ -504,6 +504,10 @@ void Com_Printf(char *msg, ...);
 ==============================================================
 */
 
+// Contents flags are seperate bits.
+// A given brush can contribute multiple content bits.
+// Multiple brushes can be in a single leaf.
+
 // Lower bits are stronger, and will eat weaker brushes completely
 #define CONTENTS_SOLID			1	// An eye is never valid in a solid
 #define CONTENTS_WINDOW			2	// Translucent, but not watery
