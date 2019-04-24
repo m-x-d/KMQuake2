@@ -754,6 +754,8 @@ extern int scr_draw_loading;
 
 void Key_Event(int key, qboolean down, unsigned time)
 {
+	static qboolean shift_down = false; //mxd. Made local
+	
 	// Hack for modal presses
 	if (key_waiting == -1)
 	{
@@ -790,6 +792,10 @@ void Key_Event(int key, qboolean down, unsigned time)
 	{
 		key_repeats[key] = 0;
 	}
+
+	// Track Shift key status between calls
+	if (key == K_SHIFT)
+		shift_down = down;
 
 	// Console key is hardcoded, so the user can never unbind it
 	if (key == '`' || key == '~')
@@ -923,7 +929,8 @@ void Key_Event(int key, qboolean down, unsigned time)
 		return;
 	}
 
-	if (down && key == K_SHIFT)
+	// Apply Shift key modifier
+	if (shift_down)
 		key = keyshift[key];
 
 	if (cls.consoleActive) // Knightmare added
