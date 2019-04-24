@@ -21,17 +21,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "server.h"
 
-game_export_t	*ge;
+game_export_t *ge;
 
+#pragma region ======================= GAME.DLL SUPPORT FUNCTIONS
 
-/*
-===============
-PF_Unicast
-
-Sends the contents of the mutlicast buffer to a single client
-===============
-*/
-void PF_Unicast (edict_t *ent, qboolean reliable)
+// Sends the contents of the mutlicast buffer to a single client
+void PF_Unicast(edict_t *ent, qboolean reliable)
 {
 	if (!ent)
 		return;
@@ -50,39 +45,25 @@ void PF_Unicast (edict_t *ent, qboolean reliable)
 	SZ_Clear(&sv.multicast);
 }
 
-
-/*
-===============
-PF_dprintf
-
-Debug print to server console
-===============
-*/
-void PF_dprintf (char *fmt, ...)
+// Debug print to server console
+void PF_dprintf(char *fmt, ...)
 {
-	char	msg[1024];
+	char msg[1024];
 	va_list	argptr;
 	
 	va_start(argptr, fmt);
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
 	va_end(argptr);
 
-	Com_Printf("%s", msg);
+	Com_Printf("%s", msg); //TODO: mxd. Shouldn't this be Com_DPrintf?
 }
 
-
-/*
-===============
-PF_cprintf
-
-Print to a single client
-===============
-*/
-void PF_cprintf (edict_t *ent, int level, char *fmt, ...)
+// Print to a single client
+void PF_cprintf(edict_t *ent, int level, char *fmt, ...)
 {
-	char	msg[1024];
+	char msg[1024];
 	va_list	argptr;
-	int		n;
+	int n;
 
 	if (ent)
 	{
@@ -101,17 +82,10 @@ void PF_cprintf (edict_t *ent, int level, char *fmt, ...)
 		Com_Printf("%s", msg);
 }
 
-
-/*
-===============
-PF_centerprintf
-
-centerprint to a single client
-===============
-*/
-void PF_centerprintf (edict_t *ent, char *fmt, ...)
+// centerprint to a single client
+void PF_centerprintf(edict_t *ent, char *fmt, ...)
 {
-	char	msg[1024];
+	char msg[1024];
 	va_list	argptr;
 
 	const int n = NUM_FOR_EDICT(ent);
@@ -127,17 +101,10 @@ void PF_centerprintf (edict_t *ent, char *fmt, ...)
 	PF_Unicast(ent, true);
 }
 
-
-/*
-===============
-PF_error
-
-Abort the server with a game error
-===============
-*/
-void PF_error (char *fmt, ...)
+// Abort the server with a game error
+void PF_error(char *fmt, ...)
 {
-	char	msg[1024];
+	char msg[1024];
 	va_list	argptr;
 	
 	va_start(argptr, fmt);
@@ -147,22 +114,15 @@ void PF_error (char *fmt, ...)
 	Com_Error(ERR_DROP, "Game Error: %s", msg);
 }
 
-
-/*
-=================
-PF_setmodel
-
-Also sets mins and maxs for inline bmodels
-=================
-*/
-void PF_setmodel (edict_t *ent, char *name)
+// Also sets mins and maxs for inline bmodels
+void PF_setmodel(edict_t *ent, char *name)
 {
 	if (!name)
 		Com_Error(ERR_DROP, "PF_setmodel: NULL");
 
 	ent->s.modelindex = SV_ModelIndex(name);
 
-	// if it is an inline model, get the size information for it
+	// If it is an inline model, get the size information for it
 	if (name[0] == '*')
 	{
 		cmodel_t *mod = CM_InlineModel(name);
@@ -172,21 +132,15 @@ void PF_setmodel (edict_t *ent, char *name)
 	}
 }
 
-/*
-===============
-PF_Configstring
-
-===============
-*/
-void PF_Configstring (int index, char *val)
+void PF_Configstring(int index, char *val)
 {
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
-		Com_Error(ERR_DROP, "PF_Configstring: bad index %i\n", index);
+		Com_Error(ERR_DROP, "PF_Configstring: bad index: %i\n", index);
 
 	if (!val)
 		val = "";
 
-	// catch overflow of indvidual configstrings
+	// Catch overflow of indvidual configstrings
 	size_t len = strlen(val);
 	const size_t maxlen = CS_SIZE(index);
 	if (len >= maxlen)
@@ -195,7 +149,7 @@ void PF_Configstring (int index, char *val)
 		len = maxlen - 1;
 	}
 
-	// change the string in sv
+	// Change the string in sv
 	// Don't use a null-terminated strncpy here!!
 	char *dest = sv.configstrings[index];
 	memcpy(dest, val, len);
@@ -203,7 +157,7 @@ void PF_Configstring (int index, char *val)
 	
 	if (sv.state != ss_loading)
 	{
-		// send the update to everyone
+		// Send the update to everyone
 		SZ_Clear(&sv.multicast);
 		MSG_WriteChar(&sv.multicast, svc_configstring);
 		MSG_WriteShort(&sv.multicast, index);
@@ -212,7 +166,6 @@ void PF_Configstring (int index, char *val)
 		SV_Multicast(vec3_origin, MULTICAST_ALL_R);
 	}
 }
-
 
 void PF_WriteChar(int c) { MSG_WriteChar(&sv.multicast, c); }
 void PF_WriteByte(int c) { MSG_WriteByte(&sv.multicast, c); }
@@ -224,15 +177,8 @@ void PF_WritePos(vec3_t pos) { MSG_WritePos(&sv.multicast, pos); }
 void PF_WriteDir(vec3_t dir) { MSG_WriteDir(&sv.multicast, dir); }
 void PF_WriteAngle(float f) { MSG_WriteAngle(&sv.multicast, f); }
 
-
-/*
-=================
-PF_inPVS
-
-Also checks portalareas so that doors block sight
-=================
-*/
-qboolean PF_inPVS (vec3_t p1, vec3_t p2)
+// Also checks portalareas so that doors block sight
+qboolean PF_inPVS(vec3_t p1, vec3_t p2)
 {
 	int leafnum = CM_PointLeafnum(p1);
 	int cluster = CM_LeafCluster(leafnum);
@@ -247,20 +193,13 @@ qboolean PF_inPVS (vec3_t p1, vec3_t p2)
 		return false;
 
 	if (!CM_AreasConnected(area1, area2))
-		return false; // a door blocks sight
+		return false; // A door blocks sight
 
 	return true;
 }
 
-
-/*
-=================
-PF_inPHS
-
-Also checks portalareas so that doors block sound
-=================
-*/
-qboolean PF_inPHS (vec3_t p1, vec3_t p2)
+// Also checks portalareas so that doors block sound
+qboolean PF_inPHS(vec3_t p1, vec3_t p2)
 {
 	int leafnum = CM_PointLeafnum(p1);
 	int cluster = CM_LeafCluster(leafnum);
@@ -272,56 +211,44 @@ qboolean PF_inPHS (vec3_t p1, vec3_t p2)
 	const int area2 = CM_LeafArea(leafnum);
 
 	if (mask && (!(mask[cluster >> 3] & (1 << (cluster & 7)))))
-		return false; // more than one bounce away
+		return false; // More than one bounce away
 
 	if (!CM_AreasConnected(area1, area2))
-		return false; // a door blocks hearing
+		return false; // A door blocks hearing
 
 	return true;
 }
 
-void PF_StartSound (edict_t *entity, int channel, int sound_num, float volume, float attenuation, float timeofs)
+void PF_StartSound(edict_t *entity, int channel, int sound_num, float volume, float attenuation, float timeofs)
 {
 	if (entity)
 		SV_StartSound(NULL, entity, channel, sound_num, volume, attenuation, timeofs);
 }
 
-//==============================================
+#pragma endregion
 
-/*
-===============
-SV_ShutdownGameProgs
+#pragma region ======================= GAME.DLL LOAD/UNLOAD
 
-Called when either the entire server is being killed, or it is changing to a different game directory.
-===============
-*/
-void SV_ShutdownGameProgs (void)
+// Called when either the entire server is being killed, or it is changing to a different game directory.
+void SV_ShutdownGameProgs(void)
 {
-	if (!ge)
-		return;
-
-	ge->Shutdown();
-	Sys_UnloadGame();
-	ge = NULL;
+	if (ge)
+	{
+		ge->Shutdown();
+		Sys_UnloadGame();
+		ge = NULL;
+	}
 }
 
-
-/*
-===============
-SV_InitGameProgs
-
-Init the game subsystem for a new map
-===============
-*/
-void SV_InitGameProgs (void)
+// Init the game subsystem for a new map
+void SV_InitGameProgs(void)
 {
 	game_import_t import;
 
-	// unload anything we have now
-	if (ge)
-		SV_ShutdownGameProgs();
+	// Unload anything we have now
+	SV_ShutdownGameProgs();
 
-	// load a new game dll
+	// Load a new game dll
 	import.multicast = SV_Multicast;
 	import.unicast = PF_Unicast;
 	import.bprintf = SV_BroadcastPrintf;
@@ -386,10 +313,12 @@ void SV_InitGameProgs (void)
 	ge = (game_export_t *)Sys_GetGameAPI(&import);
 
 	if (!ge)
-		Com_Error(ERR_DROP, "failed to load game DLL");
+		Com_Error(ERR_DROP, "Failed to load game DLL");
 
 	if (ge->apiversion != GAME_API_VERSION)
-		Com_Error(ERR_DROP, "game is version %i, not %i", ge->apiversion, GAME_API_VERSION);
+		Com_Error(ERR_DROP, "Unsupported game API version: %i (expected %i)", ge->apiversion, GAME_API_VERSION);
 
 	ge->Init();
 }
+
+#pragma endregion
