@@ -1527,9 +1527,9 @@ void Qcommon_Frame(int msec)
 
 	if (fixedtime->integer)
 	{
-		msec = fixedtime->value;
+		msec = fixedtime->integer;
 	}
-	else if (timescale->integer)
+	else if (timescale->value)
 	{
 		msec *= timescale->value;
 		msec = max(msec, 1);
