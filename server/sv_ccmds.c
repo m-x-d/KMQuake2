@@ -410,6 +410,13 @@ void SV_ReadServerFile(void)
 // Puts the server in demo mode on a specific map/cinematic
 void SV_DemoMap_f(void)
 {
+	//mxd. Usage
+	if (Cmd_Argc() != 2)
+	{
+		Com_Printf("Usage: demomap <map>\n");
+		return;
+	}
+	
 	// Knightmare- force off DM, CTF mode
 	Cvar_SetValue("ttctf", 0);
 	Cvar_SetValue("ctf", 0);
