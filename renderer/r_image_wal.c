@@ -47,22 +47,18 @@ image_t *R_LoadWal(char *name, imagetype_t type)
 
 void GetWalInfo(char *name, int *width, int *height) //mxd. From YQ2
 {
+	*width = 0;
+	*height = 0;
+	
 	miptex_t *mt;
 	const int size = FS_LoadFile(name, (void **)&mt);
+
 	if (!mt)
-	{
-		*width = 0;
-		*height = 0;
-
 		return;
-	}
 
-	if (size < sizeof(miptex_t))
+	if (size < (int)sizeof(miptex_t))
 	{
-		*width = 0;
-		*height = 0;
 		FS_FreeFile((void *)mt);
-
 		return;
 	}
 

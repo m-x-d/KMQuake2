@@ -112,15 +112,18 @@ void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height
 
 void GetPCXInfo(char *filename, int *width, int *height) //mxd. From YQ2
 {
+	*width = 0;
+	*height = 0;
+	
 	byte *raw;
-
-	FS_LoadFile(filename, (void **)&raw);
+	const int size = FS_LoadFile(filename, (void **)&raw);
 
 	if (!raw)
-	{
-		*width = 0;
-		*height = 0;
+		return;
 
+	if (size <= (int)sizeof(pcx_t)) //mxd. Added header size check
+	{
+		FS_FreeFile(raw);
 		return;
 	}
 
