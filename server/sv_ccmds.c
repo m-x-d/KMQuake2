@@ -510,9 +510,9 @@ void SV_Map_f(void)
 		char expanded[MAX_QPATH];
 		Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", map);
 
-		if (FS_FileExists(expanded)) //mxd. FS_LoadFile -> FS_FileExists
+		if (!FS_FileExists(expanded)) //mxd. FS_LoadFile -> FS_FileExists
 		{
-			Com_Printf("Can't find %s\n", expanded);
+			Com_Printf("Can't find '%s'\n", expanded);
 			return;
 		}
 	}
@@ -539,8 +539,8 @@ void SV_Loadgame_f(void)
 	Com_Printf("Loading game...\n");
 
 	char *dir = Cmd_Argv(1);
-	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\") )
-		Com_Printf("Bad savedir.\n");
+	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\"))
+		Com_Printf("Invalid savedir path: '%s'.\n", dir);
 
 	// Make sure the server.ssv file exists
 	char name[MAX_OSPATH];
@@ -567,7 +567,7 @@ void SV_Loadgame_f(void)
 	SV_ReadServerFile();
 
 	// Go to the map
-	sv.state = ss_dead; // don't save current level when changing
+	sv.state = ss_dead; // Don't save current level when changing
 	SV_Map(false, svs.mapcmd, true);
 }
 
@@ -615,7 +615,7 @@ void SV_Savegame_f(void)
 	}
 
 	char *dir = Cmd_Argv(1);
-	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\") )
+	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\"))
 		Com_Printf("Invalid savedir path: '%s'.\n", dir);
 
 	Com_Printf(S_COLOR_CYAN"Saving game \"%s\"...\n", dir);
@@ -663,7 +663,7 @@ void SV_Kick_f(void)
 	// Print directly, because the dropped client won't get the SV_BroadcastPrintf message
 	SV_ClientPrintf(sv_client, PRINT_HIGH, "You were kicked from the game\n");
 	SV_DropClient(sv_client);
-	sv_client->lastmessage = svs.realtime;	// min case there is a funny zombie
+	sv_client->lastmessage = svs.realtime; // In case there is a funny zombie
 }
 
 void SV_Status_f(void)
