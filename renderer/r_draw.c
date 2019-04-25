@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 image_t *draw_chars;
 
 extern qboolean scrap_dirty;
-void Scrap_Upload(void);
+extern void Scrap_Upload(void);
 
 #define DEFAULT_FONT_SIZE 8.0f
 
@@ -35,24 +35,18 @@ void RefreshFont(void)
 
 	draw_chars = R_FindImage(va("fonts/%s.pcx", con_font->string), it_pic, true);
 
-	if (!draw_chars) // fall back to default font
+	if (!draw_chars) // Fall back to default font
 		draw_chars = R_FindImage("fonts/default.pcx", it_pic, true);
 
-	if (!draw_chars) // fall back to old Q2 conchars
+	if (!draw_chars) // Fall back to old Q2 conchars
 		draw_chars = R_FindImage("pics/conchars.pcx", it_pic, true);
 
-	if (!draw_chars) // prevent crash caused by missing font
+	if (!draw_chars) // Prevent crash caused by missing font
 		VID_Error(ERR_FATAL, "RefreshFont: couldn't load pics/conchars");
 
 	GL_Bind(draw_chars->texnum);
 }
 
-
-/*
-===============
-R_DrawInitLocal
-===============
-*/
 void R_DrawInitLocal(void)
 {
 	image_t	*R_DrawFindPic(char *name);
@@ -60,41 +54,26 @@ void R_DrawInitLocal(void)
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	RefreshFont(); // load console characters (don't bilerp characters)
-	R_InitChars(); // init char indexes
+	RefreshFont(); // Load console characters (don't bilerp characters)
+	R_InitChars(); // Init char indexes
 }
 
-
-/*
-================
-R_CharMapScale
-================
-*/
 float R_CharMapScale(void)
 {
-	return draw_chars->width / 128.0; //current width / original width
+	return draw_chars->width / 128.0f; // Current width / original width
 }
 
 
-unsigned char_count;
-/*
-================
-R_InitChars
-================
-*/
+static unsigned char_count; //mxd. +static
+
 void R_InitChars(void)
 {
 	char_count = 0;
 }
 
-/*
-================
-R_FlushChars
-================
-*/
 void R_FlushChars(void)
 {
-	if (rb_vertex == 0 || rb_index == 0) // nothing to flush
+	if (rb_vertex == 0 || rb_index == 0) // Nothing to flush
 		return;
 
 	GL_Disable(GL_ALPHA_TEST);
@@ -112,35 +91,31 @@ void R_FlushChars(void)
 	GL_Enable(GL_ALPHA_TEST);
 }
 
-/*
-================
-R_DrawChar
-Draws one variable sized graphics character with 0 being transparent.
-It can be clipped to the top of the screen to allow the console to be smoothly scrolled off.
-================
-*/
+// Draws one variable sized graphics character with 0 being transparent.
+// It can be clipped to the top of the screen to allow the console to be smoothly scrolled off.
 void R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last)
 {
-	vec2_t		texCoord[4], verts[4];
-	qboolean	addChar = true;
+	vec2_t texCoord[4], verts[4];
+	qboolean addChar = true;
 
 	num &= 255;
 	alpha = clamp(alpha, 1, 255); //mxd
 
-	if ((num & 127) == 32)	// space
+	if ((num & 127) == 32) // Space char
 		addChar = false;
-	if (y <= -(scale * DEFAULT_FONT_SIZE))	// totally off screen
+
+	if (y <= -(scale * DEFAULT_FONT_SIZE)) // Totally off screen
 		addChar = false;
 
 	const int row = num >> 4;
 	const int col = num & 15;
 
-	const float frow = row * 0.0625;
-	const float fcol = col * 0.0625;
-	const float size = 0.0625;
+	const float frow = row * 0.0625f;
+	const float fcol = col * 0.0625f;
+	const float size = 0.0625f;
 	const float cscale = scale * DEFAULT_FONT_SIZE;
 
-	const float italicAdd = (italic ? cscale * 0.25 : 0);
+	const float italicAdd = (italic ? cscale * 0.25f : 0);
 
 	if (addChar)
 	{
@@ -155,7 +130,11 @@ void R_DrawChar(float x, float y, int num, float scale, int red, int green, int 
 		Vector2Set(verts[3], x - italicAdd, y + cscale);
 
 		if (char_count == 0)
-			rb_vertex = rb_index = 0;
+		{
+			rb_vertex = 0;
+			rb_index = 0;
+		}
+
 		if (rb_vertex + 4 >= MAX_VERTICES || rb_index + 6 >= MAX_INDICES)
 			R_FlushChars();
 
@@ -181,16 +160,10 @@ void R_DrawChar(float x, float y, int num, float scale, int red, int green, int 
 		R_FlushChars();
 }
 
-
-/*
-=============
-R_DrawFindPic
-=============
-*/
 image_t	*R_DrawFindPic(char *name)
 {
 	image_t *gl;
-	char	fullname[MAX_QPATH];
+	char fullname[MAX_QPATH];
 
 	if (name[0] != '/' && name[0] != '\\')
 	{
@@ -205,18 +178,14 @@ image_t	*R_DrawFindPic(char *name)
 	return gl;
 }
 
-/*
-=============
-R_DrawGetPicSize
-=============
-*/
 void R_DrawGetPicSize(int *w, int *h, char *pic)
 {
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
 	{
-		*w = *h = 0; // returned -1 in KMQ2
-		return;
+		*w = 0;
+		*h = 0;
+		return; // Returned -1 in KMQ2
 	}
 
 	// Factor in replace scale, so tga/jpg replacements are scaled down...
@@ -224,12 +193,6 @@ void R_DrawGetPicSize(int *w, int *h, char *pic)
 	*h = (int)(gl->height * gl->replace_scale_h); //BUG? mxd. was replace_scale_w
 }
 
-
-/*
-=============
-R_DrawStretchPic
-=============
-*/
 void R_DrawStretchPic(int x, int y, int w, int h, char *pic, float alpha)
 {
 	vec2_t texCoord[4], verts[4];
@@ -262,7 +225,8 @@ void R_DrawStretchPic(int x, int y, int w, int h, char *pic, float alpha)
 	Vector2Set(verts[2], x + w, y + h);
 	Vector2Set(verts[3], x, y + h);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -282,7 +246,7 @@ void R_DrawStretchPic(int x, int y, int w, int h, char *pic, float alpha)
 	RB_RenderMeshGeneric(false);
 
 	// Psychospaz's transparent console support
-	if (gl->has_alpha || alpha < 1.0)
+	if (gl->has_alpha || alpha < 1.0f)
 	{
 		GL_DepthMask(true);
 		GL_TexEnv(GL_REPLACE);
@@ -291,29 +255,20 @@ void R_DrawStretchPic(int x, int y, int w, int h, char *pic, float alpha)
 	}
 }
 
-
-/*
-=============
-R_DrawScaledPic
-Psychospaz's code for drawing stretched crosshairs
-=============
-*/
+// Psychospaz's code for drawing stretched crosshairs
 void R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic)
 {
 	vec2_t texCoord[4], verts[4];
 
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
-	{
-		VID_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
-		return;
-	}
+		return; //mxd. R_FindImage has already printed a warning if the image wasn't found
 
 	if (scrap_dirty)
 		Scrap_Upload();
 
-	// add alpha support
-	if (gl->has_alpha || alpha < 1.0)
+	// Added alpha support
+	if (gl->has_alpha || alpha < 1.0f)
 	{
 		GL_Disable(GL_ALPHA_TEST);
 		GL_TexEnv(GL_MODULATE);
@@ -325,8 +280,8 @@ void R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic)
 
 	float scale_x = scale;
 	float scale_y = scale;
-	scale_x *= gl->replace_scale_w; // scale down if replacing a pcx image
-	scale_y *= gl->replace_scale_h; // scale down if replacing a pcx image
+	scale_x *= gl->replace_scale_w; // Scale down if replacing a pcx image
+	scale_y *= gl->replace_scale_h; // Scale down if replacing a pcx image
 
 	Vector2Set(texCoord[0], gl->sl, gl->tl);
 	Vector2Set(texCoord[1], gl->sh, gl->tl);
@@ -341,7 +296,8 @@ void R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic)
 	Vector2Set(verts[2], x + gl->width + xoff, y + gl->height + yoff);
 	Vector2Set(verts[3], x, y + gl->height + yoff);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -354,37 +310,29 @@ void R_DrawScaledPic(int x, int y, float scale, float alpha, char *pic)
 	{
 		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
 		VA_SetElem3(vertexArray[rb_vertex], verts[i][0], verts[i][1], 0);
-		VA_SetElem4(colorArray[rb_vertex], 1.0, 1.0, 1.0, alpha);
+		VA_SetElem4(colorArray[rb_vertex], 1.0f, 1.0f, 1.0f, alpha);
 		rb_vertex++;
 	}
 
 	RB_RenderMeshGeneric(false);
 
-	if (gl->has_alpha || alpha < 1.0)
+	// Added alpha support
+	if (gl->has_alpha || alpha < 1.0f)
 	{
 		GL_DepthMask(true);
 		GL_TexEnv(GL_REPLACE);
 		GL_Disable(GL_BLEND);
-		GL_Enable(GL_ALPHA_TEST); // add alpha support
+		GL_Enable(GL_ALPHA_TEST);
 	}
 }
 
-
-/*
-=============
-R_DrawPic
-=============
-*/
 void R_DrawPic(int x, int y, char *pic)
 {
 	vec2_t texCoord[4], verts[4];
 
 	image_t *gl = R_DrawFindPic(pic);
 	if (!gl)
-	{
-		VID_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
-		return;
-	}
+		return; //mxd. R_FindImage has already printed a warning if the image wasn't found
 
 	if (scrap_dirty)
 		Scrap_Upload();
@@ -401,7 +349,8 @@ void R_DrawPic(int x, int y, char *pic)
 	Vector2Set(verts[2], x + gl->width, y + gl->height);
 	Vector2Set(verts[3], x, y + gl->height);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -414,30 +363,21 @@ void R_DrawPic(int x, int y, char *pic)
 	{
 		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
 		VA_SetElem3(vertexArray[rb_vertex], verts[i][0], verts[i][1], 0);
-		VA_SetElem4(colorArray[rb_vertex], 1.0, 1.0, 1.0, 1.0);
+		VA_SetElem4(colorArray[rb_vertex], 1.0f, 1.0f, 1.0f, 1.0f);
 		rb_vertex++;
 	}
 
 	RB_RenderMeshGeneric(false);
 }
 
-/*
-=============
-R_DrawTileClear
-
-This repeats a 64*64 tile graphic to fill the screen around a sized down refresh window.
-=============
-*/
-void R_DrawTileClear(int x, int y, int w, int h, char *pic)
+// This repeats a 64*64 tile graphic to fill the screen around a sized down refresh window.
+void R_DrawTileClear(int x, int y, int w, int h, char *pic) //TODO: mxd. Remove R_DrawTileClear
 {
 	vec2_t texCoord[4], verts[4];
 
 	image_t *image = R_DrawFindPic(pic);
 	if (!image)
-	{
-		VID_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
-		return;
-	}
+		return; //mxd. R_FindImage has already printed a warning if the image wasn't found
 
 	GL_Bind(image->texnum);
 
@@ -451,7 +391,8 @@ void R_DrawTileClear(int x, int y, int w, int h, char *pic)
 	Vector2Set(verts[2], x + w, y + h);
 	Vector2Set(verts[3], x, y + h);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -464,21 +405,14 @@ void R_DrawTileClear(int x, int y, int w, int h, char *pic)
 	{
 		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
 		VA_SetElem3(vertexArray[rb_vertex], verts[i][0], verts[i][1], 0);
-		VA_SetElem4(colorArray[rb_vertex], 1.0, 1.0, 1.0, 1.0);
+		VA_SetElem4(colorArray[rb_vertex], 1.0f, 1.0f, 1.0f, 1.0f);
 		rb_vertex++;
 	}
 
 	RB_RenderMeshGeneric(false);
 }
 
-
-/*
-======================
-R_DrawFill
-
-Fills a box of pixels with a 24-bit color w/ alpha
-===========================
-*/
+// Fills a box of pixels with a 24-bit color with alpha
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha)
 {
 	vec2_t verts[4];
@@ -500,7 +434,8 @@ void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int al
 	Vector2Set(verts[2], x + w, y + h);
 	Vector2Set(verts[3], x, y + h);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -524,24 +459,16 @@ void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int al
 	GL_Enable(GL_ALPHA_TEST);
 }
 
-//=============================================================================
-
-/*
-=============
-R_DrawCameraEffect
-
-Video camera effect
-=============
-*/
+// Video camera effect
 extern void Mod_SetRenderParmsDefaults(renderparms_t *parms);
 
 void R_DrawCameraEffect(void)
 {
-	image_t			*image[2];
-	float			texparms[2][4];
-	vec2_t			texCoord[4];
-	vec3_t			verts[4];
-	renderparms_t	cameraParms;
+	image_t *image[2];
+	float texparms[2][4];
+	vec2_t texCoord[4];
+	vec3_t verts[4];
+	renderparms_t cameraParms;
 
 	image[0] = R_DrawFindPic("/gfx/2d/screenstatic.tga");
 	image[1] = R_DrawFindPic("/gfx/2d/scanlines.tga");
@@ -566,7 +493,8 @@ void R_DrawCameraEffect(void)
 	Vector4Set(texparms[0], 2, 2, -30, 10);
 	Vector4Set(texparms[1], 1, 10, 0, 0);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -599,13 +527,11 @@ void R_DrawCameraEffect(void)
 		{
 			VA_SetElem2(texCoordArray[0][j], texCoord[j][0], texCoord[j][1]);
 			VA_SetElem3(vertexArray[j], verts[j][0], verts[j][1], verts[j][2]);
-			VA_SetElem4(colorArray[j], 1, 1, 1, 1);
+			VA_SetElem4(colorArray[j], 1.0f, 1.0f, 1.0f, 1.0f);
 		}
 
 		RB_DrawArrays();
 	}
-
-	rb_vertex = rb_index = 0;
 
 	GL_DepthMask(true);
 	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -614,16 +540,8 @@ void R_DrawCameraEffect(void)
 	GL_Enable(GL_ALPHA_TEST);
 }
 
+#pragma region ======================= Cinematic streaming
 
-//=============================================================================
-
-/*
-=============
-R_DrawStretchRaw
-
-Cinematic streaming
-=============
-*/
 #ifdef ROQ_SUPPORT
 
 void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight)
@@ -633,7 +551,7 @@ void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth,
 	vec2_t texCoord[4], verts[4];
 
 	// Check the dimensions
-	if (!glConfig.arbTextureNonPowerOfTwo) // skip if nonstandard textures sizes are supported
+	if (!glConfig.arbTextureNonPowerOfTwo) // Skip if nonstandard textures sizes are supported
 	{
 		while (width < rawWidth)
 			width <<= 1;
@@ -676,7 +594,8 @@ void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth,
 	Vector2Set(verts[2], x + w, y + h);
 	Vector2Set(verts[3], x, y + h);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
@@ -689,14 +608,14 @@ void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth,
 	{
 		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
 		VA_SetElem3(vertexArray[rb_vertex], verts[i][0], verts[i][1], 0);
-		VA_SetElem4(colorArray[rb_vertex], 1, 1, 1, 1);
+		VA_SetElem4(colorArray[rb_vertex], 1.0f, 1.0f, 1.0f, 1.0f);
 		rb_vertex++;
 	}
 
 	RB_RenderMeshGeneric(false);
 }
 
-#else // old 8-bit, 256x256 version
+#else // Old 8-bit, 256x256 version
 
 extern unsigned r_rawpalette[256];
 
@@ -810,3 +729,5 @@ void R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data
 		//GL_Enable(GL_ALPHA_TEST);
 }
 #endif // ROQ_SUPPORT
+
+#pragma endregion 
