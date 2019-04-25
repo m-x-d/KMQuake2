@@ -634,10 +634,14 @@ void PlayerConfig_MouseClick(void)
 	}
 }
 
+#define SKIN_SELECTOR_ARROW_L "/gfx/ui/arrows/arrow_left.pcx" //mxd
+#define SKIN_SELECTOR_ARROW_R "/gfx/ui/arrows/arrow_right.pcx"
+#define SKIN_SELECTOR_LIST_BG "/gfx/ui/listbox_background.pcx"
+
 void PlayerConfig_DrawSkinSelection(void)
 {
 	char scratch[MAX_QPATH];
-	const float	icon_x = SCREEN_WIDTH * 0.5 - 5; //width - 325
+	const float	icon_x = SCREEN_WIDTH * 0.5f - 5;
 	const float	icon_y = SCREEN_HEIGHT - 108;
 	float icon_offset = 0;
 	int color[3];
@@ -653,19 +657,19 @@ void PlayerConfig_DrawSkinSelection(void)
 		skinindex = s_player_skin_box.curvalue - 3;
 
 	// Left arrow
-	Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_left.pcx");
+	Com_sprintf(scratch, sizeof(scratch), SKIN_SELECTOR_ARROW_L);
 	SCR_DrawPic(icon_x - 39, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0f);
 
 	// Background
 	SCR_DrawFill(icon_x - 3, icon_y - 3, NUM_SKINBOX_ITEMS * 34 + 4, 38, ALIGN_CENTER, 0, 0, 0, 255);
-	if (R_DrawFindPic("/gfx/ui/listbox_background.pcx"))
+	if (R_DrawFindPic(SKIN_SELECTOR_LIST_BG))
 	{
 		float x = icon_x - 2;
 		float y = icon_y - 2;
 		float w = NUM_SKINBOX_ITEMS * 34 + 2;
 		float h = 36;
 		SCR_AdjustFrom640(&x, &y, &w, &h, ALIGN_CENTER);
-		R_DrawTileClear((int)x, (int)y, (int)w, (int)h, "/gfx/ui/listbox_background.pcx");
+		R_DrawStretchPic((int)x, (int)y, (int)w, (int)h, SKIN_SELECTOR_LIST_BG, 1.0f); //mxd. R_DrawTileClear -> R_DrawStretchPic
 	}
 	else
 	{
@@ -690,13 +694,13 @@ void PlayerConfig_DrawSkinSelection(void)
 
 	// Right arrow
 	icon_offset = NUM_SKINBOX_ITEMS * 34;
-	Com_sprintf(scratch, sizeof(scratch), "/gfx/ui/arrows/arrow_right.pcx");
+	Com_sprintf(scratch, sizeof(scratch), SKIN_SELECTOR_ARROW_R);
 	SCR_DrawPic(icon_x + icon_offset + 5, icon_y + 2, 32, 32, ALIGN_CENTER, scratch, 1.0f);
 }
 
 void PlayerConfig_MenuDraw(void)
 {
-	Menu_DrawBanner("m_banner_plauer_setup"); // typo for image name is id's fault
+	Menu_DrawBanner("m_banner_plauer_setup"); // Typo for image name is id's fault
 
 	refdef_t refdef;
 	memset(&refdef, 0, sizeof(refdef));
