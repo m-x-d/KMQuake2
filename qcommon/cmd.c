@@ -17,41 +17,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-// cmd.c -- Quake script command processing module
+// cmd.c -- Quake 2 script command processing module
 
 #include "qcommon.h"
 
-#define MAX_ALIAS_NAME		32
-#define ALIAS_LOOP_COUNT	16
+static qboolean cmd_wait; //mxd. +static
+static int alias_count; // For detecting runaway loops
 
-typedef struct cmdalias_s
-{
-	struct cmdalias_s *next;
-	char name[MAX_ALIAS_NAME];
-	char *value;
-} cmdalias_t;
-
-cmdalias_t *cmd_alias;
-qboolean cmd_wait;
-int alias_count; // For detecting runaway loops
-
-// Causes execution of the remainder of the command buffer to be delayed until next frame.
-// This allows commands like: bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
-void Cmd_Wait_f(void)
-{
-	cmd_wait = true;
-}
-
-/*
-=============================================================================
-	COMMAND BUFFER
-=============================================================================
-*/
+#pragma region ======================= COMMAND BUFFER
 
 sizebuf_t cmd_text;
 byte cmd_text_buf[32768]; // Knightmare increased, was 8192
 byte defer_text_buf[32768]; // Knightmare increased, was 8192
-
 
 void Cbuf_Init(void)
 {
@@ -266,12 +243,28 @@ qboolean Cbuf_AddLateCommands(void)
 	return ret;
 }
 
+#pragma endregion 
 
-/*
-==============================================================================
-	SCRIPT COMMANDS
-==============================================================================
-*/
+#pragma region ======================= SCRIPT COMMANDS
+
+#define MAX_ALIAS_NAME		32
+#define ALIAS_LOOP_COUNT	16
+
+typedef struct cmdalias_s
+{
+	struct cmdalias_s *next;
+	char name[MAX_ALIAS_NAME];
+	char *value;
+} cmdalias_t;
+
+static cmdalias_t *cmd_alias; //mxd. +static
+
+// Causes execution of the remainder of the command buffer to be delayed until next frame.
+// This allows commands like: bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
+void Cmd_Wait_f(void)
+{
+	cmd_wait = true;
+}
 
 void Cmd_Exec_f(void)
 {
@@ -367,17 +360,15 @@ void Cmd_Alias_f(void)
 	a->value = CopyString(cmd);
 }
 
-/*
-=============================================================================
-	COMMAND EXECUTION
-=============================================================================
-*/
+#pragma endregion
+
+#pragma region ======================= COMMAND EXECUTION
 
 typedef struct cmd_function_s
 {
-	struct cmd_function_s	*next;
-	char					*name;
-	xcommand_t				function;
+	struct cmd_function_s *next;
+	char *name;
+	xcommand_t function;
 } cmd_function_t;
 
 static int cmd_argc;
@@ -386,7 +377,6 @@ static char *cmd_null_string = "";
 static char cmd_args[MAX_STRING_CHARS];
 
 static cmd_function_t *cmd_functions; // Possible commands to execute
-
 
 int Cmd_Argc(void)
 {
@@ -519,8 +509,7 @@ void Cmd_TokenizeString(char *text, qboolean macroexpand)
 			cmd_args[sizeof(cmd_args) - 1] = 0; 
 
 			// Strip off any trailing whitespace
-			int l = strlen(cmd_args) - 1;
-			for (; l >= 0; l--)
+			for (int l = strlen(cmd_args) - 1; l >= 0; l--)
 			{
 				if (cmd_args[l] <= ' ')
 					cmd_args[l] = 0;
@@ -830,3 +819,5 @@ void Cmd_Init(void)
 	Cmd_AddCommand("alias", Cmd_Alias_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
+
+#pragma endregion
