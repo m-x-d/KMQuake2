@@ -18,18 +18,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-/*
-d*_t structures are on-disk representations
-m*_t structures are in-memory
-*/
+// r_model.h -- brush models
+
+// d*_t structures are on-disk representations
+// m*_t structures are in-memory
 
 #pragma once
-
-/*
-==============================================================================
-	BRUSH MODELS
-==============================================================================
-*/
 
 // In memory representation
 typedef struct
@@ -39,12 +33,12 @@ typedef struct
 
 typedef struct
 {
-	vec3_t		mins, maxs;
-	vec3_t		origin;		// For sounds or lights
-	float		radius;
-	int			headnode;
-	int			visleafs;	// Not including the solid leaf 0
-	int			firstface, numfaces;
+	vec3_t mins, maxs;
+	vec3_t origin; // For sounds or lights
+	float radius;
+	int headnode;
+	int visleafs; // Not including the solid leaf 0
+	int firstface, numfaces;
 } mmodel_t;
 
 
@@ -54,115 +48,107 @@ typedef struct
 
 #define	SURF_PLANEBACK		2
 #define	SURF_DRAWSKY		4
-#define SURF_DRAWTURB		0x10
-#define SURF_DRAWBACKGROUND	0x40
-#define SURF_LIGHTMAPPED	0x80
-#define SURF_UNDERWATER		0x100
-#define SURF_UNDERSLIME		0x200
-#define SURF_UNDERLAVA		0x400
+#define SURF_DRAWTURB		16
+#define SURF_DRAWBACKGROUND	64
+#define SURF_LIGHTMAPPED	128
+#define SURF_UNDERWATER		256
+#define SURF_UNDERSLIME		512
+#define SURF_UNDERLAVA		1024
 #define SURF_MASK_CAUSTIC	(SURF_UNDERWATER | SURF_UNDERSLIME | SURF_UNDERLAVA)
-#define SURF_ENVMAP			0x800 // Psychospaz's envmapping
+#define SURF_ENVMAP			2048 // Psychospaz's envmapping
 
 typedef struct
 {
-	unsigned short	v[2];
-	unsigned int	cachededgeoffset;
+	unsigned short v[2];
 } medge_t;
 
 typedef struct mtexinfo_s
 {
-	float		vecs[2][4];
-	int			texWidth;	// added Q2E hack
-	int			texHeight;	// added Q2E hack
-	int			flags;
-	int			numframes;
-	struct mtexinfo_s *next; // animation chain
-	image_t		*image;
-	image_t		*glow;		// glow overlay
-	float		*nmapvectors; //mxd. texWidth * texHeight of float[3] normalmap vectors, in [-1 .. 1] range
+	float vecs[2][4];
+	int texWidth;	// Added Q2E hack
+	int texHeight;	// Added Q2E hack
+	int flags;
+	int numframes;
+	struct mtexinfo_s *next; // Animation chain
+	image_t *image;
+	image_t *glow; // Glow overlay
+	float *nmapvectors; //mxd. texWidth * texHeight of float[3] normalmap vectors, in [-1 .. 1] range
 } mtexinfo_t;
 
 #define	VERTEXSIZE	7
 
 typedef struct glpoly_s
 {
-	struct	glpoly_s	*next;
-	struct	glpoly_s	*chain;
-	int		numverts;
+	struct glpoly_s *next;
+	struct glpoly_s *chain;
+	int numverts;
 
-	qboolean	vertexlightset;
-	byte		*vertexlightbase;
-	byte		*vertexlight;
-	vec3_t		center;
+	qboolean vertexlightset;
+	byte *vertexlightbase;
+	byte *vertexlight;
+	vec3_t center;
 
-	int			flags; // for SURF_UNDERWATER (not needed anymore?)
-	float		verts[4][VERTEXSIZE]; // variable sized (xyz s1t1 s2t2)
+	int flags; // For SURF_UNDERWATER (not needed anymore?) //TODO: mxd. Unused, remove
+	float verts[4][VERTEXSIZE]; // Variable sized (xyz s1t1 s2t2)
 } glpoly_t;
 
 typedef struct msurface_s
 {
-	int			visframe;	// should be drawn when node is crossed
+	int visframe; // Should be drawn when node is crossed
 
-	cplane_t	*plane;
-	int			flags;
+	cplane_t *plane;
+	int flags;
 
-	int			firstedge;	// look up in model->surfedges[], negative numbers
-	int			numedges;	// are backwards edges
+	int firstedge; // Look up in model->surfedges[], negative numbers are backwards edges
+	int numedges;
 	
-	short		texturemins[2];
-	short		extents[2];
+	short texturemins[2];
+	short extents[2];
 
-	int			light_s, light_t;	// gl lightmap coordinates
-	int			light_smax, light_tmax;
-	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
+	int light_s, light_t; // gl lightmap coordinates
+	int light_smax, light_tmax;
+	int dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
-	vec3_t		*lightmap_points; //mxd. Centers of lightmap texels, in world space, size is light_smax * light_tmax
-	vec3_t		*normalmap_normals; //mxd. Normalmap vectors, relative to surface normal, used only when lmscale is 1
+	vec3_t *lightmap_points; //mxd. Centers of lightmap texels, in world space, size is light_smax * light_tmax
+	vec3_t *normalmap_normals; //mxd. Normalmap vectors, relative to surface normal, used only when lmscale is 1
 
-	glpoly_t	*polys;				// multiple if warped
-	struct	msurface_s	*texturechain;
-	struct	msurface_s	*lightmapchain;
+	glpoly_t *polys; // Multiple if warped
+	struct msurface_s *texturechain;
+	struct msurface_s *lightmapchain;
 
-	mtexinfo_t	*texinfo;
+	mtexinfo_t *texinfo;
 	
-// lighting info
-	int			dlightframe;
-	int			dlightbits[(MAX_DLIGHTS + 31) >> 5]; // derived from MAX_DLIGHTS
-	qboolean	cached_dlight;
+	// Lighting info
+	int dlightframe;
+	int dlightbits[(MAX_DLIGHTS + 31) >> 5]; // Derived from MAX_DLIGHTS
+	qboolean cached_dlight;
 
-	int			lightmaptexturenum;
-	byte		styles[MAXLIGHTMAPS];
-	float		cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
-	byte		*samples;		// [numstyles*surfsize]
-	byte		*stains;		// Knightmare- added stainmaps
+	int lightmaptexturenum;
+	byte styles[MAXLIGHTMAPS];
+	float cached_light[MAXLIGHTMAPS]; // Values currently used in lightmap
+	byte *samples; // [numstyles*surfsize]
+	byte *stains; // Knightmare- added stainmaps
 
-	void		*chain_part;
-	void		*chain_ent;
+	void *chain_part;
+	void *chain_ent;
 
-	int			checkCount;
-	entity_t	*entity;		// entity pointer
+	int checkCount;
+	entity_t *entity; // Entity pointer
 } msurface_t;
-
-typedef struct malphasurface_s
-{
-	msurface_t	*surf;
-	entity_t	*entity; // entity pointer
-	struct	malphasurface_s	*surfacechain;
-} malphasurface_t;
 
 typedef struct mnode_s
 {
 	// Common with leaf
-	int			contents;	// -1, to differentiate from leafs
-	int			visframe;	// node needs to be traversed if current
+	int contents; // -1, to differentiate from leafs
+	int visframe; // Node needs to be traversed if current
 	
-	float		minmaxs[6];	// for bounding box culling
+	float minmaxs[6]; // For bounding box culling
 
-	struct mnode_s	*parent;
+	struct mnode_s *parent;
 
 	// Node specific
-	cplane_t	*plane;
-	struct mnode_s	*children[2];
+	cplane_t *plane;
+	struct mnode_s *children[2];
 
 	unsigned short firstsurface;
 	unsigned short numsurfaces;
@@ -171,21 +157,20 @@ typedef struct mnode_s
 typedef struct mleaf_s
 {
 	// Common with node
-	int			contents;	// wil be a negative contents number
-	int			visframe;	// node needs to be traversed if current
+	int contents;	// Will be a negative contents number
+	int visframe;	// Node needs to be traversed if current
 
-	float		minmaxs[6];	// for bounding box culling
+	float minmaxs[6];	// For bounding box culling
 
-	struct mnode_s	*parent;
+	struct mnode_s *parent;
 
 	// Leaf specific
-	int			cluster;
-	int			area;
+	int cluster;
+	int area;
 
-	msurface_t	**firstmarksurface;
-	int			nummarksurfaces;
+	msurface_t **firstmarksurface;
+	int nummarksurfaces;
 } mleaf_t;
-
 
 //===================================================================
 
@@ -194,74 +179,74 @@ typedef enum { mod_bad, mod_brush, mod_sprite, mod_alias, mod_md2 } modtype_t;
 
 typedef struct model_s
 {
-	char		name[MAX_QPATH];
+	char name[MAX_QPATH];
 
-	int			registration_sequence;
+	int registration_sequence;
 
-	modtype_t	type;
-	int			numframes;
+	modtype_t type;
+	int numframes;
 	
-	int			flags;
+	int flags;
 
 	// Volume occupied by the model graphics
-	vec3_t		mins, maxs;
-	float		radius;
+	vec3_t mins, maxs;
+	float radius;
 
 	// Solid volume for clipping 
-	qboolean	clipbox;
-	vec3_t		clipmins, clipmaxs;
+	qboolean clipbox;
+	vec3_t clipmins, clipmaxs;
 
 	// Brush model
-	int			firstmodelsurface, nummodelsurfaces;
-	int			lightmap;	// only for submodels
+	int firstmodelsurface, nummodelsurfaces;
+	int lightmap; // Only for submodels
 
-	int			numsubmodels;
-	mmodel_t	*submodels;
+	int numsubmodels;
+	mmodel_t *submodels;
 
-	int			numplanes;
-	cplane_t	*planes;
+	int numplanes;
+	cplane_t *planes;
 
-	int			numleafs;	// number of visible leafs, not counting 0
-	mleaf_t		*leafs;
+	int numleafs; // Number of visible leafs, not counting 0
+	mleaf_t *leafs;
 
-	int			numvertexes;
-	mvertex_t	*vertexes;
+	int numvertexes;
+	mvertex_t *vertexes;
 
-	int			numedges;
-	medge_t		*edges;
+	int numedges;
+	medge_t *edges;
 
-	int			numnodes;
-	int			firstnode;
-	mnode_t		*nodes;
+	int numnodes;
+	int firstnode;
+	mnode_t *nodes;
 
-	int			numtexinfo;
-	mtexinfo_t	*texinfo;
+	int numtexinfo;
+	mtexinfo_t *texinfo;
 
-	int			numsurfaces;
-	msurface_t	*surfaces;
+	int numsurfaces;
+	msurface_t *surfaces;
 
-	int			numsurfedges;
-	int			*surfedges;
+	int numsurfedges;
+	int *surfedges;
 
-	int			nummarksurfaces;
-	msurface_t	**marksurfaces;
+	int nummarksurfaces;
+	msurface_t **marksurfaces;
 
-	dvis_t		*vis;
+	dvis_t *vis;
 
-	byte		*lightdata;
+	byte *lightdata;
 
 	// For alias models and skins
 	// Echon's per-mesh skin support
-	image_t		*skins[MD3_MAX_MESHES][MAX_MD2SKINS];
+	image_t *skins[MD3_MAX_MESHES][MAX_MD2SKINS];
 
-	size_t		extradatasize;
-	void		*extradata;
+	size_t extradatasize;
+	void *extradata;
 
-	qboolean	hasAlpha; // If model has scripted transparency
+	qboolean hasAlpha; // If model has scripted transparency
 
-#ifdef PROJECTION_SHADOWS // projection shadows from BeefQuake R6
+#ifdef PROJECTION_SHADOWS // Projection shadows from BeefQuake R6
 	//signed int	edge_tri[MAX_TRIANGLES][3]; // make this dynamically allocated?
-	int			*edge_tri;
+	int *edge_tri;
 #endif // end projection shadows from BeefQuake R6
 } model_t;
 
@@ -279,4 +264,4 @@ void *ModChunk_Alloc(size_t size); //mxd
 void Mod_FreeAll(void);
 void Mod_Free(model_t *mod);
 
-extern qboolean registration_active; // map registration flag
+extern qboolean registration_active; // Map registration flag
