@@ -22,30 +22,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-int	r_dlightframecount;
+static int r_dlightframecount; //mxd. +static
 
-void vectoangles (vec3_t value1, vec3_t angles);
+#pragma region ======================= DYNAMIC LIGHTS BLEND RENDERING
 
-//#define	DLIGHT_CUTOFF	64	// Knightmare- no longer hard-coded
+#define DLIGHT_RADIUS 16.0f // was 32.0
 
-/*
-=============================================================================
-
-DYNAMIC LIGHTS BLEND RENDERING
-
-=============================================================================
-*/
-
-#define DLIGHT_RADIUS 16.0 // was 32.0
-
-/*
-=============
-R_AddDlight
-=============
-*/
-void R_AddDlight (dlight_t *light)
+void R_AddDlight(dlight_t *light)
 {
-	const float rad = light->intensity * 0.35;
+	const float rad = light->intensity * 0.35f;
 
 	vec3_t v;
 	VectorSubtract(light->origin, r_origin, v);
@@ -53,7 +38,7 @@ void R_AddDlight (dlight_t *light)
 	for (int i = 0; i < 3; i++)
 		v[i] = light->origin[i] - vpn[i] * rad;
 
-	if (RB_CheckArrayOverflow(DLIGHT_RADIUS + 1, DLIGHT_RADIUS * 3)) 
+	if (RB_CheckArrayOverflow(DLIGHT_RADIUS + 1, DLIGHT_RADIUS * 3))
 		RB_RenderMeshGeneric(true);
 
 	for (int i = 1; i <= DLIGHT_RADIUS; i++)
@@ -64,7 +49,7 @@ void R_AddDlight (dlight_t *light)
 	}
 
 	VA_SetElem3(vertexArray[rb_vertex], v[0], v[1], v[2]);
-	VA_SetElem4(colorArray[rb_vertex], light->color[0] * 0.2, light->color[1] * 0.2, light->color[2] * 0.2, 1.0);
+	VA_SetElem4(colorArray[rb_vertex], light->color[0] * 0.2f, light->color[1] * 0.2f, light->color[2] * 0.2f, 1.0f);
 	rb_vertex++;
 
 	for (int i = DLIGHT_RADIUS; i > 0; i--)
@@ -74,22 +59,17 @@ void R_AddDlight (dlight_t *light)
 			v[j] = light->origin[j] + vright[j] * cosf(a) * rad + vup[j] * sinf(a) * rad;
 
 		VA_SetElem3(vertexArray[rb_vertex], v[0], v[1], v[2]);
-		VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, 1.0);
+		VA_SetElem4(colorArray[rb_vertex], 0.0f, 0.0f, 0.0f, 1.0f);
 		rb_vertex++;
 	}
 }
 
-/*
-=============
-R_RenderDlights
-=============
-*/
-void R_RenderDlights (void)
+void R_RenderDlights(void)
 {
 	if (!r_flashblend->value)
 		return;
 
-	r_dlightframecount = r_framecount + 1;	// because the count hasn't advanced yet for this frame
+	r_dlightframecount = r_framecount + 1; // Because the count hasn't advanced yet for this frame
 
 	GL_DepthMask(0);
 	GL_DisableTexture(0);
@@ -97,7 +77,8 @@ void R_RenderDlights (void)
 	GL_Enable(GL_BLEND);
 	GL_BlendFunc(GL_ONE, GL_ONE);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
 	dlight_t *l = r_newrefdef.dlights;
 	for (int i = 0; i < r_newrefdef.num_dlights; i++, l++)
@@ -112,22 +93,13 @@ void R_RenderDlights (void)
 	GL_DepthMask(1);
 }
 
+#pragma endregion
 
-/*
-=============================================================================
+#pragma region ======================= DYNAMIC LIGHTS
 
-DYNAMIC LIGHTS
-
-=============================================================================
-*/
-
-/*
-=============
-R_MarkLights
-=============
-*/
 extern cvar_t *r_dlights_normal;
-void R_MarkLights (dlight_t *light, int num, mnode_t *node)
+
+void R_MarkLights(dlight_t *light, int num, mnode_t *node)
 {
 	if (node->contents != -1)
 		return;
@@ -141,13 +113,13 @@ void R_MarkLights (dlight_t *light, int num, mnode_t *node)
 		return;
 	}
 
-	if (dist < -light->intensity + r_lightcutoff->value)	//** DMP var dynalight cutoff
+	if (dist < -light->intensity + r_lightcutoff->value) //** DMP var dynalight cutoff
 	{
 		R_MarkLights(light, num, node->children[1]);
 		return;
 	}
-		
-	// mark the polygons
+
+	// Mark the polygons
 	msurface_t *surf = r_worldmodel->surfaces + node->firstsurface;
 	for (int i = 0; i < node->numsurfaces; i++, surf++)
 	{
@@ -160,12 +132,11 @@ void R_MarkLights (dlight_t *light, int num, mnode_t *node)
 			if ((surf->flags & SURF_PLANEBACK) != sidebit)
 				continue;
 		}
-		// end Knightmare
 
 		if (surf->dlightframe != r_dlightframecount)
 		{
 			memset(surf->dlightbits, 0, sizeof(surf->dlightbits));
-			surf->dlightbits[num >> 5] = 1 << (num & 31);	// was 0, fixes hyperblaster tearing
+			surf->dlightbits[num >> 5] = 1 << (num & 31); // Was 0, fixes hyperblaster tearing
 			surf->dlightframe = r_dlightframecount;
 		}
 		else
@@ -178,47 +149,30 @@ void R_MarkLights (dlight_t *light, int num, mnode_t *node)
 	R_MarkLights(light, num, node->children[1]);
 }
 
-
-/*
-=============
-R_PushDlights
-=============
-*/
-void R_PushDlights (void)
+void R_PushDlights(void)
 {
 	if (r_flashblend->value)
 		return;
 
-	r_dlightframecount = r_framecount + 1; // because the count hasn't advanced yet for this frame
+	r_dlightframecount = r_framecount + 1; // Because the count hasn't advanced yet for this frame
 
 	dlight_t *l = r_newrefdef.dlights;
 	for (int i = 0; i < r_newrefdef.num_dlights; i++, l++)
 		R_MarkLights(l, i, r_worldmodel->nodes);
 }
 
+#pragma endregion 
 
-/*
-=============================================================================
+#pragma region ======================= LIGHT SAMPLING
 
-LIGHT SAMPLING
+vec3_t lightspot;
 
-=============================================================================
-*/
-
-cplane_t	*lightplane; // used as shadow plane
-vec3_t		lightspot;
-
-/*
-===============
-RecursiveLightPoint
-===============
-*/
-int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
+int RecursiveLightPoint(vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 {
 	if (node->contents != -1)
-		return -1;		// didn't hit anything
+		return -1; // Didn't hit anything
 	
-	// calculate mid point
+	// Calculate mid point
 
 	// FIXME: optimize for axial
 	cplane_t *plane = node->plane;
@@ -234,17 +188,16 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 	for(int i = 0; i < 3; i++) //mxd
 		mid[i] = start[i] + (end[i] - start[i]) * frac;
 	
-	// go down front side	
+	// Go down front side
 	const int r = RecursiveLightPoint(color, node->children[side], start, mid);
 	if (r > -1)
-		return r;		// hit something
+		return r; // Hit something
 		
 	if ((back < 0) == side)
-		return -1;		// didn't hit anything
+		return -1; // Didn't hit anything
 		
-	// check for impact on this node
+	// Check for impact on this node
 	VectorCopy(mid, lightspot);
-	lightplane = plane;
 
 	msurface_t *surf = r_worldmodel->surfaces + node->firstsurface;
 
@@ -254,7 +207,7 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 			continue; //mxd. No lightmap data. Was return 0;
 		
 		if (surf->flags & (SURF_DRAWTURB | SURF_DRAWSKY)) 
-			continue;	// no lightmaps
+			continue; // No lightmaps
 
 		mtexinfo_t *tex = surf->texinfo;
 		
@@ -314,19 +267,12 @@ int RecursiveLightPoint (vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 		return 1;
 	}
 
-	// go down back side
+	// Go down back side
 	return RecursiveLightPoint(color, node->children[!side], mid, end);
 }
 
-
-/*
-===============
-R_MaxColorVec
-
-Psychospaz's lighting on alpha surfaces
-===============
-*/
-void R_MaxColorVec (vec3_t color)
+// Psychospaz's lighting on alpha surfaces
+void R_MaxColorVec(vec3_t color)
 {
 	float brightest = 0.0f;
 
@@ -340,13 +286,7 @@ void R_MaxColorVec (vec3_t color)
 		color[i] = clamp(color[i], 0, 1); //mxd
 }
 
-
-/*
-===============
-R_LightPoint
-===============
-*/
-void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt)
+void R_LightPoint(vec3_t p, vec3_t color, qboolean isEnt)
 {
 	if (!r_worldmodel->lightdata)
 	{
@@ -362,16 +302,16 @@ void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt)
 	}
 	else
 	{
-		// this catches too bright modulated color
+		// This catches too bright modulated color
 		for (int i = 0; i < 3; i++)
 			color[i] = min(color[i], 1);
 	}
 
-	// add dynamic lights
+	// Add dynamic lights
 	dlight_t *dl = r_newrefdef.dlights;
 	for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 	{
-		if (dl->spotlight) // spotlights
+		if (dl->spotlight) // Skip spotlights
 			continue;
 
 		vec3_t dist;
@@ -386,13 +326,7 @@ void R_LightPoint (vec3_t p, vec3_t color, qboolean isEnt)
 	}
 }
 
-
-/*
-===============
-R_LightPointDynamics
-===============
-*/
-void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount, int max)
+void R_LightPointDynamics(vec3_t p, vec3_t color, m_dlight_t *list, int *amount, int max)
 {
 	if (!r_worldmodel->lightdata)
 	{
@@ -408,17 +342,17 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 	}
 	else
 	{
-		// this catches too bright modulated color
+		// This catches too bright modulated color
 		for (int i = 0; i < 3; i++)
 			color[i] = min(color[i], 1);
 	}
 
-	// add dynamic lights
+	// Add dynamic lights
 	int m_dl = 0;
 	dlight_t *dl = r_newrefdef.dlights;
 	for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 	{
-		if (dl->spotlight) // spotlights
+		if (dl->spotlight) // Skip spotlights
 			continue;
 
 		vec3_t dist;
@@ -443,8 +377,8 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 			}
 			else
 			{
-				float	least_val = 10;
-				int		least_index = 0;
+				float least_val = 10;
+				int least_index = 0;
 
 				for (int i = 0; i < m_dl; i++)
 				{
@@ -466,13 +400,7 @@ void R_LightPointDynamics (vec3_t p, vec3_t color, m_dlight_t *list, int *amount
 	*amount = m_dl;
 }
 
-
-/*
-===============
-R_SurfLightPoint
-===============
-*/
-void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baselight)
+void R_SurfLightPoint(msurface_t *surf, vec3_t p, vec3_t color, qboolean baselight)
 {
 	if (!r_worldmodel->lightdata)
 	{
@@ -490,7 +418,7 @@ void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baseli
 		}
 		else
 		{
-			// this catches too bright modulated color
+			// This catches too bright modulated color
 			for (int i = 0; i < 3; i++)
 				color[i] = min(color[i], 1);
 		}
@@ -509,11 +437,11 @@ void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baseli
 			AngleVectors(hostent->angles, forward, right, up);
 		}
 
-		// add dynamic lights
+		// Add dynamic lights
 		dlight_t *dl = r_newrefdef.dlights;
 		for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 		{
-			// spotlights || no dlight casting
+			// Spotlight || no dlight casting
 			if (dl->spotlight || r_flashblend->value || !r_dynamic->value) 
 				continue;
 
@@ -543,30 +471,25 @@ void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baseli
 	}
 }
 
-//===================================================================
 // Knightmare- added Psychospaz's dynamic light-based shadows
+extern void vectoangles(vec3_t value1, vec3_t angles);
 
-/*
-===============
-R_ShadowLight
-===============
-*/
 void R_ShadowLight(vec3_t pos, vec3_t lightAdd)
 {
 	vec3_t dist;
 
-	if (!r_worldmodel || !r_worldmodel->lightdata) // keep old lame shadow
+	if (!r_worldmodel || !r_worldmodel->lightdata) // Keep old lame shadow
 		return;
 	
 	VectorClear(lightAdd);
 
-	// add dynamic light shadow angles
+	// Add dynamic light shadow angles
 	if (r_shadows->value == 2)
 	{
 		dlight_t *dl = r_newrefdef.dlights;
 		for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 		{
-			if (dl->spotlight) //spotlights
+			if (dl->spotlight) // Skip spotlights
 				continue;
 
 			VectorSubtract(dl->origin, pos, dist);
@@ -585,7 +508,7 @@ void R_ShadowLight(vec3_t pos, vec3_t lightAdd)
 	if (shadowdist > 4)
 		shadowdist = 4;
 
-	if (shadowdist < 1) // old style static shadow
+	if (shadowdist < 1) // Old-style static shadow
 	{
 		const float add = currententity->angles[1] / 180 * M_PI;
 		dist[0] = cosf(-add);
@@ -594,7 +517,7 @@ void R_ShadowLight(vec3_t pos, vec3_t lightAdd)
 		VectorNormalize(dist);
 		shadowdist = 1;
 	}
-	else // shadow from dynamic lights
+	else // Shadow from dynamic lights
 	{
 		vec3_t angle;
 		vectoangles(lightAdd, angle);
@@ -605,16 +528,12 @@ void R_ShadowLight(vec3_t pos, vec3_t lightAdd)
 	VectorScale(dist, shadowdist, lightAdd); 
 }
 
+#pragma endregion 
 
-//===================================================================
+#pragma region ======================= DYNAMIC LIGHTS SETUP
 
 static float s_blocklights[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * 4]; //mxd. Was [128*128*4] //Knightmare-  was [34*34*3], supports max chop size of 2048?
 
-/*
-===============
-R_AddDynamicLights
-===============
-*/
 void R_AddDynamicLights(msurface_t *surf)
 {
 	static byte s_castedrays[LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT]; //mxd. 0 - not yet cast, 1 - not blocked, 2 - blocked
@@ -642,7 +561,7 @@ void R_AddDynamicLights(msurface_t *surf)
 	}
 	//mxd. Shadowmapping vars setup end
 
-	// currententity is not valid for trans surfaces
+	// Currententity is not valid for trans surfaces
 	if (tex->flags & (SURF_TRANS33 | SURF_TRANS66))
 	{
 		if (surf->entity)
@@ -671,11 +590,11 @@ void R_AddDynamicLights(msurface_t *surf)
 	for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++)
 	{
 		if ( !(surf->dlightbits[lnum >> 5] & 1U << (lnum & 31)) )
-			continue; // not lit by this light
+			continue; // Not lit by this light
 
 		dlight_t *dl = &r_newrefdef.dlights[lnum];
 
-		if (dl->spotlight) //spotlights
+		if (dl->spotlight) // Skip spotlights
 			continue;
 
 		VectorCopy(dl->origin, dlorigin);
@@ -804,31 +723,18 @@ void R_AddDynamicLights(msurface_t *surf)
 	}
 }
 
-
-/*
-===============
-R_SetCacheState
-===============
-*/
 void R_SetCacheState(msurface_t *surf)
 {
 	for (int maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
 		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
 
 #ifdef BATCH_LM_UPDATES
-	// mark if dynamicly lit
+	// Mark if dynamicly lit
 	surf->cached_dlight = (surf->dlightframe == r_framecount);
 #endif
 }
 
-
-/*
-===============
-R_BuildLightMap
-
-Combine and scale multiple lightmaps into the floating format in blocklights
-===============
-*/
+// Combine and scale multiple lightmaps into the floating format in blocklights
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 {
 	if (surf->texinfo->flags & (SURF_SKY | SURF_WARP))
@@ -898,7 +804,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 							s_blocklights[i + c] += lightmap[i + c] * scale[c];
 				}
 
-				lightmap += size; // skip to next lightmap
+				lightmap += size; // Skip to next lightmap
 			}
 		}
 
@@ -997,3 +903,5 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 		}
 	}
 }
+
+#pragma endregion
