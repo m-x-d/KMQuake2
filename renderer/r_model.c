@@ -336,7 +336,7 @@ Mod_LoadVisibility
 */
 void Mod_LoadVisibility(lump_t *l)
 {
-	if (!l->filelen)
+	if (l->filelen)
 	{
 		loadmodel->vis = ModChunk_Alloc(l->filelen);
 		memcpy(loadmodel->vis, mod_base + l->fileofs, l->filelen);
