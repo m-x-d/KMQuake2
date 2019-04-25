@@ -314,7 +314,7 @@ void Cmd_Alias_f(void)
 	{
 		Com_Printf("Current alias commands:\n");
 		for (a = cmd_alias; a; a = a->next)
-			Com_Printf("%s : %s\n", a->name, a->value);
+			Com_Printf("%s : %s", a->name, a->value); //mxd. a->value already has '\n' at the end
 
 		return;
 	}
