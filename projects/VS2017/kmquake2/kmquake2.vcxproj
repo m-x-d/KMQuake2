@@ -274,7 +274,6 @@
     <ClCompile Include="..\..\..\win32\vid_dll.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\client\anorms.h" />
     <ClInclude Include="..\..\..\client\cdaudio.h" />
     <ClInclude Include="..\..\..\client\cinematic.h" />
     <ClInclude Include="..\..\..\client\client.h" />
@@ -293,7 +292,6 @@
     <ClInclude Include="..\..\..\qcommon\qcommon.h" />
     <ClInclude Include="..\..\..\qcommon\qfiles.h" />
     <ClInclude Include="..\..\..\qcommon\wildcard.h" />
-    <ClInclude Include="..\..\..\renderer\anorms.h" />
     <ClInclude Include="..\..\..\renderer\anormtab.h" />
     <ClInclude Include="..\..\..\renderer\glext.h" />
     <ClInclude Include="..\..\..\renderer\qgl.h" />

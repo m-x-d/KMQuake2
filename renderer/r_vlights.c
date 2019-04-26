@@ -31,11 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 vec3_t	vlightgrid[VLIGHT_GRIDSIZE_X][VLIGHT_GRIDSIZE_Y];
 
-static vec3_t r_avertexnormals[NUMVERTEXNORMALS] = {
-	#include "anorms.h"
-};
-
-void VLight_InitAnormTable (void)
+void VLight_InitAnormTable(void)
 {
 	for (int x = 0; x < VLIGHT_GRIDSIZE_X; x++)
 	{
@@ -56,7 +52,7 @@ void VLight_InitAnormTable (void)
 	}
 }
 
-float VLight_GetLightValue (vec3_t normal, vec3_t dir, float apitch, float ayaw, qboolean dlight)
+float VLight_GetLightValue(vec3_t normal, vec3_t dir, float apitch, float ayaw, qboolean dlight)
 {
 	float angle1, angle2, light;
 
@@ -110,17 +106,18 @@ float VLight_GetLightValue (vec3_t normal, vec3_t dir, float apitch, float ayaw,
 	
 }
 
-float VLight_LerpLight (int index1, int index2, float ilerp, vec3_t dir, vec3_t angles, qboolean dlight)
+//mxd. Never used
+/*float VLight_LerpLight(int index1, int index2, float ilerp, vec3_t dir, vec3_t angles, qboolean dlight)
 {
 	vec3_t normal;
 	for(int i = 0; i < 3; i++)
-		normal[i] = r_avertexnormals[index1][i] + (r_avertexnormals[index2][i] - r_avertexnormals[index1][i]) * ilerp;
+		normal[i] = vertexnormals[index1][i] + (vertexnormals[index2][i] - vertexnormals[index1][i]) * ilerp;
 	VectorNormalize(normal);
 
 	return VLight_GetLightValue(normal, dir, angles[PITCH], angles[YAW], dlight);
-}
+}*/
 
-void VLight_Init (void)
+void VLight_Init(void)
 {
 	VLight_InitAnormTable();
 }

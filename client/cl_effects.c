@@ -2659,9 +2659,9 @@ void CL_FlyParticles (vec3_t origin, int count)
 
 		CL_SetupParticle(
 			0, 0, 0,
-			origin[0] + bytedirs[i][0] * dist + forward[0] * BEAMLENGTH, 
-			origin[1] + bytedirs[i][1] * dist + forward[1] * BEAMLENGTH,
-			origin[2] + bytedirs[i][2] * dist + forward[2] * BEAMLENGTH,
+			origin[0] + vertexnormals[i][0] * dist + forward[0] * BEAMLENGTH,
+			origin[1] + vertexnormals[i][1] * dist + forward[1] * BEAMLENGTH,
+			origin[2] + vertexnormals[i][2] * dist + forward[2] * BEAMLENGTH,
 			0, 0, 0,
 			0, 0, 0,
 			0, 0, 0,
@@ -2764,9 +2764,9 @@ void CL_BfgParticles (entity_t *ent)
 
 		cparticle_t *p = CL_SetupParticle(
 			ent->origin[0], ent->origin[1], ent->origin[2],
-			ent->origin[0] + bytedirs[i][0] * dist + forward[0] * BEAMLENGTH,
-			ent->origin[1] + bytedirs[i][1] * dist + forward[1] * BEAMLENGTH,
-			ent->origin[2] + bytedirs[i][2] * dist + forward[2] * BEAMLENGTH,
+			ent->origin[0] + vertexnormals[i][0] * dist + forward[0] * BEAMLENGTH,
+			ent->origin[1] + vertexnormals[i][1] * dist + forward[1] * BEAMLENGTH,
+			ent->origin[2] + vertexnormals[i][2] * dist + forward[2] * BEAMLENGTH,
 			0, 0, 0,
 			0, 0, 0,
 			50, 200 * dist2, 20,

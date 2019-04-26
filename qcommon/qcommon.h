@@ -856,9 +856,9 @@ void Qcommon_Frame(int msec);
 void Qcommon_Shutdown(void);
 
 #define NUMVERTEXNORMALS	162
-extern vec3_t bytedirs[NUMVERTEXNORMALS];
+extern vec3_t vertexnormals[NUMVERTEXNORMALS]; //mxd. bytedirs -> vertexnormals
 
-// this is in the client code, but can be used for debugging from server
+// This is in the client code, but can be used for debugging from server
 void SCR_DebugGraph(float value, int color);
 
 

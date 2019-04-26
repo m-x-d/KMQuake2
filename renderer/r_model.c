@@ -2354,7 +2354,7 @@ void Mod_LoadAliasMD2ModelNew(model_t *mod, void *buffer)
 
 			vec3_t normal;
 			for (int c = 0; c < 3; c++)
-				normal[c] = r_avertexnormals[poutvert[poutindex[j]].lightnormalindex][c];
+				normal[c] = vertexnormals[poutvert[poutindex[j]].lightnormalindex][c];
 
 			NormalToLatLong(normal, poutvert[poutindex[j]].normal);
 		}
@@ -2631,7 +2631,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 
 				for (int k = 0; k < NUMVERTEXNORMALS; k++)
 				{
-					const float dot = DotProduct(normal, r_avertexnormals[k]);
+					const float dot = DotProduct(normal, vertexnormals[k]);
 					if (dot > maxdot)
 					{
 						maxdot = dot;

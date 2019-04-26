@@ -22,12 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-
-float	r_avertexnormals[NUMVERTEXNORMALS][3] = {
-#include "anorms.h"
-};
-
-// precalculated dot products for quantized angles
+// Precalculated dot products for quantized angles
 float	r_avertexnormal_dots[SHADEDOT_QUANT][256] =
 #include "anormtab.h"
 ;
