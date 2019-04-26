@@ -362,9 +362,6 @@
     <ClInclude Include="..\..\..\game\g_func_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\game\fmod.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\game\lazarus.def">

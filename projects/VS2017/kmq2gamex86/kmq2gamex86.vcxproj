@@ -44,13 +44,13 @@
     <_ProjectFileVersion>14.0.24730.2</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(BuildDir)</OutDir>
+    <OutDir>$(BuildDir)baseq2\</OutDir>
     <IntDir>$(DebugDir)</IntDir>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(BuildDir)</OutDir>
+    <OutDir>$(BuildDir)baseq2\</OutDir>
     <IntDir>$(ReleaseDir)</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -85,11 +85,11 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(BuildDir)kmq2gamex86.dll</OutputFile>
+      <OutputFile>$(BuildDir)baseq2\kmq2gamex86.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\..\game\lazarus.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(BuildDir)kmq2gamex86.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(BuildDir)baseq2\kmq2gamex86.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(DebugDir)kmq2gamex86.map</MapFileName>
       <SubSystem>Windows</SubSystem>
@@ -138,10 +138,10 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(BuildDir)kmq2gamex86.dll</OutputFile>
+      <OutputFile>$(BuildDir)baseq2\kmq2gamex86.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\..\game\lazarus.def</ModuleDefinitionFile>
-      <ProgramDatabaseFile>$(BuildDir)kmq2gamex86.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(BuildDir)baseq2\kmq2gamex86.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <BaseAddress>0x20000000</BaseAddress>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -236,7 +236,6 @@
     <ClCompile Include="..\..\..\game\q_shared.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\game\fmod.h" />
     <ClInclude Include="..\..\..\game\acebot.h" />
     <ClInclude Include="..\..\..\game\game.h" />
     <ClInclude Include="..\..\..\game\g_ctf.h" />
