@@ -18,8 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#ifndef CDAUDIO_H
-#define CDAUDIO_H
+#pragma once
 
 int CDAudio_Init(void);
 void CDAudio_Shutdown(void);
@@ -28,5 +27,3 @@ void CDAudio_Stop(void);
 void CDAudio_Update(void);
 void CDAudio_Activate(qboolean active);
 qboolean CDAudio_Active(void); // Knightmare added
-
-#endif // CDAUDIO_H

@@ -1,6 +1,8 @@
 
 // psychospaz's particle system
 
+#pragma once
+
 typedef enum
 {
 	particle_solid = 1,
@@ -45,18 +47,21 @@ typedef enum
 	particle_classic, //mxd
 } particle_type;
 
-#define  GL_ZERO						0x0
-#define  GL_ONE							0x1
-#define  GL_SRC_COLOR					0x0300
-#define  GL_ONE_MINUS_SRC_COLOR			0x0301
-#define  GL_SRC_ALPHA					0x0302
-#define  GL_ONE_MINUS_SRC_ALPHA			0x0303
-#define  GL_DST_ALPHA					0x0304
-#define  GL_ONE_MINUS_DST_ALPHA			0x0305
-#define  GL_DST_COLOR					0x0306
-#define  GL_ONE_MINUS_DST_COLOR			0x0307
-#define  GL_SRC_ALPHA_SATURATE			0x0308
-#define  GL_CONSTANT_COLOR				0x8001
-#define  GL_ONE_MINUS_CONSTANT_COLOR	0x8002
-#define  GL_CONSTANT_ALPHA				0x8003
-#define  GL_ONE_MINUS_CONSTANT_ALPHA	0x8004
+// Also defined in GL.h
+#define GL_ZERO							0x0
+#define GL_ONE							0x1
+#define GL_SRC_COLOR					0x0300
+#define GL_ONE_MINUS_SRC_COLOR			0x0301
+#define GL_SRC_ALPHA					0x0302
+#define GL_ONE_MINUS_SRC_ALPHA			0x0303
+#define GL_DST_ALPHA					0x0304
+#define GL_ONE_MINUS_DST_ALPHA			0x0305
+#define GL_DST_COLOR					0x0306
+#define GL_ONE_MINUS_DST_COLOR			0x0307
+#define GL_SRC_ALPHA_SATURATE			0x0308
+
+// Also defined in glext.h
+#define GL_CONSTANT_COLOR				0x8001
+#define GL_ONE_MINUS_CONSTANT_COLOR		0x8002
+#define GL_CONSTANT_ALPHA				0x8003
+#define GL_ONE_MINUS_CONSTANT_ALPHA		0x8004

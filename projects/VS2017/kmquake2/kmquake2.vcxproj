@@ -281,14 +281,15 @@
     <ClInclude Include="..\..\..\client\input.h" />
     <ClInclude Include="..\..\..\client\keys.h" />
     <ClInclude Include="..\..\..\client\particles.h" />
+    <ClInclude Include="..\..\..\client\q2palette.h" />
     <ClInclude Include="..\..\..\client\ref.h" />
     <ClInclude Include="..\..\..\client\screen.h" />
     <ClInclude Include="..\..\..\client\snd_loc.h" />
+    <ClInclude Include="..\..\..\client\snd_ogg.h" />
     <ClInclude Include="..\..\..\client\sound.h" />
     <ClInclude Include="..\..\..\client\vid.h" />
     <ClInclude Include="..\..\..\game\game.h" />
     <ClInclude Include="..\..\..\game\q_shared.h" />
-    <ClInclude Include="..\..\..\qcommon\bspfile.h" />
     <ClInclude Include="..\..\..\qcommon\qcommon.h" />
     <ClInclude Include="..\..\..\qcommon\qfiles.h" />
     <ClInclude Include="..\..\..\qcommon\wildcard.h" />

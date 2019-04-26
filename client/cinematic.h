@@ -18,9 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#ifndef __CINEMATIC_H__
-#define __CINEMATIC_H__
-
+#pragma once
 
 #define MAX_CINEMATICS	8
 
@@ -45,5 +43,3 @@ cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int width, int hei
 
 // Stops playing the cinematic
 void CIN_StopCinematic(cinHandle_t handle);
-
-#endif	// __CINEMATIC_H__

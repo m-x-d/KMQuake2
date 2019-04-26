@@ -172,7 +172,6 @@ static qboolean S_OpenBackgroundTrack (const char *name, bgTrack_t *track)
 	track->rate = vorbisInfo->rate;
 	track->width = 2;
 	track->channels = vorbisInfo->channels; // Knightmare added
-	track->format = (vorbisInfo->channels == 2 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16);
 
 	return true;
 }
