@@ -128,11 +128,6 @@ int MSG_ReadPMCoordNew(sizebuf_t *msg_read);
 
 //============================================================================
 
-extern qboolean bigendien;
-
-//============================================================================
-
-
 int	COM_Argc(void);
 char *COM_Argv(int arg);	// range and null checked
 void COM_ClearArgv(int arg);

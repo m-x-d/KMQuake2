@@ -707,8 +707,6 @@ void COM_DefaultExtension(char *path, char *extension)
 ============================================================================
 */
 
-qboolean bigendien;
-
 // Can't just use function pointers, or dll linkage can mess up when qcommon is included in multiple places
 // Knightmare- made these static
 static short	(*_BigShort) (short l);
@@ -783,7 +781,6 @@ void Swap_Init(void)
 	// Set the byte swapping variables in a portable manner	
 	if (*(short *)swaptest == 1)
 	{
-		bigendien = false;
 		_BigShort = ShortSwap;
 		_LittleShort = ShortNoSwap;
 		_BigLong = LongSwap;
@@ -793,7 +790,6 @@ void Swap_Init(void)
 	}
 	else
 	{
-		bigendien = true;
 		_BigShort = ShortNoSwap;
 		_LittleShort = ShortSwap;
 		_BigLong = LongNoSwap;
