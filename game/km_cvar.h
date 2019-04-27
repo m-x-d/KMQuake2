@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 /* Knightmare's cvar header file */
 
+#pragma once
+
 extern	cvar_t	*mega_gibs;				// whether to spawn extra gibs, default to 0
 extern	cvar_t	*player_gib_health;		// what health level to gib players at
 extern	cvar_t	*allow_player_use_abandoned_turret;	// whether to allow player to use turrets in exisiting maps

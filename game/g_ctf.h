@@ -18,6 +18,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
+#pragma once
+
 #define CTF_VERSION			2.12 //1.52  Knightmare- show Lazarus version
 #define CTF_VSTRING2(x) #x
 #define CTF_VSTRING(x) CTF_VSTRING2(x)
@@ -43,45 +45,50 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define STAT_CTF_FLAG_PIC2			35 // Knightmare added
 #define STAT_CTF_TEAM3_HEADER		36 // Knightmare added
 
-#define CONFIG_CTF_MATCH (CS_AIRACCEL-1)
-#define CONFIG_CTF_TEAMINFO	(CS_AIRACCEL-2)
+#define CONFIG_CTF_MATCH	(CS_AIRACCEL - 1)
+#define CONFIG_CTF_TEAMINFO	(CS_AIRACCEL - 2)
 
-typedef enum {
+typedef enum
+{
 	CTF_NOTEAM,
 	CTF_TEAM1,
 	CTF_TEAM2,
 	CTF_TEAM3 // Knightmare added
 } ctfteam_t;
 
-typedef enum {
+typedef enum
+{
 	CTF_STATE_START,
 	CTF_STATE_PLAYING
 } ctfstate_t;
 
-typedef enum {
+typedef enum
+{
 	CTF_GRAPPLE_STATE_FLY,
 	CTF_GRAPPLE_STATE_PULL,
 	CTF_GRAPPLE_STATE_HANG
 } ctfgrapplestate_t;
 
-typedef struct ghost_s {
+typedef struct ghost_s
+{
 	char netname[16];
 	int number;
 
-	// stats
+	// Stats
 	int deaths;
 	int kills;
 	int caps;
 	int basedef;
 	int carrierdef;
 
-	int code; // ghost code
-	int team; // team
-	int score; // frags at time of disconnect
+	int code; // Ghost code
+	int team; // Team
+	int score; // Frags at time of disconnect
 	edict_t *ent;
 } ghost_t;
 
-typedef enum match_s {
+typedef enum match_s
+{
 	MATCH_NONE,
 	MATCH_SETUP,
 	MATCH_PREGAME,
@@ -89,7 +96,8 @@ typedef enum match_s {
 	MATCH_POST
 } match_t;
 
-typedef enum {
+typedef enum
+{
 	ELECT_NONE,
 	ELECT_MATCH,
 	ELECT_ADMIN,
@@ -107,36 +115,33 @@ extern cvar_t *ttctf; // Knightmare added
 #define DF_ARMOR_PROTECT	262144
 #define DF_CTF_NO_TECH      524288
 
-#define CTF_CAPTURE_BONUS		15	// what you get for capture
-#define CTF_DOUBLE_CAPTURE_BONUS		40	// what you get for capture of 2 flags
+#define CTF_CAPTURE_BONUS			15	// What you get for capture
+#define CTF_DOUBLE_CAPTURE_BONUS	40	// What you get for capture of 2 flags
 
-#define CTF_TEAM_BONUS			10	// what your team gets for capture
-#define CTF_RECOVERY_BONUS		1	// what you get for recovery
-#define CTF_FLAG_BONUS			0	// what you get for picking up enemy flag
-#define CTF_FRAG_CARRIER_BONUS	2	// what you get for fragging enemy flag carrier
-#define CTF_FLAG_RETURN_TIME	40	// seconds until auto return
+#define CTF_TEAM_BONUS				10	// What your team gets for capture
+#define CTF_RECOVERY_BONUS			1	// What you get for recovery
+#define CTF_FLAG_BONUS				0	// What you get for picking up enemy flag
+#define CTF_FRAG_CARRIER_BONUS		2	// What you get for fragging enemy flag carrier
+#define CTF_FLAG_RETURN_TIME		40	// Seconds until auto return
 
-#define CTF_CARRIER_DANGER_PROTECT_BONUS	2	// bonus for fraggin someone who has recently hurt your flag carrier
-#define CTF_CARRIER_PROTECT_BONUS			1	// bonus for fraggin someone while either you or your target are near your flag carrier
-#define CTF_FLAG_DEFENSE_BONUS				1	// bonus for fraggin someone while either you or your target are near your flag
-#define CTF_RETURN_FLAG_ASSIST_BONUS		1	// awarded for returning a flag that causes a capture to happen almost immediately
-#define CTF_FRAG_CARRIER_ASSIST_BONUS		2	// award for fragging a flag carrier if a capture happens almost immediately
+#define CTF_CARRIER_DANGER_PROTECT_BONUS	2	// Bonus for fraggin someone who has recently hurt your flag carrier
+#define CTF_CARRIER_PROTECT_BONUS			1	// Bonus for fraggin someone while either you or your target are near your flag carrier
+#define CTF_FLAG_DEFENSE_BONUS				1	// Bonus for fraggin someone while either you or your target are near your flag
+#define CTF_RETURN_FLAG_ASSIST_BONUS		1	// Awarded for returning a flag that causes a capture to happen almost immediately
+#define CTF_FRAG_CARRIER_ASSIST_BONUS		2	// Award for fragging a flag carrier if a capture happens almost immediately
 
-#define CTF_TARGET_PROTECT_RADIUS			400	// the radius around an object being defended where a target will be worth extra frags
-#define CTF_ATTACKER_PROTECT_RADIUS			400	// the radius around an object being defended where an attacker will get extra frags when making kills
+#define CTF_TARGET_PROTECT_RADIUS		400	// The radius around an object being defended where a target will be worth extra frags
+#define CTF_ATTACKER_PROTECT_RADIUS		400	// The radius around an object being defended where an attacker will get extra frags when making kills
 
 #define CTF_CARRIER_DANGER_PROTECT_TIMEOUT	8
 #define CTF_FRAG_CARRIER_ASSIST_TIMEOUT		10
 #define CTF_RETURN_FLAG_ASSIST_TIMEOUT		10
 #define CTF_DOUBLE_CAPTURE_TIMEOUT			20
+#define CTF_AUTO_FLAG_RETURN_TIMEOUT		30	// Number of seconds before dropped flag auto-returns
+#define CTF_TECH_TIMEOUT					60  // Seconds before techs spawn again
 
-
-#define CTF_AUTO_FLAG_RETURN_TIMEOUT		30	// number of seconds before dropped flag auto-returns
-
-#define CTF_TECH_TIMEOUT					60  // seconds before techs spawn again
-
-#define CTF_GRAPPLE_SPEED					650 // speed of grapple in flight
-#define CTF_GRAPPLE_PULL_SPEED				650	// speed player is pulled at
+#define CTF_GRAPPLE_SPEED		650 // Speed of grapple in flight
+#define CTF_GRAPPLE_PULL_SPEED	650	// Speed player is pulled at
 
 void CTFInit(void);
 void CTFSpawn(void);
@@ -213,20 +218,15 @@ void CTFPlayerList(edict_t *ent);
 
 qboolean CTFCheckRules(void);
 
-void SP_misc_ctf_banner (edict_t *ent);
-void SP_misc_ctf_small_banner (edict_t *ent);
+void SP_misc_ctf_banner(edict_t *ent);
+void SP_misc_ctf_small_banner(edict_t *ent);
 
 extern char *ctf_statusbar;
 extern char *ttctf_statusbar; // Knightmare added
 
-void UpdateChaseCam(edict_t *ent);
-void ChaseNext(edict_t *ent);
-void ChasePrev(edict_t *ent);
-
 void CTFObserver(edict_t *ent);
 
-void SP_trigger_teleport (edict_t *ent);
-void SP_info_teleport_destination (edict_t *ent);
+void SP_trigger_teleport(edict_t *ent);
+void SP_info_teleport_destination(edict_t *ent);
 
 void CTFSetPowerUpEffect(edict_t *ent, int def);
-
