@@ -1472,11 +1472,6 @@ R_Init
 */
 qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 {	
-	extern float r_turbsin[256];
-
-	for (int j = 0; j < 256; j++)
-		r_turbsin[j] *= 0.5;
-
 	Draw_GetPalette();
 	R_Register();
 
