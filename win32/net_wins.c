@@ -21,38 +21,35 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "winsock.h"
 #include "wsipx.h"
-#include "winnewerror.h"
 #include "../qcommon/qcommon.h"
 
-#define	MAX_LOOPBACK	4
+#define MAX_LOOPBACK	4
 
 typedef struct
 {
-	byte	data[MAX_MSGLEN];
-	int		datalen;
+	byte data[MAX_MSGLEN];
+	int datalen;
 } loopmsg_t;
 
 typedef struct
 {
-	loopmsg_t	msgs[MAX_LOOPBACK];
-	int			get, send;
+	loopmsg_t msgs[MAX_LOOPBACK];
+	int get;
+	int send;
 } loopback_t;
 
+static cvar_t *noudp;
+static cvar_t *noipx;
 
-cvar_t		*net_shownet;
-static cvar_t	*noudp;
-static cvar_t	*noipx;
+loopback_t loopbacks[2];
+int ip_sockets[2];
+int ipx_sockets[2];
 
-loopback_t	loopbacks[2];
-int			ip_sockets[2];
-int			ipx_sockets[2];
+char *NET_ErrorString(void);
 
-char *NET_ErrorString (void);
+#pragma region ======================= ADDRESS CONVERSION
 
-
-//=============================================================================
-
-void NetadrToSockadr (netadr_t *a, struct sockaddr *s)
+static void NetadrToSockadr(netadr_t *a, struct sockaddr *s)
 {
 	memset(s, 0, sizeof(*s));
 
@@ -84,7 +81,7 @@ void NetadrToSockadr (netadr_t *a, struct sockaddr *s)
 	}
 }
 
-void SockadrToNetadr (struct sockaddr *s, netadr_t *a)
+static void SockadrToNetadr(struct sockaddr *s, netadr_t *a)
 {
 	if (s->sa_family == AF_INET)
 	{
@@ -101,8 +98,7 @@ void SockadrToNetadr (struct sockaddr *s, netadr_t *a)
 	}
 }
 
-
-qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
+qboolean NET_CompareAdr(netadr_t a, netadr_t b)
 {
 	if (a.type != b.type)
 		return false;
@@ -111,18 +107,10 @@ qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
 		return true;
 
 	if (a.type == NA_IP)
-	{
-		if (a.ip[0] == b.ip[0] && a.ip[1] == b.ip[1] && a.ip[2] == b.ip[2] && a.ip[3] == b.ip[3] && a.port == b.port)
-			return true;
-		return false;
-	}
+		return (a.ip[0] == b.ip[0] && a.ip[1] == b.ip[1] && a.ip[2] == b.ip[2] && a.ip[3] == b.ip[3] && a.port == b.port);
 
 	if (a.type == NA_IPX)
-	{
-		if ((memcmp(a.ipx, b.ipx, 10) == 0) && a.port == b.port)
-			return true;
-		return false;
-	}
+		return ((memcmp(a.ipx, b.ipx, 10) == 0) && a.port == b.port);
 
 	//mxd. Fixes C4715: 'NET_CompareAdr': not all control paths return a value
 	// https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/code/qcommon/net_chan.c#L519 
@@ -130,14 +118,8 @@ qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
 	return false;
 }
 
-/*
-===================
-NET_CompareBaseAdr
-
-Compares without the port
-===================
-*/
-qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
+// Compares without the port
+qboolean NET_CompareBaseAdr(netadr_t a, netadr_t b)
 {
 	if (a.type != b.type)
 		return false;
@@ -146,18 +128,10 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 		return true;
 
 	if (a.type == NA_IP)
-	{
-		if (a.ip[0] == b.ip[0] && a.ip[1] == b.ip[1] && a.ip[2] == b.ip[2] && a.ip[3] == b.ip[3])
-			return true;
-		return false;
-	}
+		return (a.ip[0] == b.ip[0] && a.ip[1] == b.ip[1] && a.ip[2] == b.ip[2] && a.ip[3] == b.ip[3]);
 
 	if (a.type == NA_IPX)
-	{
-		if ((memcmp(a.ipx, b.ipx, 10) == 0))
-			return true;
-		return false;
-	}
+		return ((memcmp(a.ipx, b.ipx, 10) == 0));
 
 	//mxd. Fixes C4715: 'NET_CompareBaseAdr': not all control paths return a value
 	// https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/code/qcommon/net_chan.c#L471 
@@ -165,14 +139,9 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 	return false;
 }
 
-/*
-===================
-NET_AdrToString
-===================
-*/
-char	*NET_AdrToString(netadr_t a)
+char *NET_AdrToString(netadr_t a)
 {
-	static	char	s[64];
+	static char s[64];
 
 	if (a.type == NA_LOOPBACK)
 		Com_sprintf(s, sizeof(s), "loopback");
@@ -184,34 +153,25 @@ char	*NET_AdrToString(netadr_t a)
 	return s;
 }
 
-
-/*
-=============
-NET_StringToAdr
-
-localhost
-idnewt
-idnewt:28000
-192.246.40.70
-192.246.40.70:28000
-=============
-*/
+// localhost
+// idnewt
+// idnewt:28000
+// 192.246.40.70
+// 192.246.40.70:28000
 #define DO(src,dest)	\
 	copy[0] = s[src];	\
 	copy[1] = s[src + 1];	\
-	sscanf (copy, "%x", &val);	\
+	sscanf(copy, "%x", &val);	\
 	((struct sockaddr_ipx *)sadr)->dest = val
 
-qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
+static qboolean NET_StringToSockaddr(char *s, struct sockaddr *sadr)
 {
-	struct hostent	*h;
-	char	*colon;
-	int		val;
-	char	copy[128];
+	int val;
+	char copy[128];
 	
 	memset(sadr, 0, sizeof(*sadr));
 
-	if ((strlen(s) >= 23) && (s[8] == ':') && (s[21] == ':'))	// check for an IPX address
+	if ((strlen(s) >= 23) && (s[8] == ':') && (s[21] == ':')) // Check for an IPX address
 	{
 		((struct sockaddr_ipx *)sadr)->sa_family = AF_IPX;
 		copy[2] = 0;
@@ -225,24 +185,25 @@ qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
 		DO(15, sa_nodenum[3]);
 		DO(17, sa_nodenum[4]);
 		DO(19, sa_nodenum[5]);
-		sscanf (&s[22], "%u", &val);
+		sscanf(&s[22], "%u", &val);
 		((struct sockaddr_ipx *)sadr)->sa_socket = htons((unsigned short)val);
 	}
 	else
 	{
 		((struct sockaddr_in *)sadr)->sin_family = AF_INET;
-		
 		((struct sockaddr_in *)sadr)->sin_port = 0;
 
-	//	strncpy (copy, s);
 		Q_strncpyz(copy, s, sizeof(copy));
-		// strip off a trailing :port if present
-		for (colon = copy ; *colon ; colon++)
+		
+		// Strip off a trailing :port if present
+		for (char *colon = copy; *colon; colon++)
+		{
 			if (*colon == ':')
 			{
 				*colon = 0;
-				((struct sockaddr_in *)sadr)->sin_port = htons((short)atoi(colon+1));	
+				((struct sockaddr_in *)sadr)->sin_port = htons((short)atoi(colon + 1));
 			}
+		}
 		
 		if (copy[0] >= '0' && copy[0] <= '9')
 		{
@@ -250,8 +211,10 @@ qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
 		}
 		else
 		{
-			if (! (h = gethostbyname(copy)) )
+			struct hostent *h = gethostbyname(copy);
+			if (!h)
 				return 0;
+
 			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = *(int *)h->h_addr_list[0];
 		}
 	}
@@ -261,56 +224,41 @@ qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
 
 #undef DO
 
-/*
-=============
-NET_StringToAdr
-
-localhost
-idnewt
-idnewt:28000
-192.246.40.70
-192.246.40.70:28000
-=============
-*/
-qboolean	NET_StringToAdr (char *s, netadr_t *a)
+// localhost
+// idnewt
+// idnewt:28000
+// 192.246.40.70
+// 192.246.40.70:28000
+qboolean NET_StringToAdr(char *s, netadr_t *a)
 {
-	struct sockaddr sadr;
-	
-	if (!strcmp (s, "localhost"))
+	if (!strcmp(s, "localhost"))
 	{
 		memset(a, 0, sizeof(*a));
 		a->type = NA_LOOPBACK;
+
 		return true;
 	}
 
-	if (!NET_StringToSockaddr (s, &sadr))
+	struct sockaddr sadr = { 0, 0 };
+	if (!NET_StringToSockaddr(s, &sadr))
 		return false;
 	
-	SockadrToNetadr (&sadr, a);
-
+	SockadrToNetadr(&sadr, a);
 	return true;
 }
 
-
-qboolean	NET_IsLocalAddress (netadr_t adr)
+qboolean NET_IsLocalAddress(netadr_t adr)
 {
 	return adr.type == NA_LOOPBACK;
 }
 
-/*
-=============================================================================
+#pragma endregion
 
-LOOPBACK BUFFERS FOR LOCAL PLAYER
+#pragma region ======================= LOOPBACK BUFFERS FOR LOCAL PLAYER
 
-=============================================================================
-*/
-
-qboolean	NET_GetLoopPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_message)
+static qboolean NET_GetLoopPacket(netsrc_t sock, netadr_t *net_from, sizebuf_t *net_message)
 {
-	int		i;
-	loopback_t	*loop;
-
-	loop = &loopbacks[sock];
+	loopback_t *loop = &loopbacks[sock];
 
 	if (loop->send - loop->get > MAX_LOOPBACK)
 		loop->get = loop->send - MAX_LOOPBACK;
@@ -318,48 +266,43 @@ qboolean	NET_GetLoopPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_me
 	if (loop->get >= loop->send)
 		return false;
 
-	i = loop->get & (MAX_LOOPBACK-1);
+	const int i = loop->get & (MAX_LOOPBACK - 1);
 	loop->get++;
 
-	memcpy (net_message->data, loop->msgs[i].data, loop->msgs[i].datalen);
+	memcpy(net_message->data, loop->msgs[i].data, loop->msgs[i].datalen);
 	net_message->cursize = loop->msgs[i].datalen;
 	memset(net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
-	return true;
 
+	return true;
 }
 
-
-void NET_SendLoopPacket (netsrc_t sock, int length, void *data, netadr_t to)
+static void NET_SendLoopPacket(netsrc_t sock, int length, void *data)
 {
-	int		i;
-	loopback_t	*loop;
+	loopback_t *loop = &loopbacks[sock ^ 1];
 
-	loop = &loopbacks[sock^1];
-
-	i = loop->send & (MAX_LOOPBACK-1);
+	const int i = loop->send & (MAX_LOOPBACK - 1);
 	loop->send++;
 
-	memcpy (loop->msgs[i].data, data, length);
+	memcpy(loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
 }
 
-//=============================================================================
-void SV_DropClientFromAdr (netadr_t address);
+#pragma endregion 
 
-qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_message)
+#pragma region ======================= GET/SEND PACKET
+
+extern void SV_DropClientFromAdr(netadr_t address);
+
+qboolean NET_GetPacket(netsrc_t sock, netadr_t *net_from, sizebuf_t *net_message)
 {
-	int 	ret;
-	struct	sockaddr from;
-	int		fromlen;
-	int		net_socket;
-	int		protocol;
-	int		err;
+	struct sockaddr from = { 0, 0 };
+	int net_socket;
 
-	if (NET_GetLoopPacket (sock, net_from, net_message))
+	if (NET_GetLoopPacket(sock, net_from, net_message))
 		return true;
 
-	for (protocol = 0 ; protocol < 2 ; protocol++)
+	for (int protocol = 0; protocol < 2; protocol++)
 	{
 		if (protocol == 0)
 			net_socket = ip_sockets[sock];
@@ -369,41 +312,33 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 		if (!net_socket)
 			continue;
 
-		fromlen = sizeof(from);
-		ret = recvfrom (net_socket, net_message->data, net_message->maxsize
-			, 0, (struct sockaddr *)&from, &fromlen);
+		int fromlen = sizeof(from);
+		const int ret = recvfrom(net_socket, (char*)net_message->data, net_message->maxsize, 0, (struct sockaddr *)&from, &fromlen);
 
-		SockadrToNetadr (&from, net_from);
+		SockadrToNetadr(&from, net_from);
 
 		if (ret == -1)
 		{
-			err = WSAGetLastError();
- 
-			if (err == WSAEWOULDBLOCK)
-				continue;
-			if (err == WSAEMSGSIZE)
+			switch(WSAGetLastError())
 			{
-				Com_Printf(S_COLOR_YELLOW"Warning:  Oversize packet from %s\n",
-						NET_AdrToString(*net_from));
-				continue;
+				case WSAEWOULDBLOCK:
+					continue;
+
+				case WSAEMSGSIZE:
+					Com_Printf(S_COLOR_YELLOW"Warning: oversize packet from %s\n", NET_AdrToString(*net_from));
+					continue;
+
+				// Knightmare- added Jitspoe's fix for WSAECONNRESET bomb-out
+				case WSAECONNRESET: 
+					Com_Printf("NET_GetPacket: %s from %s\n", NET_ErrorString(), NET_AdrToString(*net_from));
+					SV_DropClientFromAdr(*net_from); // Drop this client to not flood the console with above message
+					continue;
+
+				default:
+					// Let servers continue after errors
+					Com_Printf("NET_GetPacket: %s from %s\n", NET_ErrorString(), NET_AdrToString(*net_from));
+					continue;
 			}
-			// Knightmare- added Jitspoe's fix for WSAECONNRESET bomb-out
-			if (err == WSAECONNRESET)
-			{
-				Com_Printf("NET_GetPacket: %s from %s\n", NET_ErrorString(),
-					NET_AdrToString(*net_from));
-				// drop this client to not flood the console with above message
-				SV_DropClientFromAdr (*net_from);
-				continue;
-			}
-			//if (dedicated->value)	// let dedicated servers continue after errors
-			// let servers continue after errors
-				Com_Printf("NET_GetPacket: %s from %s\n", NET_ErrorString(),
-					NET_AdrToString(*net_from));
-			//else
-			//	Com_Error (ERR_DROP, "NET_GetPacket: %s from %s", 
-			//		NET_ErrorString(), NET_AdrToString(*net_from));
-			continue;
 		}
 
 		if (ret == net_message->maxsize)
@@ -419,130 +354,96 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 	return false;
 }
 
-//=============================================================================
-
-void NET_SendPacket (netsrc_t sock, int length, void *data, netadr_t to)
+void NET_SendPacket(netsrc_t sock, int length, void *data, netadr_t to)
 {
-	int		ret;
-	struct sockaddr	addr;
-	int		net_socket;
+	struct sockaddr	addr = { 0, 0 };
+	int net_socket;
 
-	if ( to.type == NA_LOOPBACK )
+	switch(to.type)
 	{
-		NET_SendLoopPacket (sock, length, data, to);
-		return;
-	}
+		case NA_LOOPBACK:
+			NET_SendLoopPacket(sock, length, data);
+			return;
 
-	if (to.type == NA_BROADCAST)
-	{
-		net_socket = ip_sockets[sock];
-		if (!net_socket)
+		case NA_IP:
+		case NA_BROADCAST:
+			net_socket = ip_sockets[sock];
+			if (!net_socket)
+				return;
+			break;
+
+		case NA_IPX:
+		case NA_BROADCAST_IPX:
+			net_socket = ipx_sockets[sock];
+			if (!net_socket)
+				return;
+			break;
+
+		default:
+			Com_Error(ERR_FATAL, "%s: bad address type: %i", __func__, to.type);
 			return;
 	}
-	else if (to.type == NA_IP)
-	{
-		net_socket = ip_sockets[sock];
-		if (!net_socket)
-			return;
-	}
-	else if (to.type == NA_IPX)
-	{
-		net_socket = ipx_sockets[sock];
-		if (!net_socket)
-			return;
-	}
-	else if (to.type == NA_BROADCAST_IPX)
-	{
-		net_socket = ipx_sockets[sock];
-		if (!net_socket)
-			return;
-	}
-	else
-		Com_Error (ERR_FATAL, "NET_SendPacket: bad address type");
 
-	NetadrToSockadr (&to, &addr);
+	NetadrToSockadr(&to, &addr);
 
-	ret = sendto (net_socket, data, length, 0, &addr, sizeof(addr) );
+	const int ret = sendto(net_socket, data, length, 0, &addr, sizeof(addr));
 	if (ret == -1)
 	{
-		int err = WSAGetLastError();
+		const int err = WSAGetLastError();
 
 		// wouldblock is silent
 		if (err == WSAEWOULDBLOCK)
 			return;
 
-		// some PPP links dont allow broadcasts
+		// Some PPP links dont allow broadcasts
 		// NO ERROR fix for pinging servers w/ unplugged LAN cable
-	//	if (((err == WSAEADDRNOTAVAIL) || !strcmp(NET_ErrorString(), "NO ERROR"))
-		// Pat- WSAEHOSTUNREACH, this can occur if there is no network, or unplug ?
-		if (((err == WSAEADDRNOTAVAIL) || err == WSAEHOSTUNREACH)
-			&& ((to.type == NA_BROADCAST) || (to.type == NA_BROADCAST_IPX)))
+		// Pat- WSAEHOSTUNREACH, this can occur if there is no network, or unplug?
+		if ((err == WSAEADDRNOTAVAIL || err == WSAEHOSTUNREACH)	&& (to.type == NA_BROADCAST || to.type == NA_BROADCAST_IPX))
 			return;
 
-		if (dedicated->value)	// let dedicated servers continue after errors
-		{
-			Com_Printf("NET_SendPacket ERROR: %s to %s\n", NET_ErrorString(),
-				NET_AdrToString(to));
-		}
+		if (dedicated->integer) // Let dedicated servers continue after errors
+			Com_Printf("NET_SendPacket ERROR: %s to %s\n", NET_ErrorString(), NET_AdrToString(to));
+		else if (err == WSAEADDRNOTAVAIL)
+			Com_DPrintf(S_COLOR_YELLOW"NET_SendPacket Warning: %s : %s\n", NET_ErrorString(), NET_AdrToString(to));
 		else
-		{
-			if (err == WSAEADDRNOTAVAIL)
-			{
-				Com_DPrintf (S_COLOR_YELLOW"NET_SendPacket Warning: %s : %s\n", 
-						NET_ErrorString(), NET_AdrToString(to));
-			}
-			else
-			{
-				Com_Error (ERR_DROP, "NET_SendPacket ERROR: %s to %s\n", 
-						NET_ErrorString(), NET_AdrToString(to));
-			}
-		}
+			Com_Error(ERR_DROP, "NET_SendPacket ERROR: %s to %s", NET_ErrorString(), NET_AdrToString(to));
 	}
 }
 
+#pragma endregion 
 
-//=============================================================================
-
-
-/*
-====================
-NET_Socket
-====================
-*/
-int NET_IPSocket (char *net_interface, int port)
+int NET_IPSocket(char *net_interface, int port)
 {
-	int					newsocket;
-	struct sockaddr_in	address;
-	u_long				_true = 1; //mxd. Fixes C4133: 'function': incompatible types - from 'qboolean *' to 'u_long *'
-	int					i = 1;
-	int					err;
-
-	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	const int newsocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (newsocket == -1)
 	{
-		err = WSAGetLastError();
-		if (err != WSAEAFNOSUPPORT)
+		if (WSAGetLastError() != WSAEAFNOSUPPORT)
 			Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: socket: %s", NET_ErrorString());
+
 		return 0;
 	}
 
-	// make it non-blocking
-	if (ioctlsocket (newsocket, FIONBIO, &_true) == -1)
+	// Make it non-blocking
+	u_long lval = 1;
+	if (ioctlsocket(newsocket, FIONBIO, &lval) == -1)
 	{
 		Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
 		return 0;
 	}
 
-	// make it broadcast capable
-	if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&i, sizeof(i)) == -1)
+	// Make it broadcast capable
+	int ival = 1;
+	if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&ival, sizeof(ival)) == -1)
 	{
 		Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
 		return 0;
 	}
 
-	if (!net_interface || !net_interface[0] || !stricmp(net_interface, "localhost"))
+	struct sockaddr_in address = {0, 0, 0, 0, 0, 0, 0};
+	if (!net_interface || !net_interface[0] || !Q_stricmp(net_interface, "localhost"))
 		address.sin_addr.s_addr = INADDR_ANY;
 	else
-		NET_StringToSockaddr (net_interface, (struct sockaddr *)&address);
+		NET_StringToSockaddr(net_interface, (struct sockaddr *)&address);
 
 	if (port == PORT_ANY)
 		address.sin_port = 0;
@@ -551,179 +452,151 @@ int NET_IPSocket (char *net_interface, int port)
 
 	address.sin_family = AF_INET;
 
-	if( bind (newsocket, (void *)&address, sizeof(address)) == -1)
+	if(bind(newsocket, (void *)&address, sizeof(address)) == -1)
 	{
 		Com_Printf(S_COLOR_YELLOW"WARNING: UDP_OpenSocket: bind: %s\n", NET_ErrorString());
-		closesocket (newsocket);
+		closesocket(newsocket);
+
 		return 0;
 	}
 
 	return newsocket;
 }
 
-
-/*
-====================
-NET_OpenIP
-====================
-*/
-void NET_OpenIP (void)
+void NET_OpenIP(void)
 {
-	cvar_t	*ip;
-	int		port;
-	int		dedicated;
-
-	ip = Cvar_Get("ip", "localhost", CVAR_NOSET);
-
-	dedicated = Cvar_VariableValue ("dedicated");
+	cvar_t *ip = Cvar_Get("ip", "localhost", CVAR_NOSET);
+	const int dedicated = Cvar_VariableInteger("dedicated");
 
 	if (!ip_sockets[NS_SERVER])
 	{
-		port = Cvar_Get("ip_hostport", "0", CVAR_NOSET)->value;
+		int port = Cvar_Get("ip_hostport", "0", CVAR_NOSET)->integer;
+
 		if (!port)
-		{
-			port = Cvar_Get("hostport", "0", CVAR_NOSET)->value;
-			if (!port)
-			{
-				port = Cvar_Get("port", va("%i", PORT_SERVER), CVAR_NOSET)->value;
-			}
-		}
-		ip_sockets[NS_SERVER] = NET_IPSocket (ip->string, port);
+			port = Cvar_Get("hostport", "0", CVAR_NOSET)->integer;
+
+		if (!port)
+			port = Cvar_Get("port", va("%i", PORT_SERVER), CVAR_NOSET)->integer;
+
+		ip_sockets[NS_SERVER] = NET_IPSocket(ip->string, port);
+
 		if (!ip_sockets[NS_SERVER] && dedicated)
-			Com_Error (ERR_FATAL, "Couldn't allocate dedicated server IP port");
+		{
+			Com_Error(ERR_FATAL, "Couldn't allocate dedicated server IP port");
+			return;
+		}
 	}
 
-
-	// dedicated servers don't need client ports
+	// Dedicated servers don't need client ports
 	if (dedicated)
 		return;
 
 	if (!ip_sockets[NS_CLIENT])
 	{
-		port = Cvar_Get("ip_clientport", "0", CVAR_NOSET)->value;
+		int port = Cvar_Get("ip_clientport", "0", CVAR_NOSET)->integer;
+
 		if (!port)
-		{
-			port = Cvar_Get("clientport", va("%i", PORT_CLIENT), CVAR_NOSET)->value;
-			if (!port)
-				port = PORT_ANY;
-		}
-		ip_sockets[NS_CLIENT] = NET_IPSocket (ip->string, port);
+			port = Cvar_Get("clientport", va("%i", PORT_CLIENT), CVAR_NOSET)->integer;
+
+		if (!port)
+			port = PORT_ANY;
+
+		ip_sockets[NS_CLIENT] = NET_IPSocket(ip->string, port);
+
 		if (!ip_sockets[NS_CLIENT])
-			ip_sockets[NS_CLIENT] = NET_IPSocket (ip->string, PORT_ANY);
+			ip_sockets[NS_CLIENT] = NET_IPSocket(ip->string, PORT_ANY);
 	}
 }
 
-
-/*
-====================
-IPX_Socket
-====================
-*/
-int NET_IPXSocket (int port)
+int NET_IPXSocket(int port)
 {
-	int					newsocket;
-	struct sockaddr_ipx	address;
-	int					_true = 1;
-	int					err;
-
-	if ((newsocket = socket (PF_IPX, SOCK_DGRAM, NSPROTO_IPX)) == -1)
+	const int newsocket = socket(PF_IPX, SOCK_DGRAM, NSPROTO_IPX);
+	if (newsocket == -1)
 	{
-		err = WSAGetLastError();
-		if (err != WSAEAFNOSUPPORT)
+		if (WSAGetLastError() != WSAEAFNOSUPPORT)
 			Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: socket: %s\n", NET_ErrorString());
+
 		return 0;
 	}
 
-	// make it non-blocking
-	if (ioctlsocket (newsocket, FIONBIO, &_true) == -1)
+	// Make it non-blocking
+	u_long lval = 1;
+	if (ioctlsocket(newsocket, FIONBIO, &lval) == -1)
 	{
 		Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: ioctl FIONBIO: %s\n", NET_ErrorString());
 		return 0;
 	}
 
-	// make it broadcast capable
-	if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&_true, sizeof(_true)) == -1)
+	// Make it broadcast capable
+	int	ival = 1;
+	if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&ival, sizeof(ival)) == -1)
 	{
 		Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
 		return 0;
 	}
 
+	struct sockaddr_ipx	address = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	address.sa_family = AF_IPX;
 	memset(address.sa_netnum, 0, 4);
 	memset(address.sa_nodenum, 0, 6);
+
 	if (port == PORT_ANY)
 		address.sa_socket = 0;
 	else
 		address.sa_socket = htons((short)port);
 
-	if( bind (newsocket, (void *)&address, sizeof(address)) == -1)
+	if(bind(newsocket, (void *)&address, sizeof(address)) == -1)
 	{
 		Com_Printf(S_COLOR_YELLOW"WARNING: IPX_Socket: bind: %s\n", NET_ErrorString());
-		closesocket (newsocket);
+		closesocket(newsocket);
+
 		return 0;
 	}
 
 	return newsocket;
 }
 
-
-/*
-====================
-NET_OpenIPX
-====================
-*/
-void NET_OpenIPX (void)
+void NET_OpenIPX(void)
 {
-	int		port;
-	int		dedicated;
-
-	dedicated = Cvar_VariableValue ("dedicated");
+	const int dedicated = Cvar_VariableInteger("dedicated");
 
 	if (!ipx_sockets[NS_SERVER])
 	{
-		port = Cvar_Get("ipx_hostport", "0", CVAR_NOSET)->value;
+		int port = Cvar_Get("ipx_hostport", "0", CVAR_NOSET)->integer;
+
 		if (!port)
-		{
-			port = Cvar_Get("hostport", "0", CVAR_NOSET)->value;
-			if (!port)
-			{
-				port = Cvar_Get("port", va("%i", PORT_SERVER), CVAR_NOSET)->value;
-			}
-		}
-		ipx_sockets[NS_SERVER] = NET_IPXSocket (port);
+			port = Cvar_Get("hostport", "0", CVAR_NOSET)->integer;
+
+		if (!port)
+			port = Cvar_Get("port", va("%i", PORT_SERVER), CVAR_NOSET)->integer;
+
+		ipx_sockets[NS_SERVER] = NET_IPXSocket(port);
 	}
 
-	// dedicated servers don't need client ports
+	// Dedicated servers don't need client ports
 	if (dedicated)
 		return;
 
 	if (!ipx_sockets[NS_CLIENT])
 	{
-		port = Cvar_Get("ipx_clientport", "0", CVAR_NOSET)->value;
+		int port = Cvar_Get("ipx_clientport", "0", CVAR_NOSET)->integer;
 		if (!port)
-		{
-			port = Cvar_Get("clientport", va("%i", PORT_CLIENT), CVAR_NOSET)->value;
-			if (!port)
-				port = PORT_ANY;
-		}
-		ipx_sockets[NS_CLIENT] = NET_IPXSocket (port);
+			port = Cvar_Get("clientport", va("%i", PORT_CLIENT), CVAR_NOSET)->integer;
+
+		if (!port)
+			port = PORT_ANY;
+
+		ipx_sockets[NS_CLIENT] = NET_IPXSocket(port);
+
 		if (!ipx_sockets[NS_CLIENT])
-			ipx_sockets[NS_CLIENT] = NET_IPXSocket (PORT_ANY);
+			ipx_sockets[NS_CLIENT] = NET_IPXSocket(PORT_ANY);
 	}
 }
 
-
-/*
-====================
-NET_Config
-
-A single player game will only use the loopback code
-====================
-*/
-void	NET_Config (qboolean multiplayer)
+// A single player game will only use the loopback code
+void NET_Config(qboolean multiplayer)
 {
-	int		i;
-	static	qboolean	old_config;
+	static qboolean old_config;
 
 	if (old_config == multiplayer)
 		return;
@@ -731,255 +604,187 @@ void	NET_Config (qboolean multiplayer)
 	old_config = multiplayer;
 
 	if (!multiplayer)
-	{	// shut down any existing sockets
-		for (i=0 ; i<2 ; i++)
+	{	
+		// Shut down any existing sockets
+		for (int i = 0; i < 2 ; i++)
 		{
 			if (ip_sockets[i])
 			{
-				closesocket (ip_sockets[i]);
+				closesocket(ip_sockets[i]);
 				ip_sockets[i] = 0;
 			}
+
 			if (ipx_sockets[i])
 			{
-				closesocket (ipx_sockets[i]);
+				closesocket(ipx_sockets[i]);
 				ipx_sockets[i] = 0;
 			}
 		}
 	}
 	else
-	{	// open sockets
-		if (! noudp->value)
-			NET_OpenIP ();
-		if (! noipx->value)
-			NET_OpenIPX ();
+	{
+		// Open sockets
+		if (!noudp->integer)
+			NET_OpenIP();
+
+		if (!noipx->integer)
+			NET_OpenIPX();
 	}
 }
 
-// sleeps msec or until net socket is ready
+// Sleeps msec or until net socket is ready
 void NET_Sleep(int msec)
 {
-    struct timeval timeout;
-	fd_set	fdset;
-	//extern cvar_t *dedicated; mxd. Redundant declaration
-	int i;
+	fd_set fdset;
 
-	if (!dedicated || !dedicated->value)
-		return; // we're not a server, just run full speed
+	if (!dedicated || !dedicated->integer)
+		return; // We're not a server, just run full speed
 
 	FD_ZERO(&fdset);
-	i = 0;
-	if (ip_sockets[NS_SERVER]) {
-		FD_SET(ip_sockets[NS_SERVER], &fdset); // network socket
+	int i = 0;
+
+	if (ip_sockets[NS_SERVER])
+	{
+		FD_SET(ip_sockets[NS_SERVER], &fdset); // Network socket
 		i = ip_sockets[NS_SERVER];
 	}
-	if (ipx_sockets[NS_SERVER]) {
-		FD_SET(ipx_sockets[NS_SERVER], &fdset); // network socket
+
+	if (ipx_sockets[NS_SERVER])
+	{
+		FD_SET(ipx_sockets[NS_SERVER], &fdset); // Network socket
 		if (ipx_sockets[NS_SERVER] > i)
 			i = ipx_sockets[NS_SERVER];
 	}
-	timeout.tv_sec = msec/1000;
-	timeout.tv_usec = (msec%1000)*1000;
-	select(i+1, &fdset, NULL, NULL, &timeout);
+
+	struct timeval timeout =
+	{ 
+		.tv_sec = msec / 1000, 
+		.tv_usec = (msec % 1000) * 1000
+	};
+	select(i + 1, &fdset, NULL, NULL, &timeout);
 }
 
 //===================================================================
 
-
-static WSADATA		winsockdata;
-
-/*
-====================
-NET_Init
-====================
-*/
-void NET_Init (void)
+void NET_Init(void)
 {
-	//WORD	wVersionRequested; 
-	int		r;
-
-	//wVersionRequested = MAKEWORD(1, 1); 
-
-	r = WSAStartup (MAKEWORD(1, 1), &winsockdata);
+	WSADATA winsockdata;
+	const int r = WSAStartup(MAKEWORD(1, 1), &winsockdata);
 
 	if (r)
-		Com_Error (ERR_FATAL,"Winsock initialization failed.");
+		Com_Error(ERR_FATAL, "Winsock initialization failed.");
 
 	Com_Printf("Winsock Initialized\n");
 
 	noudp = Cvar_Get("noudp", "0", CVAR_NOSET);
 	noipx = Cvar_Get("noipx", "0", CVAR_NOSET);
-
-	net_shownet = Cvar_Get("net_shownet", "0", 0);
 }
 
-
-/*
-====================
-NET_Shutdown
-====================
-*/
-void	NET_Shutdown (void)
+void NET_Shutdown(void)
 {
-	NET_Config (false);	// close sockets
-
+	NET_Config(false); // Close sockets
 	WSACleanup ();
 }
 
-
-/*
-====================
-NET_ErrorString
-====================
-*/
-char *NET_ErrorString (void)
+char *NET_ErrorString(void)
 {
-	int		code;
 	static char errstr[64];
+	const int code = WSAGetLastError();
 
-	code = WSAGetLastError ();
 	switch (code)
 	{
-#if 1	// Jitspoe's more complete error codes
-	case WSAEINTR: return "WSAEINTR";
-	case WSAEBADF: return "WSAEBADF";
-	case WSAEACCES: return "WSAEACCES";
-	case WSAEFAULT: return "WSAEFAULT";
-	case WSAEINVAL: return "WSAEINVAL";
-	case WSAEMFILE: return "WSAEMFILE";
-	case WSAEWOULDBLOCK: return "WSAEWOULDBLOCK";
-	case WSAEINPROGRESS: return "WSAEINPROGRESS";
-	case WSAEALREADY: return "WSAEALREADY";
-	case WSAENOTSOCK: return "WSAENOTSOCK";
-	case WSAEDESTADDRREQ: return "WSAEDESTADDRREQ";
-	case WSAEMSGSIZE: return "WSAEMSGSIZE";
-	case WSAEPROTOTYPE: return "WSAEPROTOTYPE";
-	case WSAENOPROTOOPT: return "WSAENOPROTOOPT";
-	case WSAEPROTONOSUPPORT: return "WSAEPROTONOSUPPORT";
-	case WSAESOCKTNOSUPPORT: return "WSAESOCKTNOSUPPORT";
-	case WSAEOPNOTSUPP: return "WSAEOPNOTSUPP";
-	case WSAEPFNOSUPPORT: return "WSAEPFNOSUPPORT";
-	case WSAEAFNOSUPPORT: return "WSAEAFNOSUPPORT";
-	case WSAEADDRINUSE: return "WSAEADDRINUSE";
-	case WSAEADDRNOTAVAIL: return "WSAEADDRNOTAVAIL";
-	case WSAENETDOWN: return "WSAENETDOWN";
-	case WSAENETUNREACH: return "WSAENETUNREACH";
-	case WSAENETRESET: return "WSAENETRESET";
-	case WSAECONNABORTED: return "WSAECONNABORTED";
-	case WSAECONNRESET: return "WSAECONNRESET";
-	case WSAENOBUFS: return "WSAENOBUFS";
-	case WSAEISCONN: return "WSAEISCONN";
-	case WSAENOTCONN: return "WSAENOTCONN";
-	case WSAESHUTDOWN: return "WSAESHUTDOWN";
-	case WSAETOOMANYREFS: return "WSAETOOMANYREFS";
-	case WSAETIMEDOUT: return "WSAETIMEDOUT";
-	case WSAECONNREFUSED: return "WSAECONNREFUSED";
-	case WSAELOOP: return "WSAELOOP";
-	case WSAENAMETOOLONG: return "WSAENAMETOOLONG";
-	case WSAEHOSTDOWN: return "WSAEHOSTDOWN";
-	case WSAEHOSTUNREACH: return "WSAEHOSTUNREACH";
-	case WSAENOTEMPTY: return "WSAENOTEMPTY";
-	case WSAEPROCLIM: return "WSAEPROCLIM";
-	case WSAEUSERS: return "WSAEUSERS";
-	case WSAEDQUOT: return "WSAEDQUOT";
-	case WSAESTALE: return "WSAESTALE";
-	case WSAEREMOTE: return "WSAEREMOTE";
-	case WSASYSNOTREADY: return "WSASYSNOTREADY";
-	case WSAVERNOTSUPPORTED: return "WSAVERNOTSUPPORTED";
-	case WSANOTINITIALISED: return "WSANOTINITIALISED";
-	case WSAEDISCON: return "WSAEDISCON";
-	case WSAENOMORE: return "WSAENOMORE";
-	case WSAECANCELLED: return "WSAECANCELLED";
-	case WSAEINVALIDPROCTABLE: return "WSAEINVALIDPROCTABLE";
-	case WSAEINVALIDPROVIDER: return "WSAEINVALIDPROVIDER";
-	case WSAEPROVIDERFAILEDINIT: return "WSAEPROVIDERFAILEDINIT";
-	case WSASYSCALLFAILURE: return "WSASYSCALLFAILURE";
-	case WSASERVICE_NOT_FOUND: return "WSASERVICE_NOT_FOUND";
-	case WSATYPE_NOT_FOUND: return "WSATYPE_NOT_FOUND";
-	case WSA_E_NO_MORE: return "WSA_E_NO_MORE";
-	case WSA_E_CANCELLED: return "WSA_E_CANCELLED";
-	case WSAEREFUSED: return "WSAEREFUSED";
-	case WSAHOST_NOT_FOUND: return "WSAHOST_NOT_FOUND";
-	case WSATRY_AGAIN: return "WSATRY_AGAIN";
-	case WSANO_RECOVERY: return "WSANO_RECOVERY";
-	case WSANO_DATA: return "WSANO_DATA"; 
-	case WSA_QOS_RECEIVERS: return "WSA_QOS_RECEIVERS";
-	case WSA_QOS_SENDERS: return "WSA_QOS_SENDERS";
-	case WSA_QOS_NO_SENDERS: return "WSA_QOS_NO_SENDERS";
-	case WSA_QOS_NO_RECEIVERS: return "WSA_QOS_NO_RECEIVERS";
-	case WSA_QOS_REQUEST_CONFIRMED: return "WSA_QOS_REQUEST_CONFIRMED";
-	case WSA_QOS_ADMISSION_FAILURE: return "WSA_QOS_ADMISSION_FAILURE";
-	case WSA_QOS_POLICY_FAILURE: return "WSA_QOS_POLICY_FAILURE";
-	case WSA_QOS_BAD_STYLE: return "WSA_QOS_BAD_STYLE";
-	case WSA_QOS_BAD_OBJECT: return "WSA_QOS_BAD_OBJECT";
-	case WSA_QOS_TRAFFIC_CTRL_ERROR: return "WSA_QOS_TRAFFIC_CTRL_ERROR";
-	case WSA_QOS_GENERIC_ERROR: return "WSA_QOS_GENERIC_ERROR";
-	case WSA_QOS_ESERVICETYPE: return "WSA_QOS_ESERVICETYPE";
-	case WSA_QOS_EFLOWSPEC: return "WSA_QOS_EFLOWSPEC";
-	case WSA_QOS_EPROVSPECBUF: return "WSA_QOS_EPROVSPECBUF";
-	case WSA_QOS_EFILTERSTYLE: return "WSA_QOS_EFILTERSTYLE";
-	case WSA_QOS_EFILTERTYPE: return "WSA_QOS_EFILTERTYPE";
-	case WSA_QOS_EFILTERCOUNT: return "WSA_QOS_EFILTERCOUNT";
-	case WSA_QOS_EOBJLENGTH: return "WSA_QOS_EOBJLENGTH";
-	case WSA_QOS_EFLOWCOUNT: return "WSA_QOS_EFLOWCOUNT";
-	case WSA_QOS_EUNKOWNPSOBJ: return "WSA_QOS_EUNKOWNPSOBJ";
-	case WSA_QOS_EPOLICYOBJ: return "WSA_QOS_EPOLICYOBJ";
-	case WSA_QOS_EFLOWDESC: return "WSA_QOS_EFLOWDESC";
-	case WSA_QOS_EPSFLOWSPEC: return "WSA_QOS_EPSFLOWSPEC";
-	case WSA_QOS_EPSFILTERSPEC: return "WSA_QOS_EPSFILTERSPEC";
-	case WSA_QOS_ESDMODEOBJ: return "WSA_QOS_ESDMODEOBJ";
-	case WSA_QOS_ESHAPERATEOBJ: return "WSA_QOS_ESHAPERATEOBJ";
-	case WSA_QOS_RESERVED_PETYPE: return "WSA_QOS_RESERVED_PETYPE";
-	default:
-		Com_sprintf(errstr, sizeof(errstr), "Unhandled WSA code: %d", code);
-		return errstr;
-
-#else
-
-	case WSAEINTR: return "WSAEINTR";
-	case WSAEBADF: return "WSAEBADF";
-	case WSAEACCES: return "WSAEACCES";
-	case WSAEDISCON: return "WSAEDISCON";
-	case WSAEFAULT: return "WSAEFAULT";
-	case WSAEINVAL: return "WSAEINVAL";
-	case WSAEMFILE: return "WSAEMFILE";
-	case WSAEWOULDBLOCK: return "WSAEWOULDBLOCK";
-	case WSAEINPROGRESS: return "WSAEINPROGRESS";
-	case WSAEALREADY: return "WSAEALREADY";
-	case WSAENOTSOCK: return "WSAENOTSOCK";
-	case WSAEDESTADDRREQ: return "WSAEDESTADDRREQ";
-	case WSAEMSGSIZE: return "WSAEMSGSIZE";
-	case WSAEPROTOTYPE: return "WSAEPROTOTYPE";
-	case WSAENOPROTOOPT: return "WSAENOPROTOOPT";
-	case WSAEPROTONOSUPPORT: return "WSAEPROTONOSUPPORT";
-	case WSAESOCKTNOSUPPORT: return "WSAESOCKTNOSUPPORT";
-	case WSAEOPNOTSUPP: return "WSAEOPNOTSUPP";
-	case WSAEPFNOSUPPORT: return "WSAEPFNOSUPPORT";
-	case WSAEAFNOSUPPORT: return "WSAEAFNOSUPPORT";
-	case WSAEADDRINUSE: return "WSAEADDRINUSE";
-	case WSAEADDRNOTAVAIL: return "WSAEADDRNOTAVAIL";
-	case WSAENETDOWN: return "WSAENETDOWN";
-	case WSAENETUNREACH: return "WSAENETUNREACH";
-	case WSAENETRESET: return "WSAENETRESET";
-	case WSAECONNABORTED: return "WSWSAECONNABORTEDAEINTR";
-	case WSAECONNRESET: return "WSAECONNRESET";
-	case WSAENOBUFS: return "WSAENOBUFS";
-	case WSAEISCONN: return "WSAEISCONN";
-	case WSAENOTCONN: return "WSAENOTCONN";
-	case WSAESHUTDOWN: return "WSAESHUTDOWN";
-	case WSAETOOMANYREFS: return "WSAETOOMANYREFS";
-	case WSAETIMEDOUT: return "WSAETIMEDOUT";
-	case WSAECONNREFUSED: return "WSAECONNREFUSED";
-	case WSAELOOP: return "WSAELOOP";
-	case WSAENAMETOOLONG: return "WSAENAMETOOLONG";
-	case WSAEHOSTDOWN: return "WSAEHOSTDOWN";
-	case WSASYSNOTREADY: return "WSASYSNOTREADY";
-	case WSAVERNOTSUPPORTED: return "WSAVERNOTSUPPORTED";
-	case WSANOTINITIALISED: return "WSANOTINITIALISED";
-	case WSAHOST_NOT_FOUND: return "WSAHOST_NOT_FOUND";
-	case WSATRY_AGAIN: return "WSATRY_AGAIN";
-	case WSANO_RECOVERY: return "WSANO_RECOVERY";
-	case WSANO_DATA: return "WSANO_DATA";
-	default: return "NO ERROR";
-#endif
+		// Jitspoe's more complete error codes
+		case WSAEINTR: return "WSAEINTR";
+		case WSAEBADF: return "WSAEBADF";
+		case WSAEACCES: return "WSAEACCES";
+		case WSAEFAULT: return "WSAEFAULT";
+		case WSAEINVAL: return "WSAEINVAL";
+		case WSAEMFILE: return "WSAEMFILE";
+		case WSAEWOULDBLOCK: return "WSAEWOULDBLOCK";
+		case WSAEINPROGRESS: return "WSAEINPROGRESS";
+		case WSAEALREADY: return "WSAEALREADY";
+		case WSAENOTSOCK: return "WSAENOTSOCK";
+		case WSAEDESTADDRREQ: return "WSAEDESTADDRREQ";
+		case WSAEMSGSIZE: return "WSAEMSGSIZE";
+		case WSAEPROTOTYPE: return "WSAEPROTOTYPE";
+		case WSAENOPROTOOPT: return "WSAENOPROTOOPT";
+		case WSAEPROTONOSUPPORT: return "WSAEPROTONOSUPPORT";
+		case WSAESOCKTNOSUPPORT: return "WSAESOCKTNOSUPPORT";
+		case WSAEOPNOTSUPP: return "WSAEOPNOTSUPP";
+		case WSAEPFNOSUPPORT: return "WSAEPFNOSUPPORT";
+		case WSAEAFNOSUPPORT: return "WSAEAFNOSUPPORT";
+		case WSAEADDRINUSE: return "WSAEADDRINUSE";
+		case WSAEADDRNOTAVAIL: return "WSAEADDRNOTAVAIL";
+		case WSAENETDOWN: return "WSAENETDOWN";
+		case WSAENETUNREACH: return "WSAENETUNREACH";
+		case WSAENETRESET: return "WSAENETRESET";
+		case WSAECONNABORTED: return "WSAECONNABORTED";
+		case WSAECONNRESET: return "WSAECONNRESET";
+		case WSAENOBUFS: return "WSAENOBUFS";
+		case WSAEISCONN: return "WSAEISCONN";
+		case WSAENOTCONN: return "WSAENOTCONN";
+		case WSAESHUTDOWN: return "WSAESHUTDOWN";
+		case WSAETOOMANYREFS: return "WSAETOOMANYREFS";
+		case WSAETIMEDOUT: return "WSAETIMEDOUT";
+		case WSAECONNREFUSED: return "WSAECONNREFUSED";
+		case WSAELOOP: return "WSAELOOP";
+		case WSAENAMETOOLONG: return "WSAENAMETOOLONG";
+		case WSAEHOSTDOWN: return "WSAEHOSTDOWN";
+		case WSAEHOSTUNREACH: return "WSAEHOSTUNREACH";
+		case WSAENOTEMPTY: return "WSAENOTEMPTY";
+		case WSAEPROCLIM: return "WSAEPROCLIM";
+		case WSAEUSERS: return "WSAEUSERS";
+		case WSAEDQUOT: return "WSAEDQUOT";
+		case WSAESTALE: return "WSAESTALE";
+		case WSAEREMOTE: return "WSAEREMOTE";
+		case WSASYSNOTREADY: return "WSASYSNOTREADY";
+		case WSAVERNOTSUPPORTED: return "WSAVERNOTSUPPORTED";
+		case WSANOTINITIALISED: return "WSANOTINITIALISED";
+		case WSAEDISCON: return "WSAEDISCON";
+		case WSAENOMORE: return "WSAENOMORE";
+		case WSAECANCELLED: return "WSAECANCELLED";
+		case WSAEINVALIDPROCTABLE: return "WSAEINVALIDPROCTABLE";
+		case WSAEINVALIDPROVIDER: return "WSAEINVALIDPROVIDER";
+		case WSAEPROVIDERFAILEDINIT: return "WSAEPROVIDERFAILEDINIT";
+		case WSASYSCALLFAILURE: return "WSASYSCALLFAILURE";
+		case WSASERVICE_NOT_FOUND: return "WSASERVICE_NOT_FOUND";
+		case WSATYPE_NOT_FOUND: return "WSATYPE_NOT_FOUND";
+		case WSA_E_NO_MORE: return "WSA_E_NO_MORE";
+		case WSA_E_CANCELLED: return "WSA_E_CANCELLED";
+		case WSAEREFUSED: return "WSAEREFUSED";
+		case WSAHOST_NOT_FOUND: return "WSAHOST_NOT_FOUND";
+		case WSATRY_AGAIN: return "WSATRY_AGAIN";
+		case WSANO_RECOVERY: return "WSANO_RECOVERY";
+		case WSANO_DATA: return "WSANO_DATA"; 
+		case WSA_QOS_RECEIVERS: return "WSA_QOS_RECEIVERS";
+		case WSA_QOS_SENDERS: return "WSA_QOS_SENDERS";
+		case WSA_QOS_NO_SENDERS: return "WSA_QOS_NO_SENDERS";
+		case WSA_QOS_NO_RECEIVERS: return "WSA_QOS_NO_RECEIVERS";
+		case WSA_QOS_REQUEST_CONFIRMED: return "WSA_QOS_REQUEST_CONFIRMED";
+		case WSA_QOS_ADMISSION_FAILURE: return "WSA_QOS_ADMISSION_FAILURE";
+		case WSA_QOS_POLICY_FAILURE: return "WSA_QOS_POLICY_FAILURE";
+		case WSA_QOS_BAD_STYLE: return "WSA_QOS_BAD_STYLE";
+		case WSA_QOS_BAD_OBJECT: return "WSA_QOS_BAD_OBJECT";
+		case WSA_QOS_TRAFFIC_CTRL_ERROR: return "WSA_QOS_TRAFFIC_CTRL_ERROR";
+		case WSA_QOS_GENERIC_ERROR: return "WSA_QOS_GENERIC_ERROR";
+		case WSA_QOS_ESERVICETYPE: return "WSA_QOS_ESERVICETYPE";
+		case WSA_QOS_EFLOWSPEC: return "WSA_QOS_EFLOWSPEC";
+		case WSA_QOS_EPROVSPECBUF: return "WSA_QOS_EPROVSPECBUF";
+		case WSA_QOS_EFILTERSTYLE: return "WSA_QOS_EFILTERSTYLE";
+		case WSA_QOS_EFILTERTYPE: return "WSA_QOS_EFILTERTYPE";
+		case WSA_QOS_EFILTERCOUNT: return "WSA_QOS_EFILTERCOUNT";
+		case WSA_QOS_EOBJLENGTH: return "WSA_QOS_EOBJLENGTH";
+		case WSA_QOS_EFLOWCOUNT: return "WSA_QOS_EFLOWCOUNT";
+		case WSA_QOS_EUNKOWNPSOBJ: return "WSA_QOS_EUNKOWNPSOBJ";
+		case WSA_QOS_EPOLICYOBJ: return "WSA_QOS_EPOLICYOBJ";
+		case WSA_QOS_EFLOWDESC: return "WSA_QOS_EFLOWDESC";
+		case WSA_QOS_EPSFLOWSPEC: return "WSA_QOS_EPSFLOWSPEC";
+		case WSA_QOS_EPSFILTERSPEC: return "WSA_QOS_EPSFILTERSPEC";
+		case WSA_QOS_ESDMODEOBJ: return "WSA_QOS_ESDMODEOBJ";
+		case WSA_QOS_ESHAPERATEOBJ: return "WSA_QOS_ESHAPERATEOBJ";
+		case WSA_QOS_RESERVED_PETYPE: return "WSA_QOS_RESERVED_PETYPE";
+		default:
+			Com_sprintf(errstr, sizeof(errstr), "Unhandled WSA code: %i", code);
+			return errstr;
 	}
 }
