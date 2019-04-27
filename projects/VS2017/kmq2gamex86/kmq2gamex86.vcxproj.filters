@@ -28,6 +28,15 @@
     <Filter Include="Source Files\monster">
       <UniqueIdentifier>{88bb74e9-0a79-4b7a-a680-cc47ed4e2758}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\monster">
+      <UniqueIdentifier>{90031b8d-2222-4f5e-ac68-10251914e080}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\player">
+      <UniqueIdentifier>{5426aa23-003e-4be7-b934-ae09188c7d56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\game">
+      <UniqueIdentifier>{1d7957c7-9a13-4d40-8576-7fa5a0ff6d39}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\game\km_cvar.c">
@@ -260,91 +269,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\game\g_ctf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\g_local.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\game.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\game\km_cvar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\game\laz_misc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_actor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_berserk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_boss2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_boss31.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_boss32.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_brain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_chick.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_flipper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_float.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_flyer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_gladiator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_gunner.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_hover.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_infantry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_insane.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_medic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_mutant.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_parasite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_soldier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_supertank.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\m_tank.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\p_menu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\game\p_text.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\game\pak.h">
@@ -356,10 +284,94 @@
     <ClInclude Include="..\..\..\game\acebot.h">
       <Filter>Header Files\acebot</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\game\m_actor.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_berserk.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_boss2.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_boss31.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_boss32.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_brain.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_chick.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_flipper.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_float.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_flyer.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_gladiator.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_gunner.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_hover.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_infantry.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_insane.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_medic.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_mutant.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_parasite.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_player.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_soldier.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_supertank.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\m_tank.h">
+      <Filter>Header Files\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\p_menu.h">
+      <Filter>Header Files\player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\p_text.h">
+      <Filter>Header Files\player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\g_ctf.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\game\g_func_decs.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\game</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\game\g_func_list.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\g_local.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\game.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\game\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

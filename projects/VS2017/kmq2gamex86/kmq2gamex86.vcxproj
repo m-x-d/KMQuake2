@@ -270,6 +270,7 @@
     <ClInclude Include="..\..\..\game\p_menu.h" />
     <ClInclude Include="..\..\..\game\p_text.h" />
     <ClInclude Include="..\..\..\game\q_shared.h" />
+    <ClInclude Include="..\..\..\game\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\game\lazarus.def" />

@@ -300,11 +300,11 @@
     <ClInclude Include="..\..\..\renderer\r_local.h" />
     <ClInclude Include="..\..\..\renderer\r_model.h" />
     <ClInclude Include="..\..\..\renderer\vlights.h" />
-    <ClInclude Include="..\..\..\renderer\warpsin.h" />
     <ClInclude Include="..\..\..\server\server.h" />
     <ClInclude Include="..\..\..\ui\ui_local.h" />
+    <ClInclude Include="..\..\..\win32\glw_win.h" />
+    <ClInclude Include="..\..\..\win32\resource.h" />
     <ClInclude Include="..\..\..\win32\winquake.h" />
-    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\win32\q2.ico" />
