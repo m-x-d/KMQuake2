@@ -42,8 +42,6 @@ qboolean kmgl_active = 0;
 
 HWND cl_hwnd; // Main window handle for life of program
 
-#define VID_NUM_MODES	((int)(sizeof(vid_modes) / sizeof(vid_modes[0])))
-
 LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static qboolean s_alttab_disabled;
@@ -406,9 +404,9 @@ void VID_Front_f(void)
 
 typedef struct vidmode_s
 {
-	const char	*description;
-	int			width, height;
-	int			mode;
+	const char *description;
+	int width, height;
+	int mode;
 } vidmode_t;
 
 // Knightmare- added 1280x1024, 1400x1050, 856x480, 1024x480 modes
@@ -419,6 +417,8 @@ vidmode_t vid_modes[] =
 
 qboolean VID_GetModeInfo(int *width, int *height, int mode)
 {
+	static int num_vid_modes = (int)(sizeof(vid_modes) / sizeof(vid_modes[0])); //mxd
+	
 	if (mode == -1) // Custom mode
 	{
 		*width  = r_customwidth->integer;
@@ -426,7 +426,7 @@ qboolean VID_GetModeInfo(int *width, int *height, int mode)
 		return true;
 	}
 
-	if (mode < 0 || mode >= VID_NUM_MODES)
+	if (mode < 0 || mode >= num_vid_modes)
 		return false;
 
 	*width  = vid_modes[mode].width;

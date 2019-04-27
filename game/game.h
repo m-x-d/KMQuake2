@@ -247,10 +247,8 @@ typedef struct
 
 	void		(*RunFrame) (void);
 
-	// ServerCommand will be called when an "sv <command>" command is issued on the
-	// server console.
-	// The game can issue gi.argc() / gi.argv() commands to get the rest
-	// of the parameters
+	// ServerCommand will be called when an "sv <command>" command is issued on the server console.
+	// The game can issue gi.argc() / gi.argv() commands to get the rest of the parameters
 	void		(*ServerCommand) (void);
 
 	//
@@ -267,4 +265,4 @@ typedef struct
 	int			max_edicts;
 } game_export_t;
 
-game_export_t *GetGameApi (game_import_t *import);
+//game_export_t *GetGameApi (game_import_t *import);
