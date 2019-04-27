@@ -288,13 +288,6 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 
 //=========================================================
 
-// Speed up sin calculations - Ed
-float r_turbsin[] =
-{
-	#include "warpsin.h"
-};
-#define TURBSCALE (256.0 / M_PI2)
-
 // MrG - texture shader stuffs
 #define DST_SIZE 16
 unsigned int dst_texture_NV, dst_texture_ARB;
@@ -499,8 +492,9 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 		float* v = p->verts[0];
 		for (int i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 		{
-			float s = v[3] + r_turbsin[(int)((v[4] * 0.125 + rdt) * TURBSCALE) & 255];
-			float t = v[4] + r_turbsin[(int)((v[3] * 0.125 + rdt) * TURBSCALE) & 255];
+			float s = v[3] + sinf(v[4] * 0.125f + rdt) * 4; //mxd. Replaced precalculated sin values with sinf()
+			float t = v[4] + sinf(v[3] * 0.125f + rdt) * 4;
+
 			s += scroll;
 			s *= DIV64;
 			t *= DIV64;
@@ -512,7 +506,7 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 				&& fa->plane->normal[2] > fa->plane->normal[0]
 				&& fa->plane->normal[2] > fa->plane->normal[1])
 			{
-				point[2] = v[2] + r_waterwave->value * sin(v[0] * 0.025 + rdt) * sin(v[2] * 0.05 + rdt);
+				point[2] = v[2] + r_waterwave->value * sinf(v[0] * 0.025f + rdt) * sinf(v[2] * 0.05f + rdt);
 			}
 //=============== End water waves ====================
 
