@@ -22,13 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "r_local.h"
 
-
-/*
-=================
-R_RotateForEntity
-=================
-*/
-void R_RotateForEntity (entity_t *e, qboolean full)
+void R_RotateForEntity(entity_t *e, qboolean full)
 {
 	qglTranslatef(e->origin[0], e->origin[1], e->origin[2]);
 	qglRotatef(e->angles[1], 0, 0, 1);
@@ -40,30 +34,18 @@ void R_RotateForEntity (entity_t *e, qboolean full)
 	}
 }
 
-
-/*
-=================
-R_RollMult
-=================
-*/
-int R_RollMult (void)
+int R_RollMult(void)
 {
-	return (r_entity_fliproll->value ? -1 : 1);
+	return (r_entity_fliproll->value ? -1 : 1); //TODO: mxd. What't the purpose of r_entity_fliproll?..
 }
 
-
-/*
-=================
-R_DrawNullModel
-=================
-*/
-void R_DrawNullModel (void)
+static void R_DrawNullModel(void)
 {
 	qglPushMatrix();
 	R_RotateForEntity(currententity, true);
 	GL_DisableTexture(0);
 
-	if (r_old_nullmodel->value)
+	if (r_old_nullmodel->value) //TODO: mxd. What't the purpose of r_old_nullmodel?..
 	{
 		vec3_t shadelight;
 		if (currententity->flags & RF_FULLBRIGHT)
@@ -84,31 +66,23 @@ void R_DrawNullModel (void)
 	qglColor4f(1, 1, 1, 1);
 }
 
+#pragma region ======================= TREE BUILDING AND USAGE
 
-/*
-==================================================================================
-	TREE BUILDING AND USAGE
-==================================================================================
-*/
-int entstosort;
+static int entstosort;
 sortedelement_t theents[MAX_ENTITIES];
-// Is this really used at all?
-//sortedelement_t *ents_prerender;
 sortedelement_t *ents_trans;
 sortedelement_t *ents_viewweaps;
 sortedelement_t *ents_viewweaps_trans;
 
-void resetEntSortList (void)
+static void ResetEntSortList(void)
 {
 	entstosort = 0;
-	//ents_prerender = NULL;
 	ents_trans = NULL;
 	ents_viewweaps = NULL;
 	ents_viewweaps_trans = NULL;
 }
 
-
-sortedelement_t *NewSortEnt (entity_t *ent)
+static sortedelement_t *NewSortEnt(entity_t *ent)
 {
 	sortedelement_t *element = &theents[entstosort];
 
@@ -124,13 +98,7 @@ sortedelement_t *NewSortEnt (entity_t *ent)
 	return element;
 }
 
-
-/*
-=================
-ElementAddNode
-=================
-*/
-void ElementAddNode (sortedelement_t *base, sortedelement_t *thisElement)
+static void ElementAddNode(sortedelement_t *base, sortedelement_t *thisElement)
 {
 	while(true)
 	{
@@ -161,13 +129,7 @@ void ElementAddNode (sortedelement_t *base, sortedelement_t *thisElement)
 	}
 }
 
-
-/*
-=================
-AddEntViewWeapTree
-=================
-*/
-void AddEntViewWeapTree (entity_t *ent, qboolean trans)
+static void AddEntViewWeapTree(entity_t *ent, qboolean trans)
 {
 	sortedelement_t *thisEnt = NewSortEnt(ent);
 
@@ -192,13 +154,7 @@ void AddEntViewWeapTree (entity_t *ent, qboolean trans)
 	entstosort++;
 }
 
-
-/*
-=================
-AddEntTransTree
-=================
-*/
-void AddEntTransTree (entity_t *ent)
+static void AddEntTransTree(entity_t *ent)
 {
 	sortedelement_t *thisEnt = NewSortEnt(ent);
 
@@ -213,14 +169,9 @@ void AddEntTransTree (entity_t *ent)
 	entstosort++;
 }
 
-//==================================================================================
+#pragma endregion 
 
-/*
-=================
-ParseRenderEntity
-=================
-*/
-void ParseRenderEntity (entity_t *ent)
+static void ParseRenderEntity(entity_t *ent)
 {
 	currententity = ent;
 
@@ -240,25 +191,19 @@ void ParseRenderEntity (entity_t *ent)
 		switch (currentmodel->type)
 		{
 #ifndef MD2_AS_MD3
-		case mod_md2: R_DrawAliasMD2Model(currententity); break;
+			case mod_md2: R_DrawAliasMD2Model(currententity); break;
 #endif
-		case mod_alias:  R_DrawAliasModel(currententity); break; //Harven MD3
-		case mod_brush:  R_DrawBrushModel(currententity); break;
-		case mod_sprite: R_DrawSpriteModel(currententity); break;
-		default:
-			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Warning: ParseRenderEntity: %s: Bad modeltype (%i)\n", currentmodel->name, currentmodel->type);
-			break;
+			case mod_alias:  R_DrawAliasModel(currententity); break; //Harven MD3
+			case mod_brush:  R_DrawBrushModel(currententity); break;
+			case mod_sprite: R_DrawSpriteModel(currententity); break;
+			default:
+				VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Warning: ParseRenderEntity: %s: bad model type (%i)\n", currentmodel->name, currentmodel->type);
+				break;
 		}
 	}
 }
 
-
-/*
-=================
-RenderEntTree
-=================
-*/
-void RenderEntTree (sortedelement_t *element)
+static void RenderEntTree(sortedelement_t *element)
 {
 	if (!element)
 		return;
@@ -271,32 +216,31 @@ void RenderEntTree (sortedelement_t *element)
 	RenderEntTree(element->right);
 }
 
+//mxd
+static qboolean EntityHasAlpha(entity_t *e)
+{
+	if (e->flags & RF_TRANSLUCENT)
+		return true;
 
-/*
-=================
-R_DrawAllEntities
-=================
-*/
-void R_DrawAllEntities (qboolean addViewWeaps)
+	// Check for md3 mesh transparency
+	if (!(e->flags & RF_BEAM) && e->model && e->model->type == mod_alias && e->model->hasAlpha)
+		return true;
+
+	return false;
+}
+
+void R_DrawAllEntities(qboolean addViewWeaps)
 {
 	if (!r_drawentities->value)
 		return;
 
-	resetEntSortList();
+	ResetEntSortList();
 
 	// Opaque models
 	for (int i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
-
-		qboolean alpha = false;
-		if (currententity->flags & RF_TRANSLUCENT)
-			alpha = true;
-
-		// check for md3 mesh transparency
-		if (!(currententity->flags & RF_BEAM) && currententity->model)
-			if (currententity->model->type == mod_alias && currententity->model->hasAlpha)
-				alpha = true;
+		const qboolean alpha = EntityHasAlpha(currententity); //mxd
 
 		if (currententity->flags & RF_WEAPONMODEL)
 		{
@@ -318,17 +262,7 @@ void R_DrawAllEntities (qboolean addViewWeaps)
 	for (int i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
-
-		qboolean alpha = false;
-		if (currententity->flags & RF_TRANSLUCENT)
-		{
-			alpha = true;
-		}
-		else if (!(currententity->flags & RF_BEAM) && currententity->model 
-			&& currententity->model->type == mod_alias && currententity->model->hasAlpha) // check for md3 mesh transparency
-		{
-			alpha = true;
-		}
+		const qboolean alpha = EntityHasAlpha(currententity); //mxd
 
 		if (!alpha || currententity->flags & RF_WEAPONMODEL)
 			continue;
@@ -339,33 +273,17 @@ void R_DrawAllEntities (qboolean addViewWeaps)
 	GL_DepthMask(1);
 }
 
-
-/*
-=================
-R_DrawSolidEntities
-=================
-*/
-void R_DrawSolidEntities ()
+void R_DrawSolidEntities()
 {
-	if (!r_drawentities->value)
+	if (!r_drawentities->integer)
 		return;
 
-	resetEntSortList();
+	ResetEntSortList();
 
 	for (int i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
-		
-		qboolean alpha = false;
-		if (currententity->flags & RF_TRANSLUCENT)
-		{
-			alpha = true;
-		}
-		else if (!(currententity->flags & RF_BEAM) && currententity->model
-			&& currententity->model->type == mod_alias && currententity->model->hasAlpha) // check for md3 mesh transparency
-		{
-			alpha = true;
-		}
+		const qboolean alpha = EntityHasAlpha(currententity); //mxd
 
 		if (currententity->flags & RF_WEAPONMODEL)
 		{
@@ -383,62 +301,8 @@ void R_DrawSolidEntities ()
 	}
 }
 
-
-/*
-=================
-R_DrawEntitiesOnList
-=================
-*/
-void R_DrawEntitiesOnList (sortedelement_t *list)
+void R_DrawEntitiesOnList(sortedelement_t *list)
 {
-	if (r_drawentities->value)
+	if (r_drawentities->integer)
 		RenderEntTree(list);
 }
-
-
-/*
-==================================================
-	SHADOW-ONLY RENDERING (UNUSED)
-==================================================
-*/
-#if 0
-void ParseRenderEntityShadow (entity_t *ent)
-{
-	currententity = ent;
-	if ( currententity->flags & RF_BEAM )
-		return;
-	currentmodel = currententity->model;
-	if (!currentmodel)
-		return;
-	switch (currentmodel->type)
-	{
-#ifndef MD2_AS_MD3
-	case mod_md2:
-		R_DrawAliasMD2ModelShadow (currententity);
-		break;
-#endif // MD2_AS_MD3
-	case mod_alias:
-		R_DrawAliasModelShadow (currententity);
-		break;
-	default:
-		break;
-	}
-}
-
-void R_DrawAllEntityShadows (void)
-{
-	int i;
-	
-	if (!r_drawentities->value)
-		return;
-	//if (!r_shadows->value)
-	if (r_shadows->value != 3)
-		return;
-
-	for (i=0;i<r_newrefdef.num_entities; i++)
-	{
-		currententity = &r_newrefdef.entities[i];
-		ParseRenderEntityShadow(currententity);
-	}
-}
-#endif
