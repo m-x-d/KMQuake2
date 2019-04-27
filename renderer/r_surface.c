@@ -2314,6 +2314,15 @@ static int fix_coord(int in, const int width)
 
 void R_SetupLightmapPoints(msurface_t *surf)
 {
+	// Sky / nodraw / water / transparent surfaces won't have light_smax/tmax set
+	if(surf->light_smax == 0 || surf->light_tmax == 0)
+	{
+		surf->lightmap_points = NULL;
+		surf->normalmap_normals = NULL;
+
+		return;
+	}
+	
 	// Setup world matrix
 	vec3_t facenormal;
 	VectorCopy(surf->plane->normal, facenormal);

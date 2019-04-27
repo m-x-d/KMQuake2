@@ -203,10 +203,10 @@ int RecursiveLightPoint(vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 
 	for (int i = 0; i < node->numsurfaces; i++, surf++)
 	{
-		if (!surf->samples)
+		if (!surf->samples || surf->light_smax == 0 || surf->light_tmax == 0) //mxd. Also skip surfaces with non-initialized lightmap size
 			continue; //mxd. No lightmap data. Was return 0;
 		
-		if (surf->flags & (SURF_DRAWTURB | SURF_DRAWSKY)) 
+		if (surf->flags & (SURF_DRAWTURB | SURF_DRAWSKY) || surf->texinfo->flags & SURF_NODRAW) //mxd. Also skip NODRAW surfaces 
 			continue; // No lightmaps
 
 		mtexinfo_t *tex = surf->texinfo;
