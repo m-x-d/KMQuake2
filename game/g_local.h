@@ -688,17 +688,14 @@ extern	int	hml_index;
 #define MOD_GRAPPLE			36
 #define MOD_FRIENDLY_FIRE	0x8000000
 
-extern	int	meansOfDeath;
+extern int meansOfDeath;
 
-extern	edict_t			*g_edicts;
+extern edict_t *g_edicts;
 
 #define	FOFS(x) (int)&(((edict_t *)0)->x)
 #define	STOFS(x) (int)&(((spawn_temp_t *)0)->x)
 #define	LLOFS(x) (int)&(((level_locals_t *)0)->x)
 #define	CLOFS(x) (int)&(((gclient_t *)0)->x)
-
-#define random()	((rand () & 0x7fff) / ((float)0x7fff))
-#define crandom()	(2.0 * (random() - 0.5))
 
 extern	cvar_t	*maxentities;
 extern	cvar_t	*deathmatch;

@@ -212,13 +212,8 @@ typedef float vec_t;
 typedef vec_t vec2_t[2];
 typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
-typedef vec_t vec5_t[5];
 
 typedef byte color_t[4];
-
-//typedef int fixed4_t; //mxd. Never used
-//typedef int fixed8_t;
-//typedef int fixed16_t;
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// Matches value in gcc v2 math.h
@@ -231,6 +226,10 @@ typedef byte color_t[4];
 #ifndef M_PIHALF //mxd
 #define M_PIHALF	1.57079632679489661923	// Doesn't match anything in particular...
 #endif
+
+//mxd. Moved from client.h, r_particle.c and g_local.h...
+#define random()	((rand () & 0x7fff) / ((float)0x7fff))
+#define crandom()	(2.0 * (random() - 0.5))
 
 #define SqrtFast(x)		((x) * Q_rsqrt(x))
 
