@@ -620,6 +620,7 @@ qboolean AxisCompare(const vec3_t axis1[3], const vec3_t axis2[3])
 
 //====================================================================================
 
+// Returns filename ("c:/dir/file.txt" -> "file.txt") //mxd. Never used
 char *COM_SkipPath(char *pathname)
 {
 	char *last = pathname;
@@ -634,6 +635,7 @@ char *COM_SkipPath(char *pathname)
 	return last;
 }
 
+// Returns filename without extension ("c:/dir/file.txt" -> "c:/dir/file")
 void COM_StripExtension(char *in, char *out)
 {
 	//mxd. Let's find the last dot instead of first...
@@ -643,6 +645,7 @@ void COM_StripExtension(char *in, char *out)
 		*ext = 0;
 }
 
+// Returns file extension ("c:/dir/file.txt" -> "txt")
 const char *COM_FileExtension(const char *in)
 {
 	//mxd. YQ2 implementation
@@ -650,16 +653,17 @@ const char *COM_FileExtension(const char *in)
 	return ((!ext || ext == in) ? "" : ext + 1);
 }
 
+// Returns filename without extension ("c:/dir/file.txt" -> "file") //mxd. Never used
 void COM_FileBase(char *in, char *out)
 {
-	char *s2;
 	char *s = in + strlen(in) - 1;
 	
 	while (s != in && *s != '.')
 		s--;
 	
-	for (s2 = s; s2 != in && *s2 != '/'; s2--)
-	;
+	char *s2 = s;
+	while (s2 != in && *s2 != '/')
+		s2--;
 	
 	if (s - s2 < 2)
 	{
@@ -673,7 +677,7 @@ void COM_FileBase(char *in, char *out)
 	}
 }
 
-// Returns the path up to, but not including the last /
+// Returns the path up to, but not including the last '/' ("c:/dir/file.txt" -> "c:/dir")
 void COM_FilePath(char *in, char *out)
 {
 	char *s = in + strlen(in) - 1;

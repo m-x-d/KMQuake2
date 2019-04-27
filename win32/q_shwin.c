@@ -24,7 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <io.h>
 
 
-int	curtime;
+int curtime;
+
 int Sys_Milliseconds(void)
 {
 	static int base;
@@ -65,9 +66,9 @@ char *Sys_GetCurrentDirectory(void)
 
 //============================================
 
-char findbase[MAX_OSPATH];
-char findpath[MAX_OSPATH];
-int findhandle;
+static char findbase[MAX_OSPATH];
+static char findpath[MAX_OSPATH];
+static int findhandle;
 
 static qboolean CompareAttributes(unsigned found, unsigned musthave, unsigned canthave)
 {
@@ -96,7 +97,7 @@ static qboolean CompareAttributes(unsigned found, unsigned musthave, unsigned ca
 	return true;
 }
 
-char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave )
+char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave)
 {
 	struct _finddata_t findinfo;
 
@@ -161,8 +162,8 @@ mxd. High-precision timers
 */
 #define NUM_TIMERS 16
 
-double PCFreq[NUM_TIMERS];
-__int64 CounterStart[NUM_TIMERS];
+static double PCFreq[NUM_TIMERS];
+static __int64 CounterStart[NUM_TIMERS];
 
 void Sys_TimerStart(int timerindex)
 {
