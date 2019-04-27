@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 #include "vlights.h"
-#include "r_normals.h"
 
 /*
 =============================================================
@@ -384,14 +383,14 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 
 		for (int i = 0; i < mesh.num_verts; i++, v++, ov++)
 		{
-			// lerp verts
-			curNormal[0] = r_sinTable[v->normal[0]] * r_cosTable[v->normal[1]];
-			curNormal[1] = r_sinTable[v->normal[0]] * r_sinTable[v->normal[1]];
-			curNormal[2] = r_cosTable[v->normal[0]];
+			// Lerp verts
+			curNormal[0] = sinf(v->normal[0]) * cosf(v->normal[1]); //mxd. Replaced precalculated r_sinTable/r_cosTable values with sinf()/cosf()
+			curNormal[1] = sinf(v->normal[0]) * sinf(v->normal[1]);
+			curNormal[2] = cosf(v->normal[0]);
 
-			oldNormal[0] = r_sinTable[ov->normal[0]] * r_cosTable[ov->normal[1]];
-			oldNormal[1] = r_sinTable[ov->normal[0]] * r_sinTable[ov->normal[1]];
-			oldNormal[2] = r_cosTable[ov->normal[0]];
+			oldNormal[0] = sinf(ov->normal[0]) * cosf(ov->normal[1]);
+			oldNormal[1] = sinf(ov->normal[0]) * sinf(ov->normal[1]);
+			oldNormal[2] = cosf(ov->normal[0]);
 
 			for (int c = 0; c < 3; c++) //mxd
 				tempNormalsArray[i][c] = curNormal[c] + (oldNormal[c] - curNormal[c]) * backlerp;
@@ -399,7 +398,7 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 			if (shellModel)
 				shellscale = (e->flags & RF_WEAPONMODEL ? WEAPON_SHELL_SCALE: POWERSUIT_SCALE);
 			else
-				shellscale = 0.0;
+				shellscale = 0.0f;
 
 			VectorSet ( tempVertexArray[meshnum][i], 
 				(move[0] + ov->xyz[0] * oldScale[0] + v->xyz[0] * curScale[0] + tempNormalsArray[i][0] * shellscale),
@@ -981,9 +980,9 @@ void R_DrawAliasModel (entity_t *e)
 		c_alias_polys += paliashdr->meshes[i].num_tris;
 
 	qglPushMatrix();
-	e->angles[ROLL] = e->angles[ROLL] * R_RollMult(); // roll is backwards
+	e->angles[ROLL] *= R_RollMult(); // Roll is backwards
 	R_RotateForEntity(e, true);
-	e->angles[ROLL] = e->angles[ROLL] * R_RollMult(); // roll is backwards
+	e->angles[ROLL] *= R_RollMult(); // Roll is backwards
 
 	if (e->frame >= paliashdr->num_frames || e->frame < 0)
 	{
@@ -1062,9 +1061,9 @@ void R_DrawAliasModel (entity_t *e)
 
 			if (r_shadows->value == 3)
 			{
-				e->angles[ROLL] = e->angles[ROLL] * R_RollMult();	// roll is backwards
+				e->angles[ROLL] *= R_RollMult(); // Roll is backwards
 				R_RotateForEntity(e, true);
-				e->angles[ROLL] = e->angles[ROLL] * R_RollMult();	// roll is backwards
+				e->angles[ROLL] *= R_RollMult(); // Roll is backwards
 				R_DrawAliasVolumeShadow(paliashdr, bbox);
 			}
 			else
