@@ -271,21 +271,6 @@ int RecursiveLightPoint(vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 	return RecursiveLightPoint(color, node->children[!side], mid, end);
 }
 
-// Psychospaz's lighting on alpha surfaces
-void R_MaxColorVec(vec3_t color)
-{
-	float brightest = 0.0f;
-
-	for (int i = 0; i < 3; i++)
-		brightest = max(color[i], brightest); //mxd
-	
-	if (brightest > 255)
-		VectorScale(color, 255 / brightest, color); //mxd
-
-	for (int i = 0; i < 3; i++)
-		color[i] = clamp(color[i], 0, 1); //mxd
-}
-
 void R_LightPoint(vec3_t p, vec3_t color, qboolean isEnt)
 {
 	if (!r_worldmodel->lightdata)

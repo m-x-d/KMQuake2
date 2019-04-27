@@ -1381,6 +1381,8 @@ qboolean SurfInFront (msurface_t *surf1, msurface_t *surf2)
 R_DrawInlineBModel
 =================
 */
+#define BACKFACE_EPSILON	0.01
+
 void R_DrawInlineBModel (entity_t *e, int causticflag)
 {
 	cplane_t	*pplane;
@@ -1971,14 +1973,29 @@ void R_MarkLeaves (void)
 =======================================================================
 */
 
+// Psychospaz's lighting on alpha surfaces
+static void MaxColorVec(vec3_t color)
+{
+	float brightest = 0.0f;
+
+	for (int i = 0; i < 3; i++)
+		brightest = max(color[i], brightest); //mxd
+
+	if (brightest > 255)
+		VectorScale(color, 255 / brightest, color); //mxd
+
+	for (int i = 0; i < 3; i++)
+		color[i] = clamp(color[i], 0, 1); //mxd
+}
+
 /*
 =================
 R_BuildVertexLightBase
 =================
 */
-void R_SurfLightPoint (msurface_t *surf, vec3_t p, vec3_t color, qboolean baselight);
+extern void R_SurfLightPoint(msurface_t *surf, vec3_t p, vec3_t color, qboolean baselight);
 
-void R_BuildVertexLightBase (msurface_t *surf, glpoly_t *poly)
+void R_BuildVertexLightBase(msurface_t *surf, glpoly_t *poly)
 {
 	float *v = poly->verts[0];
 	for (int i = 0; i < poly->numverts; i++, v += VERTEXSIZE)
@@ -1988,7 +2005,7 @@ void R_BuildVertexLightBase (msurface_t *surf, glpoly_t *poly)
 		VectorClear(color); //mxd
 
 		R_SurfLightPoint(surf, point, color, true);
-		R_MaxColorVec(color);
+		MaxColorVec(color);
 
 		for (int c = 0; c < 3; c++) //mxd
 			poly->vertexlightbase[i * 3 + c] = (byte)(color[c] * 255.0);
@@ -2051,12 +2068,12 @@ void R_BuildVertexLight (msurface_t *surf)
 			R_SurfLightPoint(surf, point, color, false);
 
 			for (int c = 0; c < 3; c++) //mxd
-				color[c] += (float)poly->vertexlightbase[i * 3 + c] / 255.0;
+				color[c] += (float)poly->vertexlightbase[i * 3 + c] / 255.0f;
 				
-			R_MaxColorVec(color);
+			MaxColorVec(color);
 
 			for (int c = 0; c < 3; c++) //mxd
-				poly->vertexlight[i * 3 + c] = (byte)(color[c] * 255.0);
+				poly->vertexlight[i * 3 + c] = (byte)(color[c] * 255.0f);
 		}
 	}
 }

@@ -31,8 +31,8 @@ static unsigned char gammatable[256];
 
 cvar_t *r_intensity;
 
-unsigned	d_8to24table[256];
-float		d_8to24tablef[256][3]; //Knightmare- MrG's Vertex array stuff
+unsigned d_8to24table[256];
+
 
 qboolean GL_Upload8(byte *data, int width, int height, qboolean mipmap);
 qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap);
@@ -747,17 +747,15 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 				scrap_texels[texnum][(y + i) * BLOCK_WIDTH + x + j] = pic[k];
 
 		image->texnum = TEXNUM_SCRAPS + texnum;
-		image->scrap = true;
 		image->has_alpha = true;
-		image->sl = (x + 0.01) / (float)BLOCK_WIDTH;
+		image->sl = (x + 0.01f) / (float)BLOCK_WIDTH;
 		image->sh = (x + image->width - 0.01) / (float)BLOCK_WIDTH;
-		image->tl = (y + 0.01) / (float)BLOCK_WIDTH;
-		image->th = (y + image->height - 0.01) / (float)BLOCK_WIDTH;
+		image->tl = (y + 0.01f) / (float)BLOCK_WIDTH;
+		image->th = (y + image->height - 0.01f) / (float)BLOCK_WIDTH;
 	}
 	else
 	{
 nonscrap:
-		image->scrap = false;
 		image->texnum = TEXNUM_IMAGES + (image - gltextures);
 		GL_Bind(image->texnum);
 
