@@ -96,6 +96,11 @@ extern	vrect_t		scr_vrect; // Position of render window
 extern	char		crosshair_pic[MAX_QPATH];
 extern	int			crosshair_width, crosshair_height;
 
+//mxd. Moved from cl_screen.c
+#define CROSSHAIR_SIZE		32
+#define CROSSHAIR_SCALE_MIN 0.25f
+#define CROSSHAIR_SCALE_MAX 2.0f
+
 // Psychospaz's scaled menu stuff
 #define SCREEN_WIDTH	640.0f
 #define SCREEN_HEIGHT	480.0f

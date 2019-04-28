@@ -37,10 +37,10 @@ static menulist_s		s_options_screen_fps_box;
 static menuaction_s		s_options_screen_defaults_action;
 static menuaction_s		s_options_screen_back_action;
 
-//mxd. Crosshair preview size and position...
-static const int crosshair_size = 36;
-static int crosshair_x;
-static int crosshair_y;
+//mxd. Crosshair frame size and position...
+static const int crosshair_frame_size = CROSSHAIR_SIZE * CROSSHAIR_SCALE_MAX + 4;
+static int crosshair_frame_x;
+static int crosshair_frame_y;
 
 #pragma region ======================= Menu item callbacks
 
@@ -353,11 +353,11 @@ void Options_Screen_MenuInit(void)
 	// Psychospaz's changeable size crosshair
 	s_options_screen_crosshairscale_slider.generic.type		= MTYPE_SLIDER;
 	s_options_screen_crosshairscale_slider.generic.x		= 0;
-	s_options_screen_crosshairscale_slider.generic.y		= y += 3 * MENU_LINE_SIZE;
+	s_options_screen_crosshairscale_slider.generic.y		= y += MENU_LINE_SIZE;
 	s_options_screen_crosshairscale_slider.generic.name		= "Crosshair scale";
 	s_options_screen_crosshairscale_slider.generic.callback = CrosshairSizeFunc;
 	s_options_screen_crosshairscale_slider.minvalue			= 1;
-	s_options_screen_crosshairscale_slider.maxvalue			= 12;
+	s_options_screen_crosshairscale_slider.maxvalue			= 8;
 	s_options_screen_crosshairscale_slider.generic.statusbar = "Changes size of crosshair";
 
 	s_options_screen_crosshairalpha_slider.generic.type		= MTYPE_SLIDER;
@@ -431,8 +431,8 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_back_action.generic.callback		= UI_BackMenu;
 
 	//mxd. Crosshair preview position
-	crosshair_x = s_options_screen_menu.x + MENU_FONT_SIZE * 7;
-	crosshair_y = s_options_screen_menu.y + s_options_screen_crosshair_box.generic.y - 18 + MENU_LINE_SIZE * 0.5f;
+	crosshair_frame_x = s_options_screen_menu.x + MENU_FONT_SIZE * 16;
+	crosshair_frame_y = s_options_screen_menu.y + s_options_screen_crosshairalpha_slider.generic.y - 2 - crosshair_frame_size / 2;
 
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_header);
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_crosshair_box);
@@ -453,7 +453,7 @@ void MenuCrosshair_MouseClick(void)
 {
 	buttonmenuobject_t crosshairbutton;
 
-	UI_AddButton(&crosshairbutton, 0, crosshair_x, crosshair_y, crosshair_size, crosshair_size);
+	UI_AddButton(&crosshairbutton, 0, crosshair_frame_x, crosshair_frame_y, crosshair_frame_size, crosshair_frame_size);
 
 	if (   cursor.x >= crosshairbutton.min[0] && cursor.x <= crosshairbutton.max[0]
 		&& cursor.y >= crosshairbutton.min[1] && cursor.y <= crosshairbutton.max[1])
@@ -491,16 +491,23 @@ void MenuCrosshair_MouseClick(void)
 	}
 }
 
-//TODO: mxd. Use crosshair_scale, crosshair_alpha and crosshair_pulse cvars when drawing preview
 void DrawMenuCrosshair(void)
 {
-	SCR_DrawFill(crosshair_x + 0, crosshair_y + 0, crosshair_size - 0, crosshair_size - 0, ALIGN_CENTER, 60, 60, 60, 255);
-	SCR_DrawFill(crosshair_x + 1, crosshair_y + 1, crosshair_size - 2, crosshair_size - 2, ALIGN_CENTER, 0, 0, 0, 255);
+	SCR_DrawFill(crosshair_frame_x + 0, crosshair_frame_y + 0, crosshair_frame_size - 0, crosshair_frame_size - 0, ALIGN_CENTER, 60, 60, 60, 255);
+	SCR_DrawFill(crosshair_frame_x + 1, crosshair_frame_y + 1, crosshair_frame_size - 2, crosshair_frame_size - 2, ALIGN_CENTER, 0, 0, 0, 255);
 
 	if (s_options_screen_crosshair_box.curvalue < 1)
 		return;
 
-	SCR_DrawPic(crosshair_x + 2, crosshair_y + 2, crosshair_size - 4, crosshair_size - 4, ALIGN_CENTER, crosshair_names[s_options_screen_crosshair_box.curvalue], 1.0f);
+	//mxd. Let's use crosshair_scale, crosshair_alpha and crosshair_pulse cvars when drawing the preview.
+	const float scaledsize = crosshair_scale->value * CROSSHAIR_SIZE;
+	const float pulsealpha = crosshair_alpha->value * crosshair_pulse->value;
+	float alpha = crosshair_alpha->value - pulsealpha + pulsealpha * sinf(anglemod(cl.time * 0.005f));
+	alpha = clamp(alpha, 0.0f, 1.0f);
+
+	const float offset = (crosshair_frame_size - scaledsize) * 0.5f;
+
+	SCR_DrawPic(crosshair_frame_x + offset, crosshair_frame_y + offset, scaledsize, scaledsize, ALIGN_CENTER, crosshair_names[s_options_screen_crosshair_box.curvalue], alpha);
 }
 
 void Options_Screen_MenuDraw(void)

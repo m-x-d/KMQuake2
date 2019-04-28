@@ -652,8 +652,6 @@ void SCR_Init(void)
 	scr_initialized = true;
 }
 
-#define CROSSHAIR_SIZE 32
-
 // Moved from cl_view.c, what the hell was it doing there?
 // Psychospaz's new crosshair code
 void SCR_DrawCrosshair(void)
@@ -673,10 +671,10 @@ void SCR_DrawCrosshair(void)
 	if (crosshair_scale->modified)
 	{
 		crosshair_scale->modified = false;
-		if (crosshair_scale->value > 5)
-			Cvar_SetValue("crosshair_scale", 5);
-		else if (crosshair_scale->value < 0.25f)
-			Cvar_SetValue("crosshair_scale", 0.25f);
+		if (crosshair_scale->value > CROSSHAIR_SCALE_MAX)
+			Cvar_SetValue("crosshair_scale", CROSSHAIR_SCALE_MAX);
+		else if (crosshair_scale->value < CROSSHAIR_SCALE_MIN)
+			Cvar_SetValue("crosshair_scale", CROSSHAIR_SCALE_MIN);
 	}
 
 	if (!crosshair_pic[0])
