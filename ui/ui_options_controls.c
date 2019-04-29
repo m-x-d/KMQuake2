@@ -45,7 +45,7 @@ static menuaction_s		s_options_controls_back_action;
 
 static void MouseSpeedFunc(void *unused)
 {
-	Cvar_SetValue("sensitivity", s_options_controls_sensitivity_slider.curvalue / 2.0F);
+	Cvar_SetValue("sensitivity", s_options_controls_sensitivity_slider.curvalue / 2.0f);
 }
 
 static void AlwaysRunFunc(void *unused)
@@ -177,6 +177,7 @@ void Options_Controls_MenuInit(void)
 	s_options_controls_sensitivity_slider.minvalue			= 2;
 	s_options_controls_sensitivity_slider.maxvalue			= 22;
 	s_options_controls_sensitivity_slider.generic.statusbar	= "Changes sensitivity of mouse for looking around";
+	s_options_controls_sensitivity_slider.cvar				= sensitivity; //mxd
 
 	s_options_controls_invertmouse_box.generic.type			= MTYPE_SPINCONTROL;
 	s_options_controls_invertmouse_box.generic.x			= 0;
@@ -210,6 +211,7 @@ void Options_Controls_MenuInit(void)
 	s_options_controls_thirdperson_distance_slider.minvalue				= 1;
 	s_options_controls_thirdperson_distance_slider.maxvalue				= 5;
 	s_options_controls_thirdperson_distance_slider.generic.statusbar	= "Changes camera distance in third-person mode";
+	s_options_controls_thirdperson_distance_slider.cvar					= cg_thirdperson_dist; //mxd
 
 	s_options_controls_thirdperson_angle_slider.generic.type		= MTYPE_SLIDER;
 	s_options_controls_thirdperson_angle_slider.generic.x			= 0;
@@ -219,6 +221,7 @@ void Options_Controls_MenuInit(void)
 	s_options_controls_thirdperson_angle_slider.minvalue			= 0;
 	s_options_controls_thirdperson_angle_slider.maxvalue			= 4;
 	s_options_controls_thirdperson_angle_slider.generic.statusbar	= "Changes camera angle in third-person mode";
+	s_options_controls_thirdperson_angle_slider.cvar				= cg_thirdperson_angle; //mxd
 
 	s_options_controls_alwaysrun_box.generic.type		= MTYPE_SPINCONTROL;
 	s_options_controls_alwaysrun_box.generic.x			= 0;

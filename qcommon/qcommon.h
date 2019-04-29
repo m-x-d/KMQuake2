@@ -451,6 +451,9 @@ Cvars are restricted from having the same names as commands to keep this interfa
 
 extern cvar_t *cvar_vars;
 
+// Returns cvar if it exists, NULL otherwise
+cvar_t *Cvar_FindVar(char *var_name);
+
 cvar_t *Cvar_Get(char *var_name, char *value, int flags);
 // Creates the variable if it doesn't exist, or returns the existing one.
 // If it exists, the value will not be changed, but flags will be ORed in that allows variables to be unarchived without needing bitflags.

@@ -359,6 +359,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_crosshairscale_slider.minvalue			= 1;
 	s_options_screen_crosshairscale_slider.maxvalue			= 8;
 	s_options_screen_crosshairscale_slider.generic.statusbar = "Changes size of crosshair";
+	s_options_screen_crosshairscale_slider.cvar				= crosshair_scale; //mxd
 
 	s_options_screen_crosshairalpha_slider.generic.type		= MTYPE_SLIDER;
 	s_options_screen_crosshairalpha_slider.generic.x		= 0;
@@ -368,6 +369,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_crosshairalpha_slider.minvalue			= 1;
 	s_options_screen_crosshairalpha_slider.maxvalue			= 20;
 	s_options_screen_crosshairalpha_slider.generic.statusbar = "Changes opacity of crosshair";
+	s_options_screen_crosshairalpha_slider.cvar				= crosshair_alpha; //mxd
 
 	s_options_screen_crosshairpulse_slider.generic.type		= MTYPE_SLIDER;
 	s_options_screen_crosshairpulse_slider.generic.x		= 0;
@@ -377,6 +379,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_crosshairpulse_slider.minvalue			= 0;
 	s_options_screen_crosshairpulse_slider.maxvalue			= 10;
 	s_options_screen_crosshairpulse_slider.generic.statusbar = "Changes pulse amplitude of crosshair";
+	s_options_screen_crosshairpulse_slider.cvar				= crosshair_pulse; //mxd
 
 	// hud scaling option
 	s_options_screen_hudscale_slider.generic.type			= MTYPE_SLIDER;
@@ -387,6 +390,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_hudscale_slider.minvalue				= 1;
 	s_options_screen_hudscale_slider.maxvalue				= 7;
 	s_options_screen_hudscale_slider.generic.statusbar		= "Changes size of HUD elements";
+	s_options_screen_hudscale_slider.cvar					= hud_scale; //mxd
 
 	// hud trans option
 	s_options_screen_hudalpha_slider.generic.type			= MTYPE_SLIDER;
@@ -397,6 +401,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_hudalpha_slider.minvalue				= 1;
 	s_options_screen_hudalpha_slider.maxvalue				= 11;
 	s_options_screen_hudalpha_slider.generic.statusbar		= "Changes opacity of HUD elements";
+	s_options_screen_hudalpha_slider.cvar					= hud_alpha; //mxd
 
 	// hud squeeze digits option
 	s_options_screen_hudsqueezedigits_box.generic.type		= MTYPE_SPINCONTROL;
@@ -431,7 +436,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_back_action.generic.callback		= UI_BackMenu;
 
 	//mxd. Crosshair preview position
-	crosshair_frame_x = s_options_screen_menu.x + MENU_FONT_SIZE * 16;
+	crosshair_frame_x = s_options_screen_menu.x + MENU_FONT_SIZE * 19;
 	crosshair_frame_y = s_options_screen_menu.y + s_options_screen_crosshairalpha_slider.generic.y - 2 - crosshair_frame_size / 2;
 
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_header);

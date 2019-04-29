@@ -38,6 +38,11 @@ static menulist_s		s_options_effects_footstep_box;
 static menuaction_s		s_options_effects_defaults_action;
 static menuaction_s		s_options_effects_back_action;
 
+//mxd. Rail color preview
+static int rail_color_frame_x;
+static int rail_color_frame_y;
+static int rail_color_frame_size;
+
 #pragma region ======================= Menu item callbacks
 
 static void BloodFunc(void *unused)
@@ -62,7 +67,7 @@ static void ItemBobFunc(void *unused)
 
 static void ParticleCompFunc(void *unused)
 {
-	Cvar_SetValue("cl_particle_scale", (s_options_effects_particle_comp_slider.curvalue - 3)*-1 + 3);
+	Cvar_SetValue("cl_particle_scale", (s_options_effects_particle_comp_slider.curvalue - 3) * -1 + 3);
 }
 
 static void DecalCallback(void *unused)
@@ -98,6 +103,14 @@ static void FootStepFunc(void *unused)
 }
 
 #pragma endregion
+
+//mxd
+static void RailColorPreviewDrawFunc(void *self)
+{
+	SCR_DrawFill(rail_color_frame_x + 0, rail_color_frame_y + 0, rail_color_frame_size - 0, rail_color_frame_size - 0, ALIGN_CENTER, 60, 60, 60, 255);
+	SCR_DrawFill(rail_color_frame_x + 1, rail_color_frame_y + 1, rail_color_frame_size - 2, rail_color_frame_size - 2, ALIGN_CENTER,
+		cl_railred->integer, cl_railgreen->integer, cl_railblue->integer, 255);
+}
 
 static void EffectsSetMenuItemValues(void)
 {
@@ -202,6 +215,7 @@ void Options_Effects_MenuInit(void)
 	s_options_effects_decal_slider.minvalue						= 0;
 	s_options_effects_decal_slider.maxvalue						= 20;
 	s_options_effects_decal_slider.generic.statusbar			= "How many decals to display at once (max is 1000)";
+	s_options_effects_decal_slider.cvar							= r_decals; //mxd
 
 	s_options_effects_particle_comp_slider.generic.type			= MTYPE_SLIDER;
 	s_options_effects_particle_comp_slider.generic.x			= 0;
@@ -229,6 +243,8 @@ void Options_Effects_MenuInit(void)
 	s_options_effects_railcolor_slider[0].minvalue			= 0;
 	s_options_effects_railcolor_slider[0].maxvalue			= 16;
 	s_options_effects_railcolor_slider[0].generic.statusbar	= "Changes red component of railtrail";
+	s_options_effects_railcolor_slider[0].cvar				= cl_railred; //mxd
+	s_options_effects_railcolor_slider[0].generic.ownerdraw = RailColorPreviewDrawFunc; //mxd
 
 	s_options_effects_railcolor_slider[1].generic.type		= MTYPE_SLIDER;
 	s_options_effects_railcolor_slider[1].generic.x			= 0;
@@ -238,6 +254,7 @@ void Options_Effects_MenuInit(void)
 	s_options_effects_railcolor_slider[1].minvalue			= 0;
 	s_options_effects_railcolor_slider[1].maxvalue			= 16;
 	s_options_effects_railcolor_slider[1].generic.statusbar	= "Changes green component of railtrail";
+	s_options_effects_railcolor_slider[1].cvar				= cl_railgreen; //mxd
 
 	s_options_effects_railcolor_slider[2].generic.type		= MTYPE_SLIDER;
 	s_options_effects_railcolor_slider[2].generic.x			= 0;
@@ -247,6 +264,7 @@ void Options_Effects_MenuInit(void)
 	s_options_effects_railcolor_slider[2].minvalue			= 0;
 	s_options_effects_railcolor_slider[2].maxvalue			= 16;
 	s_options_effects_railcolor_slider[2].generic.statusbar	= "Changes blue component of railtrail";
+	s_options_effects_railcolor_slider[2].cvar				= cl_railblue; //mxd
 
 	// Foostep override option
 	s_options_effects_footstep_box.generic.type			= MTYPE_SPINCONTROL;
@@ -271,6 +289,11 @@ void Options_Effects_MenuInit(void)
 	s_options_effects_back_action.generic.x				= UI_CenteredX(&s_options_effects_back_action.generic, s_options_effects_menu.x); //mxd. Was MENU_FONT_SIZE;
 	s_options_effects_back_action.generic.y				= y += 2 * MENU_LINE_SIZE;
 	s_options_effects_back_action.generic.callback		= UI_BackMenu;
+
+	//mxd. Setup rail color preview frame position and size
+	rail_color_frame_x = s_options_effects_menu.x + s_options_effects_railcolor_slider[0].generic.x + MENU_FONT_SIZE * 18;
+	rail_color_frame_y = s_options_effects_menu.y + s_options_effects_railcolor_slider[0].generic.y;
+	rail_color_frame_size = s_options_effects_railcolor_slider[2].generic.y + MENU_FONT_SIZE - s_options_effects_railcolor_slider[0].generic.y;
 
 	Menu_AddItem(&s_options_effects_menu, (void *)&s_options_effects_header);
 	Menu_AddItem(&s_options_effects_menu, (void *)&s_options_effects_blood_box);

@@ -35,7 +35,7 @@ static menulist_s		s_rgbscale_box;
 static menulist_s		s_trans_lighting_box;
 static menulist_s		s_warp_lighting_box;
 static menuslider_s		s_lightcutoff_slider;
-static menulist_s		s_dlight_shadowmap_quality_slider; //mxd
+static menulist_s		s_dlight_shadowmap_quality_box; //mxd
 static menulist_s		s_dlight_normalmapping_box; //mxd
 static menulist_s		s_solidalpha_box;
 static menulist_s		s_texshader_warp_box;
@@ -82,9 +82,9 @@ static void Video_Advanced_MenuSetValues(void)
 	Cvar_SetValue("r_dlightshadowmapscale", ClampCvar(0, 5, Cvar_VariableValue("r_dlightshadowmapscale"))); //mxd
 	const int dlightshadowmapscale = Cvar_VariableValue("r_dlightshadowmapscale");
 	if (dlightshadowmapscale == 0)
-		s_dlight_shadowmap_quality_slider.curvalue = 0;
+		s_dlight_shadowmap_quality_box.curvalue = 0;
 	else
-		s_dlight_shadowmap_quality_slider.curvalue = 6 - dlightshadowmapscale;
+		s_dlight_shadowmap_quality_box.curvalue = 6 - dlightshadowmapscale;
 
 	Cvar_SetValue("r_dlightnormalmapping", ClampCvar(0, 1, Cvar_VariableValue("r_dlightnormalmapping"))); //mxd
 	s_dlight_normalmapping_box.curvalue = Cvar_VariableValue("r_dlightnormalmapping");
@@ -174,10 +174,10 @@ static void LightCutoffCallback(void *unused)
 
 static void DlightShadowmapScaleCallback(void *unused) //mxd
 {
-	if (s_dlight_shadowmap_quality_slider.curvalue == 0)
+	if (s_dlight_shadowmap_quality_box.curvalue == 0)
 		Cvar_SetValue("r_dlightshadowmapscale", 0);
 	else
-		Cvar_SetValue("r_dlightshadowmapscale", 6 - s_dlight_shadowmap_quality_slider.curvalue);
+		Cvar_SetValue("r_dlightshadowmapscale", 6 - s_dlight_shadowmap_quality_box.curvalue);
 }
 
 static void DlightNormalmappingCallback(void *unused) //mxd
@@ -314,6 +314,7 @@ void Menu_Video_Advanced_Init(void)
 	s_lightmapscale_slider.minvalue				= 0;
 	s_lightmapscale_slider.maxvalue				= 10;
 	s_lightmapscale_slider.generic.statusbar	= "Leave at minimum, washes out textures";
+	s_lightmapscale_slider.cvar					= Cvar_FindVar("r_modulate"); //mxd
 
 	s_textureintensity_slider.generic.type		= MTYPE_SLIDER; //TODO: mxd. remove
 	s_textureintensity_slider.generic.x			= 0;
@@ -323,6 +324,7 @@ void Menu_Video_Advanced_Init(void)
 	s_textureintensity_slider.minvalue			= 0;
 	s_textureintensity_slider.maxvalue			= 10;
 	s_textureintensity_slider.generic.statusbar	= "Leave at minimum, washes out textures";
+	s_textureintensity_slider.cvar				= Cvar_FindVar("r_intensity"); //mxd
 
 	s_rgbscale_box.generic.type				= MTYPE_SPINCONTROL;
 	s_rgbscale_box.generic.x				= 0;
@@ -356,15 +358,16 @@ void Menu_Video_Advanced_Init(void)
 	s_lightcutoff_slider.minvalue			= 0;
 	s_lightcutoff_slider.maxvalue			= 8;
 	s_lightcutoff_slider.generic.statusbar	= "Lower = smoother blend, higher = faster";
+	s_lightcutoff_slider.cvar				= Cvar_FindVar("r_lightcutoff"); //mxd;
 
 	//mxd
-	s_dlight_shadowmap_quality_slider.generic.type		= MTYPE_SPINCONTROL;
-	s_dlight_shadowmap_quality_slider.generic.x			= 0;
-	s_dlight_shadowmap_quality_slider.generic.y			= y += MENU_LINE_SIZE;
-	s_dlight_shadowmap_quality_slider.generic.name		= "Dynamic light shadowmap quality";
-	s_dlight_shadowmap_quality_slider.generic.callback	= DlightShadowmapScaleCallback;
-	s_dlight_shadowmap_quality_slider.itemnames			= dlight_shadowmap_quality_names;
-	s_dlight_shadowmap_quality_slider.generic.statusbar = "Maximum quality depends on lightmap resolution.";
+	s_dlight_shadowmap_quality_box.generic.type			= MTYPE_SPINCONTROL;
+	s_dlight_shadowmap_quality_box.generic.x			= 0;
+	s_dlight_shadowmap_quality_box.generic.y			= y += MENU_LINE_SIZE;
+	s_dlight_shadowmap_quality_box.generic.name			= "Dynamic light shadowmap quality";
+	s_dlight_shadowmap_quality_box.generic.callback		= DlightShadowmapScaleCallback;
+	s_dlight_shadowmap_quality_box.itemnames			= dlight_shadowmap_quality_names;
+	s_dlight_shadowmap_quality_box.generic.statusbar	= "Maximum quality depends on lightmap resolution.";
 
 	//mxd
 	s_dlight_normalmapping_box.generic.type				= MTYPE_SPINCONTROL;
@@ -407,6 +410,7 @@ void Menu_Video_Advanced_Init(void)
 	s_waterwave_slider.minvalue				= 0;
 	s_waterwave_slider.maxvalue				= 24;
 	s_waterwave_slider.generic.statusbar	= "Size of waves on flat water surfaces";
+	s_waterwave_slider.cvar					= Cvar_FindVar("r_waterwave"); //mxd
 
 	s_caustics_box.generic.type				= MTYPE_SPINCONTROL;
 	s_caustics_box.generic.x				= 0;
@@ -490,6 +494,7 @@ void Menu_Video_Advanced_Init(void)
 	s_screenshotjpegquality_slider.minvalue				= 0;
 	s_screenshotjpegquality_slider.maxvalue				= 10;
 	s_screenshotjpegquality_slider.generic.statusbar	= "Quality of JPG screenshots, 50-100%";
+	s_screenshotjpegquality_slider.cvar					= Cvar_FindVar("r_screenshot_jpeg_quality"); //mxd
 
 	s_saveshotsize_box.generic.type				= MTYPE_SPINCONTROL; //TODO: mxd. Remove
 	s_saveshotsize_box.generic.x				= 0;
@@ -522,7 +527,7 @@ void Menu_Video_Advanced_Init(void)
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_trans_lighting_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_warp_lighting_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_lightcutoff_slider);
-	Menu_AddItem(&s_video_advanced_menu, (void *)&s_dlight_shadowmap_quality_slider); //mxd
+	Menu_AddItem(&s_video_advanced_menu, (void *)&s_dlight_shadowmap_quality_box); //mxd
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_dlight_normalmapping_box); //mxd
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_glass_envmap_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_solidalpha_box);

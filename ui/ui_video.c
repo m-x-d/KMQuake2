@@ -309,6 +309,7 @@ void Menu_Video_Init(void)
 	s_brightness_slider.maxvalue			= 20;
 	s_brightness_slider.curvalue			= (1.3f - Cvar_VariableValue("vid_gamma")) * 20;
 	s_brightness_slider.generic.statusbar	= "Changes display brightness";
+	s_brightness_slider.cvar				= Cvar_FindVar("vid_gamma"); //mxd
 
 	s_texfilter_box.generic.type		= MTYPE_SPINCONTROL;
 	s_texfilter_box.generic.x			= 0;

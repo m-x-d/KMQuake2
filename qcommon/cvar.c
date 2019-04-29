@@ -30,7 +30,7 @@ static qboolean Cvar_InfoValidate(char *s)
 	return (!strstr(s, "\\") && !strstr(s, "\"") && !strstr(s, ";"));
 }
 
-static cvar_t *Cvar_FindVar(char *var_name)
+cvar_t *Cvar_FindVar(char *var_name)
 {
 	for (cvar_t *var = cvar_vars; var; var = var->next)
 		if (!strcmp(var_name, var->name))

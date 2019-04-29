@@ -175,6 +175,7 @@ void Options_Sound_MenuInit(void)
 	s_options_sound_sfxvolume_slider.maxvalue			= 10;
 	s_options_sound_sfxvolume_slider.curvalue			= Cvar_VariableValue("s_volume") * 10;
 	s_options_sound_sfxvolume_slider.generic.statusbar	= "Volume of sound effects";
+	s_options_sound_sfxvolume_slider.cvar				= Cvar_FindVar("s_volume"); //mxd
 
 	s_options_sound_musicvolume_slider.generic.type			= MTYPE_SLIDER;
 	s_options_sound_musicvolume_slider.generic.x			= 0;
@@ -185,6 +186,7 @@ void Options_Sound_MenuInit(void)
 	s_options_sound_musicvolume_slider.maxvalue				= 10;
 	s_options_sound_musicvolume_slider.curvalue				= Cvar_VariableValue("s_musicvolume") * 10;
 	s_options_sound_musicvolume_slider.generic.statusbar	= "Volume of ogg vorbis music";
+	s_options_sound_musicvolume_slider.cvar					= Cvar_FindVar("s_musicvolume"); //mxd
 
 	s_options_sound_oggmusic_box.generic.type		= MTYPE_SPINCONTROL;
 	s_options_sound_oggmusic_box.generic.x			= 0;

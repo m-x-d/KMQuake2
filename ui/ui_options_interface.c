@@ -310,6 +310,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_menumouse_slider.minvalue			= 1;
 	s_options_interface_menumouse_slider.maxvalue			= 8;
 	s_options_interface_menumouse_slider.generic.statusbar	= "Changes mouse sensitivity in menus";
+	s_options_interface_menumouse_slider.cvar				= menu_sensitivity; //mxd
 
 	s_options_interface_menualpha_slider.generic.type		= MTYPE_SLIDER;
 	s_options_interface_menualpha_slider.generic.x			= 0;
@@ -319,6 +320,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_menualpha_slider.minvalue			= 0;
 	s_options_interface_menualpha_slider.maxvalue			= 20;
 	s_options_interface_menualpha_slider.generic.statusbar	= "Changes opacity of menu background";
+	s_options_interface_menualpha_slider.cvar				= menu_alpha; //mxd
 
 	font_names = SetFontNames();
 	s_options_interface_font_box.generic.type				= MTYPE_SPINCONTROL;
@@ -337,6 +339,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_fontsize_slider.minvalue			= 3;
 	s_options_interface_fontsize_slider.maxvalue			= 8;
 	s_options_interface_fontsize_slider.generic.statusbar	= "Changes the size of console text";
+	s_options_interface_fontsize_slider.cvar				= con_font_size; //mxd
 
 	s_options_interface_alt_text_color_box.generic.type		= MTYPE_SPINCONTROL;
 	s_options_interface_alt_text_color_box.generic.x		= 0;
@@ -354,6 +357,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_conalpha_slider.minvalue			= 0;
 	s_options_interface_conalpha_slider.maxvalue			= 20;
 	s_options_interface_conalpha_slider.generic.statusbar	= "Changes opacity of console background";
+	s_options_interface_conalpha_slider.cvar				= con_alpha; //mxd
 
 	/*
 	s_options_interface_conheight_slider.generic.type	= MTYPE_SLIDER;

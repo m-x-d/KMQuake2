@@ -160,6 +160,10 @@ void Field_Draw(menufield_s *f)
 
 	Menu_DrawString(f->generic.x + f->generic.parent->x + MENU_FONT_SIZE * 3,
 					f->generic.y + f->generic.parent->y, tempbuffer, alpha);
+
+	//mxd. Ownerdraw support for all item types
+	if (f->generic.ownerdraw)
+		f->generic.ownerdraw(f);
 }
 
 qboolean Field_Key(menufield_s *f, int key)
@@ -310,6 +314,10 @@ void MenuList_Draw(menulist_s *l)
 		n++;
 		y += MENU_LINE_SIZE;
 	}
+
+	//mxd. Ownerdraw support for all item types
+	if (l->generic.ownerdraw)
+		l->generic.ownerdraw(l);
 }
 
 void Separator_Draw(menuseparator_s *s)
@@ -329,6 +337,10 @@ void Separator_Draw(menuseparator_s *s)
 		Menu_DrawStringR2LDark(s->generic.x + s->generic.parent->x,
 							   s->generic.y + s->generic.parent->y, s->generic.name, alpha);
 	}
+
+	//mxd. Ownerdraw support for all item types
+	if (s->generic.ownerdraw)
+		s->generic.ownerdraw(s);
 }
 
 void Slider_DoSlide(menuslider_s *s, int dir)
@@ -344,29 +356,50 @@ void Slider_DoSlide(menuslider_s *s, int dir)
 
 void Slider_Draw(menuslider_s *s)
 {
-	int	i;
 	const int alpha = MouseOverAlpha(&s->generic);
 
+	// Draw title
 	Menu_DrawStringR2LDark(s->generic.x + s->generic.parent->x + LCOLUMN_OFFSET,
 						   s->generic.y + s->generic.parent->y, s->generic.name, alpha);
 
-	s->range = (s->curvalue - s->minvalue) / (float)(s->maxvalue - s->minvalue);
-	s->range = clamp(s->range, 0, 1);
-
+	// Draw slider bg start char
 	SCR_DrawChar(s->generic.x + s->generic.parent->x + RCOLUMN_OFFSET,
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 128, 255, 255, 255, 255, false, false);
-
-	for (i = 0; i < SLIDER_RANGE; i++)
+	
+	// Draw slider bg middle char
+	for (int i = 0; i < SLIDER_RANGE; i++)
 	{
 		SCR_DrawChar(s->generic.x + s->generic.parent->x + (i + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET,
 					 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 129, 255, 255, 255, 255, false, false);
 	}
 
-	SCR_DrawChar(s->generic.x + s->generic.parent->x + (i + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET,
+	// Draw slider bg end char
+	SCR_DrawChar(s->generic.x + s->generic.parent->x + (SLIDER_RANGE + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET,
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 130, 255, 255, 255, 255, false, false);
 
-	SCR_DrawChar(s->generic.x + s->generic.parent->x + MENU_FONT_SIZE * ((SLIDER_RANGE - 1) * s->range + 1) + RCOLUMN_OFFSET,
+	// Convert curvalue to 0..1 range
+	float range = (s->curvalue - s->minvalue) / (s->maxvalue - s->minvalue);
+	range = clamp(range, 0, 1);
+
+	// Draw slider thumb
+	SCR_DrawChar(s->generic.x + s->generic.parent->x + MENU_FONT_SIZE * ((SLIDER_RANGE - 1) * range + 1) + RCOLUMN_OFFSET,
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 131, 255, 255, 255, 255, false, true);
+
+	//mxd. Draw value
+	char *value;
+	if(s->cvar)
+		value = va("%g", s->cvar->value); // Using s->cvar->string here will result in decimal values being printed like "1.500000"...
+	else if(s->curvalue == (int)s->curvalue)
+		value = va("%i", (int)s->curvalue);
+	else
+		value = va("%g", s->curvalue);
+
+	Menu_DrawString(s->generic.x + s->generic.parent->x + (SLIDER_RANGE + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET + MENU_FONT_SIZE * 1.5f,
+					s->generic.y + s->generic.parent->y, value, alpha);
+
+	//mxd. Ownerdraw support for all item types
+	if (s->generic.ownerdraw)
+		s->generic.ownerdraw(s);
 }
 
 void SpinControl_DoEnter(menulist_s *s)
@@ -425,6 +458,10 @@ void SpinControl_Draw(menulist_s *s)
 		Menu_DrawString(s->generic.x + s->generic.parent->x + RCOLUMN_OFFSET,
 						s->generic.y + s->generic.parent->y + MENU_LINE_SIZE, buffer, alpha);
 	}
+
+	//mxd. Ownerdraw support for all item types
+	if (s->generic.ownerdraw)
+		s->generic.ownerdraw(s);
 }
 
 void Menu_AddItem(menuframework_s *menu, void *item)
