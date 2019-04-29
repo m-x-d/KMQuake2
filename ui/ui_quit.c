@@ -84,12 +84,15 @@ const char *M_Quit_Key(int key)
 	switch (key)
 	{
 		case K_ESCAPE:
+		case K_MOUSE2: //mxd
 		case 'n':
 		case 'N':
 			UI_PopMenu();
 			break;
 		
 		case K_ENTER: //mxd
+		case K_SPACE: //mxd
+		case K_MOUSE1: //mxd
 		case 'Y':
 		case 'y':
 			cls.key_dest = key_console;
