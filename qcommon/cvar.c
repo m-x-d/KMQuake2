@@ -279,7 +279,7 @@ void Cvar_SetValue(char *var_name, float value)
 	if (value == (int)value)
 		Com_sprintf(val, sizeof(val), "%i", (int)value);
 	else
-		Com_sprintf(val, sizeof(val), "%f", value);
+		Com_sprintf(val, sizeof(val), "%g", value); //mxd. Avoid trailing zeroes (was %f)
 
 	Cvar_Set(var_name, val);
 }
