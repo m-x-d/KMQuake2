@@ -27,23 +27,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../client/client.h"
 #include "ui_local.h"
 
-static void Action_DoEnter(menuaction_s *a);
-static void Action_Draw(menuaction_s *a);
-//static void Menulist_DoEnter(menulist_s *l); //mxd. Never used
-static void MenuList_Draw(menulist_s *l);
-static void Separator_Draw(menuseparator_s *s);
-static void Slider_DoSlide(menuslider_s *s, int dir);
-static void Slider_Draw(menuslider_s *s);
-//static void SpinControl_DoEnter(menulist_s *s); //mxd. Never used
-static void SpinControl_Draw(menulist_s *s);
-static void SpinControl_DoSlide(menulist_s *s, int dir);
-
 #define VID_WIDTH viddef.width
 #define VID_HEIGHT viddef.height
 
-// Added Psychospaz's menu mouse support
-//======================================================
-
+// Psychospaz's menu mouse support
 int MouseOverAlpha(menucommon_s *m)
 {
 	if (cursor.menuitem == m)
@@ -54,8 +41,6 @@ int MouseOverAlpha(menucommon_s *m)
 
 	return 255;
 }
-//======================================================
-
 
 void Action_DoEnter(menuaction_s *a)
 {
@@ -352,6 +337,41 @@ void Slider_DoSlide(menuslider_s *s, int dir)
 		s->generic.callback(s);
 }
 
+//mxd. Returns true if slider value was changed
+qboolean Slider_MouseClick(void *item)
+{
+	menuslider_s *s = (menuslider_s*)item;
+
+	// Technically "slider start" and "slider end" chars are outside of valid slider range,
+	// but allowing to click on them to set min / max value seems logical from usability standpoint.
+
+	// Get start and end coordinates of the clickable area, taking "slider start" and "slider end" chars into account.
+	float sliderstart = s->generic.x + s->generic.parent->x + RCOLUMN_OFFSET;
+	float sliderend = s->generic.x + s->generic.parent->x + (SLIDER_RANGE + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET;
+	SCR_AdjustFrom640(&sliderstart, NULL, NULL, NULL, ALIGN_CENTER);
+	SCR_AdjustFrom640(&sliderend, NULL, NULL, NULL, ALIGN_CENTER);
+
+	if (cursor.x < sliderstart || cursor.x > sliderend)
+		return false;
+
+	// Calculate slider position using actual slider start
+	const float fontsize = SCR_ScaledVideo(MENU_FONT_SIZE);
+	const int pos = cursor.x - (sliderstart + fontsize); // Valid slider range starts at 0.5 * fontsize from sliderstart, using thumb center adds another 0.5 * fontsize  
+	const float fvalue = pos / ((SLIDER_RANGE - 1) * fontsize);
+	const int ivalue = (int)roundf(s->minvalue + fvalue * (s->maxvalue - s->minvalue));
+
+	const float prevvalue = s->curvalue;
+	s->curvalue = clamp(ivalue, s->minvalue, s->maxvalue);
+
+	if (prevvalue == s->curvalue)
+		return false;
+
+	if (s->generic.callback)
+		s->generic.callback(s);
+
+	return true;
+}
+
 #define SLIDER_RANGE 10
 
 void Slider_Draw(menuslider_s *s)
@@ -361,20 +381,21 @@ void Slider_Draw(menuslider_s *s)
 	// Draw title
 	Menu_DrawStringR2LDark(s->generic.x + s->generic.parent->x + LCOLUMN_OFFSET,
 						   s->generic.y + s->generic.parent->y, s->generic.name, alpha);
-
-	// Draw slider bg start char
-	SCR_DrawChar(s->generic.x + s->generic.parent->x + RCOLUMN_OFFSET,
-				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 128, 255, 255, 255, 255, false, false);
 	
 	// Draw slider bg middle char
 	for (int i = 0; i < SLIDER_RANGE; i++)
 	{
-		SCR_DrawChar(s->generic.x + s->generic.parent->x + (i + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET,
+		//mxd: offset 0.5 chars from the start char, not 1, like in KMQ2, so the thumb looks more natural at start/end positions
+		SCR_DrawChar(s->generic.x + s->generic.parent->x + i * MENU_FONT_SIZE + RCOLUMN_OFFSET + MENU_FONT_SIZE * 0.5f,
 					 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 129, 255, 255, 255, 255, false, false);
 	}
 
+	// Draw slider bg start char
+	SCR_DrawChar(s->generic.x + s->generic.parent->x + RCOLUMN_OFFSET,
+		s->generic.y + s->generic.parent->y, ALIGN_CENTER, 128, 255, 255, 255, 255, false, false);
+
 	// Draw slider bg end char
-	SCR_DrawChar(s->generic.x + s->generic.parent->x + (SLIDER_RANGE + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET,
+	SCR_DrawChar(s->generic.x + s->generic.parent->x + SLIDER_RANGE * MENU_FONT_SIZE + RCOLUMN_OFFSET,
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 130, 255, 255, 255, 255, false, false);
 
 	// Convert curvalue to 0..1 range
@@ -382,7 +403,7 @@ void Slider_Draw(menuslider_s *s)
 	range = clamp(range, 0, 1);
 
 	// Draw slider thumb
-	SCR_DrawChar(s->generic.x + s->generic.parent->x + MENU_FONT_SIZE * ((SLIDER_RANGE - 1) * range + 1) + RCOLUMN_OFFSET,
+	SCR_DrawChar(s->generic.x + s->generic.parent->x + MENU_FONT_SIZE * ((SLIDER_RANGE - 1) * range) + RCOLUMN_OFFSET + MENU_FONT_SIZE * 0.5f,
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 131, 255, 255, 255, 255, false, true);
 
 	//mxd. Draw value
@@ -394,7 +415,7 @@ void Slider_Draw(menuslider_s *s)
 	else
 		value = va("%g", s->curvalue);
 
-	Menu_DrawString(s->generic.x + s->generic.parent->x + (SLIDER_RANGE + 1) * MENU_FONT_SIZE + RCOLUMN_OFFSET + MENU_FONT_SIZE * 1.5f,
+	Menu_DrawString(s->generic.x + s->generic.parent->x + SLIDER_RANGE * MENU_FONT_SIZE + RCOLUMN_OFFSET + MENU_FONT_SIZE * 1.5f,
 					s->generic.y + s->generic.parent->y, value, alpha);
 
 	//mxd. Ownerdraw support for all item types
@@ -505,7 +526,7 @@ qboolean Menu_ItemIsValidCursorPosition(void *item)
 
 // This function takes the given menu, the direction, and attempts
 // to adjust the menu's cursor so that it's at the next available slot.
-void Menu_AdjustCursor (menuframework_s *m, int dir)
+void Menu_AdjustCursor(menuframework_s *m, int dir)
 {
 	// See if it's in a valid spot
 	if (m->cursor >= 0 && m->cursor < m->nitems && Menu_ItemIsValidCursorPosition(Menu_ItemAtCursor(m)))
@@ -928,9 +949,6 @@ int Menu_TallySlots(menuframework_s *menu)
 
 #pragma region ======================= Menu Mouse Cursor - psychospaz
 
-extern void (*m_drawfunc)(void);
-extern const char *(*m_keyfunc)(int key);
-
 void UI_RefreshCursorMenu(void)
 {
 	cursor.menu = NULL;
@@ -941,101 +959,7 @@ void UI_RefreshCursorLink(void)
 	cursor.menuitem = NULL;
 }
 
-#if 0
-/*
-=================
-Slider_CursorPositionX
-=================
-*/
-int Slider_CursorPositionX (menuslider_s *s)
-{
-	float range;
-
-	range = (s->curvalue - s->minvalue) / (float)(s->maxvalue - s->minvalue);
-
-	if (range < 0)
-		range = 0;
-	if (range > 1)
-		range = 1;
-
-	return (int)(SCR_ScaledVideo(MENU_FONT_SIZE) + RCOLUMN_OFFSET + (SLIDER_RANGE)*SCR_ScaledVideo(MENU_FONT_SIZE) * range);
-}
-
-/*
-=================
-NewSliderValueForX
-=================
-*/
-int NewSliderValueForX (int x, menuslider_s *s)
-{
-	float	newValue, sliderbase;
-	int		newValueInt;
-	int		pos;
-	
-	sliderbase = s->generic.x + s->generic.parent->x + MENU_FONT_SIZE + RCOLUMN_OFFSET;
-	SCR_AdjustFrom640 (&sliderbase, NULL, NULL, NULL, ALIGN_CENTER);
-	pos = x - sliderbase;
-//	pos = x - SCR_ScaledVideo(s->generic.x + s->generic.parent->x + MENU_FONT_SIZE + RCOLUMN_OFFSET);
-
-	newValue = ((float)pos)/((SLIDER_RANGE-1)*SCR_ScaledVideo(MENU_FONT_SIZE));
-	newValueInt = s->minvalue + newValue * (float)(s->maxvalue - s->minvalue);
-
-	return newValueInt;
-}
-
-/*
-=================
-Slider_CheckSlide
-=================
-*/
-void Slider_CheckSlide (menuslider_s *s)
-{
-	if (s->curvalue > s->maxvalue)
-		s->curvalue = s->maxvalue;
-	else if (s->curvalue < s->minvalue)
-		s->curvalue = s->minvalue;
-
-	if (s->generic.callback)
-		s->generic.callback (s);
-}
-
-/*
-=================
-Menu_DragSlideItem
-=================
-*/
-void Menu_DragSlideItem (menuframework_s *menu, void *menuitem)
-{
-//	menucommon_s *item = (menucommon_s *) menuitem;
-	menuslider_s *slider = (menuslider_s *) menuitem;
-
-	slider->curvalue = NewSliderValueForX(cursor.x, slider);
-	Slider_CheckSlide( slider );
-}
-
-/*
-=================
-Menu_ClickSlideItem
-=================
-*/
-void Menu_ClickSlideItem (menuframework_s *menu, void *menuitem)
-{
-	int				min, max;
-	float			x, w;
-	menucommon_s	*item = (menucommon_s *) menuitem;
-	menuslider_s	*slider = (menuslider_s *) menuitem;
-
-	x = menu->x + item->x + Slider_CursorPositionX(slider) - 4;
-	w = 8;
-	SCR_AdjustFrom640 (&x, NULL, &w, NULL, ALIGN_CENTER);
-	min = x;	max = x + w;
-
-	if (cursor.x < min)
-		Menu_SlideItem( menu, -1 );
-	if (cursor.x > max)
-		Menu_SlideItem( menu, 1 );
-}
-#endif
+extern void(*m_drawfunc)(void);
 
 void UI_Think_MouseCursor(void)
 {
@@ -1074,50 +998,42 @@ void UI_Think_MouseCursor(void)
 	if (cursor.menuitem)
 	{
 		// MOUSE1
-		if (cursor.buttondown[MOUSEBUTTON1])
+		if (cursor.buttondown[MOUSEBUTTON1] && cursor.buttonclicks[MOUSEBUTTON1] && !cursor.buttonused[MOUSEBUTTON1])
 		{
-			if (cursor.menuitemtype == MENUITEM_SLIDER && !cursor.buttonused[MOUSEBUTTON1])
+			if (cursor.menuitemtype == MENUITEM_SLIDER)
 			{
-			//	Menu_DragSlideItem(m, cursor.menuitem); //TODO: mxd. implement "click on slider to set value" logic?
-				Menu_SlideItem(m, 1);
+				if(Slider_MouseClick(cursor.menuitem)) //mxd. Play sound only when slider value has changed, otherwise we'll play 1 menu_move_sound per frame
+					sound = menu_move_sound;
+				//mxd. Don't release the button, so user can drag the slider
+			}
+			else if (cursor.menuitemtype == MENUITEM_ROTATE)
+			{
+				Menu_SlideItem(m, (menu_rotate->value ? -1 : 1));
 				sound = menu_move_sound;
 				cursor.buttonused[MOUSEBUTTON1] = true;
 			}
-			else if (!cursor.buttonused[MOUSEBUTTON1] && cursor.buttonclicks[MOUSEBUTTON1])
+			else
 			{
-				if (cursor.menuitemtype == MENUITEM_ROTATE)
-				{
-					Menu_SlideItem(m, (menu_rotate->value ? -1 : 1));
-					sound = menu_move_sound;
-					cursor.buttonused[MOUSEBUTTON1] = true;
-				}
-				else
-				{
-					cursor.buttonused[MOUSEBUTTON1] = true;
-					Menu_MouseSelectItem(cursor.menuitem);
-					sound = menu_move_sound;
-				}
+				cursor.buttonused[MOUSEBUTTON1] = true;
+				Menu_MouseSelectItem(cursor.menuitem);
+				sound = menu_move_sound;
 			}
 		}
 
 		// MOUSE2
-		if (cursor.buttondown[MOUSEBUTTON2] && cursor.buttonclicks[MOUSEBUTTON2])
+		if (cursor.buttondown[MOUSEBUTTON2] && cursor.buttonclicks[MOUSEBUTTON2] && !cursor.buttonused[MOUSEBUTTON2])
 		{
-			if (cursor.menuitemtype == MENUITEM_SLIDER && !cursor.buttonused[MOUSEBUTTON2])
+			if (cursor.menuitemtype == MENUITEM_SLIDER)
 			{
-			//	Menu_ClickSlideItem(m, cursor.menuitem);
-				Menu_SlideItem(m, -1);
+				if(Slider_MouseClick(cursor.menuitem)) //mxd
+					sound = menu_move_sound;
+				//mxd. Don't release the button, so user can drag the slider
+			}
+			else if (cursor.menuitemtype == MENUITEM_ROTATE)
+			{
+				Menu_SlideItem(m, (menu_rotate->value ? 1 : -1));
 				sound = menu_move_sound;
 				cursor.buttonused[MOUSEBUTTON2] = true;
-			}
-			else if (!cursor.buttonused[MOUSEBUTTON2])
-			{
-				if (cursor.menuitemtype == MENUITEM_ROTATE)
-				{
-					Menu_SlideItem(m, (menu_rotate->value ? 1 : -1));
-					sound = menu_move_sound;
-					cursor.buttonused[MOUSEBUTTON2] = true;
-				}
 			}
 		}
 	}

@@ -436,7 +436,7 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_back_action.generic.callback		= UI_BackMenu;
 
 	//mxd. Crosshair preview position
-	crosshair_frame_x = s_options_screen_menu.x + MENU_FONT_SIZE * 19;
+	crosshair_frame_x = s_options_screen_menu.x + MENU_FONT_SIZE * 18;
 	crosshair_frame_y = s_options_screen_menu.y + s_options_screen_crosshairalpha_slider.generic.y - 2 - crosshair_frame_size / 2;
 
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_header);
