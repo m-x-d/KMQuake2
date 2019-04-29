@@ -275,12 +275,7 @@ cvar_t *Cvar_FullSet(char *var_name, char *value, int flags)
 void Cvar_SetValue(char *var_name, float value)
 {
 	char val[32];
-
-	if (value == (int)value)
-		Com_sprintf(val, sizeof(val), "%i", (int)value);
-	else
-		Com_sprintf(val, sizeof(val), "%g", value); //mxd. Avoid trailing zeroes (was %f)
-
+	Com_sprintf(val, sizeof(val), "%g", value); //mxd. Avoid trailing zeroes (was %i or %f)
 	Cvar_Set(var_name, val);
 }
 

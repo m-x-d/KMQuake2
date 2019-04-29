@@ -407,13 +407,13 @@ void Slider_Draw(menuslider_s *s)
 				 s->generic.y + s->generic.parent->y, ALIGN_CENTER, 131, 255, 255, 255, 255, false, true);
 
 	//mxd. Draw value
+	const float fvalue = (s->cvar ? s->cvar->value : s->curvalue);
+	
 	char *value;
-	if(s->cvar)
-		value = va("%g", s->cvar->value); // Using s->cvar->string here will result in decimal values being printed like "1.500000"...
-	else if(s->curvalue == (int)s->curvalue)
-		value = va("%i", (int)s->curvalue);
+	if (s->numdecimals > 0) // Draw with fixed number of decimals?
+		value = va("%.*f", s->numdecimals, fvalue);
 	else
-		value = va("%g", s->curvalue);
+		value = va("%g", fvalue);
 
 	Menu_DrawString(s->generic.x + s->generic.parent->x + SLIDER_RANGE * MENU_FONT_SIZE + RCOLUMN_OFFSET + MENU_FONT_SIZE * 1.5f,
 					s->generic.y + s->generic.parent->y, value, alpha);

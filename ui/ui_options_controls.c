@@ -176,6 +176,7 @@ void Options_Controls_MenuInit(void)
 	s_options_controls_sensitivity_slider.generic.callback	= MouseSpeedFunc;
 	s_options_controls_sensitivity_slider.minvalue			= 2;
 	s_options_controls_sensitivity_slider.maxvalue			= 22;
+	s_options_controls_sensitivity_slider.numdecimals		= 1; //mxd
 	s_options_controls_sensitivity_slider.generic.statusbar	= "Changes sensitivity of mouse for looking around";
 	s_options_controls_sensitivity_slider.cvar				= sensitivity; //mxd
 

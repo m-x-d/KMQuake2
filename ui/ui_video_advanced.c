@@ -313,6 +313,7 @@ void Menu_Video_Advanced_Init(void)
 	s_lightmapscale_slider.generic.callback		= LightMapScaleCallback;
 	s_lightmapscale_slider.minvalue				= 0;
 	s_lightmapscale_slider.maxvalue				= 10;
+	s_lightmapscale_slider.numdecimals			= 1; //mxd
 	s_lightmapscale_slider.generic.statusbar	= "Leave at minimum, washes out textures";
 	s_lightmapscale_slider.cvar					= Cvar_FindVar("r_modulate"); //mxd
 
@@ -323,6 +324,7 @@ void Menu_Video_Advanced_Init(void)
 	s_textureintensity_slider.generic.callback	= TextureIntensCallback;
 	s_textureintensity_slider.minvalue			= 0;
 	s_textureintensity_slider.maxvalue			= 10;
+	s_textureintensity_slider.numdecimals		= 1; //mxd
 	s_textureintensity_slider.generic.statusbar	= "Leave at minimum, washes out textures";
 	s_textureintensity_slider.cvar				= Cvar_FindVar("r_intensity"); //mxd
 

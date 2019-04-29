@@ -309,6 +309,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_menumouse_slider.generic.callback	= MouseMenuFunc;
 	s_options_interface_menumouse_slider.minvalue			= 1;
 	s_options_interface_menumouse_slider.maxvalue			= 8;
+	s_options_interface_menumouse_slider.numdecimals		= 2; //mxd
 	s_options_interface_menumouse_slider.generic.statusbar	= "Changes mouse sensitivity in menus";
 	s_options_interface_menumouse_slider.cvar				= menu_sensitivity; //mxd
 
@@ -319,6 +320,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_menualpha_slider.generic.callback	= MenuAlphaFunc;
 	s_options_interface_menualpha_slider.minvalue			= 0;
 	s_options_interface_menualpha_slider.maxvalue			= 20;
+	s_options_interface_menualpha_slider.numdecimals		= 2; //mxd
 	s_options_interface_menualpha_slider.generic.statusbar	= "Changes opacity of menu background";
 	s_options_interface_menualpha_slider.cvar				= menu_alpha; //mxd
 
@@ -356,6 +358,7 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_conalpha_slider.generic.callback	= ConAlphaFunc;
 	s_options_interface_conalpha_slider.minvalue			= 0;
 	s_options_interface_conalpha_slider.maxvalue			= 20;
+	s_options_interface_conalpha_slider.numdecimals			= 2; //mxd
 	s_options_interface_conalpha_slider.generic.statusbar	= "Changes opacity of console background";
 	s_options_interface_conalpha_slider.cvar				= con_alpha; //mxd
 

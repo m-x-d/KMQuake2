@@ -108,6 +108,7 @@ typedef struct
 	float curvalue;
 
 	cvar_t *cvar; //mxd. If set, use to display value, otherwise use curvalue
+	int numdecimals; //mxd. Number of decimals to print after dot. 0 == strip trailing zeroes.
 } menuslider_s;
 
 typedef struct
