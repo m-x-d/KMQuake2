@@ -834,7 +834,7 @@ void Mod_LoadLeafs(lump_t *l)
 		out->firstmarksurface = loadmodel->marksurfaces + (unsigned short)LittleShort(in->firstleafface); // Knightmare- make sure this doesn't turn negative!
 		out->nummarksurfaces = (unsigned short)LittleShort(in->numleaffaces);
 		
-		// underwater flag for caustics
+		// Underwater flag for caustics
 		if (out->contents & (MASK_WATER))
 		{	
 			unsigned int flag;
@@ -846,11 +846,7 @@ void Mod_LoadLeafs(lump_t *l)
 				flag = SURF_UNDERWATER;
 
 			for (int j = 0; j < out->nummarksurfaces; j++)
-			{
 				out->firstmarksurface[j]->flags |= flag;
-				for (glpoly_t *poly = out->firstmarksurface[j]->polys; poly; poly = poly->next)
-					poly->flags |= flag;
-			}
 		}
 	}	
 }

@@ -88,7 +88,6 @@ typedef struct glpoly_s
 	byte *vertexlight;
 	vec3_t center;
 
-	int flags; // For SURF_UNDERWATER (not needed anymore?) //TODO: mxd. Unused, remove
 	float verts[4][VERTEXSIZE]; // Variable sized (xyz s1t1 s2t2)
 } glpoly_t;
 

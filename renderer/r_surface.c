@@ -2226,7 +2226,6 @@ void R_BuildPolygonFromSurface (msurface_t *fa)
 	//
 	glpoly_t *poly = ModChunk_Alloc(sizeof(glpoly_t) + (lnumverts - 4) * VERTEXSIZE * sizeof(float));
 	poly->next = fa->polys;
-	poly->flags = fa->flags;
 	fa->polys = poly;
 	poly->numverts = lnumverts;
 
