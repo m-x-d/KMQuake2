@@ -266,7 +266,6 @@ void Menu_Video_Init(void)
 	
 	s_customwidth_field.generic.type		= MTYPE_FIELD;
 	s_customwidth_field.generic.flags		= (s_mode_list.curvalue != 0) ? (QMF_NUMBERSONLY | QMF_HIDDEN) : QMF_NUMBERSONLY;
-	s_customwidth_field.generic.callback	= 0;
 	s_customwidth_field.generic.x			= -14 * MENU_FONT_SIZE;
 	s_customwidth_field.generic.y			= y + 1.5f * MENU_LINE_SIZE;
 	s_customwidth_field.length				= 5;
@@ -283,7 +282,6 @@ void Menu_Video_Init(void)
 
 	s_customheight_field.generic.type		= MTYPE_FIELD;
 	s_customheight_field.generic.flags		= (s_mode_list.curvalue != 0) ? (QMF_NUMBERSONLY | QMF_HIDDEN) : QMF_NUMBERSONLY;
-	s_customheight_field.generic.callback	= 0;
 	s_customheight_field.generic.x			= 2 * MENU_FONT_SIZE;
 	s_customheight_field.generic.y			= y + 1.5f * MENU_LINE_SIZE;
 	s_customheight_field.length				= 5;

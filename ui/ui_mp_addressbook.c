@@ -61,7 +61,6 @@ void AddressBook_MenuInit(void)
 
 		s_addressbook_fields[i].generic.type			= MTYPE_FIELD;
 		s_addressbook_fields[i].generic.name			= 0;
-		s_addressbook_fields[i].generic.callback		= 0;
 		s_addressbook_fields[i].generic.x				= 0;
 		s_addressbook_fields[i].generic.y				= i * 2.25f * MENU_LINE_SIZE;
 		s_addressbook_fields[i].generic.localdata[0]	= i;

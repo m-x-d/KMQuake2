@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define VID_HEIGHT viddef.height
 
 // Psychospaz's menu mouse support
-int MouseOverAlpha(menucommon_s *m)
+static int MouseOverAlpha(menucommon_s *m)
 {
 	if (cursor.menuitem == m)
 	{
@@ -42,13 +42,13 @@ int MouseOverAlpha(menucommon_s *m)
 	return 255;
 }
 
-void Action_DoEnter(menuaction_s *a)
+static void Action_DoEnter(menuaction_s *a)
 {
 	if (a->generic.callback)
 		a->generic.callback(a);
 }
 
-void Action_Draw(menuaction_s *a)
+static void Action_Draw(menuaction_s *a)
 {
 	const int alpha = MouseOverAlpha(&a->generic);
 
@@ -83,7 +83,7 @@ void Action_Draw(menuaction_s *a)
 		a->generic.ownerdraw(a);
 }
 
-qboolean Field_DoEnter(menufield_s *f)
+static qboolean Field_DoEnter(menufield_s *f)
 {
 	if (f->generic.callback)
 	{
@@ -94,7 +94,7 @@ qboolean Field_DoEnter(menufield_s *f)
 	return false;
 }
 
-void Field_Draw(menufield_s *f)
+static void Field_Draw(menufield_s *f)
 {
 	const int alpha = MouseOverAlpha(&f->generic);
 	char tempbuffer[128] = "";
@@ -122,27 +122,38 @@ void Field_Draw(menufield_s *f)
 		strncpy(tempbuffer, f->buffer + f->visible_offset, f->visible_length);
 	}
 
+	// Draw top-left border char
 	SCR_DrawChar(f->generic.x + f->generic.parent->x + MENU_FONT_SIZE * 2,
-				 f->generic.y + f->generic.parent->y - 4, ALIGN_CENTER, 18, 255, 255, 255, 255, false, false);
+				 f->generic.y + f->generic.parent->y - 4, ALIGN_CENTER, 18, 255, 255, 255, 255, false, false); 
+
+	// Draw bottom-left border char
 	SCR_DrawChar(f->generic.x + f->generic.parent->x + MENU_FONT_SIZE * 2,
-				 f->generic.y + f->generic.parent->y + 4, ALIGN_CENTER, 24, 255, 255, 255, 255, false, false);
+				 f->generic.y + f->generic.parent->y + 4, ALIGN_CENTER, 24, 255, 255, 255, 255, false, false); 
+
+	// Draw top-right border char
 	SCR_DrawChar(f->generic.x + f->generic.parent->x + (3 + f->visible_length) * MENU_FONT_SIZE,
-				 f->generic.y + f->generic.parent->y - 4, ALIGN_CENTER, 20, 255, 255, 255, 255, false, false);
+				 f->generic.y + f->generic.parent->y - 4, ALIGN_CENTER, 20, 255, 255, 255, 255, false, false); 
+
+	// Draw bottom-right border char
 	SCR_DrawChar(f->generic.x + f->generic.parent->x + (3 + f->visible_length) * MENU_FONT_SIZE,
 				 f->generic.y + f->generic.parent->y + 4, ALIGN_CENTER, 26, 255, 255, 255, 255, false, false);
 
 	for (int i = 0; i < f->visible_length; i++)
 	{
+		// Draw top border char
 		SCR_DrawChar(f->generic.x + f->generic.parent->x + (3 + i) * MENU_FONT_SIZE,
 					 f->generic.y + f->generic.parent->y - 4, ALIGN_CENTER, 19, 255, 255, 255, 255, false, false);
+
+		// Draw bottom border char
 		SCR_DrawChar(f->generic.x + f->generic.parent->x + (3 + i) * MENU_FONT_SIZE,
 					 f->generic.y + f->generic.parent->y + 4, ALIGN_CENTER, 25, 255, 255, 255, 255, false, (i == (f->visible_length - 1)));
 	}
 
 	// Add cursor thingie
-	if (Menu_ItemAtCursor(f->generic.parent) == f  && ((int)(Sys_Milliseconds() / 250)) & 1)
+	if (Menu_ItemAtCursor(f->generic.parent) == f && ((int)(Sys_Milliseconds() / 250)) & 1)
 		Com_sprintf(tempbuffer, sizeof(tempbuffer),	"%s%c", tempbuffer, 11);
 
+	// Draw text
 	Menu_DrawString(f->generic.x + f->generic.parent->x + MENU_FONT_SIZE * 3,
 					f->generic.y + f->generic.parent->y, tempbuffer, alpha);
 
@@ -270,16 +281,16 @@ qboolean Field_Key(menufield_s *f, int key)
 	return true;
 }
 
-void Menulist_DoEnter(menulist_s *l)
+/*static void MenuList_DoEnter(menulist_s *l)
 {
 	const int start = l->generic.y / 10 + 1;
 	l->curvalue = l->generic.parent->cursor - start;
 
 	if (l->generic.callback)
 		l->generic.callback(l);
-}
+}*/
 
-void MenuList_Draw(menulist_s *l)
+static void MenuList_Draw(menulist_s *l)
 {
 	int y = 0;
 	const int alpha = MouseOverAlpha(&l->generic);
@@ -305,7 +316,7 @@ void MenuList_Draw(menulist_s *l)
 		l->generic.ownerdraw(l);
 }
 
-void Separator_Draw(menuseparator_s *s)
+static void Separator_Draw(menuseparator_s *s)
 {
 	if (!s->generic.name)
 		return;
@@ -328,7 +339,7 @@ void Separator_Draw(menuseparator_s *s)
 		s->generic.ownerdraw(s);
 }
 
-void Slider_DoSlide(menuslider_s *s, int dir)
+static void Slider_DoSlide(menuslider_s *s, int dir)
 {
 	s->curvalue += dir;
 	s->curvalue = clamp(s->curvalue, s->minvalue, s->maxvalue);
@@ -338,7 +349,7 @@ void Slider_DoSlide(menuslider_s *s, int dir)
 }
 
 //mxd. Returns true if slider value was changed
-qboolean Slider_MouseClick(void *item)
+static qboolean Slider_MouseClick(void *item)
 {
 	menuslider_s *s = (menuslider_s*)item;
 
@@ -374,7 +385,7 @@ qboolean Slider_MouseClick(void *item)
 
 #define SLIDER_RANGE 10
 
-void Slider_Draw(menuslider_s *s)
+static void Slider_Draw(menuslider_s *s)
 {
 	const int alpha = MouseOverAlpha(&s->generic);
 
@@ -423,7 +434,7 @@ void Slider_Draw(menuslider_s *s)
 		s->generic.ownerdraw(s);
 }
 
-void SpinControl_DoEnter(menulist_s *s)
+/*static void SpinControl_DoEnter(menulist_s *s)
 {
 	if (!s->itemnames || !s->numitemnames)
 		return;
@@ -434,9 +445,9 @@ void SpinControl_DoEnter(menulist_s *s)
 
 	if (s->generic.callback)
 		s->generic.callback(s);
-}
+}*/
 
-void SpinControl_DoSlide(menulist_s *s, int dir)
+static void SpinControl_DoSlide(menulist_s *s, int dir)
 {
 	if (!s->itemnames || !s->numitemnames)
 		return;
