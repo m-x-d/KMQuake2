@@ -307,8 +307,8 @@ void IN_MouseMove(usercmd_t *cmd)
 
 	if (m_filter->value)
 	{
-		mouse_x = (mx + old_mouse_x) * 0.5;
-		mouse_y = (my + old_mouse_y) * 0.5;
+		mouse_x = (mx + old_mouse_x) * 0.5f;
+		mouse_y = (my + old_mouse_y) * 0.5f;
 	}
 	else
 	{
@@ -342,8 +342,8 @@ void IN_MouseMove(usercmd_t *cmd)
 		//psychospaz - zooming in preserves sensitivity
 		if (autosensitivity->value && cl.base_fov < 90)
 		{
-			mouse_x *= sensitivity->value * (cl.base_fov / 90.0);
-			mouse_y *= sensitivity->value * (cl.base_fov / 90.0);
+			mouse_x *= sensitivity->value * (cl.base_fov / 90.0f);
+			mouse_y *= sensitivity->value * (cl.base_fov / 90.0f);
 		}
 		else
 		{
@@ -352,12 +352,12 @@ void IN_MouseMove(usercmd_t *cmd)
 		}
 
 		// Add mouse X/Y movement to cmd
-		if ((in_strafe.state & 1) || (lookstrafe->value && mlooking))
+		if ((in_strafe.state & KEYSTATE_DOWN) || (lookstrafe->value && mlooking))
 			cmd->sidemove += m_side->value * mouse_x;
 		else
 			cl.viewangles[YAW] -= m_yaw->value * mouse_x;
 
-		if ((mlooking || freelook->value) && !(in_strafe.state & 1))
+		if ((mlooking || freelook->value) && !(in_strafe.state & KEYSTATE_DOWN))
 			cl.viewangles[PITCH] += m_pitch->value * mouse_y;
 		else
 			cmd->forwardmove -= m_forward->value * mouse_y;
@@ -711,7 +711,7 @@ void IN_JoyMove(usercmd_t *cmd)
 	if (!IN_ReadJoystick())
 		return;
 
-	if ((in_speed.state & 1) ^ (int)cl_run->value)
+	if ((in_speed.state & KEYSTATE_DOWN) ^ cl_run->integer)
 		speed = 2;
 	else
 		speed = 1;
@@ -725,10 +725,10 @@ void IN_JoyMove(usercmd_t *cmd)
 		float fAxisValue = (float)*pdwRawValue[i];
 		
 		// Move centerpoint to zero
-		fAxisValue -= 32768.0;
+		fAxisValue -= 32768.0f;
 
 		// Convert range from -32768..32767 to -1..1 
-		fAxisValue /= 32768.0;
+		fAxisValue /= 32768.0f;
 
 		switch (dwAxisMap[i])
 		{
@@ -743,14 +743,14 @@ void IN_JoyMove(usercmd_t *cmd)
 					if (m_pitch->value < 0.0)
 					{
 						if (autosensitivity->value && cl.base_fov < 90) // Knightmare added
-							cl.viewangles[PITCH] -= (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0)) * aspeed * cl_pitchspeed->value;
+							cl.viewangles[PITCH] -= (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0f)) * aspeed * cl_pitchspeed->value;
 						else
 							cl.viewangles[PITCH] -= (fAxisValue * joy_pitchsensitivity->value) * aspeed * cl_pitchspeed->value;
 					}
 					else
 					{
 						if (autosensitivity->value && cl.base_fov < 90) // Knightmare added
-							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0)) * aspeed * cl_pitchspeed->value;
+							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0f)) * aspeed * cl_pitchspeed->value;
 						else
 							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value) * aspeed * cl_pitchspeed->value;
 					}
@@ -775,7 +775,7 @@ void IN_JoyMove(usercmd_t *cmd)
 			break;
 
 		case AxisTurn:
-			if ((in_strafe.state & 1) || (lookstrafe->value && mlooking))
+			if ((in_strafe.state & KEYSTATE_DOWN) || (lookstrafe->value && mlooking))
 			{
 				// User wants turn control to become side control
 				if (fabsf(fAxisValue) > joy_sidethreshold->value)
@@ -789,16 +789,16 @@ void IN_JoyMove(usercmd_t *cmd)
 					if(dwControlMap[i] == JOY_ABSOLUTE_AXIS)
 					{
 						if (autosensitivity->value && cl.base_fov < 90) // Knightmare added
-							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value * (cl.base_fov / 90.0)) * aspeed * cl_yawspeed->value;
+							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value * (cl.base_fov / 90.0f)) * aspeed * cl_yawspeed->value;
 						else
 							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value) * aspeed * cl_yawspeed->value;
 					}
 					else
 					{
 						if (autosensitivity->value && cl.base_fov < 90) // Knightmare added
-							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value * (cl.base_fov / 90.0)) * speed * 180.0;
+							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value * (cl.base_fov / 90.0f)) * speed * 180.0f;
 						else
-							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value) * speed * 180.0;
+							cl.viewangles[YAW] += (fAxisValue * joy_yawsensitivity->value) * speed * 180.0f;
 					}
 
 				}
@@ -814,16 +814,16 @@ void IN_JoyMove(usercmd_t *cmd)
 					if(dwControlMap[i] == JOY_ABSOLUTE_AXIS)
 					{
 						if (autosensitivity->value && cl.base_fov < 90) // Knightmare added
-							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0)) * aspeed * cl_pitchspeed->value;
+							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0f)) * aspeed * cl_pitchspeed->value;
 						else
 							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value) * aspeed * cl_pitchspeed->value;
 					}
 					else
 					{
 						if (autosensitivity->value && cl.base_fov < 90) // Knightmare added
-							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0)) * speed * 180.0;
+							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value * (cl.base_fov / 90.0f)) * speed * 180.0f;
 						else
-							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value) * speed * 180.0;
+							cl.viewangles[PITCH] += (fAxisValue * joy_pitchsensitivity->value) * speed * 180.0f;
 					}
 				}
 			}
