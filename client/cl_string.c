@@ -18,20 +18,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-// cl_string.c
-// string drawing and formatting functions
+// cl_string.c - string drawing and formatting functions
 
 #include "client.h"
 
-
-/*
-================
-TextColor
-This sets the actual text color, can be called from anywhere
-================
-*/
+// This sets the actual text color, can be called from anywhere
 void TextColor(int colornum, int *red, int *green, int *blue)
 {
+	// Should match the values of COLOR_ / S_COLOR_ defines
 	switch (colornum)
 	{
 		case 1:		//red
@@ -102,13 +96,7 @@ void TextColor(int colornum, int *red, int *green, int *blue)
 	}
 }
 
-
-/*
-================
-StringSetParams
-================
-*/
-qboolean StringSetParams (char modifier, int *red, int *green, int *blue, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *reset)
+qboolean StringSetParams(char modifier, int *red, int *green, int *blue, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *reset)
 {
 	if (!alt_text_color)
 		alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
@@ -133,35 +121,24 @@ qboolean StringSetParams (char modifier, int *red, int *green, int *blue, qboole
 			TextColor(atoi(&modifier), red, green, blue);
 			return true;
 
-		case 'A': case 'a': //alt text color
-			TextColor((int)alt_text_color->value, red, green, blue);
+		case 'A': case 'a': // Alternative text color
+			TextColor(alt_text_color->integer, red, green, blue);
 			return true;
 	}
 	
 	return false;
 }
 
-
-/*
-================
-StringCheckParams (mxd)
-================
-*/
+//mxd
 qboolean StringCheckParams(char modifier)
 {
 	int i; qboolean b;
 	return StringSetParams(modifier, &i, &i, &i, &b, &b, &b, &b);
 }
 
-
-/*
-================
-DrawStringGeneric
-================
-*/
-void DrawStringGeneric (int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit)
+void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit)
 {
-	// defaults
+	// Defaults
 	int red = 255;
 	int green = 255;
 	int blue = 255;
@@ -214,29 +191,29 @@ void DrawStringGeneric (int x, int y, const char *string, int alpha, textscalety
 		float textSize, textScale;
 		switch (scaleType)
 		{
-		case SCALETYPE_MENU:
-			textSize = SCR_ScaledVideo(MENU_FONT_SIZE);
-			textScale = SCR_VideoScale();
-			break;
+			case SCALETYPE_MENU:
+				textSize = SCR_ScaledVideo(MENU_FONT_SIZE);
+				textScale = SCR_VideoScale();
+				break;
 
-		case SCALETYPE_HUD:
-			textSize = ScaledHud(HUD_FONT_SIZE);
-			textScale = HudScale();
-			// hack for alternate text color
-			if (altBit)
-				character ^= 0x80;
-			if (character & 128)
-				TextColor((int)alt_text_color->value, &red, &green, &blue);
-			break;
+			case SCALETYPE_HUD:
+				textSize = ScaledHud(HUD_FONT_SIZE);
+				textScale = HudScale();
+				// Hack for alternate text color
+				if (altBit)
+					character ^= 0x80;
+				if (character & 128)
+					TextColor(alt_text_color->integer, &red, &green, &blue);
+				break;
 
-		case SCALETYPE_CONSOLE:
-		default:
-			textSize = FONT_SIZE;
-			textScale = FONT_SIZE / 8.0;
-			// hack for alternate text color
-			if (character & 128)
-				TextColor((int)alt_text_color->value, &red, &green, &blue);
-			break;
+			case SCALETYPE_CONSOLE:
+			default:
+				textSize = FONT_SIZE;
+				textScale = FONT_SIZE / 8.0f;
+				// Hack for alternate text color
+				if (character & 128)
+					TextColor(alt_text_color->integer, &red, &green, &blue);
+				break;
 		}
 
 		if (shadow)
