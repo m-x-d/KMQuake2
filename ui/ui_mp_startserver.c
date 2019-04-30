@@ -36,10 +36,10 @@ static menulist_s	s_startmap_list;
 menulist_s			s_rules_box;
 static menuaction_s	s_startserver_back_action;
 
-#define M_UNSET 0
-#define	M_MISSING 1
-#define	M_FOUND 2
-static	byte *ui_svr_mapshotvalid; // levelshot truth table
+#define M_UNSET		0
+#define M_MISSING	1
+#define M_FOUND		2
+static byte *ui_svr_mapshotvalid; // levelshot validity table
 
 typedef enum
 {
@@ -56,7 +56,7 @@ typedef struct
 	char *tokens;
 } gametype_names_t;
 
-gametype_names_t gametype_names[] = 
+static gametype_names_t gametype_names[] =
 {
 	{ MAP_DM, "dm ffa team teamdm" },
 	{ MAP_COOP, "coop" },
@@ -77,7 +77,7 @@ static char	**ui_svr_arena_mapnames[NUM_MAPTYPES];
 
 #pragma region ======================= .arena files support
 
-qboolean UI_ParseArenaFromFile(char *filename, char *shortname, char *longname, char *gametypes, size_t bufSize)
+static qboolean UI_ParseArenaFromFile(char *filename, char *shortname, char *longname, char *gametypes, size_t bufSize)
 {
 	fileHandle_t f;
 	char buf[MAX_ARENAS_TEXT];
@@ -178,7 +178,7 @@ qboolean UI_ParseArenaFromFile(char *filename, char *shortname, char *longname, 
 	return true;
 }
 
-void UI_SortArenas(char **list, int len)
+static void UI_SortArenas(char **list, int len)
 {
 	if (!list || len < 2)
 		return;
@@ -210,7 +210,7 @@ void UI_SortArenas(char **list, int len)
 	}
 }
 
-void UI_LoadArenas(void)
+static void UI_LoadArenas(void)
 {
 	int narenas = 0;
 	int narenanames = 0;
@@ -315,6 +315,8 @@ void UI_LoadArenas(void)
 
 #pragma endregion
 
+#pragma region ======================= Map list handling
+
 void UI_LoadMapList(void)
 {
 	// Free existing list
@@ -373,7 +375,7 @@ void UI_LoadMapList(void)
 	ui_svr_maptype = MAP_DM; // Initial maptype
 }
 
-void UI_BuildMapList(maptype_t maptype)
+static void UI_BuildMapList(maptype_t maptype)
 {
 	if (ui_svr_mapnames)
 		free(ui_svr_mapnames);
@@ -395,9 +397,9 @@ void UI_BuildMapList(maptype_t maptype)
 
 	if (s_startmap_list.curvalue >= ui_svr_nummaps) // paranoia
 		s_startmap_list.curvalue = 0;
-}	
+}
 
-void UI_RefreshMapList(maptype_t maptype)
+static void UI_RefreshMapList(maptype_t maptype)
 {
 	if (maptype == ui_svr_maptype) // No change
 		return;
@@ -432,15 +434,15 @@ void UI_RefreshMapList(maptype_t maptype)
 	}
 }
 
-//=============================================================================
+#pragma endregion 
 
-void DMOptionsFunc(void *self)
+static void DMOptionsFunc(void *self)
 {
 	if (s_rules_box.curvalue != 1)
 		M_Menu_DMOptions_f();
 }
 
-void RulesChangeFunc(void *self)
+static void RulesChangeFunc(void *self)
 {
 	s_maxclients_field.generic.statusbar = NULL;
 	s_startserver_dmoptions_action.generic.statusbar = NULL;
@@ -486,7 +488,7 @@ void RulesChangeFunc(void *self)
 	}
 }
 
-void StartServerActionFunc(void *self)
+static void StartServerActionFunc(void *self)
 {
 	char startmap[1024];
 	Q_strncpyz(startmap, strchr(ui_svr_mapnames[s_startmap_list.curvalue], '\n') + 1, sizeof(startmap));
@@ -495,9 +497,9 @@ void StartServerActionFunc(void *self)
 	const int timelimit  = atoi(s_timelimit_field.buffer);
 	const int fraglimit  = atoi(s_fraglimit_field.buffer);
 
-	Cvar_SetValue("maxclients", ClampCvar(0, maxclients, maxclients));
-	Cvar_SetValue("timelimit", ClampCvar(0, timelimit, timelimit));
-	Cvar_SetValue("fraglimit", ClampCvar(0, fraglimit, fraglimit));
+	Cvar_SetValue("maxclients", max(0, maxclients));
+	Cvar_SetValue("timelimit", max(0, timelimit));
+	Cvar_SetValue("fraglimit", max(0, fraglimit));
 	Cvar_Set("hostname", s_hostname_field.buffer);
 
 	Cvar_SetValue("deathmatch", s_rules_box.curvalue != 1);
@@ -536,7 +538,7 @@ void StartServerActionFunc(void *self)
 	UI_ForceMenuOff();
 }
 
-void StartServer_MenuInit(void)
+static void StartServer_MenuInit(void)
 {
 	static const char *dm_coop_names[]		 = { "Deathmatch", "Cooperative", "CTF", "3Team CTF", 0 };
 	static const char *dm_coop_names_rogue[] = { "Deathmatch", "Cooperative", "CTF", "3Team CTF", "Tag", 0 };
@@ -577,12 +579,8 @@ void StartServer_MenuInit(void)
 	s_rules_box.generic.y		= y += 3 * MENU_LINE_SIZE;
 	s_rules_box.generic.name	= "Rules";
 
-//PGM - rogue games only available with rogue DLL.
-	if (roguepath())
-		s_rules_box.itemnames = dm_coop_names_rogue;
-	else
-		s_rules_box.itemnames = dm_coop_names;
-//PGM
+	//PGM - rogue games only available with rogue DLL.
+	s_rules_box.itemnames = (roguepath() ? dm_coop_names_rogue : dm_coop_names);
 
 	if (Cvar_VariableValue("ttctf"))
 		s_rules_box.curvalue = 3;
@@ -602,7 +600,7 @@ void StartServer_MenuInit(void)
 	s_timelimit_field.generic.flags		= QMF_NUMBERSONLY;
 	s_timelimit_field.generic.x			= 0;
 	s_timelimit_field.generic.y			= y += 2 * MENU_FONT_SIZE;
-	s_timelimit_field.generic.statusbar	= "0 = no limit";
+	s_timelimit_field.generic.statusbar	= "0 - no limit";
 	s_timelimit_field.length			= 4;
 	s_timelimit_field.visible_length	= 4;
 	Q_strncpyz(s_timelimit_field.buffer, Cvar_VariableString("timelimit"), sizeof(s_timelimit_field.buffer));
@@ -621,7 +619,7 @@ void StartServer_MenuInit(void)
 
 	// maxclients determines the maximum number of players that can join the game.
 	// If maxclients is only "1" then we should default the menu
-	// option to 8 players, otherwise use whatever its current value is. 
+	// option to 8 players, otherwise use whatever it's current value is. 
 	// Clamping will be done when the server is actually started.
 	s_maxclients_field.generic.type			= MTYPE_FIELD;
 	s_maxclients_field.generic.name			= "Maximum players";
@@ -688,7 +686,7 @@ void StartServer_MenuInit(void)
 	RulesChangeFunc(NULL);
 }
 
-void DrawStartSeverLevelshot(void)
+static void DrawStartSeverLevelshot(void)
 {
 	char startmap[MAX_QPATH];
 	char mapshotname[MAX_QPATH];
@@ -724,14 +722,14 @@ void DrawStartSeverLevelshot(void)
 	}
 }
 
-void StartServer_MenuDraw(void)
+static void StartServer_MenuDraw(void)
 {
 	Menu_DrawBanner("m_banner_start_server"); // Knightmare added
 	Menu_Draw(&s_startserver_menu);
 	DrawStartSeverLevelshot(); // Added levelshots
 }
 
-const char *StartServer_MenuKey(int key)
+static const char *StartServer_MenuKey(int key)
 {
 	return Default_MenuKey(&s_startserver_menu, key);
 }
