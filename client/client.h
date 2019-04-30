@@ -739,7 +739,6 @@ void R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data
 /*
 ** video mode and refresh state management entry points
 */
-void R_SetPalette(const unsigned char *palette);	// NULL = game palette
 void R_BeginFrame(float camera_separation);
 void GLimp_EndFrame(void);
 void GLimp_AppActivate(qboolean activate);
@@ -1034,12 +1033,11 @@ void CL_WidowSplash(vec3_t org);
 //
 // cl_utils.c
 //
-int	color8red(int color8);
-int	color8green(int color8);
-int	color8blue(int color8);
+int color8red(int color8);
+int color8green(int color8);
+int color8blue(int color8);
 void color8_to_vec3(int color8, vec3_t v); //mxd
 void vectoangles(vec3_t vec, vec3_t angles);
-void vectoangles2(vec3_t vec, vec3_t angles); //mxd. Identical to vectoangles //TODO: remove?
 int CL_UnformattedStringLength(const char *string); //mxd
 char *CL_UnformattedString(const char *string); //mxd
 int CL_StringLengthExtra(const char *string); //mxd

@@ -1701,19 +1701,18 @@ void RefreshFont(void);
 
 void R_BeginFrame(float camera_separation)
 {
-
 	glState.camera_separation = camera_separation;
 
 	// Knightmare- added Psychospaz's console font size option
 	if (con_font->modified)
-		RefreshFont ();
+		RefreshFont();
 
 	if (con_font_size->modified)
 	{
 		if (con_font_size->value < 4)
-			Cvar_Set( "con_font_size", "4" );
+			Cvar_Set("con_font_size", "4");
 		else if (con_font_size->value > 24)
-			Cvar_Set( "con_font_size", "24" );
+			Cvar_Set("con_font_size", "24");
 
 		con_font_size->modified = false;
 	}
@@ -1729,11 +1728,11 @@ void R_BeginFrame(float camera_separation)
 
 	if (r_log->modified)
 	{
-		GLimp_EnableLogging(r_log->value);
+		GLimp_EnableLogging(r_log->integer);
 		r_log->modified = false;
 	}
 
-	if (r_log->value)
+	if (r_log->integer)
 		GLimp_LogNewFrame();
 
 	// Update gamma
@@ -1798,41 +1797,4 @@ void R_BeginFrame(float camera_separation)
 
 	// Clear screen if desired
 	R_Clear();
-}
-
-/*
-=============
-R_SetPalette
-=============
-*/
-unsigned r_rawpalette[256];
-
-void R_SetPalette(const unsigned char *palette)
-{
-	byte *rp = (byte*)r_rawpalette;
-
-	if (palette)
-	{
-		for (int i = 0; i < 256; i++ )
-		{
-			rp[i * 4 + 0] = palette[i * 3 + 0];
-			rp[i * 4 + 1] = palette[i * 3 + 1];
-			rp[i * 4 + 2] = palette[i * 3 + 2];
-			rp[i * 4 + 3] = 0xff;
-		}
-	}
-	else
-	{
-		for (int i = 0; i < 256; i++ )
-		{
-			rp[i * 4 + 0] = d_8to24table[i] & 0xff;
-			rp[i * 4 + 1] = (d_8to24table[i] >> 8) & 0xff;
-			rp[i * 4 + 2] = (d_8to24table[i] >> 16) & 0xff;
-			rp[i * 4 + 3] = 0xff;
-		}
-	}
-
-	qglClearColor(0, 0, 0, 0);
-	qglClear(GL_COLOR_BUFFER_BIT);
-	qglClearColor(1, 0, 0.5, 0.5);
 }

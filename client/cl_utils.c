@@ -22,30 +22,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-//=================================================
+extern unsigned d_8to24table[256]; //mxd. Let's use actual palette
 
-// Here I convert old 256 color palette to RGB
-const byte default_pal[768] =
+int color8red(int color8)
 {
-	#include "q2palette.h"
-};
-
-
-int	color8red(int color8)
-{ 
-	return default_pal[color8 * 3 + 0];
+	return d_8to24table[color8] & 0xff;
 }
 
-
-int	color8green(int color8)
+int color8green(int color8)
 {
-	return default_pal[color8 * 3 + 1];
+	return (d_8to24table[color8] >> 8) & 0xff;
 }
 
-
-int	color8blue(int color8)
+int color8blue(int color8)
 {
-	return default_pal[color8 * 3 + 2];
+	return (d_8to24table[color8] >> 16) & 0xff;
 }
 
 //mxd
@@ -72,7 +63,7 @@ void vectoangles(vec3_t vec, vec3_t angles)
 	{
 		// PMM - fixed to correct for pitch of 0
 		if (vec[0])
-			yaw = (atan2(vec[1], vec[0]) * 180 / M_PI);
+			yaw = atan2f(vec[1], vec[0]) * 180 / M_PI;
 		else if (vec[1] > 0)
 			yaw = 90;
 		else
@@ -82,7 +73,7 @@ void vectoangles(vec3_t vec, vec3_t angles)
 			yaw += 360;
 
 		const float forward = sqrtf(vec[0] * vec[0] + vec[1] * vec[1]);
-		pitch = (atan2(vec[2], forward) * 180 / M_PI);
+		pitch = atan2f(vec[2], forward) * 180 / M_PI;
 		if (pitch < 0)
 			pitch += 360;
 	}
@@ -90,11 +81,6 @@ void vectoangles(vec3_t vec, vec3_t angles)
 	angles[PITCH] = -pitch;
 	angles[YAW] = yaw;
 	angles[ROLL] = 0;
-}
-
-void vectoangles2(vec3_t vec, vec3_t angles)
-{
-	vectoangles(vec, angles); //mxd. Identical implementation...
 }
 
 //=================================================
@@ -140,16 +126,16 @@ char *CL_UnformattedString(const char *string)
 			switch (c)
 			{
 				// No idea if the following two are ever sent here, but in conchars.pcx they look like this, so do the replacements
-			case 0x10: c = '['; break;
-			case 0x11: c = ']'; break;
+				case 0x10: c = '['; break;
+				case 0x11: c = ']'; break;
 
 				// Horizontal line chars
-			case 0x1D: c = '<'; break; // start
-			case 0x1E: c = '='; break; // mid
-			case 0x1F: c = '>'; break; // end
+				case 0x1D: c = '<'; break; // start
+				case 0x1E: c = '='; break; // mid
+				case 0x1F: c = '>'; break; // end
 
-			// Just replace all other unprintable chars with space, should be good enough
-			default: c = ' '; break;
+				// Just replace all other unprintable chars with space, should be good enough
+				default: c = ' '; break;
 			}
 		}
 
