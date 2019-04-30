@@ -399,8 +399,6 @@ void R_ClearState();
 void R_Shutdown();
 void R_RenderView(refdef_t *fd);
 void R_BeginFrame(float camera_separation);
-void R_SetPalette(const unsigned char *palette);
-
 
 //
 // r_model.c

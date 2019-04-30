@@ -413,9 +413,6 @@
     <ClInclude Include="..\..\..\client\vid.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\client\q2palette.h">
-      <Filter>Header Files\client</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\qcommon\wildcard.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>

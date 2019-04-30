@@ -281,7 +281,6 @@
     <ClInclude Include="..\..\..\client\input.h" />
     <ClInclude Include="..\..\..\client\keys.h" />
     <ClInclude Include="..\..\..\client\particles.h" />
-    <ClInclude Include="..\..\..\client\q2palette.h" />
     <ClInclude Include="..\..\..\client\ref.h" />
     <ClInclude Include="..\..\..\client\screen.h" />
     <ClInclude Include="..\..\..\client\snd_loc.h" />
