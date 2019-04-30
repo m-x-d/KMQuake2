@@ -21,25 +21,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-cvar_t	*cl_nodelta;
+cvar_t *cl_nodelta;
 
-extern	unsigned	sys_frame_time;
-unsigned	frame_msec;
-unsigned	old_sys_frame_time;
+extern unsigned sys_frame_time;
+static unsigned frame_msec;
+static unsigned old_sys_frame_time;
+
+#pragma region ======================= KEY BUTTONS
 
 /*
-===============================================================================
-
-KEY BUTTONS
-
 Continuous button event tracking is complicated by the fact that two different
 input sources (say, mouse button 1 and the control key) can both press the
 same button, but the button should only be released when both of the
 pressing key have been released.
 
 When a key event issues a button command (+forward, +attack, etc), it appends
-its key number as a parameter to the command so it can be matched up with
-the release.
+its key number as a parameter to the command so it can be matched up with the release.
 
 state bit 0 is the current state of the key
 state bit 1 is edge triggered on the up to down transition
@@ -49,21 +46,17 @@ state bit 2 is edge triggered on the down to up transition
 Key_Event (int key, qboolean down, unsigned time);
 
   +mlook src time
-
-===============================================================================
 */
 
+kbutton_t in_klook, in_strafe, in_speed;
+static kbutton_t in_left, in_right, in_forward, in_back;
+static kbutton_t in_lookup, in_lookdown, in_moveleft, in_moveright;
+static kbutton_t in_use, in_attack, in_attack2;
+static kbutton_t in_up, in_down;
 
-kbutton_t	in_klook;
-kbutton_t	in_left, in_right, in_forward, in_back;
-kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
-kbutton_t	in_strafe, in_speed, in_use, in_attack, in_attack2;
-kbutton_t	in_up, in_down;
+static int in_impulse;
 
-int			in_impulse;
-
-
-void KeyDown (kbutton_t *b)
+static void KeyDown(kbutton_t *b)
 {
 	int k;
 
@@ -71,10 +64,10 @@ void KeyDown (kbutton_t *b)
 	if (c[0])
 		k = atoi(c);
 	else
-		k = -1;		// typed manually at the console for continuous down
+		k = -1; // Typed manually at the console for continuous down
 
 	if (k == b->down[0] || k == b->down[1])
-		return;		// repeating key
+		return; // Repeating key
 	
 	if (!b->down[0])
 	{
@@ -90,19 +83,19 @@ void KeyDown (kbutton_t *b)
 		return;
 	}
 	
-	if (b->state & 1)
-		return;		// still down
+	if (b->state & KEYSTATE_DOWN)
+		return; // Still down
 
-	// save timestamp
+	// Save timestamp
 	c = Cmd_Argv(2);
 	b->downtime = atoi(c);
 	if (!b->downtime)
 		b->downtime = sys_frame_time - 100;
 
-	b->state |= 1 + 2;	// down + impulse down
+	b->state |= (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN); // down + impulse down
 }
 
-void KeyUp (kbutton_t *b)
+static void KeyUp(kbutton_t *b)
 {
 	int k;
 
@@ -113,9 +106,10 @@ void KeyUp (kbutton_t *b)
 	}
 	else
 	{
-		// typed manually at the console, assume for unsticking, so clear all
-		b->down[0] = b->down[1] = 0;
-		b->state = 4;	// impulse up
+		// Typed manually at the console, assume for unsticking, so clear all
+		b->down[0] = 0;
+		b->down[1] = 0;
+		b->state = KEYSTATE_IMPULSE_UP; // Impulse up
 
 		return;
 	}
@@ -125,15 +119,15 @@ void KeyUp (kbutton_t *b)
 	else if (b->down[1] == k)
 		b->down[1] = 0;
 	else
-		return; // key up without coresponding down (menu pass through)
+		return; // Key up without coresponding down (menu pass through)
 
 	if (b->down[0] || b->down[1])
-		return;	// some other key is still holding it down
+		return;	// Some other key is still holding it down
 
-	if (!(b->state & 1))
-		return;	// still up (this should not happen)
+	if (!(b->state & KEYSTATE_DOWN))
+		return; // Still up (this should not happen)
 
-	// save timestamp
+	// Save timestamp
 	c = Cmd_Argv(2);
 	const unsigned uptime = atoi(c);
 	if (uptime)
@@ -141,68 +135,66 @@ void KeyUp (kbutton_t *b)
 	else
 		b->msec += 10;
 
-	b->state &= ~1;	// now up
-	b->state |= 4; 	// impulse up
+	b->state &= ~KEYSTATE_DOWN; // Now up
+	b->state |= KEYSTATE_IMPULSE_UP; // Impulse up
 }
 
-void IN_KLookDown(void) { KeyDown(&in_klook); }
-void IN_KLookUp(void) { KeyUp(&in_klook); }
-void IN_UpDown(void) { KeyDown(&in_up); }
-void IN_UpUp(void) { KeyUp(&in_up); }
-void IN_DownDown(void) { KeyDown(&in_down); }
-void IN_DownUp(void) { KeyUp(&in_down); }
-void IN_LeftDown(void) { KeyDown(&in_left); }
-void IN_LeftUp(void) { KeyUp(&in_left); }
-void IN_RightDown(void) { KeyDown(&in_right); }
-void IN_RightUp(void) { KeyUp(&in_right); }
-void IN_ForwardDown(void) { KeyDown(&in_forward); }
-void IN_ForwardUp(void) { KeyUp(&in_forward); }
-void IN_BackDown(void) { KeyDown(&in_back); }
-void IN_BackUp(void) { KeyUp(&in_back); }
-void IN_LookupDown(void) { KeyDown(&in_lookup); }
-void IN_LookupUp(void) { KeyUp(&in_lookup); }
-void IN_LookdownDown(void) { KeyDown(&in_lookdown); }
-void IN_LookdownUp(void) { KeyUp(&in_lookdown); }
-void IN_MoveleftDown(void) { KeyDown(&in_moveleft); }
-void IN_MoveleftUp(void) { KeyUp(&in_moveleft); }
-void IN_MoverightDown(void) { KeyDown(&in_moveright); }
-void IN_MoverightUp(void) { KeyUp(&in_moveright); }
+static void IN_KLookDown(void) { KeyDown(&in_klook); }
+static void IN_KLookUp(void) { KeyUp(&in_klook); }
+static void IN_UpDown(void) { KeyDown(&in_up); }
+static void IN_UpUp(void) { KeyUp(&in_up); }
+static void IN_DownDown(void) { KeyDown(&in_down); }
+static void IN_DownUp(void) { KeyUp(&in_down); }
+static void IN_LeftDown(void) { KeyDown(&in_left); }
+static void IN_LeftUp(void) { KeyUp(&in_left); }
+static void IN_RightDown(void) { KeyDown(&in_right); }
+static void IN_RightUp(void) { KeyUp(&in_right); }
+static void IN_ForwardDown(void) { KeyDown(&in_forward); }
+static void IN_ForwardUp(void) { KeyUp(&in_forward); }
+static void IN_BackDown(void) { KeyDown(&in_back); }
+static void IN_BackUp(void) { KeyUp(&in_back); }
+static void IN_LookupDown(void) { KeyDown(&in_lookup); }
+static void IN_LookupUp(void) { KeyUp(&in_lookup); }
+static void IN_LookdownDown(void) { KeyDown(&in_lookdown); }
+static void IN_LookdownUp(void) { KeyUp(&in_lookdown); }
+static void IN_MoveleftDown(void) { KeyDown(&in_moveleft); }
+static void IN_MoveleftUp(void) { KeyUp(&in_moveleft); }
+static void IN_MoverightDown(void) { KeyDown(&in_moveright); }
+static void IN_MoverightUp(void) { KeyUp(&in_moveright); }
 
-void IN_SpeedDown(void) { KeyDown(&in_speed); }
-void IN_SpeedUp(void) { KeyUp(&in_speed); }
-void IN_StrafeDown(void) { KeyDown(&in_strafe); }
-void IN_StrafeUp(void) { KeyUp(&in_strafe); }
+static void IN_SpeedDown(void) { KeyDown(&in_speed); }
+static void IN_SpeedUp(void) { KeyUp(&in_speed); }
+static void IN_StrafeDown(void) { KeyDown(&in_strafe); }
+static void IN_StrafeUp(void) { KeyUp(&in_strafe); }
 
-void IN_AttackDown(void) { KeyDown(&in_attack); }
-void IN_AttackUp(void) { KeyUp(&in_attack); }
+static void IN_AttackDown(void) { KeyDown(&in_attack); }
+static void IN_AttackUp(void) { KeyUp(&in_attack); }
 
 //Knightmare added
-void IN_Attack2Down(void) { KeyDown(&in_attack2); }
-void IN_Attack2Up(void) { KeyUp(&in_attack2); }
-// end Knightmare
+static void IN_Attack2Down(void) { KeyDown(&in_attack2); }
+static void IN_Attack2Up(void) { KeyUp(&in_attack2); }
 
-void IN_UseDown(void) { KeyDown(&in_use); }
-void IN_UseUp(void) { KeyUp(&in_use); }
+static void IN_UseDown(void) { KeyDown(&in_use); }
+static void IN_UseUp(void) { KeyUp(&in_use); }
 
-void IN_Impulse(void) { in_impulse = atoi(Cmd_Argv(1)); }
+static void IN_Impulse(void) { in_impulse = atoi(Cmd_Argv(1)); }
 
-/*
-===============
-CL_KeyState
+void IN_CenterView(void)
+{
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[PITCH]);
+}
 
-Returns the fraction of the frame that the key was down
-===============
-*/
+// Returns the fraction of the frame that the key was down
 float CL_KeyState(kbutton_t *key)
 {
-	key->state &= 1; // clear impulses
+	key->state &= KEYSTATE_DOWN; // Clear impulses
 
 	int msec = key->msec;
 	key->msec = 0;
 
 	if (key->state)
 	{
-		// still down
+		// Still down
 		msec += sys_frame_time - key->downtime;
 		key->downtime = sys_frame_time;
 	}
@@ -210,44 +202,34 @@ float CL_KeyState(kbutton_t *key)
 	return clamp((float)msec / frame_msec, 0, 1);
 }
 
+#pragma endregion 
 
+cvar_t *cl_upspeed;
+cvar_t *cl_forwardspeed;
+cvar_t *cl_sidespeed;
 
+cvar_t *cl_yawspeed;
+cvar_t *cl_pitchspeed;
 
-//==========================================================================
+cvar_t *cl_run;
 
-cvar_t	*cl_upspeed;
-cvar_t	*cl_forwardspeed;
-cvar_t	*cl_sidespeed;
+cvar_t *cl_anglespeedkey;
 
-cvar_t	*cl_yawspeed;
-cvar_t	*cl_pitchspeed;
-
-cvar_t	*cl_run;
-
-cvar_t	*cl_anglespeedkey;
-
-
-/*
-================
-CL_AdjustAngles
-
-Moves the local angle positions
-================
-*/
-void CL_AdjustAngles (void)
+// Moves the local angle positions
+static void CL_AdjustAngles(void)
 {
 	float speed = cls.netFrameTime;
 
-	if (in_speed.state & 1)
+	if (in_speed.state & KEYSTATE_DOWN)
 		speed *= cl_anglespeedkey->value;
 
-	if (!(in_strafe.state & 1))
+	if (!(in_strafe.state & KEYSTATE_DOWN))
 	{
 		cl.viewangles[YAW] -= speed * cl_yawspeed->value * CL_KeyState(&in_right);
 		cl.viewangles[YAW] += speed * cl_yawspeed->value * CL_KeyState(&in_left);
 	}
 
-	if (in_klook.state & 1)
+	if (in_klook.state & KEYSTATE_DOWN)
 	{
 		cl.viewangles[PITCH] -= speed * cl_pitchspeed->value * CL_KeyState(&in_forward);
 		cl.viewangles[PITCH] += speed * cl_pitchspeed->value * CL_KeyState(&in_back);
@@ -257,21 +239,15 @@ void CL_AdjustAngles (void)
 	cl.viewangles[PITCH] += speed * cl_pitchspeed->value * CL_KeyState(&in_lookdown);
 }
 
-/*
-================
-CL_BaseMove
-
-Send the intended movement message to the server
-================
-*/
-void CL_BaseMove (usercmd_t *cmd)
+// Send the intended movement message to the server
+void CL_BaseMove(usercmd_t *cmd)
 {	
 	CL_AdjustAngles();
 	
 	memset(cmd, 0, sizeof(*cmd));
 	
 	VectorCopy(cl.viewangles, cmd->angles);
-	if (in_strafe.state & 1)
+	if (in_strafe.state & KEYSTATE_DOWN)
 	{
 		cmd->sidemove += cl_sidespeed->value * CL_KeyState(&in_right);
 		cmd->sidemove -= cl_sidespeed->value * CL_KeyState(&in_left);
@@ -283,14 +259,14 @@ void CL_BaseMove (usercmd_t *cmd)
 	cmd->upmove += cl_upspeed->value * CL_KeyState(&in_up);
 	cmd->upmove -= cl_upspeed->value * CL_KeyState(&in_down);
 
-	if (!(in_klook.state & 1))
+	if (!(in_klook.state & KEYSTATE_DOWN))
 	{	
 		cmd->forwardmove += cl_forwardspeed->value * CL_KeyState(&in_forward);
 		cmd->forwardmove -= cl_forwardspeed->value * CL_KeyState(&in_back);
 	}	
 
-	// adjust for speed key / running
-	if ((in_speed.state & 1) ^ (int)cl_run->value)
+	// Adjust for speed key / running
+	if ((in_speed.state & KEYSTATE_DOWN) ^ cl_run->integer)
 	{
 		cmd->forwardmove *= 2;
 		cmd->sidemove *= 2;
@@ -298,7 +274,7 @@ void CL_BaseMove (usercmd_t *cmd)
 	}	
 }
 
-void CL_ClampPitch (void)
+static void CL_ClampPitch(void)
 {
 	float pitch = SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[PITCH]);
 
@@ -306,10 +282,10 @@ void CL_ClampPitch (void)
 		pitch -= 360;
 
 	if (cl.viewangles[PITCH] + pitch < -360)
-		cl.viewangles[PITCH] += 360; // wrapped
+		cl.viewangles[PITCH] += 360; // Wrapped
 
 	if (cl.viewangles[PITCH] + pitch > 360)
-		cl.viewangles[PITCH] -= 360; // wrapped
+		cl.viewangles[PITCH] -= 360; // Wrapped
 
 	if (cl.viewangles[PITCH] + pitch > 89)
 		cl.viewangles[PITCH] = 89 - pitch;
@@ -318,35 +294,29 @@ void CL_ClampPitch (void)
 		cl.viewangles[PITCH] = -89 - pitch;
 }
 
-/*
-==============
-CL_FinishMove
-==============
-*/
-void CL_FinishMove (usercmd_t *cmd)
+static void CL_FinishMove(usercmd_t *cmd)
 {
-	// figure button bits
-	if (in_attack.state & 3)
+	// Figure button bits
+	if (in_attack.state & (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN))
 		cmd->buttons |= BUTTON_ATTACK;
-	in_attack.state &= ~2;
+	in_attack.state &= ~KEYSTATE_IMPULSE_DOWN;
 	
 	// Knightmare added
-	if (in_attack2.state & 3)
+	if (in_attack2.state & (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN))
 		cmd->buttons |= BUTTON_ATTACK2;
-	in_attack2.state &= ~2;
-	// end Knightamre
+	in_attack2.state &= ~KEYSTATE_IMPULSE_DOWN;
 
-	if (in_use.state & 3)
+	if (in_use.state & (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN))
 		cmd->buttons |= BUTTON_USE;
-	in_use.state &= ~2;
+	in_use.state &= ~KEYSTATE_IMPULSE_DOWN;
 
 	if (anykeydown && cls.key_dest == key_game)
 		cmd->buttons |= BUTTON_ANY;
 
-	// send milliseconds of time to apply the move
+	// Send milliseconds of time to apply the move
 	int ms = cls.netFrameTime * 1000;
 	if (ms > 250)
-		ms = 100; // time was unreasonable
+		ms = 100; // Time was unreasonable
 	cmd->msec = ms;
 
 	CL_ClampPitch();
@@ -356,23 +326,11 @@ void CL_FinishMove (usercmd_t *cmd)
 	cmd->impulse = in_impulse;
 	in_impulse = 0;
 
-// send the ambient light level at the player's current position
+	// Send the ambient light level at the player's current position
 	cmd->lightlevel = (byte)cl_lightlevel->value;
 }
 
-
-void IN_CenterView (void)
-{
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[PITCH]);
-}
-
-
-/*
-============
-CL_InitInput
-============
-*/
-void CL_InitInput (void)
+void CL_InitInput(void)
 {
 	Cmd_AddCommand("centerview", IN_CenterView);
 
@@ -406,7 +364,6 @@ void CL_InitInput (void)
 	// Knightmare added
 	Cmd_AddCommand("+attack2", IN_Attack2Down);
 	Cmd_AddCommand("-attack2", IN_Attack2Up);
-	// end Knightmare
 
 	Cmd_AddCommand("+use", IN_UseDown);
 	Cmd_AddCommand("-use", IN_UseUp);
@@ -417,20 +374,13 @@ void CL_InitInput (void)
 	cl_nodelta = Cvar_Get("cl_nodelta", "0", 0);
 }
 
-
-/*
-=================
-CL_CreateCmd
-=================
-*/
-usercmd_t CL_CreateCmd (void)
+static usercmd_t CL_CreateCmd(void)
 {
-	usercmd_t cmd;
-
 	frame_msec = clamp(sys_frame_time - old_sys_frame_time, 1, 200);
-	
-	CL_BaseMove(&cmd); // get basic movement from keyboard
-	IN_Move(&cmd); // allow mice or other external controllers to add to the move
+
+	usercmd_t cmd;
+	CL_BaseMove(&cmd); // Get basic movement from keyboard
+	IN_Move(&cmd); // Allow mice or other external controllers to add to the move
 	CL_FinishMove(&cmd);
 
 	old_sys_frame_time = sys_frame_time;
@@ -438,29 +388,21 @@ usercmd_t CL_CreateCmd (void)
 	return cmd;
 }
 
-
 #ifdef CLIENT_SPLIT_NETFRAME
 
-/*
-=================
-CL_RefreshCmd
-
-jec - Adds any new input changes to usercmd that occurred since last Init or RefreshCmd.
-=================
-*/
-void CL_RefreshCmd (void)
+// jec - Adds any new input changes to usercmd that occurred since last Init or RefreshCmd.
+void CL_RefreshCmd(void)
 {
 	usercmd_t *cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
 
-	// get delta for this sample.
+	// Get delta for this sample.
 	frame_msec = sys_frame_time - old_sys_frame_time;
 
-	// bounds checking
+	// Bounds checking
 	if (frame_msec < 1)
 		return;
 
-	if (frame_msec > 200)
-		frame_msec = 200;
+	frame_msec = min(frame_msec, 200);
 
 	// Get basic movement from keyboard
 	CL_BaseMove(cmd);
@@ -489,31 +431,23 @@ void CL_RefreshCmd (void)
 	// 4 = idle                  4
 
 	// Send packet immediately on important events
-	if ((in_attack.state & 2) || (in_attack2.state & 2) || (in_use.state & 2))
+	if ((in_attack.state & KEYSTATE_IMPULSE_DOWN) || (in_attack2.state & KEYSTATE_IMPULSE_DOWN) || (in_use.state & KEYSTATE_IMPULSE_DOWN))
 		cls.forcePacket = true;
 }
 
-
-/*
-=================
-CL_RefreshMove
-
-Just updates movement, such as when disconnected.
-=================
-*/
-void CL_RefreshMove (void)
+// Just updates movement, such as when disconnected.
+void CL_RefreshMove(void)
 {	
 	usercmd_t *cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
 
-	// get delta for this sample
+	// Get delta for this sample
 	frame_msec = sys_frame_time - old_sys_frame_time;
 
 	// bounds checking
 	if (frame_msec < 1)
 		return;
 
-	if (frame_msec > 200)
-		frame_msec = 200;
+	frame_msec = min(frame_msec, 200);
 
 	// Get basic movement from keyboard
 	CL_BaseMove(cmd);
@@ -525,32 +459,24 @@ void CL_RefreshMove (void)
 	old_sys_frame_time = sys_frame_time;
 }
 
-
-/*
-=================
-CL_FinalizeCmd
-
-jec - Prepares usercmd for transmission, adds all changes that occurred since last Init.
-=================
-*/
-void CL_FinalizeCmd (void)
+// jec - Prepares usercmd for transmission, adds all changes that occurred since last Init.
+static void CL_FinalizeCmd(void)
 {
 	usercmd_t *cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
 
 	// Set any button hits that occured since last frame
-	if (in_attack.state & 3)
+	if (in_attack.state & (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN))
 		cmd->buttons |= BUTTON_ATTACK;
-	in_attack.state &= ~2;
+	in_attack.state &= ~KEYSTATE_IMPULSE_DOWN;
 
 	// Knightmare added
-	if (in_attack2.state & 3)
+	if (in_attack2.state & (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN))
 		cmd->buttons |= BUTTON_ATTACK2;
-	in_attack2.state &= ~2;
-	// end Knightamre
+	in_attack2.state &= ~KEYSTATE_IMPULSE_DOWN;
 
-	if (in_use.state & 3)
+	if (in_use.state & (KEYSTATE_DOWN | KEYSTATE_IMPULSE_DOWN))
 		cmd->buttons |= BUTTON_USE;
-	in_use.state &= ~2;
+	in_use.state &= ~KEYSTATE_IMPULSE_DOWN;
 
 	if (anykeydown && cls.key_dest == key_game)
 		cmd->buttons |= BUTTON_ANY;
@@ -558,33 +484,34 @@ void CL_FinalizeCmd (void)
 	cmd->impulse = in_impulse;
 	in_impulse = 0;
 
-	// set the ambient light level at the player's current position
+	// Set the ambient light level at the player's current position
 	cmd->lightlevel = (byte)cl_lightlevel->value;
 }
 
+#endif
 
-/*
-=================
-CL_SendCmd_Async
-=================
-*/
-void CL_SendCmd_Async (void)
+void CL_SendCmd(qboolean async)
 {
-	sizebuf_t	buf;
-	byte		data[128];
-	usercmd_t	nullcmd;
-
-	// clear buffer
+	// Clear buffer
+	sizebuf_t buf;
 	memset(&buf, 0, sizeof(buf));
 
-	// build a command even if not connected
+	// Build a command even if not connected
 
-	// save this command off for prediction
+	// Save this command off for prediction
 	int cmdindex = cls.netchan.outgoing_sequence & (CMD_BACKUP - 1);
-	usercmd_t *cmd = &cl.cmds[cmdindex];
-	cl.cmd_time[cmdindex] = cls.realtime;	// for netgraph ping calculation
+	cl.cmd_time[cmdindex] = cls.realtime; // For netgraph ping calculation
 
-	CL_FinalizeCmd ();
+	usercmd_t *cmd = NULL;
+	if (async) //mxd
+	{
+		cmd = &cl.cmds[cmdindex];
+		CL_FinalizeCmd();
+	}
+	else
+	{
+		*cmd = CL_CreateCmd();
+	}
 
 	cl.cmd = *cmd;
 
@@ -593,13 +520,13 @@ void CL_SendCmd_Async (void)
 
 	if (cls.state == ca_connected)
 	{
-		if (cls.netchan.message.cursize || curtime - cls.netchan.last_sent > 1000)
+		if (cls.netchan.message.cursize	|| curtime - cls.netchan.last_sent > 1000)
 			Netchan_Transmit(&cls.netchan, 0, buf.data);
 
 		return;
 	}
 
-	// send a userinfo update if needed
+	// Send a userinfo update if needed
 	if (userinfo_modified)
 	{
 		CL_FixUpGender();
@@ -608,6 +535,7 @@ void CL_SendCmd_Async (void)
 		MSG_WriteString(&cls.netchan.message, Cvar_Userinfo());
 	}
 
+	byte data[128];
 	SZ_Init(&buf, data, sizeof(data));
 
 	// Knightmare- removed this, put ESC-only substitute in keys.c
@@ -617,23 +545,24 @@ void CL_SendCmd_Async (void)
 		SCR_FinishCinematic ();
 	}*/
 
-	// begin a client move command
+	// Begin a client move command
 	MSG_WriteByte(&buf, clc_move);
 
-	// save the position for a checksum byte
+	// Save the position for a checksum byte
 	const int checksumIndex = buf.cursize;
 	MSG_WriteByte(&buf, 0);
 
-	// let the server know what the last frame we
-	// got was, so the next message can be delta compressed
+	// Let the server know what the last frame we got was, so the next message can be delta compressed
 	if (cl_nodelta->value || !cl.frame.valid || cls.demowaiting)
-		MSG_WriteLong(&buf, -1);	// no compression
+		MSG_WriteLong(&buf, -1); // No compression
 	else
 		MSG_WriteLong(&buf, cl.frame.serverframe);
 
-	// send this and the previous cmds in the message, so if the last packet was dropped, it can be recovered
+	// Send this and the previous cmds in the message, so if the last packet was dropped, it can be recovered
 	cmdindex = (cls.netchan.outgoing_sequence - 2) & (CMD_BACKUP - 1);
 	cmd = &cl.cmds[cmdindex];
+
+	usercmd_t nullcmd;
 	memset(&nullcmd, 0, sizeof(nullcmd));
 	MSG_WriteDeltaUsercmd(&buf, &nullcmd, cmd);
 	usercmd_t *oldcmd = cmd;
@@ -647,106 +576,16 @@ void CL_SendCmd_Async (void)
 	cmd = &cl.cmds[cmdindex];
 	MSG_WriteDeltaUsercmd(&buf, oldcmd, cmd);
 
-	// calculate a checksum over the move commands
+	// Calculate a checksum over the move commands
 	buf.data[checksumIndex] = COM_BlockSequenceCRCByte(buf.data + checksumIndex + 1, buf.cursize - checksumIndex - 1, cls.netchan.outgoing_sequence);
 
-	// deliver the message
+	// Deliver the message
 	Netchan_Transmit(&cls.netchan, buf.cursize, buf.data);
 
-	// Init the current cmd buffer and clear it
-	cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
-	memset(cmd, 0, sizeof(*cmd));
-}
-
-#endif
-
-
-/*
-=================
-CL_SendCmd
-=================
-*/
-void CL_SendCmd (void)
-{
-	sizebuf_t	buf;
-	byte		data[128];
-	usercmd_t	nullcmd;
-
-	// clear buffer
-	memset(&buf, 0, sizeof(buf));
-
-	// build a command even if not connected
-
-	// save this command off for prediction
-	int cmdindex = cls.netchan.outgoing_sequence & (CMD_BACKUP - 1);
-	usercmd_t *cmd = &cl.cmds[cmdindex];
-	cl.cmd_time[cmdindex] = cls.realtime;	// for netgraph ping calculation
-
-	*cmd = CL_CreateCmd();
-	cl.cmd = *cmd;
-
-	if (cls.state == ca_disconnected || cls.state == ca_connecting)
-		return;
-
-	if (cls.state == ca_connected)
+	if (async) //mxd
 	{
-		if (cls.netchan.message.cursize	|| curtime - cls.netchan.last_sent > 1000 )
-			Netchan_Transmit(&cls.netchan, 0, buf.data);
-
-		return;
+		// Init the current cmd buffer and clear it
+		cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
+		memset(cmd, 0, sizeof(*cmd));
 	}
-
-	// send a userinfo update if needed
-	if (userinfo_modified)
-	{
-		CL_FixUpGender();
-		userinfo_modified = false;
-		MSG_WriteByte(&cls.netchan.message, clc_userinfo);
-		MSG_WriteString(&cls.netchan.message, Cvar_Userinfo());
-	}
-
-	SZ_Init(&buf, data, sizeof(data));
-
-	// Knightmare- removed this, put ESC-only substitute in keys.c
-	/*if (cmd->buttons && cl.cinematictime > 0 && !cl.attractloop 
-		&& cls.realtime - cl.cinematictime > 1000)
-	{	// skip the rest of the cinematic
-		SCR_FinishCinematic ();
-	}*/
-
-	// begin a client move command
-	MSG_WriteByte(&buf, clc_move);
-
-	// save the position for a checksum byte
-	const int checksumIndex = buf.cursize;
-	MSG_WriteByte(&buf, 0);
-
-	// let the server know what the last frame we got was, so the next message can be delta compressed
-	if (cl_nodelta->value || !cl.frame.valid || cls.demowaiting)
-		MSG_WriteLong(&buf, -1);	// no compression
-	else
-		MSG_WriteLong(&buf, cl.frame.serverframe);
-
-	// send this and the previous cmds in the message, so
-	// if the last packet was dropped, it can be recovered
-	cmdindex = (cls.netchan.outgoing_sequence-2) & (CMD_BACKUP - 1);
-	cmd = &cl.cmds[cmdindex];
-	memset(&nullcmd, 0, sizeof(nullcmd));
-	MSG_WriteDeltaUsercmd(&buf, &nullcmd, cmd);
-	usercmd_t *oldcmd = cmd;
-
-	cmdindex = (cls.netchan.outgoing_sequence-1) & (CMD_BACKUP - 1);
-	cmd = &cl.cmds[cmdindex];
-	MSG_WriteDeltaUsercmd(&buf, oldcmd, cmd);
-	oldcmd = cmd;
-
-	cmdindex = (cls.netchan.outgoing_sequence) & (CMD_BACKUP - 1);
-	cmd = &cl.cmds[cmdindex];
-	MSG_WriteDeltaUsercmd(&buf, oldcmd, cmd);
-
-	// calculate a checksum over the move commands
-	buf.data[checksumIndex] = COM_BlockSequenceCRCByte(buf.data + checksumIndex + 1, buf.cursize - checksumIndex - 1, cls.netchan.outgoing_sequence);
-
-	// deliver the message
-	Netchan_Transmit(&cls.netchan, buf.cursize, buf.data);
 }

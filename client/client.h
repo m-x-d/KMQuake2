@@ -762,23 +762,31 @@ void CL_WriteConfig_f(void);
 //
 // cl_input
 //
+
+typedef enum //mxd
+{
+	KEYSTATE_UNSET = 0,
+	KEYSTATE_DOWN = 1,
+	KEYSTATE_IMPULSE_DOWN = 2,
+	KEYSTATE_IMPULSE_UP = 4,
+} kstate_t;
+
 typedef struct
 {
-	int			down[2];		// key nums holding it down
-	unsigned	downtime;		// msec timestamp
-	unsigned	msec;			// msec down this frame
-	int			state;
+	int down[2]; // Key nums holding it down
+	unsigned downtime; // Msec timestamp
+	unsigned msec; // Msec down this frame
+	kstate_t state; //mxd. Was int
 } kbutton_t;
 
-extern	kbutton_t in_mlook, in_klook;
-extern	kbutton_t in_strafe;
-extern	kbutton_t in_speed;
+extern kbutton_t in_mlook, in_klook;
+extern kbutton_t in_strafe;
+extern kbutton_t in_speed;
 
 void CL_InitInput(void);
-void CL_SendCmd(void);
+void CL_SendCmd(qboolean async); //mxd. Merged with CL_SendCmd_Async()
 
 #ifdef CLIENT_SPLIT_NETFRAME
-void CL_SendCmd_Async(void);
 void CL_RefreshCmd(void);
 void CL_RefreshMove(void);
 #endif

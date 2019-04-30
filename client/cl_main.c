@@ -1423,7 +1423,7 @@ static void CL_RefreshInputs(void)
 static void CL_SendCommand_Async(void)
 {
 	// Send intentions now
-	CL_SendCmd_Async();
+	CL_SendCmd(true);
 
 	// Resend a connection request if necessary
 	CL_CheckForResend();
@@ -1617,7 +1617,7 @@ void CL_SendCommand(void)
 	CL_FixCvarCheats();
 
 	// Send intentions now
-	CL_SendCmd();
+	CL_SendCmd(false);
 
 	// Resend a connection request if necessary
 	CL_CheckForResend();
