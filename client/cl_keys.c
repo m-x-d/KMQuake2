@@ -192,24 +192,7 @@ void Key_Console(int key)
 {
 	static int history_line = 0; //mxd. Made local
 	
-	switch (key)
-	{
-		case K_KP_SLASH:      key = '/'; break;
-		case K_KP_MULT:       key = '*'; break;
-		case K_KP_MINUS:      key = '-'; break;
-		case K_KP_PLUS:       key = '+'; break;
-		case K_KP_HOME:       key = '7'; break;
-		case K_KP_UPARROW:    key = '8'; break;
-		case K_KP_PGUP:       key = '9'; break;
-		case K_KP_LEFTARROW:  key = '4'; break;
-		case K_KP_5:          key = '5'; break;
-		case K_KP_RIGHTARROW: key = '6'; break;
-		case K_KP_END:        key = '1'; break;
-		case K_KP_DOWNARROW:  key = '2'; break;
-		case K_KP_PGDN:       key = '3'; break;
-		case K_KP_INS:        key = '0'; break;
-		case K_KP_DEL:        key = '.'; break;
-	}
+	key = Key_ConvertNumPadKey(key); //mxd
 
 	if ((toupper(key) == 'V' && keydown[K_CTRL]) || ((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
 	{
@@ -535,7 +518,7 @@ int Key_StringToKeynum(char *str)
 
 // Returns a string (either a single ascii char, or a K_* name) for the given keynum.
 // FIXME: handle quote special (general escape sequence?)
-char *Key_KeynumToString (int keynum)
+char *Key_KeynumToString(int keynum)
 {
 	static char tinystr[2];
 	
@@ -974,4 +957,28 @@ int Key_GetKey(void)
 		Sys_SendKeyEvents();
 
 	return key_waiting;
+}
+
+//mxd. Converts numpad keys to input chars regardless fo NumLock state.
+int Key_ConvertNumPadKey(int key)
+{
+	switch (key)
+	{
+		case K_KP_SLASH:		return '/';
+		case K_KP_MULT:			return '*';
+		case K_KP_MINUS:		return '-';
+		case K_KP_PLUS:			return '+';
+		case K_KP_HOME:			return '7';
+		case K_KP_UPARROW:		return '8';
+		case K_KP_PGUP:			return '9';
+		case K_KP_LEFTARROW:	return '4';
+		case K_KP_5:			return '5';
+		case K_KP_RIGHTARROW:	return '6';
+		case K_KP_END:			return '1';
+		case K_KP_DOWNARROW:	return '2';
+		case K_KP_PGDN:			return '3';
+		case K_KP_INS:			return '0';
+		case K_KP_DEL:			return '.';
+		default:				return key;
+	}
 }
