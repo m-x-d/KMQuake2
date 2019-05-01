@@ -151,7 +151,7 @@ static void Field_Draw(menufield_s *f)
 
 	// Add cursor thingie
 	if (Menu_ItemAtCursor(f->generic.parent) == f && ((int)(Sys_Milliseconds() / 250)) & 1)
-		Com_sprintf(tempbuffer, sizeof(tempbuffer),	"%s%c", tempbuffer, 11);
+		tempbuffer[f->cursor] = 11; //mxd. Actually place it where it should be
 
 	// Draw text
 	Menu_DrawString(f->generic.x + f->generic.parent->x + MENU_FONT_SIZE * 3,
@@ -162,59 +162,12 @@ static void Field_Draw(menufield_s *f)
 		f->generic.ownerdraw(f);
 }
 
+extern int keydown[];
+
 qboolean Field_Key(menufield_s *f, int key)
 {
-	extern int keydown[];
-
-	switch (key)
-	{
-	case K_KP_SLASH:
-		key = '/';
-		break;
-	case K_KP_MINUS:
-		key = '-';
-		break;
-	case K_KP_PLUS:
-		key = '+';
-		break;
-	case K_KP_HOME:
-		key = '7';
-		break;
-	case K_KP_UPARROW:
-		key = '8';
-		break;
-	case K_KP_PGUP:
-		key = '9';
-		break;
-	case K_KP_LEFTARROW:
-		key = '4';
-		break;
-	case K_KP_5:
-		key = '5';
-		break;
-	case K_KP_RIGHTARROW:
-		key = '6';
-		break;
-	case K_KP_END:
-		key = '1';
-		break;
-	case K_KP_DOWNARROW:
-		key = '2';
-		break;
-	case K_KP_PGDN:
-		key = '3';
-		break;
-	case K_KP_INS:
-		key = '0';
-		break;
-	case K_KP_DEL:
-		key = '.';
-		break;
-	}
-
 	// Support pasting from the clipboard
-	if ((toupper(key) == 'V' && keydown[K_CTRL]) ||
-		((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
+	if ((toupper(key) == 'V' && keydown[K_CTRL]) || ((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
 	{
 		//TODO: (mxd) paste at cursor position, update text instead of replacing it?
 		char *cbd = Sys_GetClipboardData();
@@ -233,49 +186,80 @@ qboolean Field_Key(menufield_s *f, int key)
 		return true;
 	}
 
-	//mxd
-	if (key > 127)
-		return false;
-
+	// Process control keys
 	switch (key)
 	{
-	case K_KP_LEFTARROW:
-	case K_LEFTARROW:
-	case K_BACKSPACE:
-		if (f->cursor > 0)
-		{
-			memmove(&f->buffer[f->cursor - 1], &f->buffer[f->cursor], strlen(&f->buffer[f->cursor]) + 1);
-			f->cursor--;
+		case K_LEFTARROW: //mxd
+			if(f->cursor > 0)
+				f->cursor--;
+			return true;
 
-			if (f->visible_offset)
-				f->visible_offset--;
-		}
-		break;
+		case K_RIGHTARROW: //mxd
+			if (f->cursor < (int)strlen(&f->buffer[0]))
+				f->cursor++;
+			return true;
 
-	case K_KP_DEL:
-	case K_DEL:
-		memmove(&f->buffer[f->cursor], &f->buffer[f->cursor + 1], strlen(&f->buffer[f->cursor + 1]) + 1);
-		break;
+		case K_BACKSPACE:
+			if (f->cursor > 0)
+			{
+				memmove(&f->buffer[f->cursor - 1], &f->buffer[f->cursor], strlen(&f->buffer[f->cursor]) + 1);
+				f->cursor--;
 
-	case K_KP_ENTER:
-	case K_ENTER:
-	case K_ESCAPE:
-	case K_TAB:
+				if (f->visible_offset)
+					f->visible_offset--;
+			}
+			return true; //mxd. Was break
+
+		case K_DEL:
+			memmove(&f->buffer[f->cursor], &f->buffer[f->cursor + 1], strlen(&f->buffer[f->cursor + 1]) + 1);
+			return true; //mxd. Was break
+
+		case K_KP_ENTER:
+		case K_ENTER:
+		case K_ESCAPE:
+		case K_TAB:
+			return false;
+	}
+
+	// Remap keypad keys to printable chars regardless of NumLock state
+	switch (key)
+	{
+		case K_KP_SLASH:		key = '/'; break;
+		case K_KP_MINUS:		key = '-'; break;
+		case K_KP_PLUS:			key = '+'; break;
+		case K_KP_HOME:			key = '7'; break;
+		case K_KP_UPARROW:		key = '8'; break;
+		case K_KP_PGUP:			key = '9'; break;
+		case K_KP_LEFTARROW:	key = '4'; break;
+		case K_KP_5:			key = '5'; break;
+		case K_KP_RIGHTARROW:	key = '6'; break;
+		case K_KP_END:			key = '1'; break;
+		case K_KP_DOWNARROW:	key = '2'; break;
+		case K_KP_PGDN:			key = '3'; break;
+		case K_KP_INS:			key = '0'; break;
+		case K_KP_DEL:			key = '.'; break;
+	}
+
+	//mxd. Only printable chars from this point
+	if (key < 32 || key > 126)
 		return false;
 
-	case K_SPACE:
-	default:
-		if (!isdigit(key) && (f->generic.flags & QMF_NUMBERSONLY))
-			return false;
+	// Process input key
+	if (!isdigit(key) && (f->generic.flags & QMF_NUMBERSONLY))
+		return false;
 
-		if (f->cursor < f->length)
-		{
-			f->buffer[f->cursor++] = key;
-			f->buffer[f->cursor] = 0;
+	if (f->cursor < f->length)
+	{
+		//mxd. Move text after cursor?
+		if(f->buffer[f->cursor + 1])
+			memmove(&f->buffer[f->cursor + 1], &f->buffer[f->cursor], min(f->length - f->cursor - 1, (int)strlen(&f->buffer[f->cursor]) + 1));
+		else
+			f->buffer[f->cursor + 1] = 0;
+		
+		f->buffer[f->cursor++] = key;
 
-			if (f->cursor > f->visible_length)
-				f->visible_offset++;
-		}
+		if (f->cursor > f->visible_length)
+			f->visible_offset++;
 	}
 
 	return true;
