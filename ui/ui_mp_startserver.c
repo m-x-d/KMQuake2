@@ -602,7 +602,7 @@ static void StartServer_MenuInit(void)
 	s_timelimit_field.generic.y			= y += 2 * MENU_FONT_SIZE;
 	s_timelimit_field.generic.statusbar	= "0 - no limit";
 	s_timelimit_field.length			= 4;
-	s_timelimit_field.visible_length	= 4;
+	s_timelimit_field.visible_length	= 5; //mxd. Add space to draw cursor
 	Q_strncpyz(s_timelimit_field.buffer, Cvar_VariableString("timelimit"), sizeof(s_timelimit_field.buffer));
 	s_timelimit_field.cursor			= strlen(s_timelimit_field.buffer);
 
@@ -613,7 +613,7 @@ static void StartServer_MenuInit(void)
 	s_fraglimit_field.generic.y			= y += 2.25f * MENU_FONT_SIZE;
 	s_fraglimit_field.generic.statusbar	= "0 - no limit";
 	s_fraglimit_field.length			= 4;
-	s_fraglimit_field.visible_length	= 4;
+	s_fraglimit_field.visible_length	= 5; //mxd. Add space to draw cursor
 	Q_strncpyz(s_fraglimit_field.buffer, Cvar_VariableString("fraglimit"), sizeof(s_fraglimit_field.buffer));
 	s_fraglimit_field.cursor			= strlen(s_fraglimit_field.buffer);
 
@@ -628,7 +628,7 @@ static void StartServer_MenuInit(void)
 	s_maxclients_field.generic.y			= y += 2.25f * MENU_FONT_SIZE;
 	s_maxclients_field.generic.statusbar	= NULL;
 	s_maxclients_field.length				= 3;
-	s_maxclients_field.visible_length		= 4;
+	s_maxclients_field.visible_length		= 4; //mxd. Add space to draw cursor
 
 	if (Cvar_VariableInteger("maxclients") == 1)
 		Q_strncpyz(s_maxclients_field.buffer, "8", sizeof(s_maxclients_field.buffer));
@@ -644,7 +644,7 @@ static void StartServer_MenuInit(void)
 	s_hostname_field.generic.y				= y += 2.25f * MENU_FONT_SIZE;
 	s_hostname_field.generic.statusbar		= NULL;
 	s_hostname_field.length					= 12;
-	s_hostname_field.visible_length			= 12;
+	s_hostname_field.visible_length			= 13; //mxd. Add space to draw cursor
 	Q_strncpyz(s_hostname_field.buffer, Cvar_VariableString("hostname"), sizeof(s_hostname_field.buffer));
 	s_hostname_field.cursor					= strlen(s_hostname_field.buffer);
 

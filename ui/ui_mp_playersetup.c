@@ -398,11 +398,10 @@ qboolean PlayerConfig_MenuInit(void)
 	s_player_name_field.generic.type = MTYPE_FIELD;
 	s_player_name_field.generic.flags = QMF_LEFT_JUSTIFY;
 	s_player_name_field.generic.name = "Name";
-	s_player_name_field.generic.callback = 0;
 	s_player_name_field.generic.x = -MENU_FONT_SIZE;
 	s_player_name_field.generic.y = y;
 	s_player_name_field.length = 20;
-	s_player_name_field.visible_length = 20;
+	s_player_name_field.visible_length = 21; //mxd. Add space to draw cursor
 	Q_strncpyz(s_player_name_field.buffer, name->string, sizeof(s_player_name_field.buffer));
 	s_player_name_field.cursor = strlen(name->string);
 
@@ -676,7 +675,7 @@ void PlayerConfig_DrawSkinSelection(void)
 		SCR_DrawFill(icon_x - 2, icon_y - 2, NUM_SKINBOX_ITEMS * 34 + 2, 36, ALIGN_CENTER, 60, 60, 60, 255);
 	}
 		
-	for (int count = 0; count<NUM_SKINBOX_ITEMS; skinindex++,count++)
+	for (int count = 0; count < NUM_SKINBOX_ITEMS; skinindex++, count++)
 	{
 		if (skinindex < 0 || skinindex >= s_pmi[s_player_model_box.curvalue].nskins)
 			continue;
