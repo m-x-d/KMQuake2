@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // Console variables that we need to access from this module
 cvar_t *scanforcd; // Knightmare- just here to enable command line option without error
 cvar_t *win_noalttab;
-cvar_t *win_alttab_restore_desktop;	// Knightmare- whether to restore desktop resolution on alt-tab
+cvar_t *win_alttab_restore_desktop; // Knightmare- whether to restore desktop resolution on alt-tab
 cvar_t *vid_gamma;
 cvar_t *vid_ref;	// Name of Refresh DLL loaded
 cvar_t *vid_xpos;	// X coordinate of window position
@@ -37,49 +37,111 @@ cvar_t *r_customwidth;
 cvar_t *r_customheight;
 
 // Global variables used internally by this module
-viddef_t viddef;	// global video state; used by other modules
-qboolean kmgl_active = 0;
+viddef_t viddef; // Global video state; used by other modules
+static qboolean kmgl_active = false;
 
 HWND cl_hwnd; // Main window handle for life of program
 
 LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-static qboolean s_alttab_disabled;
 extern unsigned sys_msg_time;
 
-/*
-==========================================================================
-	WIN32 helper functions
-==========================================================================
-*/
+#pragma region ======================= Win32 helper functions
 
-static void WIN_DisableAltTab(void)
+static void WIN_ToggleAltTab(qboolean enable) //mxd
 {
-	if (s_alttab_disabled)
-		return;
+	static qboolean alttab_disabled = false;
+	
+	if (!enable && !alttab_disabled)
+	{
+		RegisterHotKey(0, 0, MOD_ALT, VK_TAB);
+		RegisterHotKey(0, 1, MOD_ALT, VK_RETURN);
 
-	RegisterHotKey(0, 0, MOD_ALT, VK_TAB);
-	RegisterHotKey(0, 1, MOD_ALT, VK_RETURN);
+		alttab_disabled = true;
+	}
+	else if(enable && alttab_disabled)
+	{
+		UnregisterHotKey(0, 0);
+		UnregisterHotKey(0, 1);
 
-	s_alttab_disabled = true;
+		alttab_disabled = false;
+	}
 }
 
-static void WIN_EnableAltTab(void)
+#pragma endregion
+
+#pragma region ======================= Windows key message processing
+
+static byte scantokey[128] =
 {
-	if (!s_alttab_disabled)
-		return;
+	//	0			1		2			3			4		5				6			7
+	//	8			9		A			B			C		D				E			F
+	0,			27,		'1',		'2',		'3',	'4',			'5',		'6',
+	'7',		'8',	'9',		'0',		'-',	'=',			K_BACKSPACE,9,			// 0
+	'q',		'w',	'e',		'r',		't',	'y',			'u',		'i',
+	'o',		'p',	'[',		']',		13 ,	K_CTRL,			'a',		's',		// 1
+	'd',		'f',	'g',		'h',		'j',	'k',			'l',		';',
+	'\'',		'`',	K_SHIFT,	'\\',		'z',	'x',			'c',		'v',		// 2
+	'b',		'n',	'm',		',',		'.',	'/',			K_SHIFT,	K_KP_MULT,	// KP_MULT was '*'
+	K_ALT,		' ',	K_CAPSLOCK,	K_F1,		K_F2,	K_F3,			K_F4,		K_F5,		// 3
+	K_F6,		K_F7,	K_F8,		K_F9,		K_F10,  K_PAUSE,		K_SCROLLOCK,K_HOME,
+	K_UPARROW,	K_PGUP,	K_KP_MINUS,	K_LEFTARROW,K_KP_5,	K_RIGHTARROW,	K_KP_PLUS,	K_END,		// 4
+	K_DOWNARROW,K_PGDN,	K_INS,		K_DEL,		0,		0,				0,			K_F11,
+	K_F12,		0,		0,			0,			0,		0,				0,			0,			// 5
+	0,			0,		0,			0,			0,		0,				0,			0,
+	0,			0,		0,			0,			0,		0,				0,			0,			// 6
+	0,			0,		0,			0,			0,		0,				0,			0,
+	0,			0,		0,			0,			0,		0,				0,			0			// 7
+};
 
-	UnregisterHotKey(0, 0);
-	UnregisterHotKey(0, 1);
+// Get Quake 2 keynum from compound value returned by WM_KEYDOWN / WM_KEYUP windows messages
+static int MapKey(int key)
+{
+	// Scan code is stored in bits 16-23
+	const int scancode = (key >> 16) & 255;
 
-	s_alttab_disabled = false;
+	if (scancode > 127)
+		return 0;
+
+	// Bit 24 is set when the key is an extended key, such as the right-hand ALT and CTRL keys that appear on an enhanced 101- or 102-key keyboard.
+	const qboolean is_extended = (key & (1 << 24));
+
+	const int result = scantokey[scancode];
+
+	if (!is_extended)
+	{
+		switch (result)
+		{
+			case K_HOME:		return K_KP_HOME;
+			case K_UPARROW:		return K_KP_UPARROW;
+			case K_PGUP:		return K_KP_PGUP;
+			case K_LEFTARROW:	return K_KP_LEFTARROW;
+			case K_RIGHTARROW:	return K_KP_RIGHTARROW;
+			case K_END:			return K_KP_END;
+			case K_DOWNARROW:	return K_KP_DOWNARROW;
+			case K_PGDN:		return K_KP_PGDN;
+			case K_INS:			return K_KP_INS;
+			case K_DEL:			return K_KP_DEL;
+			default:			return result;
+		}
+	}
+	else
+	{
+		//mxd. On my keyboard, only right-Ctrl (key 133) is registering as extended
+		switch (result)
+		{
+			case K_ENTER:	return K_KP_ENTER;
+			case '/':		return K_KP_SLASH;
+			case K_KP_MULT:	return K_KP_PLUS;
+			case K_PAUSE:	return K_NUMLOCK;
+			default:		return result;
+		}
+	}
 }
 
-/*
-==========================================================================
-	DLL GLUE
-==========================================================================
-*/
+#pragma endregion
+
+#pragma region ======================= DLL GLUE
 
 void VID_Printf(int print_level, char *fmt, ...)
 {
@@ -117,91 +179,7 @@ void VID_Error(int err_level, char *fmt, ...)
 	Com_Error(err_level, "%s", msg);
 }
 
-//==========================================================================
-
-byte scantokey[128] = 
-{ 
-//  0           1       2			3			4       5				6			7 
-//  8           9       A			B			C       D				E			F 
-	0,			27,     '1',		'2',		'3',    '4',			'5',		'6', 
-	'7',		'8',    '9',		'0',		'-',    '=',			K_BACKSPACE,9,		    // 0 
-	'q',		'w',    'e',		'r',		't',    'y',			'u',		'i', 
-	'o',		'p',    '[',		']',		13 ,    K_CTRL,			'a',		's',		// 1 
-	'd',		'f',    'g',		'h',		'j',    'k',			'l',		';', 
-	'\'',		'`',    K_SHIFT,	'\\',		'z',    'x',			'c',		'v',		// 2 
-	'b',		'n',    'm',		',',		'.',    '/',			K_SHIFT,	K_KP_MULT,	// KP_MULT was '*'
-	K_ALT,		' ',	K_CAPSLOCK,	K_F1,		K_F2,	K_F3,			K_F4,		K_F5,	    // 3 
-	K_F6,		K_F7,	K_F8,		K_F9,		K_F10,  K_PAUSE,		K_SCROLLOCK,K_HOME, 
-	K_UPARROW,	K_PGUP,	K_KP_MINUS,	K_LEFTARROW,K_KP_5,	K_RIGHTARROW,	K_KP_PLUS,	K_END,      // 4 
-	K_DOWNARROW,K_PGDN,	K_INS,		K_DEL,		0,		0,				0,			K_F11, 
-	K_F12,		0,		0,			0,			0,		0,				0,			0,			// 5
-	0,			0,		0,			0,			0,		0,				0,			0, 
-	0,			0,		0,			0,			0,		0,				0,			0,			// 6 
-	0,			0,		0,			0,			0,		0,				0,			0, 
-	0,			0,		0,			0,			0,		0,				0,			0			// 7 
-}; 
-
-// Map from windows to quake keynums
-int MapKey(int key)
-{
-	const int modified = (key >> 16) & 255;
-	qboolean is_extended = false;
-
-	if (modified > 127)
-		return 0;
-
-	if (key & (1 << 24))
-		is_extended = true;
-
-	const int result = scantokey[modified];
-
-	if (!is_extended)
-	{
-		switch (result)
-		{
-		case K_HOME:
-			return K_KP_HOME;
-		case K_UPARROW:
-			return K_KP_UPARROW;
-		case K_PGUP:
-			return K_KP_PGUP;
-		case K_LEFTARROW:
-			return K_KP_LEFTARROW;
-		case K_RIGHTARROW:
-			return K_KP_RIGHTARROW;
-		case K_END:
-			return K_KP_END;
-		case K_DOWNARROW:
-			return K_KP_DOWNARROW;
-		case K_PGDN:
-			return K_KP_PGDN;
-		case K_INS:
-			return K_KP_INS;
-		case K_DEL:
-			return K_KP_DEL;
-		default:
-			return result;
-		}
-	}
-	else
-	{
-		switch (result)
-		{
-		case 0x0D:
-			return K_KP_ENTER;
-		case 0x2F:
-			return K_KP_SLASH;
-		case 0xAF:
-			return K_KP_PLUS;
-		case K_PAUSE:
-			return K_NUMLOCK;
-		default:
-			return result;
-		}
-	}
-}
-
-void AppActivate(BOOL fActive, BOOL minimize)
+static void AppActivate(BOOL fActive, BOOL minimize)
 {
 	Minimized = minimize;
 
@@ -211,24 +189,12 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	ActiveApp = (fActive && !Minimized);
 
 	// Minimize/restore mouse-capture on demand
-	if (!ActiveApp)
-	{
-		IN_Activate(false);
-		CDAudio_Activate(false);
-		S_Activate(false);
+	IN_Activate(ActiveApp);
+	CDAudio_Activate(ActiveApp);
+	S_Activate(ActiveApp);
 
-		if (win_noalttab->integer)
-			WIN_EnableAltTab();
-	}
-	else
-	{
-		IN_Activate(true);
-		CDAudio_Activate(true);
-		S_Activate(true);
-
-		if (win_noalttab->integer)
-			WIN_DisableAltTab();
-	}
+	if (win_noalttab->integer)
+		WIN_ToggleAltTab(!ActiveApp); //mxd
 }
 
 // Main window procedure
@@ -236,60 +202,54 @@ LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
-	case WM_MOUSEWHEEL:
-		if ((short)HIWORD(wParam) > 0)
-		{
-			Key_Event(K_MWHEELUP, true, sys_msg_time);
-			Key_Event(K_MWHEELUP, false, sys_msg_time);
-		}
-		else
-		{
-			Key_Event(K_MWHEELDOWN, true, sys_msg_time);
-			Key_Event(K_MWHEELDOWN, false, sys_msg_time);
-		}
-		break;
-
-	case WM_HOTKEY:
-		return 0;
-
-	case WM_CREATE:
-		cl_hwnd = hWnd;
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-
-	case WM_PAINT:
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-
-	case WM_DESTROY:
-		// Let sound and input know about this?
-		cl_hwnd = NULL;
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-
-	case WM_ACTIVATE:
-		{
-			// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
-			const int fActive = LOWORD(wParam);
-			const int fMinimized = (BOOL)HIWORD(wParam);
-
-			AppActivate(fActive != WA_INACTIVE, fMinimized);
-
-			if (kmgl_active)
-				GLimp_AppActivate(fActive != WA_INACTIVE); //mxd. Was !(fActive == WA_INACTIVE)
-		}
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-
-	case WM_MOVE:
-		{
-			if (!vid_fullscreen->value)
+		case WM_MOUSEWHEEL:
+			if ((short)HIWORD(wParam) > 0)
 			{
-				const int xPos = (short)LOWORD(lParam);    // horizontal position 
-				const int yPos = (short)HIWORD(lParam);    // vertical position 
+				Key_Event(K_MWHEELUP, true, sys_msg_time);
+				Key_Event(K_MWHEELUP, false, sys_msg_time);
+			}
+			else
+			{
+				Key_Event(K_MWHEELDOWN, true, sys_msg_time);
+				Key_Event(K_MWHEELDOWN, false, sys_msg_time);
+			}
+			break;
 
-				RECT r;
-				r.left   = 0;
-				r.top    = 0;
-				r.right  = 1;
-				r.bottom = 1;
+		case WM_HOTKEY:
+			return 0;
 
+		case WM_CREATE:
+			cl_hwnd = hWnd;
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
+		case WM_PAINT:
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
+		case WM_DESTROY:
+			// Let sound and input know about this?
+			cl_hwnd = NULL;
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
+		case WM_ACTIVATE:
+			{
+				// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
+				const int fActive = LOWORD(wParam);
+				const int fMinimized = (BOOL)HIWORD(wParam);
+
+				AppActivate(fActive != WA_INACTIVE, fMinimized);
+
+				if (kmgl_active)
+					GLimp_AppActivate(fActive != WA_INACTIVE); //mxd. Was !(fActive == WA_INACTIVE)
+			}
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
+		case WM_MOVE:
+			if (!vid_fullscreen->integer)
+			{
+				const int xPos = (short)LOWORD(lParam); // Horizontal position 
+				const int yPos = (short)HIWORD(lParam); // Vertical position 
+
+				RECT r = {0, 0, 1, 1};
 				const int style = GetWindowLong(hWnd, GWL_STYLE);
 				AdjustWindowRect(&r, style, FALSE);
 
@@ -301,81 +261,80 @@ LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (ActiveApp)
 					IN_Activate(true);
 			}
-		}
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
-	// This is complicated because Win32 seems to pack multiple mouse events into
-	// one update sometimes, so we always check all states and look for events
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_XBUTTONDOWN:// Backslash's imouse explorer buttons
-	case WM_XBUTTONUP:	// Backslash's imouse explorer buttons 
-	case WM_MOUSEMOVE:
-		{
-			int temp = 0;
+		// This is complicated because Win32 seems to pack multiple mouse events into
+		// one update sometimes, so we always check all states and look for events
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:
+		case WM_XBUTTONDOWN:// Backslash's imouse explorer buttons
+		case WM_XBUTTONUP:	// Backslash's imouse explorer buttons 
+		case WM_MOUSEMOVE:
+			{
+				int temp = 0;
 
-			if (wParam & MK_LBUTTON)
-				temp |= 1;
+				if (wParam & MK_LBUTTON)
+					temp |= 1;
 
-			if (wParam & MK_RBUTTON)
-				temp |= 2;
+				if (wParam & MK_RBUTTON)
+					temp |= 2;
 
-			if (wParam & MK_MBUTTON)
-				temp |= 4;
-			// Mouse buttons 4 & 5 support
-			if (wParam & MK_XBUTTON1)
-				temp |= 8;
+				if (wParam & MK_MBUTTON)
+					temp |= 4;
+				// Mouse buttons 4 & 5 support
+				if (wParam & MK_XBUTTON1)
+					temp |= 8;
 
-			if (wParam & MK_XBUTTON2)
-				temp |= 16;
-			// end Mouse buttons 4 & 5 support
+				if (wParam & MK_XBUTTON2)
+					temp |= 16;
+				// end Mouse buttons 4 & 5 support
 
-			IN_MouseEvent(temp);
-		}
-		break;
+				IN_MouseEvent(temp);
+			}
+			break;
 
-	case WM_SYSCOMMAND: // Idle's fix
-		switch (wParam & 0xfffffff0) // bitshifter's fix for screensaver bug
-		{
-		case SC_SCREENSAVE:
-		case SC_MONITORPOWER:
-			return 0;
-		case SC_CLOSE:
-			CL_Quit_f();
-		}
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+		case WM_SYSCOMMAND: // Idle's fix
+			switch (wParam & 0xfffffff0) // bitshifter's fix for screensaver bug
+			{
+				case SC_SCREENSAVE:
+				case SC_MONITORPOWER:
+					return 0;
+				case SC_CLOSE:
+					CL_Quit_f();
+			}
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
-	case WM_SYSKEYDOWN:
-		if (wParam == 13)
-		{
-			if (vid_fullscreen)
-				Cvar_SetValue("vid_fullscreen", !vid_fullscreen->value);
+		case WM_SYSKEYDOWN:
+			if (wParam == 13)
+			{
+				if (vid_fullscreen)
+					Cvar_SetValue("vid_fullscreen", !vid_fullscreen->value);
 
-			return 0;
-		}
-		// fall through
-	case WM_KEYDOWN:
-		Key_Event(MapKey(lParam), true, sys_msg_time);
-		break;
+				return 0;
+			}
+		// Fall through
+		case WM_KEYDOWN:
+			Key_Event(MapKey(lParam), true, sys_msg_time);
+			break;
 
-	case WM_SYSKEYUP:
-	case WM_KEYUP:
-		Key_Event(MapKey(lParam), false, sys_msg_time);
-		break;
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+			Key_Event(MapKey(lParam), false, sys_msg_time);
+			break;
 
-	case MM_MCINOTIFY:
-		{
-			LONG CDAudio_MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-			CDAudio_MessageHandler(hWnd, uMsg, wParam, lParam);
-		}
-		break;
+		case MM_MCINOTIFY:
+			{
+				LONG CDAudio_MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+				CDAudio_MessageHandler(hWnd, uMsg, wParam, lParam);
+			}
+			break;
 
-	default: // Pass all unhandled messages to DefWindowProc
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+		default: // Pass all unhandled messages to DefWindowProc
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	// Return 0 if handled message, 1 if not
@@ -396,11 +355,9 @@ void VID_Front_f(void)
 	SetForegroundWindow(cl_hwnd);
 }
 
-/*
-==========================================================================
-	Get mode info
-==========================================================================
-*/
+#pragma endregion
+
+#pragma region ======================= Get mode info
 
 typedef struct vidmode_s
 {
@@ -409,14 +366,13 @@ typedef struct vidmode_s
 	int mode;
 } vidmode_t;
 
-// Knightmare- added 1280x1024, 1400x1050, 856x480, 1024x480 modes
-vidmode_t vid_modes[] =
-{
-	#include "../qcommon/vid_modes.h"
-};
-
 qboolean VID_GetModeInfo(int *width, int *height, int mode)
 {
+	// Knightmare- added 1280x1024, 1400x1050, 856x480, 1024x480 modes
+	static vidmode_t vid_modes[] =
+	{
+		#include "../qcommon/vid_modes.h"
+	};
 	static int num_vid_modes = (int)(sizeof(vid_modes) / sizeof(vid_modes[0])); //mxd
 	
 	if (mode == -1) // Custom mode
@@ -435,7 +391,7 @@ qboolean VID_GetModeInfo(int *width, int *height, int mode)
 	return true;
 }
 
-void VID_UpdateWindowPosAndSize(int x, int y)
+static void VID_UpdateWindowPosAndSize(int x, int y)
 {
 	RECT r = { 0, 0, viddef.width, viddef.height };
 	const int style = GetWindowLong(cl_hwnd, GWL_STYLE);
@@ -455,12 +411,12 @@ void VID_NewWindow(int width, int height)
 	cl.force_refdef = true; // Can't use a paused refdef
 }
 
-void VID_FreeReflib(void)
+static void VID_FreeReflib(void)
 {
 	kmgl_active = false;
 }
 
-void UpdateVideoRef(void)
+static void UpdateVideoRef(void)
 {
 	extern decalpolys_t *active_decals;
 	static qboolean reclip_decals = false;
@@ -531,11 +487,7 @@ void VID_CheckChanges(void)
 {
 	if (win_noalttab->modified)
 	{
-		if (win_noalttab->integer)
-			WIN_DisableAltTab();
-		else
-			WIN_EnableAltTab();
-
+		WIN_ToggleAltTab(win_noalttab->integer == 0); //mxd
 		win_noalttab->modified = false;
 	}
 
@@ -587,3 +539,5 @@ void VID_Shutdown(void)
 		VID_FreeReflib();
 	}
 }
+
+#pragma endregion
