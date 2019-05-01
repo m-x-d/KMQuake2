@@ -35,7 +35,6 @@ static menuslider_s		s_options_interface_fontsize_slider;
 static menulist_s		s_options_interface_alt_text_color_box;
 static menulist_s		s_options_interface_simple_loadscreen_box;
 static menulist_s		s_options_interface_newconback_box;
-static menulist_s		s_options_interface_noalttab_box;
 static menuaction_s		s_options_interface_defaults_action;
 static menuaction_s		s_options_interface_back_action;
 
@@ -77,11 +76,6 @@ static void SimpleLoadscreenFunc(void *unused)
 static void NewConbackFunc(void *unused)
 {
 	Cvar_SetValue("con_newconback", s_options_interface_newconback_box.curvalue);
-}
-
-static void NoAltTabFunc(void *unused)
-{
-	Cvar_SetValue("win_noalttab", s_options_interface_noalttab_box.curvalue);
 }
 
 #pragma endregion 
@@ -266,8 +260,6 @@ static void InterfaceSetMenuItemValues(void)
 
 	Cvar_SetValue("con_newconback", ClampCvar(0, 1, Cvar_VariableValue("con_newconback")));
 	s_options_interface_newconback_box.curvalue = Cvar_VariableValue("con_newconback");
-
-	s_options_interface_noalttab_box.curvalue = Cvar_VariableValue("win_noalttab");
 }
 
 static void InterfaceResetDefaultsFunc(void *unused)
@@ -281,7 +273,6 @@ static void InterfaceResetDefaultsFunc(void *unused)
 	//	Cvar_SetToDefault ("con_height");	
 	Cvar_SetToDefault("scr_simple_loadscreen");
 	Cvar_SetToDefault("con_newconback");
-	Cvar_SetToDefault("win_noalttab");
 
 	InterfaceSetMenuItemValues();
 }
@@ -388,14 +379,6 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_newconback_box.itemnames			= yesno_names;
 	s_options_interface_newconback_box.generic.statusbar	= "Enables Q3-style console background";
 
-	s_options_interface_noalttab_box.generic.type		= MTYPE_SPINCONTROL;
-	s_options_interface_noalttab_box.generic.x			= 0;
-	s_options_interface_noalttab_box.generic.y			= y += 2 * MENU_LINE_SIZE;
-	s_options_interface_noalttab_box.generic.name		= "Disable alt-tab";
-	s_options_interface_noalttab_box.generic.callback	= NoAltTabFunc;
-	s_options_interface_noalttab_box.itemnames			= yesno_names;
-	s_options_interface_noalttab_box.generic.statusbar	= "Disables alt-tabbing to desktop";
-
 	s_options_interface_defaults_action.generic.type		= MTYPE_ACTION;
 	s_options_interface_defaults_action.generic.flags		= QMF_LEFT_JUSTIFY; //mxd
 	s_options_interface_defaults_action.generic.name		= "Reset to defaults";
@@ -422,7 +405,6 @@ void Options_Interface_MenuInit(void)
 	//Menu_AddItem( &s_options_interface_menu, ( void * ) &s_options_interface_conheight_slider );
 	Menu_AddItem(&s_options_interface_menu, (void *)&s_options_interface_simple_loadscreen_box);
 	Menu_AddItem(&s_options_interface_menu, (void *)&s_options_interface_newconback_box);
-	Menu_AddItem(&s_options_interface_menu, (void *)&s_options_interface_noalttab_box);
 	Menu_AddItem(&s_options_interface_menu, (void *)&s_options_interface_defaults_action);
 	Menu_AddItem(&s_options_interface_menu, (void *)&s_options_interface_back_action);
 

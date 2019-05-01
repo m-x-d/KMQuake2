@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // Console variables that we need to access from this module
 cvar_t *scanforcd; // Knightmare- just here to enable command line option without error
-cvar_t *win_noalttab;
 cvar_t *win_alttab_restore_desktop; // Knightmare- whether to restore desktop resolution on alt-tab
 cvar_t *vid_gamma;
 cvar_t *vid_ref;	// Name of Refresh DLL loaded
@@ -42,33 +41,7 @@ static qboolean kmgl_active = false;
 
 HWND cl_hwnd; // Main window handle for life of program
 
-LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 extern unsigned sys_msg_time;
-
-#pragma region ======================= Win32 helper functions
-
-static void WIN_ToggleAltTab(qboolean enable) //mxd
-{
-	static qboolean alttab_disabled = false;
-	
-	if (!enable && !alttab_disabled)
-	{
-		RegisterHotKey(0, 0, MOD_ALT, VK_TAB);
-		RegisterHotKey(0, 1, MOD_ALT, VK_RETURN);
-
-		alttab_disabled = true;
-	}
-	else if(enable && alttab_disabled)
-	{
-		UnregisterHotKey(0, 0);
-		UnregisterHotKey(0, 1);
-
-		alttab_disabled = false;
-	}
-}
-
-#pragma endregion
 
 #pragma region ======================= Windows key message processing
 
@@ -192,9 +165,6 @@ static void AppActivate(BOOL fActive, BOOL minimize)
 	IN_Activate(ActiveApp);
 	CDAudio_Activate(ActiveApp);
 	S_Activate(ActiveApp);
-
-	if (win_noalttab->integer)
-		WIN_ToggleAltTab(!ActiveApp); //mxd
 }
 
 // Main window procedure
@@ -214,9 +184,6 @@ LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				Key_Event(K_MWHEELDOWN, false, sys_msg_time);
 			}
 			break;
-
-		case WM_HOTKEY:
-			return 0;
 
 		case WM_CREATE:
 			cl_hwnd = hWnd;
@@ -485,12 +452,6 @@ static void UpdateVideoRef(void)
 // update the rendering DLL and/or video mode to match.
 void VID_CheckChanges(void)
 {
-	if (win_noalttab->modified)
-	{
-		WIN_ToggleAltTab(win_noalttab->integer == 0); //mxd
-		win_noalttab->modified = false;
-	}
-
 	// Update changed vid_ref
 	UpdateVideoRef();
 
@@ -513,7 +474,6 @@ void VID_Init(void)
 	vid_ypos = Cvar_Get("vid_ypos", "22", CVAR_ARCHIVE);
 	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE);
 	vid_gamma = Cvar_Get("vid_gamma", "0.8", CVAR_ARCHIVE); // was 1.0
-	win_noalttab = Cvar_Get("win_noalttab", "0", CVAR_ARCHIVE);
 	win_alttab_restore_desktop = Cvar_Get("win_alttab_restore_desktop", "1", CVAR_ARCHIVE);	// Knightmare- whether to restore desktop resolution on alt-tab
 	r_customwidth = Cvar_Get("r_customwidth", "1600", CVAR_ARCHIVE);
 	r_customheight = Cvar_Get("r_customheight", "1024", CVAR_ARCHIVE);
