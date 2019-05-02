@@ -52,7 +52,6 @@ static menulist_s		s_glass_envmap_box;
 static menulist_s		s_screenshotformat_box;
 static menuslider_s		s_screenshotjpegquality_slider;
 static menulist_s		s_saveshotsize_box;
-static menuaction_s		s_advanced_apply_action;
 static menuaction_s		s_back_action;
 
 
@@ -150,6 +149,7 @@ static void LightMapScaleCallback(void *unused)
 static void TextureIntensCallback(void *unused)
 {
 	Cvar_SetValue("r_intensity", s_textureintensity_slider.curvalue / 10 + 1);
+	vid_ref->modified = true;
 }
 
 static void RGBSCaleCallback(void *unused)
@@ -272,13 +272,6 @@ static void JPEGScreenshotQualityCallback(void *unused)
 static void SaveshotSizeCallback(void *unused)
 {
 	Cvar_SetValue("r_saveshotsize", s_saveshotsize_box.curvalue);
-}
-
-static void AdvancedMenuApplyChanges(void *unused)
-{
-	// Update for modified r_intensity and r_stencilTwoSide
-	if (r_intensity->modified)
-		vid_ref->modified = true;
 }
 
 #pragma endregion
@@ -506,13 +499,6 @@ void Menu_Video_Advanced_Init(void)
 	s_saveshotsize_box.itemnames				= yesno_names;
 	s_saveshotsize_box.generic.statusbar		= "Hi-res saveshots when running at 800x600 or higher";
 
-	s_advanced_apply_action.generic.type		= MTYPE_ACTION;
-	s_advanced_apply_action.generic.flags		= QMF_LEFT_JUSTIFY; //mxd
-	s_advanced_apply_action.generic.name		= "Apply changes";
-	s_advanced_apply_action.generic.x			= -MENU_FONT_SIZE * strlen(s_advanced_apply_action.generic.name); //mxd. Was 0;
-	s_advanced_apply_action.generic.y			= y += 2 * MENU_LINE_SIZE;
-	s_advanced_apply_action.generic.callback	= AdvancedMenuApplyChanges;
-
 	s_back_action.generic.type					= MTYPE_ACTION;
 	s_back_action.generic.flags					= QMF_LEFT_JUSTIFY; //mxd
 	s_back_action.generic.name					= (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_VIDEO); //mxd
@@ -546,8 +532,6 @@ void Menu_Video_Advanced_Init(void)
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_screenshotformat_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_screenshotjpegquality_slider);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_saveshotsize_box);
-
-	Menu_AddItem(&s_video_advanced_menu, (void *)&s_advanced_apply_action);
 
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_back_action);
 }

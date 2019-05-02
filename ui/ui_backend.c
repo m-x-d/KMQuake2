@@ -1018,12 +1018,9 @@ void UI_Think_MouseCursor(void)
 	}
 	else if (!cursor.buttonused[MOUSEBUTTON2] && (cursor.buttonclicks[MOUSEBUTTON2] == 2) && cursor.buttondown[MOUSEBUTTON2])
 	{
-		if (m_drawfunc == PlayerConfig_MenuDraw)
-			PConfigAccept();
+		//mxd. Emulate Esc press to let current menu code handle the closing. 
+		UI_Keydown(K_ESCAPE);
 
-		UI_PopMenu();
-
-		sound = menu_out_sound;
 		cursor.buttonused[MOUSEBUTTON2] = true;
 		cursor.buttonclicks[MOUSEBUTTON2] = 0;
 		cursor.buttonused[MOUSEBUTTON1] = true;

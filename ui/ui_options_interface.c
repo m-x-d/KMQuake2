@@ -384,7 +384,6 @@ void Options_Interface_MenuInit(void)
 	s_options_interface_defaults_action.generic.name		= "Reset to defaults";
 	s_options_interface_defaults_action.generic.x			= -MENU_FONT_SIZE * strlen(s_options_interface_defaults_action.generic.name); //mxd;
 	s_options_interface_defaults_action.generic.y			= y += 2 * MENU_LINE_SIZE;
-	
 	s_options_interface_defaults_action.generic.callback	= InterfaceResetDefaultsFunc;
 	s_options_interface_defaults_action.generic.statusbar	= "Resets all interface settings to internal defaults";
 

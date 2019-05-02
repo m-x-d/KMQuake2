@@ -39,6 +39,7 @@ static menuaction_s	s_startserver_back_action;
 #define M_UNSET		0
 #define M_MISSING	1
 #define M_FOUND		2
+
 static byte *ui_svr_mapshotvalid; // levelshot validity table
 
 typedef enum
@@ -49,6 +50,8 @@ typedef enum
 	MAP_3TCTF,
 	NUM_MAPTYPES
 } maptype_t;
+
+#define MAP_TAG	4 //mxd. Special Rogue maptype requires special rogue handling...
 
 typedef struct
 {
@@ -64,8 +67,8 @@ static gametype_names_t gametype_names[] =
 	{ MAP_3TCTF, "3tctf" },
 };
 
-#define MAX_ARENAS 1024
-#define MAX_ARENAS_TEXT 8192
+#define MAX_ARENAS		1024
+#define MAX_ARENAS_TEXT	8192
 
 static maptype_t ui_svr_maptype;
 static int	ui_svr_nummaps;
@@ -74,6 +77,61 @@ static int	ui_svr_listfile_nummaps;
 static char	**ui_svr_listfile_mapnames;
 static int	ui_svr_arena_nummaps[NUM_MAPTYPES];
 static char	**ui_svr_arena_mapnames[NUM_MAPTYPES];
+
+#pragma region ======================= Persistent settings
+
+//mxd. Saving changes to cvars when closing the menu seems to mess server state
+#define HOSTNAME_FIELD_LENGTH 12
+
+static int ps_timelimit;
+static int ps_fraglimit;
+static int ps_maxclients;
+static int ps_currentrule;
+static char ps_hostname[HOSTNAME_FIELD_LENGTH];
+
+// Called from StartServer_MenuInit
+static void InitializePersistentSettings()
+{
+	static qboolean ps_initialized;
+
+	if (!ps_initialized)
+	{
+		ps_timelimit = Cvar_VariableInteger("timelimit");
+		ps_fraglimit = Cvar_VariableInteger("fraglimit");
+
+		ps_maxclients = Cvar_VariableInteger("maxclients");
+		if (ps_maxclients == 1)
+			ps_maxclients = 8;
+
+		Q_strncpyz(ps_hostname, Cvar_VariableString("hostname"), sizeof(ps_hostname));
+
+		// Determine current game mode from assortment of flags...
+		if (Cvar_VariableInteger("ttctf"))
+			ps_currentrule = MAP_3TCTF;
+		else if (Cvar_VariableInteger("ctf"))
+			ps_currentrule = MAP_CTF;
+		else if (roguepath() && Cvar_VariableInteger("gamerules") == 2)
+			ps_currentrule = MAP_TAG;
+		else if (Cvar_VariableInteger("coop"))
+			ps_currentrule = MAP_COOP;
+		else
+			ps_currentrule = MAP_DM;
+
+		ps_initialized = true;
+	}
+}
+
+// Called when closing the menu or starting the server
+static void SavePersistentSettings()
+{
+	ps_maxclients = atoi(s_maxclients_field.buffer);
+	ps_timelimit = atoi(s_timelimit_field.buffer);
+	ps_fraglimit = atoi(s_fraglimit_field.buffer);
+	ps_currentrule = s_rules_box.curvalue;
+	Q_strncpyz(ps_hostname, s_hostname_field.buffer, sizeof(ps_hostname));
+}
+
+#pragma endregion
 
 #pragma region ======================= .arena files support
 
@@ -336,10 +394,8 @@ void UI_LoadMapList(void)
 	char* s = buffer;
 
 	for(int i = 0; i < length; i++)
-	{
 		if (s[i] == '\r')
 			ui_svr_listfile_nummaps++;
-	}
 
 	if (ui_svr_listfile_nummaps == 0)
 	{
@@ -436,6 +492,8 @@ static void UI_RefreshMapList(maptype_t maptype)
 
 #pragma endregion 
 
+#pragma region ======================= Menu item callbacks
+
 static void DMOptionsFunc(void *self)
 {
 	if (s_rules_box.curvalue != 1)
@@ -466,22 +524,22 @@ static void RulesChangeFunc(void *self)
 	}
 	else if (s_rules_box.curvalue == MAP_CTF)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 12) // set default of 12
+		if (atoi(s_maxclients_field.buffer) <= 12) // Set default of 12
 			Q_strncpyz(s_maxclients_field.buffer, "12", sizeof(s_maxclients_field.buffer));
 
 		UI_RefreshMapList(MAP_CTF);
 	}
 	else if (s_rules_box.curvalue == MAP_3TCTF)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 18) // set default of 18
+		if (atoi(s_maxclients_field.buffer) <= 18) // Set default of 18
 			Q_strncpyz(s_maxclients_field.buffer, "18", sizeof(s_maxclients_field.buffer));
 
 		UI_RefreshMapList(MAP_3TCTF);
 	}
 	// ROGUE GAMES
-	else if (roguepath() && s_rules_box.curvalue == 4) // tag
+	else if (roguepath() && s_rules_box.curvalue == MAP_TAG)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 8) // set default of 8
+		if (atoi(s_maxclients_field.buffer) <= 8) // Set default of 8
 			Q_strncpyz(s_maxclients_field.buffer, "8", sizeof(s_maxclients_field.buffer));
 
 		UI_RefreshMapList(MAP_DM);
@@ -490,26 +548,28 @@ static void RulesChangeFunc(void *self)
 
 static void StartServerActionFunc(void *self)
 {
-	char startmap[1024];
+	char startmap[MAX_PATH]; //mxd. Was 1024. Why?..
 	Q_strncpyz(startmap, strchr(ui_svr_mapnames[s_startmap_list.curvalue], '\n') + 1, sizeof(startmap));
 
 	const int maxclients = atoi(s_maxclients_field.buffer);
 	const int timelimit  = atoi(s_timelimit_field.buffer);
 	const int fraglimit  = atoi(s_fraglimit_field.buffer);
 
-	Cvar_SetValue("maxclients", max(0, maxclients));
-	Cvar_SetValue("timelimit", max(0, timelimit));
-	Cvar_SetValue("fraglimit", max(0, fraglimit));
+	Cvar_SetInteger("maxclients", max(0, maxclients));
+	Cvar_SetInteger("timelimit", max(0, timelimit));
+	Cvar_SetInteger("fraglimit", max(0, fraglimit));
 	Cvar_Set("hostname", s_hostname_field.buffer);
 
-	Cvar_SetValue("deathmatch", s_rules_box.curvalue != 1);
-	Cvar_SetValue("coop", s_rules_box.curvalue == 1);
-	Cvar_SetValue("ctf", s_rules_box.curvalue == 2);
-	Cvar_SetValue("ttctf", s_rules_box.curvalue == 3);
-	Cvar_SetValue("gamerules", roguepath() ? ((s_rules_box.curvalue == 4) ? 2 : 0) : 0);
+	Cvar_SetInteger("deathmatch", s_rules_box.curvalue != MAP_COOP);
+	Cvar_SetInteger("coop", s_rules_box.curvalue == MAP_COOP);
+	Cvar_SetInteger("ctf", s_rules_box.curvalue == MAP_CTF);
+	Cvar_SetInteger("ttctf", s_rules_box.curvalue == MAP_3TCTF);
+	Cvar_SetInteger("gamerules", roguepath() ? ((s_rules_box.curvalue == MAP_TAG) ? MAP_CTF : MAP_DM) : MAP_DM);
+
+	SavePersistentSettings(); //mxd
 
 	char* spot = NULL;
-	if (s_rules_box.curvalue == 1) // PGM
+	if (s_rules_box.curvalue == MAP_COOP) // PGM
 	{
 		if(Q_stricmp(startmap, "bunk1") == 0 || Q_stricmp(startmap, "mintro") == 0 || Q_stricmp(startmap, "fact1") == 0)
 			spot = "start";
@@ -538,6 +598,15 @@ static void StartServerActionFunc(void *self)
 	UI_ForceMenuOff();
 }
 
+//mxd
+static void StartServerBackFunc(void *unused)
+{
+	SavePersistentSettings();
+	UI_BackMenu(unused);
+}
+
+#pragma endregion
+
 static void StartServer_MenuInit(void)
 {
 	static const char *dm_coop_names[]		 = { "Deathmatch", "Cooperative", "CTF", "3Team CTF", 0 };
@@ -563,6 +632,9 @@ static void StartServer_MenuInit(void)
 			ui_svr_mapshotvalid[ui_svr_nummaps] = M_MISSING;
 	}
 
+	//mxd. Initialize persistent settings
+	InitializePersistentSettings();
+
 	// Initialize the menu stuff
 	s_startserver_menu.x = SCREEN_WIDTH * 0.5f - 140;
 	s_startserver_menu.y = DEFAULT_MENU_Y; //mxd. Was unset
@@ -578,21 +650,8 @@ static void StartServer_MenuInit(void)
 	s_rules_box.generic.x		= 0;
 	s_rules_box.generic.y		= y += 3 * MENU_LINE_SIZE;
 	s_rules_box.generic.name	= "Rules";
-
-	//PGM - rogue games only available with rogue DLL.
-	s_rules_box.itemnames = (roguepath() ? dm_coop_names_rogue : dm_coop_names);
-
-	if (Cvar_VariableValue("ttctf"))
-		s_rules_box.curvalue = 3;
-	else if (Cvar_VariableValue("ctf"))
-		s_rules_box.curvalue = 2;
-	else if (roguepath() && Cvar_VariableValue("gamerules") == 2)
-		s_rules_box.curvalue = 4;
-	else if (Cvar_VariableValue("coop"))
-		s_rules_box.curvalue = 1;
-	else
-		s_rules_box.curvalue = 0;
-
+	s_rules_box.itemnames		= (roguepath() ? dm_coop_names_rogue : dm_coop_names); //PGM - rogue games only available with rogue DLL.
+	s_rules_box.curvalue		= ps_currentrule; //mxd
 	s_rules_box.generic.callback = RulesChangeFunc;
 
 	s_timelimit_field.generic.type		= MTYPE_FIELD;
@@ -603,7 +662,7 @@ static void StartServer_MenuInit(void)
 	s_timelimit_field.generic.statusbar	= "0 - no limit";
 	s_timelimit_field.length			= 4;
 	s_timelimit_field.visible_length	= 5; //mxd. Add space to draw cursor
-	Q_strncpyz(s_timelimit_field.buffer, Cvar_VariableString("timelimit"), sizeof(s_timelimit_field.buffer));
+	Q_snprintfz(s_timelimit_field.buffer, sizeof(s_timelimit_field.buffer), "%i", ps_timelimit); //mxd
 	s_timelimit_field.cursor			= strlen(s_timelimit_field.buffer);
 
 	s_fraglimit_field.generic.type		= MTYPE_FIELD;
@@ -614,7 +673,7 @@ static void StartServer_MenuInit(void)
 	s_fraglimit_field.generic.statusbar	= "0 - no limit";
 	s_fraglimit_field.length			= 4;
 	s_fraglimit_field.visible_length	= 5; //mxd. Add space to draw cursor
-	Q_strncpyz(s_fraglimit_field.buffer, Cvar_VariableString("fraglimit"), sizeof(s_fraglimit_field.buffer));
+	Q_snprintfz(s_fraglimit_field.buffer, sizeof(s_fraglimit_field.buffer), "%i", ps_fraglimit); //mxd
 	s_fraglimit_field.cursor			= strlen(s_fraglimit_field.buffer);
 
 	// maxclients determines the maximum number of players that can join the game.
@@ -629,12 +688,7 @@ static void StartServer_MenuInit(void)
 	s_maxclients_field.generic.statusbar	= NULL;
 	s_maxclients_field.length				= 3;
 	s_maxclients_field.visible_length		= 4; //mxd. Add space to draw cursor
-
-	if (Cvar_VariableInteger("maxclients") == 1)
-		Q_strncpyz(s_maxclients_field.buffer, "8", sizeof(s_maxclients_field.buffer));
-	else
-		Q_strncpyz(s_maxclients_field.buffer, Cvar_VariableString("maxclients"), sizeof(s_maxclients_field.buffer));
-
+	Q_snprintfz(s_maxclients_field.buffer, sizeof(s_maxclients_field.buffer), "%i", ps_maxclients); //mxd
 	s_maxclients_field.cursor				= strlen(s_maxclients_field.buffer);
 
 	s_hostname_field.generic.type			= MTYPE_FIELD;
@@ -643,9 +697,9 @@ static void StartServer_MenuInit(void)
 	s_hostname_field.generic.x				= 0;
 	s_hostname_field.generic.y				= y += 2.25f * MENU_FONT_SIZE;
 	s_hostname_field.generic.statusbar		= NULL;
-	s_hostname_field.length					= 12;
-	s_hostname_field.visible_length			= 13; //mxd. Add space to draw cursor
-	Q_strncpyz(s_hostname_field.buffer, Cvar_VariableString("hostname"), sizeof(s_hostname_field.buffer));
+	s_hostname_field.length					= HOSTNAME_FIELD_LENGTH;
+	s_hostname_field.visible_length			= HOSTNAME_FIELD_LENGTH + 1; //mxd. Add space to draw cursor
+	Q_strncpyz(s_hostname_field.buffer, ps_hostname, sizeof(s_hostname_field.buffer)); //mxd
 	s_hostname_field.cursor					= strlen(s_hostname_field.buffer);
 
 	s_startserver_dmoptions_action.generic.type			= MTYPE_ACTION;
@@ -668,7 +722,7 @@ static void StartServer_MenuInit(void)
 	s_startserver_back_action.generic.flags		= QMF_LEFT_JUSTIFY;
 	s_startserver_back_action.generic.x			= UI_CenteredX(&s_startserver_back_action.generic, s_startserver_menu.x); //mxd. Draw centered
 	s_startserver_back_action.generic.y			= y += 6 * MENU_LINE_SIZE;
-	s_startserver_back_action.generic.callback	= UI_BackMenu;
+	s_startserver_back_action.generic.callback	= StartServerBackFunc; //mxd. Let's accept changes. Was UI_BackMenu;
 
 	Menu_AddItem(&s_startserver_menu, &s_startmap_list);
 	Menu_AddItem(&s_startserver_menu, &s_rules_box);
@@ -731,6 +785,9 @@ static void StartServer_MenuDraw(void)
 
 static const char *StartServer_MenuKey(int key)
 {
+	if (key == K_ESCAPE) //mxd
+		SavePersistentSettings();
+	
 	return Default_MenuKey(&s_startserver_menu, key);
 }
 

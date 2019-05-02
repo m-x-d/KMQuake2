@@ -50,10 +50,10 @@ char *currentweaponmodel;
 
 typedef struct
 {
-	int		nskins;
-	char	**skindisplaynames;
-	char	displayname[MAX_DISPLAYNAME];
-	char	directory[MAX_QPATH];
+	int nskins;
+	char **skindisplaynames;
+	char displayname[MAX_DISPLAYNAME];
+	char directory[MAX_QPATH];
 } playermodelinfo_s;
 
 static playermodelinfo_s s_pmi[MAX_PLAYERMODELS];
@@ -63,6 +63,7 @@ static int s_numplayermodels;
 static int rate_tbl[] = { 2500, 3200, 5000, 10000, 15000, 25000, 0 };
 static const char *rate_names[] = { "28.8 Modem", "33.6 Modem", "56K/Single ISDN", "Dual ISDN", "Cable/DSL", "T1/LAN", "User defined", 0 };
 
+#pragma region ======================= Menu item callbacks
 
 static void HandednessCallback(void *unused)
 {
@@ -125,6 +126,15 @@ static void SkinCallback(void *unused)
 
 	playerskin = R_RegisterSkin(scratch);
 }
+
+//mxd
+static void PlayerConfigBackFunc(void *unused)
+{
+	PConfigAccept();
+	UI_BackMenu(unused);
+}
+
+#pragma endregion
 
 static qboolean IconOfSkinExists(char *skin, char **files, int nfiles, char *suffix)
 {
@@ -475,7 +485,7 @@ qboolean PlayerConfig_MenuInit(void)
 	s_player_back_action.generic.x = -5 * MENU_FONT_SIZE;
 	s_player_back_action.generic.y = y += 2 * MENU_LINE_SIZE;
 	s_player_back_action.generic.statusbar = NULL;
-	s_player_back_action.generic.callback = UI_BackMenu;
+	s_player_back_action.generic.callback = PlayerConfigBackFunc; //mxd. Let's accept changes. Was UI_BackMenu;
 
 	// Only register model and skin on starup or when changed
 	Com_sprintf(scratch, sizeof(scratch), "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory);
@@ -571,7 +581,7 @@ qboolean PlayerConfig_CheckIncerement(int dir, float x, float y, float w, float 
 
 void PlayerConfig_MouseClick(void)
 {
-	const float icon_x = SCREEN_WIDTH * 0.5 - 5;
+	const float icon_x = SCREEN_WIDTH * 0.5f - 5;
 	const float icon_y = SCREEN_HEIGHT - 108;
 	float icon_offset = 0;
 
@@ -798,7 +808,8 @@ void PConfigAccept(void)
 {
 	char scratch[1024];
 
-	Cvar_Set("name", s_player_name_field.buffer);
+	char *name = (strlen(s_player_name_field.buffer) == 0 ? Cvar_DefaultString("name") : s_player_name_field.buffer); //mxd. Avoid empty player names
+	Cvar_Set("name", name);
 
 	Com_sprintf(scratch, sizeof(scratch), "%s/%s", 
 		s_pmi[s_player_model_box.curvalue].directory, 
@@ -829,7 +840,6 @@ const char *PlayerConfig_MenuKey(int key)
 
 	return Default_MenuKey(&s_player_config_menu, key);
 }
-
 
 void M_Menu_PlayerConfig_f(void)
 {
