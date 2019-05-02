@@ -93,9 +93,6 @@ extern	cvar_t		*crosshair_pulse;
 
 extern	vrect_t		scr_vrect; // Position of render window
 
-extern	char		crosshair_pic[MAX_QPATH];
-extern	int			crosshair_width, crosshair_height;
-
 //mxd. Moved from cl_screen.c
 #define CROSSHAIR_SIZE		32
 #define CROSSHAIR_SCALE_MIN 0.25f

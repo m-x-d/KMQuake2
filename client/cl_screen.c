@@ -78,9 +78,6 @@ cvar_t		*cl_drawfps; //Knightmare 12/28/2001- BramBo's FPS counter
 cvar_t		*cl_demomessage;
 cvar_t		*cl_loadpercent;
 
-char		crosshair_pic[MAX_QPATH];
-int			crosshair_width, crosshair_height;
-
 void SCR_TimeRefresh_f(void);
 void SCR_Loading_f(void);
 
@@ -656,38 +653,58 @@ void SCR_Init(void)
 // Psychospaz's new crosshair code
 void SCR_DrawCrosshair(void)
 {
-	if (!crosshair->value || scr_hidehud)
+	//mxd. Made local
+	static char crosshair_pic[MAX_QPATH];
+	
+	if (!crosshair->integer || scr_hidehud)
 		return;
 
 	if (crosshair->modified)
 	{
-		crosshair->modified = false;
-		SCR_TouchPics();
+		//mxd. Handle here instead of SCR_TouchPics to avoid message spam when crosshair image is missing
+		if (modType("dday")) // dday has no crosshair (FORCED)
+		{
+			Cvar_SetInteger("crosshair", 0);
+		}
+		else
+		{
+			if (crosshair->integer > 100 || crosshair->integer < 0) //Knightmare increased
+				Cvar_SetInteger("crosshair", 1); //mxd. Don't directly set the value
 
-		if (modType("dday")) //dday has no crosshair (FORCED)
-			Cvar_SetValue("crosshair", 0);
+			Com_sprintf(crosshair_pic, sizeof(crosshair_pic), "ch%i", crosshair->integer);
+
+			int w, h;
+			R_DrawGetPicSize(&w, &h, crosshair_pic);
+			if (w == 0 || h == 0)
+				crosshair_pic[0] = 0;
+		}
+
+		//mxd. Set last to avoid mutiple calls to this block
+		crosshair->modified = false;
 	}
 
 	if (crosshair_scale->modified)
 	{
-		crosshair_scale->modified = false;
 		if (crosshair_scale->value > CROSSHAIR_SCALE_MAX)
 			Cvar_SetValue("crosshair_scale", CROSSHAIR_SCALE_MAX);
 		else if (crosshair_scale->value < CROSSHAIR_SCALE_MIN)
 			Cvar_SetValue("crosshair_scale", CROSSHAIR_SCALE_MIN);
+
+		//mxd. Set last to avoid mutiple calls to this block
+		crosshair_scale->modified = false;
 	}
 
 	if (!crosshair_pic[0])
 		return;
 
-	const float scaledSize = crosshair_scale->value * CROSSHAIR_SIZE;
+	const float scaledsize = crosshair_scale->value * CROSSHAIR_SIZE;
 	const float pulsealpha = crosshair_alpha->value * crosshair_pulse->value;
 	float alpha = crosshair_alpha->value - pulsealpha + pulsealpha * sinf(anglemod(cl.time * 0.005f));
 	alpha = clamp(alpha, 0.0f, 1.0f);
 
-	SCR_DrawPic(((float)SCREEN_WIDTH  - scaledSize) * 0.5f,
-				((float)SCREEN_HEIGHT - scaledSize) * 0.5f,
-				scaledSize, scaledSize, ALIGN_CENTER, crosshair_pic, alpha);
+	SCR_DrawPic(((float)SCREEN_WIDTH  - scaledsize) * 0.5f,
+				((float)SCREEN_HEIGHT - scaledsize) * 0.5f,
+				scaledsize, scaledsize, ALIGN_CENTER, crosshair_pic, alpha);
 }
 
 void SCR_DrawNet(void)
@@ -1370,17 +1387,6 @@ void SCR_TouchPics(void)
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 11; j++)
 			R_DrawFindPic(sb_nums[i][j]);
-
-	if (crosshair->integer)
-	{
-		if (crosshair->integer > 100 || crosshair->integer < 0) //Knightmare increased
-			Cvar_SetInteger("crosshair", 1); //mxd. Don't directly set the value
-
-		Com_sprintf(crosshair_pic, sizeof(crosshair_pic), "ch%i", crosshair->integer);
-		R_DrawGetPicSize(&crosshair_width, &crosshair_height, crosshair_pic);
-		if (!crosshair_width)
-			crosshair_pic[0] = 0;
-	}
 }
 
 void SCR_ExecuteLayoutString(char *s, qboolean isStatusBar)
