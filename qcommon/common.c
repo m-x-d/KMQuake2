@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // common.c -- misc functions used in client and server
 #include "qcommon.h"
 #include <setjmp.h>
+#include "../client/console.h" //mxd
 
 #ifdef _WIN32
 #include "../win32/winquake.h"
@@ -99,10 +100,26 @@ void Com_EndRedirect(void)
 // Both client and server can use this, and it will output to the apropriate place.
 extern char *CL_UnformattedString(const char *string); //mxd
 
+//mxd. Store early Com_Printf messages added before logfile_active is initialized and loaded from config.cfg / autoexec.cfg.
+static char *earlymsg[512];
+static int earlymsgcount = 0;
+
+static void FreeEarlyMessages()
+{
+	if (earlymsgcount > 0)
+	{
+		for (int i = 0; i < earlymsgcount; i++)
+			free(earlymsg[i]);
+
+		earlymsgcount = -1;
+	}
+}
+
 void Com_Printf(char *fmt, ...)
 {
 	va_list	argptr;
 	static char msg[MAXPRINTMSG]; //mxd. +static
+	static qboolean earlymessagesaddedtoconsole = false; //mxd
 
 	va_start(argptr, fmt);
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);	// fix for nVidia 191.xx crash
@@ -118,6 +135,15 @@ void Com_Printf(char *fmt, ...)
 
 		Q_strncatz(rd_buffer, msg, rd_buffersize);
 		return;
+	}
+
+	//mxd. Add early messages to the console?
+	if (con.initialized && !earlymessagesaddedtoconsole)
+	{
+		for (int i = 0; i < earlymsgcount; i++)
+			Con_Print(va("%s\n", earlymsg[i]));
+
+		earlymessagesaddedtoconsole = true;
 	}
 
 	Con_Print(msg);
@@ -148,11 +174,27 @@ void Com_Printf(char *fmt, ...)
 				logfile = fopen(name, "w");
 		}
 
+		//mxd. Add early messages?
+		if (earlymsgcount > 0)
+		{
+			for (int i = 0; i < earlymsgcount; i++)
+				fprintf(logfile, "%s\n", earlymsg[i]);
+
+			FreeEarlyMessages(); // Also sets earlymsgcount to -1
+		}
+
 		if (logfile)
 			fprintf(logfile, "%s", text);
 
 		if (logfile_active->integer > 1)
 			fflush(logfile); // Force it to save every time
+	}
+	else if(earlymsgcount != -1) //mxd. Store in temporary buffer...
+	{
+		const int textsize = len * sizeof(char);
+		earlymsg[earlymsgcount] = malloc(textsize);
+		Q_strncpyz(earlymsg[earlymsgcount], text, textsize);
+		earlymsgcount++;
 	}
 }
 
@@ -1655,6 +1697,9 @@ void Qcommon_Init(int argc, char **argv)
 	}
 
 	Com_Printf("=== %s %s v%4.2f Initialized ===\n\n", ENGINE_NAME, CPUSTRING, VERSION);
+
+	//mxd. Free after logfile_active cvar is initialized and at least one Com_Printf call is made...
+	FreeEarlyMessages();
 }
 
 void Qcommon_Frame(int msec)

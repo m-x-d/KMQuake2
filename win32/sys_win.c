@@ -210,18 +210,18 @@ void Sys_Init(void)
 {
 	timeBeginPeriod(1);
 
+	Com_Printf("\n------------ System Info ------------\n"); //mxd
+
 	// Detect OS
 	char string[256]; // Knightmare added
 	if(!Sys_GetOsName(string)) //mxd
 		Sys_Error("Unsupported operating system");
 
 	Com_Printf("OS:  %s\n", string);
-	Cvar_Get("sys_osVersion", string, CVAR_NOSET | CVAR_LATCH | CVAR_SAVE_IGNORE);
 
 	// Detect CPU
 	Sys_GetCpuName(string, sizeof(string));
 	Com_Printf("CPU: %s\n", string);
-	Cvar_Get("sys_cpuString", string, CVAR_NOSET | CVAR_LATCH | CVAR_SAVE_IGNORE);
 
 	// Get physical memory
 	MEMORYSTATUSEX memStatus; // Knightmare added //mxd. GlobalMemoryStatus -> GlobalMemoryStatusEx
@@ -229,13 +229,14 @@ void Sys_Init(void)
 	GlobalMemoryStatusEx(&memStatus);
 	sprintf(string, "%i", (int)(memStatus.ullTotalPhys >> 20)); //mxd. Uh oh! We'll be in trouble once average ram size exceeds 2 147 483 647 MB!
 	Com_Printf("RAM: %s MB\n", string);
-	Cvar_Get("sys_ramMegs", string, CVAR_NOSET | CVAR_LATCH | CVAR_SAVE_IGNORE); //mxd. Never used for anything other than printing to the console
+
+	Com_Printf("-------------------------------------\n\n"); //mxd
 }
 
 void Sys_AppActivate(void)
 {
 	ShowWindow(cl_hwnd, SW_RESTORE);
-	SetForegroundWindow(cl_hwnd );
+	SetForegroundWindow(cl_hwnd);
 }
 
 
