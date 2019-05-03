@@ -66,10 +66,6 @@ char *Sys_GetCurrentDirectory(void)
 
 //============================================
 
-static char findbase[MAX_OSPATH];
-static char findpath[MAX_OSPATH];
-static int findhandle;
-
 static qboolean CompareAttributes(unsigned found, unsigned musthave, unsigned canthave)
 {
 	if ((found & _A_RDONLY) && (canthave & SFF_RDONLY))
@@ -97,13 +93,16 @@ static qboolean CompareAttributes(unsigned found, unsigned musthave, unsigned ca
 	return true;
 }
 
+static char findpath[MAX_OSPATH];
+static char findbase[MAX_OSPATH];
+static int findhandle;
+
 char *Sys_FindFirst(char *path, unsigned musthave, unsigned canthave)
 {
 	struct _finddata_t findinfo;
 
 	if (findhandle)
-		Sys_Error("Sys_BeginFind without close");
-	findhandle = 0;
+		Sys_Error("Sys_FindFirst called without calling Sys_FindClose!");
 
 	COM_FilePath(path, findbase);
 	findhandle = _findfirst(path, &findinfo);
