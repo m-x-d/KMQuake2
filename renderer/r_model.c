@@ -2836,6 +2836,11 @@ void R_EndRegistration(void)
 	registration_active = false; // map registration flag
 }
 
+//mxd
+int R_GetRegistartionSequence(struct model_s *model)
+{
+	return model->registration_sequence;
+}
 
 //=============================================================================
 

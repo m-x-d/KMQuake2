@@ -706,6 +706,7 @@ struct image_s *R_DrawFindPic(char *name);
 void R_FreePic(char *name); // Knightmare added
 void R_SetSky(char *name, float rotate, vec3_t axis);
 void R_EndRegistration(void);
+int R_GetRegistartionSequence(struct model_s *model); //mxd
 
 void R_RenderFrame(refdef_t *fd);
 

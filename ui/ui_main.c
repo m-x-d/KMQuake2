@@ -26,13 +26,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 static int m_main_cursor;
 
-// For checking if quad cursor model is available
-#define QUAD_CURSOR_MODEL "models/ui/quad_cursor.md2"
-qboolean quadModel_loaded;
+//mxd. Entity used to draw quad cursor model
+static entity_t quadent;
 
-#define	MAIN_ITEMS 5
+#define MAIN_ITEMS	5
 
-char *main_names[] =
+static char *main_names[] =
 {
 	"m_main_game",
 	"m_main_multiplayer",
@@ -42,7 +41,7 @@ char *main_names[] =
 	0
 };
 
-void FindMenuCoords(int *xoffset, int *ystart, int *totalheight, int *widest)
+static void FindMenuCoords(int *xoffset, int *ystart, int *totalheight, int *widest)
 {
 	int w, h;
 
@@ -65,7 +64,7 @@ void FindMenuCoords(int *xoffset, int *ystart, int *totalheight, int *widest)
 // Draws an animating cursor with the point at x, y.
 // The pic will extend to the left of x, and both above and below y.
 // Used only if quad damage model isn't loaded.
-void UI_DrawMainCursor(const int x, const int y, const int f)
+static void UI_DrawMainCursor(const int x, const int y, const int f)
 {
 	static qboolean cached = false;
 	char cursorname[80];
@@ -84,21 +83,20 @@ void UI_DrawMainCursor(const int x, const int y, const int f)
 
 	Com_sprintf(cursorname, sizeof(cursorname), "m_cursor%d", f);
 	R_DrawGetPicSize(&w, &h, cursorname);
-	SCR_DrawPic(x, y, w, h, ALIGN_CENTER, cursorname, 1.0);
+	SCR_DrawPic(x, y, w, h, ALIGN_CENTER, cursorname, 1.0f);
 }
 
-// Draws a rotating quad damage model.
-void UI_DrawMainCursor3D(const int x, const int y)
+// Draws a rotating quad damage model. Expects quadent to be initialized.
+static void UI_DrawMainCursor3D(const int x, const int y)
 {
+	// Set model yaw
+	quadent.angles[1] = anglemod(cl.time / 10.0f);
+	
+	// Initialize a custom refdef
 	refdef_t refdef;
-	entity_t quadEnt;
-
-	const int yaw = anglemod(cl.time / 10.0f);
-
 	memset(&refdef, 0, sizeof(refdef));
-	memset(&quadEnt, 0, sizeof(quadEnt));
 
-	// size 24x34
+	// Size 24x34
 	float rx = x;
 	float ry = y;
 	float rw = 24;
@@ -111,32 +109,37 @@ void UI_DrawMainCursor3D(const int x, const int y)
 	refdef.height = rh;
 	refdef.fov_x = 40;
 	refdef.fov_y = CalcFov(refdef.fov_x, refdef.width, refdef.height);
-	refdef.time = cls.realtime*0.001;
-	refdef.areabits = 0;
-	refdef.lightstyles = 0;
+	refdef.time = cls.realtime * 0.001f;
 	refdef.rdflags = RDF_NOWORLDMODEL;
-	refdef.num_entities = 0;
-	refdef.entities = &quadEnt;
-
-	entity_t *ent = &quadEnt;
-	ent->model = R_RegisterModel(QUAD_CURSOR_MODEL);
-	ent->flags = RF_FULLBRIGHT | RF_NOSHADOW | RF_DEPTHHACK;
-	VectorSet(ent->origin, 40, 0, -18);
-	VectorCopy(ent->origin, ent->oldorigin);
-	ent->frame = 0;
-	ent->oldframe = 0;
-	ent->backlerp = 0.0;
-	ent->angles[1] = yaw;
-	refdef.num_entities++;
+	refdef.num_entities = 1;
+	refdef.entities = &quadent;
 
 	R_RenderFrame(&refdef);
 }
 
-// Checks for quad damage model.
-void UI_CheckQuadModel(void)
+//mxd. Initializes quadent and loads the quad damage model.
+static qboolean UI_CheckQuadModel(void)
 {
-	struct model_s* quadModel = R_RegisterModel(QUAD_CURSOR_MODEL);
-	quadModel_loaded = (quadModel != NULL);
+	static qboolean loadfailed;
+	static int registration_sequence = -1;
+
+	if (loadfailed)
+		return false;
+	
+	if (quadent.model != NULL && R_GetRegistartionSequence(quadent.model) == registration_sequence)
+		return true;
+	
+	quadent.model = R_RegisterModel("models/ui/quad_cursor.md2");
+	quadent.flags = RF_FULLBRIGHT | RF_NOSHADOW | RF_DEPTHHACK;
+	VectorSet(quadent.origin, 40, 0, -18);
+	VectorCopy(quadent.origin, quadent.oldorigin);
+
+	if (quadent.model != NULL)
+		registration_sequence = R_GetRegistartionSequence(quadent.model);
+
+	loadfailed = (quadent.model == NULL);
+
+	return loadfailed;
 }
 
 void M_Main_Draw(void)
@@ -165,7 +168,7 @@ void M_Main_Draw(void)
 	SCR_DrawPic(xoffset - 1, (ystart + m_main_cursor * 40 + 2), w + 2, h + 2, ALIGN_CENTER, litname, 1.0f);
 
 	// Draw our nifty quad damage model as a cursor if it's loaded.
-	if (quadModel_loaded)
+	if (UI_CheckQuadModel())
 		UI_DrawMainCursor3D(xoffset - 27, ystart + (m_main_cursor * 40 + 1));
 	else
 		UI_DrawMainCursor(xoffset - 25, ystart + (m_main_cursor * 40 + 1), (int)(cls.realtime / 100) % NUM_MAINMENU_CURSOR_FRAMES);
@@ -178,7 +181,7 @@ void M_Main_Draw(void)
 	SCR_DrawPic(xoffset - (w / 2 + 50), ystart + last_h + 20, w, h, ALIGN_CENTER, "m_main_logo", 1.0f);
 }
 
-void OpenMenuFromMain(void)
+static void OpenMenuFromMain(void)
 {
 	switch (m_main_cursor)
 	{
@@ -295,6 +298,5 @@ const char *M_Main_Key(int key)
 
 void M_Menu_Main_f(void)
 {
-	UI_CheckQuadModel();
 	UI_PushMenu(M_Main_Draw, M_Main_Key);
 }
