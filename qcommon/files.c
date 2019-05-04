@@ -104,10 +104,10 @@ typedef struct fsSearchPath_s
 } fsSearchPath_t;
 
 
-fsHandle_t		fs_handles[MAX_HANDLES];
-fsLink_t		*fs_links;
-fsSearchPath_t	*fs_searchPaths;
-fsSearchPath_t	*fs_baseSearchPaths;
+static fsHandle_t		fs_handles[MAX_HANDLES];
+static fsLink_t			*fs_links;
+static fsSearchPath_t	*fs_searchPaths;
+static fsSearchPath_t	*fs_baseSearchPaths;
 
 char			fs_gamedir[MAX_OSPATH];
 static char		fs_currentGame[MAX_QPATH];
@@ -116,8 +116,7 @@ static char		fs_fileInPath[MAX_OSPATH];
 static qboolean	fs_fileInPack;
 
 // Set by FS_FOpenFile
-int file_from_pak = 0;
-int file_from_pk3 = 0;
+qboolean file_from_pak;
 char last_pk3_name[MAX_QPATH];
 
 cvar_t	*fs_homepath;
@@ -131,7 +130,7 @@ cvar_t	*fs_roguegame;
 
 
 // Returns the path up to, but not including the last /
-void Com_FilePath(const char *path, char *dst, int dstSize)
+static void Com_FilePath(const char *path, char *dst, int dstSize)
 {
 	const char *last;
 
@@ -148,7 +147,7 @@ void Com_FilePath(const char *path, char *dst, int dstSize)
 }
 
 // Returns bit flag based on pak item's extension.
-unsigned int FS_TypeFlagForPakItem(char *itemName)
+static unsigned int FS_TypeFlagForPakItem(char *itemName)
 {
 	static const char *type_extensions[] =
 	{
@@ -166,7 +165,7 @@ unsigned int FS_TypeFlagForPakItem(char *itemName)
 	return 0;
 }
 
-int FS_FileLength(FILE *f)
+static int FS_FileLength(FILE *f)
 {
 	const int cur = ftell(f);
 	fseek(f, 0, SEEK_END);
@@ -244,7 +243,7 @@ void FS_DeletePath(char *path)
 }
 
 // Returns a fsHandle_t * for the given fileHandle_t
-fsHandle_t *FS_GetFileByHandle(fileHandle_t f)
+static fsHandle_t *FS_GetFileByHandle(fileHandle_t f)
 {
 	if (f <= 0 || f > MAX_HANDLES)
 		Com_Error(ERR_DROP, "FS_GetFileByHandle: out of range");
@@ -267,7 +266,7 @@ FILE *FS_FileForHandle(fileHandle_t f)
 }
 
 // Finds a free fileHandle_t
-fsHandle_t *FS_HandleForFile(const char *path, fileHandle_t *f)
+static fsHandle_t *FS_HandleForFile(const char *path, fileHandle_t *f)
 {
 	fsHandle_t *handle = fs_handles;
 	for (int i = 0; i < MAX_HANDLES; i++, handle++)
@@ -289,7 +288,7 @@ fsHandle_t *FS_HandleForFile(const char *path, fileHandle_t *f)
 #ifdef BINARY_PACK_SEARCH
 
 // Performs a binary search by hashed filename to find pack items in a sorted pack
-int FS_FindPackItem(fsPack_t *pack, char *itemName, long itemHash)
+static int FS_FindPackItem(fsPack_t *pack, char *itemName, long itemHash)
 {
 	// Catch null pointers
 	if (!pack || !itemName)
@@ -323,7 +322,7 @@ int FS_FindPackItem(fsPack_t *pack, char *itemName, long itemHash)
 #endif	// BINARY_PACK_SEARCH
 
 // Returns file size or -1 on error
-int FS_FOpenFileAppend(fsHandle_t *handle)
+static int FS_FOpenFileAppend(fsHandle_t *handle)
 {
 	FS_CreatePath(handle->name);
 
@@ -346,7 +345,7 @@ int FS_FOpenFileAppend(fsHandle_t *handle)
 }
 
 // Returns 0 on success, -1 on error
-int FS_FOpenFileWrite(fsHandle_t *handle)
+static int FS_FOpenFileWrite(fsHandle_t *handle)
 {
 	FS_CreatePath(handle->name);
 
@@ -370,11 +369,10 @@ int FS_FOpenFileWrite(fsHandle_t *handle)
 
 // Returns file size or -1 if not found.
 // Can open separate files as well as files inside pack files (both PAK and PK3).
-int FS_FOpenFileRead(fsHandle_t *handle)
+static int FS_FOpenFileRead(fsHandle_t *handle)
 {
 	// Knightmare- hack global vars for autodownloads
-	file_from_pak = 0;
-	file_from_pk3 = 0;
+	file_from_pak = false;
 
 	Com_sprintf(last_pk3_name, sizeof(last_pk3_name), "\0");
 	const long hash = Com_HashFileName(handle->name, 0, false);
@@ -432,7 +430,7 @@ int FS_FOpenFileRead(fsHandle_t *handle)
 					else if (pack->pk3)
 					{
 						// PK3
-						file_from_pk3 = true; // Knightmare added
+						file_from_pak = true; // Knightmare added //BUG: mxd. This was file_from_pk3 in KMQ2 and it was never used
 						Com_sprintf(last_pk3_name, sizeof(last_pk3_name), strrchr(pack->name, '/') + 1); // Knightmare added
 						handle->zip = unzOpen(pack->name);
 						if (handle->zip)
@@ -602,19 +600,6 @@ int FS_Write(const void *buffer, int size, fileHandle_t f)
 	}
 
 	return size;
-}
-
-int FS_FTell(fileHandle_t f)
-{
-	fsHandle_t *handle = FS_GetFileByHandle(f);
-
-	if (handle->file)
-		return ftell(handle->file);
-
-	if (handle->zip)
-		return unztell(handle->zip);
-
-	return 0;
 }
 
 // Generates a listing of the contents of a pak file
@@ -826,7 +811,7 @@ void FS_FreeFile(void *buffer)
 }
 
 // Checks against a blacklist to see if a file should not be loaded from a pak.
-qboolean FS_FileInPakBlacklist(char *filename, qboolean isPk3)
+static qboolean FS_FileInPakBlacklist(char *filename, qboolean isPk3)
 {
 	// Some incompetently packaged mods have these files in their paks!
 	static char *pakfile_ignore_names[] =
@@ -861,9 +846,9 @@ qboolean FS_FileInPakBlacklist(char *filename, qboolean isPk3)
 #ifdef BINARY_PACK_SEARCH
 
 // Used for sorting pak entries by hash 
-long *nameHashes = NULL;
+static long *nameHashes = NULL;
 
-int FS_PakFileCompare(const void *f1, const void *f2)
+static int FS_PakFileCompare(const void *f1, const void *f2)
 {
 	if (!nameHashes)
 		return 1;
@@ -875,11 +860,11 @@ int FS_PakFileCompare(const void *f1, const void *f2)
 
 // Takes an explicit (not game tree related) path to a pack file.
 // Loads the header and directory, adding the files at the beginning of the list so they override previous pack files.
-fsPack_t *FS_LoadPAK(const char *packPath)
+static fsPack_t *FS_LoadPAK(const char *packPath)
 {
-	dpackheader_t	header;
-	dpackfile_t		info[MAX_FILES_IN_PACK];
-	unsigned		contentFlags = 0;
+	dpackheader_t header;
+	dpackfile_t info[MAX_FILES_IN_PACK];
+	unsigned contentFlags = 0;
 
 	FILE *handle = fopen(packPath, "rb");
 	if (!handle)
@@ -983,12 +968,12 @@ void FS_AddPAKFile(const char *packPath)
 
 // Takes an explicit (not game tree related) path to a pack file.
 // Loads the header and directory, adding the files at the beginning of the list so they override previous pack files.
-fsPack_t *FS_LoadPK3(const char *packPath)
+static fsPack_t *FS_LoadPK3(const char *packPath)
 {
-	unz_global_info	global;
-	unz_file_info	info;
-	unsigned		contentFlags = 0;
-	char			fileName[MAX_QPATH];
+	unz_global_info global;
+	unz_file_info info;
+	unsigned contentFlags = 0;
+	char fileName[MAX_QPATH];
 
 	unzFile *handle = unzOpen(packPath);
 	if (!handle)
@@ -1004,7 +989,7 @@ fsPack_t *FS_LoadPK3(const char *packPath)
 	if (numFiles > MAX_FILES_IN_PACK || numFiles == 0)
 	{
 		unzClose(handle);
-		Com_Error(ERR_FATAL, "FS_LoadPK3: %s has %i files", packPath, numFiles);
+		Com_Error(ERR_FATAL, "FS_LoadPK3: %s has too many files or no files at all (%i / %i)", packPath, numFiles, MAX_FILES_IN_PACK);
 	}
 
 	fsPackFile_t *files = Z_Malloc(numFiles * sizeof(fsPackFile_t));
@@ -1106,49 +1091,36 @@ void FS_AddPK3File(const char *packPath)
 }
 
 // Sets fs_gameDir, adds the directory to the head of the path, then loads and adds all the pack files found (in alphabetical order).
-// PK3 files are loaded later so they override PAK files.
-void FS_AddGameDirectory(const char *dir)
+static void FS_AddGameDirectory(const char *dir)
 {
-	char packPath[MAX_OSPATH];
-
-	// VoiD -S- *.pak support
-	char findname[1024];
-	int ndirs;
-	// VoiD -E- *.pak support
+	char packpath[MAX_OSPATH];
 
 	Q_strncpyz(fs_gamedir, dir, sizeof(fs_gamedir));
 
-	// Add the directory to the search path
-	fsSearchPath_t *search = Z_Malloc(sizeof(fsSearchPath_t));
-	Q_strncpyz(search->path, dir, sizeof(search->path));
-	search->path[sizeof(search->path) - 1] = 0;
-	search->next = fs_searchPaths;
-	fs_searchPaths = search;
-
-	// Add any pak files in the format pak0.pak pak1.pak, ...
+	// Add pak files in the pak0.pak, pak1.pak... format
 	for (int i = 0; i < 100; i++) // Pooy - paks can now go up to 100
 	{
-		Com_sprintf(packPath, sizeof(packPath), "%s/pak%i.pak", dir, i);
-		FS_AddPAKFile(packPath);
+		Com_sprintf(packpath, sizeof(packpath), "%s/pak%i.pak", dir, i);
+		FS_AddPAKFile(packpath);
 	}
 
-	// NeVo - pak3's!
-	// Add any pk3 files in the format pak0.pk3 pak1.pk3, ...
+	//NeVo. Add pk3 files in the pak0.pk3, pak1.pk3... format 
 	for (int i = 0; i < 100; i++) // Pooy - paks can now go up to 100
 	{
-		Com_sprintf(packPath, sizeof(packPath), "%s/pak%i.pk3", dir, i);
-		FS_AddPK3File(packPath);
+		Com_sprintf(packpath, sizeof(packpath), "%s/pak%i.pk3", dir, i);
+		FS_AddPK3File(packpath);
 	}
 
-	for (int i = 0; i < 2; i++)
+	// Add pak files not using pak0.pak, pak1.pak... format, then add pk3 files not using pak0.pk3, pak1.pk3... format
+	for (int ispak = 0; ispak < 2; ispak++)
 	{
-		// NeVo - Set filetype
-		if(i == 0)
-			Com_sprintf(findname, sizeof(findname), "%s/%s", dir, "*.pak"); // Standard Quake II pack file '.pak'
-		else
-			Com_sprintf(findname, sizeof(findname), "%s/%s", dir, "*.pk3"); // Quake III pack file '.pk3'
+		const char *ext = (ispak ?  "pak" : "pk3");
 
-		// VoiD -S- *.pack support
+		// Set search mask
+		char findname[1024];
+		Com_sprintf(findname, sizeof(findname), "%s/*.%s", dir, ext);
+
+		// Use correct slashes...
 		char *tmp = findname;
 		while (*tmp != 0)
 		{
@@ -1158,45 +1130,52 @@ void FS_AddGameDirectory(const char *dir)
 			tmp++;
 		}
 
-		char **dirnames = FS_ListFiles(findname, &ndirs, 0, 0);
-		if (dirnames)
+		// Find all .pak/.pk3 files
+		int numfiles;
+		char **filenames = FS_ListFiles(findname, &numfiles, 0, 0);
+		if (filenames == NULL)
+			return;
+
+		// Add the ones, which don't match pakX naming sceme
+		for (int i = 0; i < numfiles; i++) //BUG? mxd. This counted to numfiles - 1 in KMQ2. Why?
 		{
-			for (int j = 0; j < ndirs - 1; j++)
+			qboolean numberedpak = false;
+
+			// Skip packs using pakX naming scheme...
+			for (int j = 0; j < 100; j++)
 			{
 				char buf[16];
-				char buf2[16];
-				qboolean numberedpak = false;
+				Com_sprintf(buf, sizeof(buf), "/pak%i.%s", j, ext);
 
-				for (int k = 0; k < 100; k++)
+				if (strstr(filenames[i], buf))
 				{
-					Com_sprintf(buf, sizeof(buf), "/pak%i.pak", k);
-					Com_sprintf(buf2, sizeof(buf2), "/pak%i.pk3", k);
-
-					if (strstr(dirnames[j], buf) || strstr(dirnames[j], buf2))
-					{
-						numberedpak = true;
-						break;
-					}
+					numberedpak = true;
+					break;
 				}
-
-				if (numberedpak)
-					continue;
-
-				if (strrchr(dirnames[j], '/'))
-				{
-					if (i == 1)
-						FS_AddPK3File(dirnames[j]);
-					else
-						FS_AddPAKFile(dirnames[j]);
-				}
-
-				free(dirnames[j]);
 			}
 
-			free(dirnames);
+			if (numberedpak)
+				continue;
+
+			if (strrchr(filenames[i], '/'))
+			{
+				if (ispak)
+					FS_AddPAKFile(filenames[i]);
+				else
+					FS_AddPK3File(filenames[i]);
+			}
+
+			free(filenames[i]);
 		}
-		// VoiD -E- *.pack support
+
+		free(filenames);
 	}
+
+	// Add the directory to the search path //mxd. Add last, so it's checked first
+	fsSearchPath_t *search = Z_Malloc(sizeof(fsSearchPath_t));
+	Q_strncpyz(search->path, dir, sizeof(search->path));
+	search->next = fs_searchPaths;
+	fs_searchPaths = search;
 }
 
 // Allows enumerating all of the directories in the search path
@@ -1220,7 +1199,7 @@ char *FS_NextPath(const char *prevPath)
 	return NULL;
 }
 
-void FS_Path_f(void)
+static void FS_Path_f(void)
 {
 	int totalFiles = 0;
 
@@ -1254,7 +1233,7 @@ void FS_Path_f(void)
 }
 
 // Creates a filelink_t
-void FS_Link_f(void)
+static void FS_Link_f(void)
 {
 	if (Cmd_Argc() != 3)
 	{
@@ -1551,47 +1530,44 @@ char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned c
 {
 	int nfiles = 0;
 
-	char *s = Sys_FindFirst(findname, musthave, canthave);
-	while (s)
+	// Count number of matching files
+	char *filename = Sys_FindFirst(findname, musthave, canthave);
+	while (filename != NULL)
 	{
-		if (s[strlen(s) - 1] != '.')
+		if (filename[strlen(filename) - 1] != '.')
 			nfiles++;
 
-		s = Sys_FindNext(musthave, canthave);
+		filename = Sys_FindNext(musthave, canthave);
 	}
-
 	Sys_FindClose();
 
-	if (!nfiles)
-	{
-		*numfiles = 0;
-		return NULL;
-	}
-
-	nfiles++; // Add space for a guard
+	// Store number of matching files
 	*numfiles = nfiles;
 
-	char **list = malloc(sizeof( char * ) * nfiles);
-	memset(list, 0, sizeof(char *) * nfiles);
+	if (nfiles == 0)
+		return NULL;
 
-	s = Sys_FindFirst(findname, musthave, canthave);
-	nfiles = 0;
-	while (s)
+	// Fill list with matching filenames
+	const int listsize = sizeof(char *) * (nfiles + 1); // Add space for a guard
+	char **list = malloc(listsize);
+	memset(list, 0, listsize);
+
+	filename = Sys_FindFirst(findname, musthave, canthave);
+	for (int i = 0; i < nfiles && filename != NULL; i++)
 	{
-		if (s[strlen(s) - 1] != '.')
+		if (filename[strlen(filename) - 1] != '.')
 		{
-			list[nfiles] = strdup(s);
+			list[i] = strdup(filename);
 #ifdef _WIN32
-			strlwr(list[nfiles]);
+			strlwr(list[i]);
 #endif
-			nfiles++;
 		}
 
-		s = Sys_FindNext(musthave, canthave);
+		filename = Sys_FindNext(musthave, canthave);
 	}
-
 	Sys_FindClose();
 
+	// Return result
 	return list;
 }
 
@@ -1635,7 +1611,7 @@ void FS_InsertInList(char **list, char *insert, int len, int start)
 	list[len] = strdup(insert);
 }
 
-void FS_Dir_f(void)
+static void FS_Dir_f(void)
 {
 	char *path = NULL;
 	char findname[1024];

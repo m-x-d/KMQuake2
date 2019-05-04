@@ -1181,7 +1181,9 @@ cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int 
 
 		CIN_Huff1TableInit(cin);
 
-		cin->start = FS_FTell(cin->file);
+		cin->start = FS_Tell(cin->file); //mxd. FS_FTell -> FS_Tell
+		if (cin->start == -1) //mxd
+			return 0;
 	}
 	else
 	{
@@ -1191,7 +1193,9 @@ cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int 
 		CIN_ReadChunk(cin);
 		CIN_SoundSqrTableInit(cin);
 
-		cin->start = FS_FTell(cin->file);
+		cin->start = FS_Tell(cin->file); //mxd. FS_FTell -> FS_Tell
+		if (cin->start == -1) //mxd
+			return 0;
 	}
 
 	cin->frameCount = 0;

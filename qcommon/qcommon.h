@@ -738,8 +738,7 @@ typedef enum
 	FS_SEARCH_FULL_PATH
 } fsSearchType_t;
 
-extern int file_from_pak;
-extern int file_from_pk3;
+extern qboolean file_from_pak;
 extern char last_pk3_name[MAX_QPATH];
 
 void FS_Startup(void);
@@ -753,7 +752,6 @@ void FS_FCloseFile(fileHandle_t f);
 int FS_Read(void *buffer, int size, fileHandle_t f);
 int FS_Write(const void *buffer, int size, fileHandle_t f);
 void FS_Seek(fileHandle_t f, int offset, fsOrigin_t origin);
-int FS_FTell(fileHandle_t f);
 int FS_Tell(fileHandle_t f);
 qboolean FS_FileExists(char *path);
 qboolean FS_LocalFileExists(char *path);
