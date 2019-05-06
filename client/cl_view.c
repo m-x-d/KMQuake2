@@ -641,12 +641,12 @@ void V_RenderView(float stereo_separation)
 		// dissapear when viewed with the eye exactly on it.
 		// the server protocol only specifies to 1/8 pixel, so add 1/16 in each axis
 		for(int c = 0; c < 3; c++)
-			cl.refdef.vieworg[c] += 1.0 / 16;
+			cl.refdef.vieworg[c] += 1.0f / 16;
 
-		cl.refdef.x = scr_vrect.x;
-		cl.refdef.y = scr_vrect.y;
-		cl.refdef.width = scr_vrect.width;
-		cl.refdef.height = scr_vrect.height;
+		cl.refdef.x = 0;
+		cl.refdef.y = 0;
+		cl.refdef.width = viddef.width;
+		cl.refdef.height = viddef.height;
 
 		// adjust fov for wide aspect ratio
 		if (cl_widescreen_fov->value)

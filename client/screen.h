@@ -85,13 +85,10 @@ extern	qboolean	scr_hidehud;
 
 extern	int			sb_lines;
 
-extern	cvar_t		*scr_viewsize;
 extern	cvar_t		*crosshair;
 extern	cvar_t		*crosshair_scale;
 extern	cvar_t		*crosshair_alpha;
 extern	cvar_t		*crosshair_pulse;
-
-extern	vrect_t		scr_vrect; // Position of render window
 
 //mxd. Moved from cl_screen.c
 #define CROSSHAIR_SIZE		32

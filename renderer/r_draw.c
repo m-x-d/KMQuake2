@@ -370,48 +370,6 @@ void R_DrawPic(int x, int y, char *pic)
 	RB_RenderMeshGeneric(false);
 }
 
-// This repeats a 64*64 tile graphic to fill the screen around a sized down refresh window.
-void R_DrawTileClear(int x, int y, int w, int h, char *pic) //TODO: mxd. Remove R_DrawTileClear
-{
-	vec2_t texCoord[4], verts[4];
-
-	image_t *image = R_DrawFindPic(pic);
-	if (!image)
-		return; //mxd. R_FindImage has already printed a warning if the image wasn't found
-
-	GL_Bind(image->texnum);
-
-	Vector2Set(texCoord[0], (float)x / (float)image->width, (float)y / (float)image->height);
-	Vector2Set(texCoord[1], (float)(x + w) / (float)image->width, (float)y / (float)image->height);
-	Vector2Set(texCoord[2], (float)(x + w) / (float)image->width, (float)(y + h) / (float)image->height);
-	Vector2Set(texCoord[3], (float)x / (float)image->width, (float)(y + h) / (float)image->height);
-
-	Vector2Set(verts[0], x, y);
-	Vector2Set(verts[1], x + w, y);
-	Vector2Set(verts[2], x + w, y + h);
-	Vector2Set(verts[3], x, y + h);
-
-	rb_vertex = 0;
-	rb_index = 0;
-
-	indexArray[rb_index++] = rb_vertex + 0;
-	indexArray[rb_index++] = rb_vertex + 1;
-	indexArray[rb_index++] = rb_vertex + 2;
-	indexArray[rb_index++] = rb_vertex + 0;
-	indexArray[rb_index++] = rb_vertex + 2;
-	indexArray[rb_index++] = rb_vertex + 3;
-
-	for (int i = 0; i < 4; i++)
-	{
-		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
-		VA_SetElem3(vertexArray[rb_vertex], verts[i][0], verts[i][1], 0);
-		VA_SetElem4(colorArray[rb_vertex], 1.0f, 1.0f, 1.0f, 1.0f);
-		rb_vertex++;
-	}
-
-	RB_RenderMeshGeneric(false);
-}
-
 // Fills a box of pixels with a 24-bit color with alpha
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha)
 {

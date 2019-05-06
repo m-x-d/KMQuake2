@@ -42,9 +42,6 @@ qboolean	scr_initialized; // Ready to draw
 
 int			scr_draw_loading;
 
-vrect_t		scr_vrect; // Position of render window on screen
-
-cvar_t		*scr_viewsize; //TODO: remove scr_viewsize
 cvar_t		*scr_conspeed;
 cvar_t		*scr_letterbox;
 cvar_t		*scr_centertime;
@@ -348,13 +345,13 @@ void SCR_DrawDebugGraph(void)
 
 	if (scr_netgraph_pos->value == 0) // Bottom right
 	{
-		x = scr_vrect.width - (w + 2) - 1;
-		y = scr_vrect.height - (h + 2) - 1;
+		x = viddef.width - w - 3;
+		y = viddef.height - h - 3;
 	}	
 	else // Bottom left
 	{
 		x = 0;
-		y = scr_vrect.height - (h + 2) - 1;
+		y = viddef.height - h - 3;
 	}
 
 	// Transparent background
@@ -529,27 +526,6 @@ void SCR_CheckDrawCenterString(void)
 
 //=============================================================================
 
-// Sets scr_vrect, the coordinates of the rendered window
-static void SCR_CalcVrect(void)
-{
-	// Bound viewsize
-	if (scr_viewsize->value < 40)
-		Cvar_Set("viewsize", "40");
-	if (scr_viewsize->value > 100)
-		Cvar_Set("viewsize", "100");
-
-	const int size = scr_viewsize->value;
-
-	scr_vrect.width = viddef.width * size / 100;
-	scr_vrect.width &= ~1;	// Knightmare- was ~7, fixes undersized viewport at 1366x768
-
-	scr_vrect.height = viddef.height * size / 100;
-	scr_vrect.height &= ~1;
-
-	scr_vrect.x = (viddef.width - scr_vrect.width) / 2;
-	scr_vrect.y = (viddef.height - scr_vrect.height) / 2;
-}
-
 void SCR_SizeUp_f(void)
 {	
 	// Handle HUD scale
@@ -561,7 +537,7 @@ void SCR_SizeDown_f(void)
 {
 	// Handle HUD scale
 	const int hudscale = max(Cvar_VariableValue("hud_scale") - 1, 1); //mxd. +max
-	Cvar_SetValue ("hud_scale", hudscale);
+	Cvar_SetValue("hud_scale", hudscale);
 }
 
 // Set a specific sky and rotation speed
@@ -606,7 +582,6 @@ void SCR_Init(void)
 	cl_demomessage = Cvar_Get("cl_demomessage", "1", CVAR_ARCHIVE);
 	cl_loadpercent = Cvar_Get("cl_loadpercent", "0", CVAR_ARCHIVE);
 
-	scr_viewsize = Cvar_Get("viewsize", "100", CVAR_ARCHIVE);
 	scr_conspeed = Cvar_Get("scr_conspeed", "3", 0);
 	scr_letterbox = Cvar_Get("scr_letterbox", "1", CVAR_ARCHIVE);
 	scr_showturtle = Cvar_Get("scr_showturtle", "0", 0);
@@ -710,7 +685,14 @@ void SCR_DrawCrosshair(void)
 void SCR_DrawNet(void)
 {
 	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged > CMD_BACKUP - 2)
-		R_DrawPic(scr_vrect.x + ScaledHud(64), scr_vrect.y, "net");
+	{
+		//mxd. Draw scaled. And pulsating.
+		int w, h;
+		R_DrawGetPicSize(&w, &h, "net");
+
+		const float alpha = 0.625f + (sinf(anglemod(cl.time * 0.005f)) * 0.375f);
+		SCR_DrawPic(1, 1, w, h, ALIGN_LEFT, "net", alpha);
+	}
 }
 
 void SCR_DrawAlertMessagePicture(char *name, qboolean center, int yOffset)
@@ -1120,35 +1102,6 @@ void SCR_TimeRefresh_f(void)
 	const float time = (stop - start) / 1000.0f;
 	Com_Printf("%f seconds (%f fps)\n", time, 128 / time);
 }
-
-// Clear around a sized down screen //TODO: mxd. remove SCR_TileClear
-void SCR_TileClear(void)
-{
-	// Full screen console || full screen rendering || full screen cinematic
-	if (scr_con_current == 1.0f || scr_viewsize->value == 100 || cl.cinematictime > 0)
-		return;
-
-	const int w = viddef.width;
-	const int h = viddef.height;
-
-	const int top = cl.refdef.y;
-	const int bottom = top + cl.refdef.height - 1;
-	const int left = cl.refdef.x;
-	const int right = left + cl.refdef.width - 1;
-
-	// Clear above view screen
-	R_DrawTileClear(0, 0, w, top, "backtile");
-
-	// Clear below view screen
-	R_DrawTileClear(0, bottom, w, h - bottom, "backtile");
-
-	// Clear left of view screen
-	R_DrawTileClear(0, top, left, bottom - top + 1, "backtile");
-
-	// Clear right of view screen
-	R_DrawTileClear(right, top, w - right, bottom - top + 1, "backtile");
-}
-
 
 #pragma region ======================= HUD CODE
 
@@ -1761,12 +1714,6 @@ void SCR_UpdateScreen(void)
 				cls.consoleActive = true; // Show error in console
 				M_Menu_Main_f();
 			}
-
-			// Do 3D refresh drawing, and then update the screen
-			SCR_CalcVrect();
-
-			// Clear background around sized down view
-			SCR_TileClear();
 
 			V_RenderView(separation[i]);
 

@@ -717,7 +717,6 @@ void R_DrawPic(int x, int y, char *name);
 void R_DrawStretchPic(int x, int y, int w, int h, char *name, float alpha); // added alpha for Psychospaz's transparent console
 void R_DrawScaledPic(int x, int y, float scale, float alpha, char *name);
 void R_DrawChar(float x, float y, int c, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last); // added char scaling from Quake2Max
-void R_DrawTileClear(int x, int y, int w, int h, char *name);
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
 void R_DrawCameraEffect(void);
 
