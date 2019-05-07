@@ -25,11 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // Key up events are sent even if in console mode
 
-char		key_lines[32][MAXCMDLINE];
-int			key_linepos;
 int			anykeydown;
-
-int			edit_line = 0;
 
 int			key_waiting;
 char		*keybindings[NUM_KEYBINDINGS];
@@ -161,241 +157,6 @@ keyname_t keynames[] =
 };
 
 #pragma endregion
-
-#pragma region ======================= LINE TYPING INTO THE CONSOLE
-
-void CompleteCommand(void)
-{
-	char *s = key_lines[edit_line] + 1;
-	if (*s == '\\' || *s == '/')
-		s++;
-
-	qboolean exactmatch = false; //mxd
-	char *cmd = Cmd_CompleteCommand(s, &exactmatch);
-
-	// Knightmare - added command auto-complete
-	if (cmd)
-	{
-		key_lines[edit_line][1] = '/';
-		Q_strncpyz(key_lines[edit_line] + 2, cmd, sizeof(key_lines[edit_line]) - 2);
-		key_linepos = strlen(cmd) + 2;
-
-		if (exactmatch) //mxd. Add trailing space only when a single/exact match was found
-			key_lines[edit_line][key_linepos++] = ' ';
-
-		key_lines[edit_line][key_linepos] = 0;
-	}
-}
-
-// Interactive line editing and console scrollback
-void Key_Console(int key)
-{
-	static int history_line = 0; //mxd. Made local
-	
-	key = Key_ConvertNumPadKey(key); //mxd
-
-	if ((toupper(key) == 'V' && keydown[K_CTRL]) || ((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
-	{
-		char *cbd = Sys_GetClipboardData();
-		if (cbd)
-		{
-			strtok(cbd, "\n\r\b");
-
-			int len = strlen(cbd);
-			if (len + key_linepos >= MAXCMDLINE)
-				len = MAXCMDLINE - key_linepos;
-
-			if (len > 0)
-			{
-				cbd[len] = 0;
-				Q_strncatz(key_lines[edit_line], cbd, sizeof(key_lines[edit_line]));
-				key_linepos += len;
-			}
-
-			free(cbd);
-		}
-
-		con.backedit = 0;
-	}
-	else if ((key == 'l' || key == 'c') && keydown[K_CTRL]) //mxd. +Clear via Ctrl-C 
-	{
-		Cbuf_AddText ("clear\n");
-		con.backedit = 0;
-	}
-	else if (key == K_ENTER || key == K_KP_ENTER)
-	{
-		// Backslash text are commands, else chat
-		if (key_lines[edit_line][1] == '\\' || key_lines[edit_line][1] == '/')
-			Cbuf_AddText(key_lines[edit_line] + 2);	// Skip the >
-		else
-			Cbuf_AddText(key_lines[edit_line] + 1);	// Valid command
-
-		Cbuf_AddText("\n");
-		Com_Printf("%s\n", key_lines[edit_line]);
-
-		edit_line = (edit_line + 1) & 31;
-		history_line = edit_line;
-		key_lines[edit_line][0] = ']';
-		key_linepos = 1;
-		con.backedit = 0;
-
-		if (cls.state == ca_disconnected)
-			SCR_UpdateScreen();	// Force an update, because the command may take some time
-	}
-	else if (key == K_TAB)
-	{
-		// Command completion
-		CompleteCommand();
-		con.backedit = 0; // Knightmare added
-	}
-	else if (key == K_BACKSPACE)
-	{
-		if (key_linepos > 1)
-		{
-			if (con.backedit && con.backedit < key_linepos)
-			{
-				if (key_linepos - con.backedit <= 1)
-					return;
-
-				for (int i = key_linepos - con.backedit - 1; i < key_linepos; i++)
-					key_lines[edit_line][i] = key_lines[edit_line][i + 1];
-			}
-			
-			key_linepos--; //mxd
-		}
-	}
-	else if (key == K_DEL)
-	{
-		if (key_linepos > 1 && con.backedit)
-		{
-			for (int i = key_linepos - con.backedit; i < key_linepos; i++)
-				key_lines[edit_line][i] = key_lines[edit_line][i + 1];
-
-			con.backedit--;
-			key_linepos--;
-		}
-	}
-	else if (key == K_LEFTARROW) // Added from Quake2max
-	{
-		if (key_linepos > 1)
-		{
-			con.backedit++;
-			con.backedit = min(con.backedit, key_linepos - 1); //mxd
-		}
-	}
-	else if (key == K_RIGHTARROW)
-	{
-		if (key_linepos > 1)
-		{
-			con.backedit--;
-			con.backedit = max(con.backedit, 0); //mxd
-		}
-	} // end Q2max
-	else if (key == K_UPARROW || key == K_KP_UPARROW || (key == 'p' && keydown[K_CTRL]))
-	{
-		do
-		{
-			history_line = (history_line - 1) & 31;
-		} while (history_line != edit_line && !key_lines[history_line][1]);
-
-		if (history_line == edit_line)
-			history_line = (edit_line + 1) & 31;
-
-		Q_strncpyz(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
-		key_linepos = strlen(key_lines[edit_line]);
-	}
-	else if (key == K_DOWNARROW || key == K_KP_DOWNARROW || (key == 'n' && keydown[K_CTRL]))
-	{
-		if (history_line == edit_line)
-			return;
-
-		do
-		{
-			history_line = (history_line + 1) & 31;
-		}
-		while (history_line != edit_line && !key_lines[history_line][1]);
-
-		if (history_line == edit_line)
-		{
-			key_lines[edit_line][0] = ']';
-			key_linepos = 1;
-		}
-		else
-		{
-			Q_strncpyz(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
-			key_linepos = strlen(key_lines[edit_line]);
-		}
-	}
-	else if (key == K_PGUP || key == K_KP_PGUP)
-	{
-		const int linesonscreen = Con_LinesOnScreen(); //mxd
-		const int firstline = Con_FirstLine();
-
-		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
-		{
-			con.display -= linesonscreen - 2; // Was 2
-			con.display = max(con.display, firstline + linesonscreen - 2);
-		}
-	}
-	else if (key == K_PGDN || key == K_KP_PGDN) // Quake2max change
-	{
-		con.display += Con_LinesOnScreen() - 2; //mxd. Was 2
-		con.display = min(con.display, con.current);
-	}
-	else if (key == K_MWHEELUP) //mxd
-	{
-		const int linesonscreen = Con_LinesOnScreen();
-		const int firstline = Con_FirstLine();
-
-		if(con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
-		{
-			con.display -= 2;
-			con.display = max(con.display, firstline + linesonscreen - 2);
-		}
-	}
-	else if (key == K_MWHEELDOWN) //mxd
-	{
-		con.display += 2;
-		con.display = min(con.display, con.current);
-	}
-	else if (key == K_HOME || key == K_KP_HOME)
-	{
-		const int linesonscreen = Con_LinesOnScreen(); //mxd
-		const int firstline = Con_FirstLine();
-
-		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
-			con.display = firstline + linesonscreen - 2;
-	}
-	else if (key == K_END || key == K_KP_END)
-	{
-		con.display = con.current;
-	}
-	else if (key < 32 || key > 127)
-	{
-		// non printable
-	}
-	else if (key_linepos < MAXCMDLINE - 1)
-	{	
-		// Knightmare- added from Quake2Max
-		if (con.backedit) // Insert character...
-		{
-			int i;
-			for (i = key_linepos; i > key_linepos - con.backedit; i--)
-				key_lines[edit_line][i] = key_lines[edit_line][i - 1];
-
-			key_lines[edit_line][i] = key;
-		}
-		else
-		{
-			key_lines[edit_line][key_linepos] = key;
-		}
-
-		key_linepos++;
-		key_lines[edit_line][key_linepos] = 0;
-	}
-}
-
-#pragma endregion 
 
 #pragma region ======================= Key message processing
 
@@ -642,14 +403,6 @@ void Key_Bindlist_f(void)
 
 void Key_Init(void)
 {
-	for (int i = 0; i < 32; i++)
-	{
-		key_lines[i][0] = ']';
-		key_lines[i][1] = 0;
-	}
-
-	key_linepos = 1;
-	
 	// Init ascii characters in console mode
 	for (int i = 32; i < 128; i++)
 		consolekeys[i] = true;
@@ -918,7 +671,7 @@ void Key_Event(int key, qboolean down, unsigned time)
 
 	if (cls.consoleActive) // Knightmare added
 	{
-		Key_Console(key);
+		Con_KeyDown(key);
 	}
 	else if (!scr_draw_loading) // Added check from Quake2Max
 	{
@@ -928,11 +681,20 @@ void Key_Event(int key, qboolean down, unsigned time)
 			case key_menu:	  UI_Keydown(key); break;
 
 			case key_game:
-			case key_console: Key_Console(key); break;
+			case key_console: Con_KeyDown(key); break;
 
 			default: Com_Error(ERR_FATAL, "Bad cls.key_dest");
 		}
 	} // end Knightmare
+}
+
+//mxd. From Q2E
+qboolean Key_IsDown(int key)
+{
+	if (key < 0 || key > 255)
+		return false;
+
+	return keydown[key];
 }
 
 void Key_ClearStates(void)
