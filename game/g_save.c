@@ -396,8 +396,8 @@ void InitGame (void)
 	corpse_fadetime = gi.cvar("corpse_fadetime", "20", 0);
 	crosshair = gi.cvar("crosshair", "1", 0);
 	footstep_sounds = gi.cvar("footstep_sounds", "0", CVAR_SERVERINFO|CVAR_LATCH);
-	fov = gi.cvar("fov", "90", 0);
-	hand = gi.cvar("hand", "0", 0);
+	info_fov = gi.cvar("fov", "90", 0);
+	info_hand = gi.cvar("hand", "0", 0);
 	jetpack_weenie = gi.cvar("jetpack_weenie", "0", CVAR_SERVERINFO);
 	joy_pitchsensitivity = gi.cvar("joy_pitchsensitivity", "1", 0);
 	joy_yawsensitivity = gi.cvar("joy_yawsensitivity", "-1", 0);

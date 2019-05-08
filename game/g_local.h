@@ -764,11 +764,11 @@ extern	cvar_t	*crosshair;
 extern	cvar_t	*crossh;
 extern	cvar_t	*developer;
 extern	cvar_t	*footstep_sounds;
-extern	cvar_t	*fov;
+extern	cvar_t	*info_fov;
 extern	cvar_t	*gl_clear;
 extern  cvar_t  *gl_driver;
 extern	cvar_t	*gl_driver_fog;   // Name of dll to load for Default OpenGL mode
-extern	cvar_t	*hand;
+extern	cvar_t	*info_hand;
 extern	cvar_t	*jetpack_weenie;
 extern	cvar_t	*joy_pitchsensitivity;
 extern	cvar_t	*joy_yawsensitivity;

@@ -462,14 +462,14 @@ extern	cvar_t	*cl_async;
 // Knighthare added
 extern	cvar_t	*info_password;
 extern	cvar_t	*info_spectator;
-extern	cvar_t	*name;
-extern	cvar_t	*skin;
-extern	cvar_t	*rate;
-extern	cvar_t	*fov;
-extern	cvar_t	*msg;
-extern	cvar_t	*hand;
-extern	cvar_t	*gender;
-extern	cvar_t	*gender_auto;
+extern	cvar_t	*info_name;
+extern	cvar_t	*info_skin;
+extern	cvar_t	*info_rate;
+extern	cvar_t	*info_fov;
+extern	cvar_t	*info_msg;
+extern	cvar_t	*info_hand;
+extern	cvar_t	*info_gender;
+extern	cvar_t	*info_gender_auto;
 // end Knightmare
 
 extern	cvar_t	*cl_vwep;

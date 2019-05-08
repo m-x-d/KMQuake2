@@ -362,7 +362,7 @@ qboolean PlayerConfig_MenuInit(void)
 	if (hand->value < 0 || hand->value > 2)
 		Cvar_SetValue("hand", 0);
 
-	Q_strncpyz(currentdirectory, skin->string, sizeof(currentdirectory));
+	Q_strncpyz(currentdirectory, info_skin->string, sizeof(currentdirectory));
 
 	if (strchr(currentdirectory, '/'))
 	{
@@ -412,8 +412,8 @@ qboolean PlayerConfig_MenuInit(void)
 	s_player_name_field.generic.y = y;
 	s_player_name_field.length = 20;
 	s_player_name_field.visible_length = 21; //mxd. Add space to draw cursor
-	Q_strncpyz(s_player_name_field.buffer, name->string, sizeof(s_player_name_field.buffer));
-	s_player_name_field.cursor = strlen(name->string);
+	Q_strncpyz(s_player_name_field.buffer, info_name->string, sizeof(s_player_name_field.buffer));
+	s_player_name_field.cursor = strlen(info_name->string);
 
 	s_player_model_title.generic.type = MTYPE_SEPARATOR;
 	s_player_model_title.generic.flags = QMF_LEFT_JUSTIFY;
@@ -738,7 +738,7 @@ void PlayerConfig_MenuDraw(void)
 		refdef.entities = entity;
 
 		float yaw = anglemod(cl.time / 10.0f);
-		if (hand->value == 1)
+		if (info_hand->value == 1)
 			yaw -= 90; //mxd. Fixes model facing when switching handedness
 
 		VectorSet(modelOrg, 150, -25, 0);
@@ -752,7 +752,7 @@ void PlayerConfig_MenuDraw(void)
 		ent->skin = playerskin;
 
 		ent->flags = RF_FULLBRIGHT | RF_NOSHADOW | RF_DEPTHHACK;
-		if (hand->value == 1)
+		if (info_hand->value == 1)
 			ent->flags |= RF_MIRRORMODEL;
 
 		VectorCopy(modelOrg, ent->origin); //mxd
@@ -777,7 +777,7 @@ void PlayerConfig_MenuDraw(void)
 			ent->skinnum = 0;
 
 			ent->flags = RF_FULLBRIGHT | RF_NOSHADOW | RF_DEPTHHACK;
-			if (hand->value == 1)
+			if (info_hand->value == 1)
 				ent->flags |= RF_MIRRORMODEL;
 
 			VectorCopy(modelOrg, ent->origin); //mxd

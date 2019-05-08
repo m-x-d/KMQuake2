@@ -1457,7 +1457,7 @@ void CL_AddBeams (void)
 	vec3_t		grapple_offset_dir;
 
 	// chasecam grapple offset stuff
-	const int handmult = (hand && hand->value == 1 ? -1 : 1); //mxd
+	const int handmult = (info_hand && info_hand->value == 1 ? -1 : 1); //mxd
 
 	vec3_t thirdp_grapple_offset;
 	VectorSet(thirdp_grapple_offset, 6, 16, 16);
@@ -1628,11 +1628,11 @@ void CL_AddPlayerBeams (void)
 	vec3_t		pbeam_offset_dir;
 
 //PMM
-	if (hand)
+	if (info_hand)
 	{
-		if (hand->value == 2)
+		if (info_hand->value == 2)
 			hand_multiplier = 0;
-		else if (hand->value == 1)
+		else if (info_hand->value == 1)
 			hand_multiplier = -1;
 		else
 			hand_multiplier = 1;
@@ -1713,7 +1713,7 @@ void CL_AddPlayerBeams (void)
 					VectorMA(org, b->offset[1], cl.v_forward, org);
 					VectorMA(org, b->offset[2], cl.v_up, org);
 					
-					if (hand && hand->value == 2) 
+					if (info_hand && info_hand->value == 2) 
 						VectorMA(org, -1, cl.v_up, org);
 
 					// FIXME - take these out when final
@@ -1763,7 +1763,7 @@ void CL_AddPlayerBeams (void)
 				VectorMA(dist, thirdp_pbeam_offset[2], u, dist);
 			}
 
-			if (hand && hand->value == 2 && !chasecam)
+			if (info_hand && info_hand->value == 2 && !chasecam)
 				VectorMA(org, -1, cl.v_up, org);
 		}
 //PMM

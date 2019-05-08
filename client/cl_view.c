@@ -37,7 +37,7 @@ cvar_t		*cl_testblend;
 
 cvar_t		*cl_stats;
 
-cvar_t		*hand;
+cvar_t		*info_hand;
 
 
 int			r_numdlights;
@@ -123,7 +123,7 @@ void V_AddEntity (entity_t *ent)
 		for (int i = 0; i < 3; i++)
 			clientOrg[i] = ent->oldorigin[i] = ent->origin[i] = cl.predicted_origin[i];
 
-		if (hand->value == 1) //lefthanded
+		if (info_hand->value == 1) //lefthanded
 			ent->flags |= RF_MIRRORMODEL;
 
 		if (cg_thirdperson->value && !(cl.attractloop && !(cl.cinematictime > 0 && cls.realtime - cl.cinematictime > 1000)))
@@ -488,7 +488,7 @@ void CL_PrepRefresh(void)
 
 	// Knightmare - Vics fix to get rid of male/grunt flicker
 	// CL_LoadClientinfo (&cl.baseclientinfo, "unnamed\\male/grunt");
-	CL_LoadClientinfo(&cl.baseclientinfo, va("unnamed\\%s", skin->string));
+	CL_LoadClientinfo(&cl.baseclientinfo, va("unnamed\\%s", info_skin->string));
 
 	// Knightmare- refresh the player model/skin info
 	userinfo_modified = true;
@@ -817,7 +817,7 @@ void V_Init (void)
 	Cmd_AddCommand("surf", V_Surf_f);
 	//Cmd_AddCommand("bbox", V_BBox_f);
 
-	hand = Cvar_Get("hand", "0", CVAR_ARCHIVE);
+	info_hand = Cvar_Get("hand", "0", CVAR_ARCHIVE);
 
 	cl_testblend = Cvar_Get("cl_testblend", "0", 0);
 	cl_testparticles = Cvar_Get("cl_testparticles", "0", 0);

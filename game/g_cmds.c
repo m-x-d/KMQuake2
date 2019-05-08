@@ -1694,7 +1694,7 @@ void SetSensitivities (edict_t *ent, qboolean reset)
 			Com_sprintf(string, sizeof(string), "cl_gun %i\n",atoi(lazarus_cl_gun->string));
 			stuffcmd(ent,string);
 		}
-		ent->client->pers.hand = hand->value;
+		ent->client->pers.hand = info_hand->value;
 	}
 	else
 	{

@@ -143,14 +143,14 @@ cvar_t	*cl_lightlevel;
 //
 cvar_t	*info_password;
 cvar_t	*info_spectator;
-cvar_t	*name;
-cvar_t	*skin;
-cvar_t	*rate;
-cvar_t	*fov;
-cvar_t	*msg;
-cvar_t	*hand;
-cvar_t	*gender;
-cvar_t	*gender_auto;
+cvar_t	*info_name;
+cvar_t	*info_skin;
+cvar_t	*info_rate;
+cvar_t	*info_fov;
+cvar_t	*info_msg;
+cvar_t	*info_hand;
+cvar_t	*info_gender;
+cvar_t	*info_gender_auto;
 
 cvar_t	*cl_vwep;
 
@@ -1008,18 +1008,18 @@ void CL_ReadPackets(void)
 
 void CL_FixUpGender(void)
 {
-	if (!gender_auto->integer)
+	if (!info_gender_auto->integer)
 		return;
 
-	if (gender->modified)
+	if (info_gender->modified)
 	{
 		// Was set directly, don't override the user
-		gender->modified = false;
+		info_gender->modified = false;
 		return;
 	}
 
 	char sk[80];
-	strncpy(sk, skin->string, sizeof(sk) - 1);
+	strncpy(sk, info_skin->string, sizeof(sk) - 1);
 	char *p = strchr(sk, '/');
 
 	if (p != NULL)
@@ -1032,7 +1032,7 @@ void CL_FixUpGender(void)
 	else
 		Cvar_Set("gender", "none");
 
-	gender->modified = false;
+	info_gender->modified = false;
 }
 
 void CL_Userinfo_f(void)
@@ -1248,15 +1248,15 @@ void CL_InitLocal(void)
 	//
 	info_password = Cvar_Get("password", "", CVAR_USERINFO);
 	info_spectator = Cvar_Get("spectator", "0", CVAR_USERINFO);
-	name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
-	skin = Cvar_Get("skin", "male/grunt", CVAR_USERINFO | CVAR_ARCHIVE);
-	rate = Cvar_Get("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE);	// FIXME
-	msg = Cvar_Get("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
-	hand = Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
-	fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
-	gender = Cvar_Get("gender", "male", CVAR_USERINFO | CVAR_ARCHIVE);
-	gender_auto = Cvar_Get("gender_auto", "1", CVAR_ARCHIVE);
-	gender->modified = false; // Clear this so we know when user sets it manually
+	info_name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_skin = Cvar_Get("skin", "male/grunt", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_rate = Cvar_Get("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE);	// FIXME
+	info_msg = Cvar_Get("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_hand = Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_gender = Cvar_Get("gender", "male", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_gender_auto = Cvar_Get("gender_auto", "1", CVAR_ARCHIVE);
+	info_gender->modified = false; // Clear this so we know when user sets it manually
 
 	cl_vwep = Cvar_Get("cl_vwep", "1", CVAR_ARCHIVE);
 
