@@ -519,6 +519,7 @@ float ClampCvar(float min, float max, float value);
 void TextColor(int colornum, int *red, int *green, int *blue);
 qboolean StringSetParams(char modifier, int *red, int *green, int *blue, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *reset);
 qboolean StringCheckParams(char modifier); //mxd
+qboolean IsColoredString(char *s); //mxd
 void Con_DrawString(int x, int y, char *string, int alpha);
 void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit);
 

@@ -101,12 +101,23 @@ qboolean StringSetParams(char modifier, int *red, int *green, int *blue, qboolea
 	if (!alt_text_color)
 		alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
 
-	switch (modifier)
+	switch (tolower(modifier))
 	{
-		case 'R': case 'r': *reset = true;  return true;
-		case 'B': case 'b':	*bold = !*bold;	return true;
-		case 'S': case 's':	*shadow = !*shadow; return true;
-		case 'I': case 'i': *italic = !*italic; return true;
+		case COLOR_RESET:
+			*reset = true;
+			return true;
+
+		case COLOR_BOLD:
+			*bold = !*bold;
+			return true;
+
+		case COLOR_SHADOW:
+			*shadow = !*shadow;
+			return true;
+
+		case COLOR_ITALIC:
+			*italic = !*italic;
+			return true;
 		
 		case COLOR_RED:
 		case COLOR_GREEN:
@@ -121,12 +132,13 @@ qboolean StringSetParams(char modifier, int *red, int *green, int *blue, qboolea
 			TextColor(atoi(&modifier), red, green, blue);
 			return true;
 
-		case 'A': case 'a': // Alternative text color
+		case COLOR_ALT: // Alternative text color
 			TextColor(alt_text_color->integer, red, green, blue);
 			return true;
+
+		default:
+			return false;
 	}
-	
-	return false;
 }
 
 //mxd
@@ -134,6 +146,35 @@ qboolean StringCheckParams(char modifier)
 {
 	int i; qboolean b;
 	return StringSetParams(modifier, &i, &i, &i, &b, &b, &b, &b);
+}
+
+//mxd
+qboolean IsColoredString(char *s)
+{
+	if (strlen(s) < 2 || *s != Q_COLOR_ESCAPE)
+		return false;
+
+	switch (s[1])
+	{
+		case COLOR_GRAY:
+		case COLOR_RED:
+		case COLOR_GREEN:
+		case COLOR_YELLOW:
+		case COLOR_BLUE:
+		case COLOR_CYAN:
+		case COLOR_MAGENTA:
+		case COLOR_WHITE:
+		case COLOR_BLACK:
+		case COLOR_ORANGE:
+		case COLOR_ALT:
+		case COLOR_BOLD:
+		case COLOR_SHADOW:
+		case COLOR_ITALIC:
+			return true;
+
+		default:
+			return false;
+	}
 }
 
 void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit)
@@ -201,7 +242,7 @@ void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletyp
 				textScale = HudScale();
 				// Hack for alternate text color
 				if (altBit)
-					character ^= 0x80;
+					character ^= 128;
 				if (character & 128)
 					TextColor(alt_text_color->integer, &red, &green, &blue);
 				break;

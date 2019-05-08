@@ -28,16 +28,12 @@ cvar_t *con_notifytime;
 cvar_t *con_alpha;		// Knightare- Psychospaz's transparent console
 cvar_t *con_newconback;	// Whether to use new console background
 cvar_t *con_oldconbar;	// Whether to draw bottom bar on old console
+
 static qboolean newconback_found = false; // Whether to draw Q3-style console
 
-static char key_lines[32][MAXCMDLINE];
+static char key_lines[32][MAXCMDLINE]; // Manually entered console commands are stored here
 static int edit_line;
-static int key_linepos;
-
-void Con_DrawString(int x, int y, char *string, int alpha)
-{
-	DrawStringGeneric(x, y, string, alpha, SCALETYPE_CONSOLE, false);
-}
+static int key_linepos; // Current index into key_lines[]
 
 static void Key_ClearTyping(void)
 {
@@ -45,6 +41,8 @@ static void Key_ClearTyping(void)
 	key_linepos = 1;
 	con.backedit = 0;
 }
+
+#pragma region ======================= Console commands
 
 void Con_ToggleConsole_f(void)
 {
@@ -92,17 +90,12 @@ void Con_Clear_f(void)
 	memset(con.text, ' ', CON_TEXTSIZE);
 
 	//mxd. Also reset display line and curent line...
-	con.display = con.current = con.totallines;
+	con.displayline = con.currentline = con.totallines;
 }
 
 // Save the console contents out to a file
 static void Con_Dump_f(void)
 {
-	int l, x;
-	char *line;
-	char buffer[MAXCMDLINE];
-	char name[MAX_OSPATH];
-
 	if (Cmd_Argc() > 2)
 	{
 		Com_Printf("Usage: condump <filename>\n");
@@ -110,6 +103,8 @@ static void Con_Dump_f(void)
 	}
 
 	char *filename = (Cmd_Argc() == 1 ? "condump" : Cmd_Argv(1)); //mxd. +Default filename
+
+	char name[MAX_OSPATH];
 	Com_sprintf(name, sizeof(name), "%s/%s.txt", FS_Gamedir(), filename);
 
 	FS_CreatePath(name);
@@ -121,29 +116,34 @@ static void Con_Dump_f(void)
 	}
 
 	// Skip empty lines
-	for (l = con.current - con.totallines + 1; l <= con.current; l++)
+	int lineindex;
+	for (lineindex = con.currentline - con.totallines + 1; lineindex <= con.currentline; lineindex++)
 	{
-		line = con.text + (l % con.totallines) * con.linewidth;
+		char *line = con.text + (lineindex % con.totallines) * con.linewidth;
 
-		for (x = 0; x < con.linewidth; x++)
-			if (line[x] != ' ')
+		int pos;
+		for (pos = 0; pos < con.linewidth; pos++)
+			if (line[pos] != ' ')
 				break;
 
-		if (x != con.linewidth)
+		if (pos != con.linewidth)
 			break;
 	}
 
 	// Write the remaining lines
-	buffer[con.linewidth] = 0;
-	for (; l <= con.current; l++)
+	for (; lineindex <= con.currentline; lineindex++)
 	{
-		line = con.text + (l % con.totallines) * con.linewidth;
+		char *line = con.text + (lineindex % con.totallines) * con.linewidth;
+
+		char buffer[MAXCMDLINE];
 		strncpy(buffer, line, con.linewidth);
 
-		for (x = con.linewidth - 1; x >= 0; x--)
+		// Zero-out trailing spaces
+		buffer[con.linewidth] = 0;
+		for (int pos = con.linewidth - 1; pos >= 0; pos--)
 		{
-			if (buffer[x] == ' ')
-				buffer[x] = 0;
+			if (buffer[pos] == ' ')
+				buffer[pos] = 0;
 			else
 				break;
 		}
@@ -154,13 +154,7 @@ static void Con_Dump_f(void)
 	fclose(f);
 
 	// Done
-	Com_Printf("Dumped console text to %s.\n", name);
-}
-
-void Con_ClearNotify(void)
-{
-	for (int i = 0; i < NUM_CON_TIMES; i++)
-		con.times[i] = 0;
+	Com_Printf("Dumped console text to '%s'.\n", name);
 }
 
 static void Con_MessageMode_f(void)
@@ -175,6 +169,14 @@ static void Con_MessageMode2_f(void)
 	chat_team = true;
 	cls.key_dest = key_message;
 	cls.consoleActive = false; // Knightmare added
+}
+
+#pragma endregion 
+
+void Con_ClearNotify(void)
+{
+	for (int i = 0; i < NUM_CON_TIMES; i++)
+		con.notifytimes[i] = 0;
 }
 
 // If the line width has changed, reformat the buffer.
@@ -193,9 +195,9 @@ void Con_CheckResize(void)
 		width = MAXCMDLINE;
 	}
 
-	if (width < 1) // video hasn't been initialized yet
+	if (width < 1) // Video hasn't been initialized yet
 	{
-		width = 78; // was 38
+		width = 78; // Was 38
 		con.linewidth = width;
 		con.backedit = 0;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
@@ -219,13 +221,13 @@ void Con_CheckResize(void)
 
 		for (int i = 0; i < numlines; i++)
 			for (int j = 0; j < numchars; j++)
-				con.text[(con.totallines - 1 - i) * con.linewidth + j] = tbuf[((con.current - i + oldtotallines) % oldtotallines) * oldwidth + j];
+				con.text[(con.totallines - 1 - i) * con.linewidth + j] = tbuf[((con.currentline - i + oldtotallines) % oldtotallines) * oldwidth + j];
 
 		Con_ClearNotify();
 	}
 
-	con.current = con.totallines - 1;
-	con.display = con.current;
+	con.currentline = con.totallines - 1;
+	con.displayline = con.currentline;
 }
 
 void Con_Init(void)
@@ -270,12 +272,12 @@ void Con_Init(void)
 
 static void Con_Linefeed(void)
 {
-	con.x = 0;
-	if (con.display == con.current)
-		con.display++;
+	con.offsetx = 0;
+	if (con.displayline == con.currentline)
+		con.displayline++;
 
-	con.current++;
-	memset(&con.text[(con.current % con.totallines) * con.linewidth], ' ', con.linewidth);
+	con.currentline++;
+	memset(&con.text[(con.currentline % con.totallines) * con.linewidth], ' ', con.linewidth);
 }
 
 // Handles cursor positioning, line wrapping, etc.
@@ -283,76 +285,93 @@ static void Con_Linefeed(void)
 // If no console is visible, the text will appear at the top of the game window.
 void Con_Print(char *text)
 {
-	int c, l;
-	static qboolean cr;
-	int mask;
-
+	static qboolean carriage_return;
+	
 	if (!con.initialized)
 		return;
 
+	int mask = 0;
 	if (text[0] == 1 || text[0] == 2)
 	{
 		mask = 128; // Go to colored text
 		text++;
 	}
-	else
-	{
-		mask = 0;
-	}
 
-	while ((c = *text))
+	// Add to con.text[], char by char
+	char colorchar = 0; //mxd. Last encountered COLOR_ char 
+	while (*text)
 	{
 		// Count word length
-		for (l = 0; l < con.linewidth; l++)
-			if (text[l] <= ' ')
+		int len;
+		for (len = 0; len < con.linewidth; len++)
+			if (text[len] <= ' ')
 				break;
 
-		// Word wrap
-		if (l != con.linewidth && con.x + l > con.linewidth)
-			con.x = 0;
-
-		text++;
-
-		if (cr)
+		//mxd. Don't count colouring chars towards word length...
+		if (IsColoredString(text))
 		{
-			con.current--;
-			cr = false;
+			len -= 2;
+			colorchar = text[1];
 		}
 
-		if (!con.x)
+		// Word wrap
+		if (len != con.linewidth && con.offsetx + len > con.linewidth)
+			con.offsetx = 0;
+
+		// Clear current line without advancing to the next one?
+		if (carriage_return)
+		{
+			con.currentline--;
+			carriage_return = false;
+		}
+
+		if (con.offsetx == 0)
 		{
 			Con_Linefeed();
+
+			//mxd. Add last used color from previous line
+			if (colorchar)
+			{
+				const int pos = (con.currentline % con.totallines) * con.linewidth;
+				con.text[pos + (con.offsetx++)] = Q_COLOR_ESCAPE;
+				con.text[pos + (con.offsetx++)] = colorchar;
+			}
 			
 			// Mark time for transparent overlay
-			if (con.current >= 0)
-				con.times[con.current % NUM_CON_TIMES] = (float)cls.realtime;
+			if (con.currentline >= 0)
+				con.notifytimes[con.currentline % NUM_CON_TIMES] = (float)cls.realtime;
 		}
 
-		switch (c)
+		switch (*text)
 		{
 			case '\n':
-				con.x = 0;
+				con.offsetx = 0;
+				colorchar = 0; //mxd
 				break;
 
 			case '\r':
-				con.x = 0;
-				cr = true;
+				con.offsetx = 0;
+				colorchar = 0; //mxd
+				carriage_return = true;
 				break;
 
 			default: // Display character and advance
 			{
-				const int y = con.current % con.totallines;
-				con.text[y * con.linewidth + con.x] = c | mask | con.ormask;
-				con.x++;
-				if (con.x >= con.linewidth)
-					con.x = 0;
+				const int pos = (con.currentline % con.totallines) * con.linewidth;
+				con.text[pos + (con.offsetx++)] = *text | mask | con.ormask;
+				if (con.offsetx >= con.linewidth)
+					con.offsetx = 0;
 				break;
 			}
 		}
+
+		// Advance to next char
+		text++;
 	}
 }
 
-void Con_CenteredPrint(char *text)
+//mxd. Never used
+/*void Con_CenteredPrint(char *text)
 {
 	char buffer[1024];
 
@@ -364,17 +383,17 @@ void Con_CenteredPrint(char *text)
 	Q_strncpyz(buffer + len, text, sizeof(buffer) - 1);
 	Q_strncatz(buffer, "\n", sizeof(buffer));
 	Con_Print(buffer);
-}
+}*/
 
 static int Con_LinesOnScreen() //mxd
 {
-	return (int)((con.vislines - (2.75f * FONT_SIZE)) / FONT_SIZE); // Lines of text to draw
+	return (int)((con.height - (2.75f * FONT_SIZE)) / FONT_SIZE); // Lines of text to draw
 }
 
 static int Con_FirstLine() //mxd
 {
 	// Find the first line with text...
-	for (int l = con.current - con.totallines + 1; l <= con.current; l++)
+	for (int l = con.currentline - con.totallines + 1; l <= con.currentline; l++)
 	{
 		char *line = con.text + (l % con.totallines) * con.linewidth;
 
@@ -383,10 +402,15 @@ static int Con_FirstLine() //mxd
 				return l;
 	}
 
-	return con.current; // We wrapped around / buffer is empty
+	return con.currentline; // We wrapped around / buffer is empty
 }
 
 #pragma region ======================= DRAWING
+
+void Con_DrawString(int x, int y, char *string, int alpha)
+{
+	DrawStringGeneric(x, y, string, alpha, SCALETYPE_CONSOLE, false);
+}
 
 // The input line scrolls horizontally if typing goes beyond the right edge
 static void Con_DrawInput(void)
@@ -401,7 +425,7 @@ static void Con_DrawInput(void)
 	if (con.backedit)
 		text[key_linepos] = ' ';
 	else
-		text[key_linepos] = 10 + ((int)(cls.realtime >> 8) & 1);
+		text[key_linepos] = 10 + ((int)(cls.realtime >> 8) & 1); // Alternate between empty char (10) and cursor char (11)
 	
 	// Fill out remainder with spaces
 	for (int i = key_linepos + 1; i < con.linewidth; i++)
@@ -416,13 +440,14 @@ static void Con_DrawInput(void)
 	Com_sprintf(output, sizeof(output), "");
 	for (int i = 0; i < con.linewidth; i++)
 	{
+		// Alternate between cursor char (11) and text char
 		if (con.backedit == key_linepos - i && ((int)(cls.realtime >> 8) & 1))
 			Com_sprintf(output, sizeof(output), "%s%c", output, 11);
 		else
 			Com_sprintf(output, sizeof(output), "%s%c", output, text[i]);
 	}
 
-	Con_DrawString((int)(FONT_SIZE / 2), con.vislines - (int)(2.75f * FONT_SIZE), output, 255);
+	Con_DrawString((int)(FONT_SIZE / 2), con.height - (int)(2.75f * FONT_SIZE), output, 255);
 
 	// Remove cursor
 	key_lines[edit_line][key_linepos] = 0;
@@ -431,24 +456,19 @@ static void Con_DrawInput(void)
 // Draws the last few lines of output transparently over the game top
 void Con_DrawNotify(void)
 {
-	int x;
+	int yoffset = 0;
+
 	char output[2048];
-	int i, j;
-	float time;
-
-	int lines = 0;
-	int v = 0;
-
 	Com_sprintf(output, sizeof(output), "");
 
-	// This is the say msg while typeing...
+	// This is the say msg while typing...
 	if (cls.key_dest == key_message)
 	{
 		char *target = (chat_team ? " say_team: " : " say: "); //mxd
 		Com_sprintf(output, sizeof(output), "%s", target);
 
 		char *s = chat_buffer;
-		x = 0;
+		int x = 0;
 
 		const int len = (int)((viddef.width / FONT_SIZE) - (strlen(output) + 1)); //mxd
 		if (chat_bufferlen > len)
@@ -467,17 +487,18 @@ void Con_DrawNotify(void)
 		if (!chat_backedit)
 			Com_sprintf(output, sizeof(output), "%s%c", output, 10 + ((int)(cls.realtime >> 8) & 1));
 
-		Con_DrawString(0, v, output, 255);
+		Con_DrawString(0, yoffset, output, 255);
 
-		v += (int)(FONT_SIZE * 2); // Make extra space so we have room
+		yoffset += (int)(FONT_SIZE * 2); // Make extra space so we have room
 	}
 
-	for (i = con.current - NUM_CON_TIMES + 1; i <= con.current; i++)
+	int lines = 0;
+	for (int i = con.currentline - NUM_CON_TIMES + 1; i <= con.currentline; i++)
 	{
 		if (i < 0)
 			continue;
 
-		time = con.times[i % NUM_CON_TIMES];
+		float time = con.notifytimes[i % NUM_CON_TIMES];
 		if (time == 0)
 			continue;
 
@@ -492,12 +513,12 @@ void Con_DrawNotify(void)
 	if (lines == 0)
 		return;
 
-	for (j = 0, i = con.current - NUM_CON_TIMES + 1; i <= con.current; i++, j++)
+	for (int i = con.currentline - NUM_CON_TIMES + 1; i <= con.currentline; i++)
 	{
 		if (i < 0)
 			continue;
 
-		time = con.times[i % NUM_CON_TIMES];
+		float time = con.notifytimes[i % NUM_CON_TIMES];
 		if (time == 0)
 			continue;
 
@@ -507,33 +528,29 @@ void Con_DrawNotify(void)
 
 		char *text = con.text + (i % con.totallines) * con.linewidth;
 			
-		int alpha = (int)(255 * sqrtf((1.0f - time / (con_notifytime->value * 1000.0f + 1.0f)) * (v + 8.0f) / (8.0f * lines)));
+		int alpha = (int)(255 * sqrtf((1.0f - time / (con_notifytime->value * 1000.0f + 1.0f)) * (yoffset + 8.0f) / (8.0f * lines)));
 		alpha = clamp(alpha, 0, 255); //mxd
 
 		Com_sprintf(output, sizeof(output), "");
-		for (x = 0; x < con.linewidth; x++)
+		for (int x = 0; x < con.linewidth; x++)
 			Com_sprintf(output, sizeof(output), "%s%c", output, (char)text[x]);
 
-		Con_DrawString((int)(FONT_SIZE / 2), v, output, alpha);
+		Con_DrawString((int)(FONT_SIZE / 2), yoffset, output, alpha);
 
-		v += (int)FONT_SIZE;
+		yoffset += (int)FONT_SIZE;
 	}
 }
 
 // Draws the console with the solid background
 void Con_DrawConsole(float heightratio, qboolean transparent)
 {
-	int		x, len;
-	char	*text, output[1024];
-	char	dlbar[1024];
-	float	barwidth, barheight; //Knightmare added
-	
 	// Changeable download bar color
-	int		red, green, blue;
+	int red, green, blue;
+	TextColor(alt_text_color->integer, &red, &green, &blue);
 
 	// Q3-style console bottom bar
-	TextColor((int)alt_text_color->value, &red, &green, &blue);
-	if ((newconback_found && con_newconback->value) || con_oldconbar->value)
+	float barwidth, barheight; //Knightmare added
+	if ((newconback_found && con_newconback->integer) || con_oldconbar->integer)
 	{
 		barwidth = SCREEN_WIDTH;
 		barheight = 2;
@@ -545,70 +562,71 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 		barheight = 0;
 	}
 
-	int lines = (int)(viddef.height * heightratio);
-	if (lines <= 0)
+	const int consoleheight = (int)(viddef.height * min(heightratio, 1.0f));
+	if (consoleheight <= 0)
 		return;
-
-	if (lines > viddef.height)
-		lines = viddef.height;
 
 	// Psychospaz's transparent console
 	float alpha = 1.0f;
 	if(transparent)
 	{
-		if (newconback_found && con_newconback->value)
+		if (newconback_found && con_newconback->integer)
 			alpha = con_alpha->value;
 		else
 			alpha = heightratio * con_alpha->value * 2;
 	}
 
 	// Draw the background
-	int y = lines - (int)barheight;
-	if (y < 1)
-		y = 0;
+	int conbar_y = consoleheight - (int)barheight;
+	if (conbar_y < 1)
+		conbar_y = 0;
 	else if (newconback_found && con_newconback->value)	// Q3-style console
-		R_DrawStretchPic(0, 0, viddef.width, y, "/gfx/ui/newconback.pcx", alpha);
+		R_DrawStretchPic(0, 0, viddef.width, conbar_y, "/gfx/ui/newconback.pcx", alpha);
 	else
-		R_DrawStretchPic(0, (int)(lines - viddef.width * 0.75f - barheight), viddef.width, (int)(viddef.width * 0.75f), "conback", alpha); //mxd. Preserve aspect ratio (width * 0.75 == width / 4 * 3)
+		R_DrawStretchPic(0, (int)(consoleheight - viddef.width * 0.75f - barheight), viddef.width, (int)(viddef.width * 0.75f), "conback", alpha); //mxd. Preserve aspect ratio (width * 0.75 == width / 4 * 3)
 
-	// Changed to "KMQuake2 vx.xx"
+	// Draw engine name, version and build
 	char version[64];
 	Com_sprintf(version, sizeof(version), S_COLOR_BOLD S_COLOR_SHADOW S_COLOR_ALT"%s v%4.2f%s", ENGINE_NAME, VERSION, ENGINE_BUILD); //mxd. +ENGINE_NAME, +VERSION, +ENGINE_BUILD
-	Con_DrawString((int)(viddef.width - FONT_SIZE * (CL_UnformattedStringLength((const char *)&version)) - 3), y - (int)(1.25f * FONT_SIZE), version, 255);
+	Con_DrawString((int)(viddef.width - FONT_SIZE * (CL_UnformattedStringLength((const char *)&version)) - 3), conbar_y - (int)(1.25f * FONT_SIZE), version, 255);
 
-	if ((newconback_found && con_newconback->value) || con_oldconbar->value) // Q3-style console bottom bar
-		R_DrawFill(0, y, (int)barwidth, (int)barheight, red, green, blue, 255);
+	// Draw Q3-style console bottom bar?
+	if ((newconback_found && con_newconback->integer) || con_oldconbar->integer)
+		R_DrawFill(0, conbar_y, (int)barwidth, (int)barheight, red, green, blue, 255);
 
 	// Draw the text
-	con.vislines = lines;
-	int rows = Con_LinesOnScreen(); //mxd // Lines of text to draw
-	y = lines - (int)(3.75f * FONT_SIZE);
+	con.height = consoleheight;
+	int lines = Con_LinesOnScreen(); //mxd. Lines of text to draw
+	int line_y = consoleheight - (int)(3.75f * FONT_SIZE);
 
 	// Draw from the bottom up
-	if (con.display != con.current)
+	if (con.displayline != con.currentline)
 	{
 		// Draw arrows to show the buffer is backscrolled
-		for (x = 0; x < con.linewidth; x += 4)
-			R_DrawChar((x + 1) * FONT_SIZE, (float)y, '^', CON_FONT_SCALE, 255, 0, 0, 255, false, x + 4 >= con.linewidth);
+		for (int x = 0; x < con.linewidth; x += 4)
+			R_DrawChar((x + 1) * FONT_SIZE, (float)line_y, '^', CON_FONT_SCALE, 255, 0, 0, 255, false, x + 4 >= con.linewidth);
 	
-		y -= (int)FONT_SIZE;
-		rows--;
+		line_y -= (int)FONT_SIZE;
+		lines--;
 	}
 	
-	int row = con.display;
-	for (int i = 0; i < rows; i++, y -= (int)FONT_SIZE, row--)
+	// Draw text from the bottom up
+	int curline = con.displayline;
+	for (int i = 0; i < lines; i++, line_y -= (int)FONT_SIZE, curline--)
 	{
 		// Before || past scrollback wrap point
-		if (row < 0 || con.current - row >= con.totallines)
+		if (curline < 0 || con.currentline - curline >= con.totallines)
 			break;
 			
-		text = con.text + (row % con.totallines) * con.linewidth;
+		char *text = con.text + (curline % con.totallines) * con.linewidth;
 
+		char output[1024];
 		Com_sprintf(output, sizeof(output), "");
-		for (x = 0; x < con.linewidth; x++)
+
+		for (int x = 0; x < con.linewidth; x++)
 			Com_sprintf(output, sizeof(output), "%s%c", output, text[x]);
 
-		Con_DrawString(4, y, output, 255);
+		Con_DrawString(4, line_y, output, 255);
 	}
 
 //ZOID- draw the download bar
@@ -618,41 +636,41 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 	if (cls.download)
 #endif	// USE_CURL
 	{
-		if ((text = strrchr(cls.downloadname, '/')) != NULL)
-			text++;
+		char *downloadname = strrchr(cls.downloadname, '/');
+		if (downloadname != NULL)
+			downloadname++;
 		else
-			text = cls.downloadname;
+			downloadname = cls.downloadname;
 
+		char dlbar[1024];
 		memset(dlbar, 0, sizeof(dlbar)); // Clear dlbar
 
 		// Make this a little shorter in case of longer version string
-		x = con.linewidth - ((con.linewidth * 7) / 40) - (CL_UnformattedStringLength((const char *)&version) - 14);
-		y = x - strlen(text) - (cls.downloadrate > 0.0f ? 19 : 8);
+		const int x = con.linewidth - ((con.linewidth * 7) / 40) - (CL_UnformattedStringLength((const char *)&version) - 14);
+		int dlbar_width = x - strlen(downloadname) - (cls.downloadrate > 0.0f ? 19 : 8);
 
 		const int maxchars = con.linewidth / 3;
-		if ((int)strlen(text) > maxchars)
+		if ((int)strlen(downloadname) > maxchars)
 		{
-			y = x - maxchars - 11;
-			strncpy(dlbar, text, maxchars);
+			dlbar_width = x - maxchars - 11;
+			strncpy(dlbar, downloadname, maxchars);
 			dlbar[maxchars] = 0;
 			Q_strncatz(dlbar, "...", sizeof(dlbar));
 		}
 		else
 		{
-			Q_strncpyz(dlbar, text, sizeof(dlbar));
+			Q_strncpyz(dlbar, downloadname, sizeof(dlbar));
 		}
 
 		Q_strncatz(dlbar, ": ", sizeof(dlbar));
 
-		len = strlen(dlbar); //mxd
+		const int len = strlen(dlbar); //mxd
 		
 		// Init solid color download bar
 		int graph_x = (int)((len + 1) * FONT_SIZE);
-		int graph_y = (int)(con.vislines - (FONT_SIZE * 1.5f) - barheight); // was -12
-		int graph_w = (int)(y * FONT_SIZE);
-		int graph_h = (int)FONT_SIZE;
+		int graph_y = (int)(con.height - (FONT_SIZE * 1.5f) - barheight); // was -12
 
-		for (int i = 0; i < y; i++) // Add blank spaces
+		for (int i = 0; i < dlbar_width; i++) // Add blank spaces
 			Com_sprintf(dlbar + len, sizeof(dlbar) - len, " ");
 
 		if (cls.downloadrate > 0.0f)
@@ -668,8 +686,9 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 		// New solid color download bar
 		graph_x--;
 		graph_y--;
-		graph_w += 2;
-		graph_h += 2;
+
+		const int graph_w = (int)(dlbar_width * FONT_SIZE) + 2;
+		const int graph_h = (int)FONT_SIZE + 2;
 
 		R_DrawFill(graph_x, graph_y, graph_w, graph_h, 255, 255, 255, 90);
 		R_DrawFill((int)(graph_x + graph_h * 0.2f), (int)(graph_y + graph_h * 0.2f),
@@ -852,44 +871,44 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 		const int linesonscreen = Con_LinesOnScreen(); //mxd
 		const int firstline = Con_FirstLine();
 
-		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
+		if (con.currentline - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
 		{
-			con.display -= linesonscreen - 2; // Was 2
-			con.display = max(con.display, firstline + linesonscreen - 2);
+			con.displayline -= linesonscreen - 2; // Was 2
+			con.displayline = max(con.displayline, firstline + linesonscreen - 2);
 		}
 	}
 	else if (key == K_PGDN || key == K_KP_PGDN) // Quake2max change
 	{
-		con.display += Con_LinesOnScreen() - 2; //mxd. Was 2
-		con.display = min(con.display, con.current);
+		con.displayline += Con_LinesOnScreen() - 2; //mxd. Was 2
+		con.displayline = min(con.displayline, con.currentline);
 	}
 	else if (key == K_MWHEELUP) //mxd
 	{
 		const int linesonscreen = Con_LinesOnScreen();
 		const int firstline = Con_FirstLine();
 
-		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
+		if (con.currentline - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
 		{
-			con.display -= 2;
-			con.display = max(con.display, firstline + linesonscreen - 2);
+			con.displayline -= 2;
+			con.displayline = max(con.displayline, firstline + linesonscreen - 2);
 		}
 	}
 	else if (key == K_MWHEELDOWN) //mxd
 	{
-		con.display += 2;
-		con.display = min(con.display, con.current);
+		con.displayline += 2;
+		con.displayline = min(con.displayline, con.currentline);
 	}
 	else if (key == K_HOME || key == K_KP_HOME)
 	{
 		const int linesonscreen = Con_LinesOnScreen(); //mxd
 		const int firstline = Con_FirstLine();
 
-		if (con.current - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
-			con.display = firstline + linesonscreen - 2;
+		if (con.currentline - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
+			con.displayline = firstline + linesonscreen - 2;
 	}
 	else if (key == K_END || key == K_KP_END)
 	{
-		con.display = con.current;
+		con.displayline = con.currentline;
 	}
 	else if (key < 32 || key > 127)
 	{

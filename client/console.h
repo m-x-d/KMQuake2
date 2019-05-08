@@ -33,21 +33,19 @@ typedef struct
 	qboolean initialized;
 
 	char	text[CON_TEXTSIZE];
-	int		current;		// Line where next message will be printed
-	int		x;				// Offset in current line for next print
-	int		display;		// Bottom of console displays this line
+	int		currentline;	// Line where next message will be printed. Can exceed text[] size.
+	int		offsetx;		// Offset in current line for next print
+	int		displayline;	// Bottom of console displays this line
 
-	int		ormask;			// High bit mask for colored characters
+	int		ormask;			// High bit mask for colored characters. 0 or 128
 
-	int 	linewidth;		// Characters across screen
-	int		totallines;		// Total lines in console scrollback
-	int		backedit;
+	int 	linewidth;		// Max. number of characters to fit in a single line
+	int		totallines;		// Total text lines in console scrollback
+	int		backedit;		// Text input cursor position, relative to the last entered character
 
-	float	cursorspeed;
+	int		height;			// Total console height, in pixels. Changes when console is lowering/raising 
 
-	int		vislines;
-
-	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated. Used to draw transparent notify lines
+	float	notifytimes[NUM_CON_TIMES]; // cls.realtime time the line was generated. Used to draw transparent notify lines
 } console_t;
 
 extern console_t con;
@@ -57,7 +55,7 @@ void Con_CheckResize(void);
 void Con_Init(void);
 void Con_DrawConsole(float heightratio, qboolean transparent); //Knightmare changed
 void Con_KeyDown(int key); //mxd
-void Con_CenteredPrint(char *text);
+//void Con_CenteredPrint(char *text); //mxd. Never used
 void Con_Clear_f(void);
 void Con_DrawNotify(void);
 void Con_ClearNotify(void);

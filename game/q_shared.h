@@ -364,6 +364,11 @@ void Com_PageInMemory(byte *buffer, int size);
 #define COLOR_WHITE		'7'
 #define COLOR_BLACK		'8'
 #define COLOR_ORANGE	'9'
+#define COLOR_ALT		'a' //mxd
+#define COLOR_BOLD		'b' //mxd
+#define COLOR_SHADOW	's' //mxd
+#define COLOR_ITALIC	'i' //mxd
+#define COLOR_RESET		'r' //mxd
 
 #define S_COLOR_GRAY	"^0"
 #define S_COLOR_RED		"^1"
@@ -379,6 +384,7 @@ void Com_PageInMemory(byte *buffer, int size);
 #define S_COLOR_BOLD	"^b"
 #define S_COLOR_SHADOW	"^s"
 #define S_COLOR_ITALIC	"^i"
+#define S_COLOR_RESET	"^r" //mxd. Added for completeness sake
 
 #define Q_COLOR_ESCAPE	'^'
 
