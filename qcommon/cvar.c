@@ -78,23 +78,15 @@ char *Cvar_DefaultString(char *var_name)
 	return (var ? var->default_string : "");
 }
 
-char *Cvar_CompleteVariable(char *partial)
+void Cvar_CompleteVariable(const char *partial, void(*callback)(const char *found)) //mxd. +callback
 {
-	const int len = strlen(partial);
-	if (!len)
-		return NULL;
-		
-	// Check exact match
-	for (cvar_t *cvar = cvar_vars; cvar; cvar = cvar->next)
-		if (!strcmp(partial, cvar->name))
-			return cvar->name;
+	if (strlen(partial) == 0)
+		return;
 
-	// Check partial match
+	//mxd. Check, whether cvar name contains target string
 	for (cvar_t *cvar = cvar_vars; cvar; cvar = cvar->next)
-		if (!strncmp(partial, cvar->name, len))
-			return cvar->name;
-
-	return NULL;
+		if (Q_strcasestr(cvar->name, partial))
+			callback(cvar->name);
 }
 
 // If the variable already exists, the value will not be set.

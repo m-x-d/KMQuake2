@@ -593,165 +593,28 @@ qboolean Cmd_Exists(char *cmd_name)
 	return false;
 }
 
-// Knightmare - added command auto-complete
-char *Cmd_CompleteCommand(char *partial, qboolean *exactmatch)
+//mxd. Added alias auto-completion
+void Cmd_CompleteAlias(const char *partial, void(*callback)(const char *found))
 {
-	#define MAX_MATCHES 1024 //mxd
-	enum commandtype_t { TYPE_COMMAND, TYPE_ALIAS, TYPE_CVAR };
-	static char pmatchtypename[3][8] = { "command", "alias", "cvar" };
-	
-	*exactmatch = false;
-	const int len = strlen(partial);
+	if (strlen(partial) == 0)
+		return;
 
-	if (!len)
-		return NULL;
-
-	//mxd. Init collections
-	char *pmatch[MAX_MATCHES];
-	memset(pmatch, 0, sizeof(pmatch[0]) * MAX_MATCHES);
-	byte pmatchtype[MAX_MATCHES];
-	memset(pmatchtype, 0, MAX_MATCHES);
-
-	int nummatches = 0;
-
-	//mxd. Collect partial matches, which contain specified string
-	for (cmd_function_t *cmd = cmd_functions; cmd && nummatches < MAX_MATCHES; cmd = cmd->next)
-	{
-		if (Q_strcasestr(cmd->name, partial))
-		{
-			pmatch[nummatches] = cmd->name;
-			pmatchtype[nummatches] = TYPE_COMMAND;
-			nummatches++;
-		}
-	}
-
-	for (cmdalias_t *a = cmd_alias; a && nummatches < MAX_MATCHES; a = a->next)
-	{
+	//mxd. Check, whether alias name contains target string
+	for (cmdalias_t *a = cmd_alias; a; a = a->next)
 		if (Q_strcasestr(a->name, partial))
-		{
-			pmatch[nummatches] = a->name;
-			pmatchtype[nummatches] = TYPE_ALIAS;
-			nummatches++;
-		}
-	}
+			callback(a->name);
+}
 
-	for (cvar_t *cvar = cvar_vars; cvar && nummatches < MAX_MATCHES; cvar = cvar->next)
-	{
-		if (Q_strcasestr(cvar->name, partial))
-		{
-			pmatch[nummatches] = cvar->name;
-			pmatchtype[nummatches] = TYPE_CVAR;
-			nummatches++;
-		}
-	}
+// Knightmare - added command auto-complete
+void Cmd_CompleteCommand(const char *partial, void(*callback)(const char *found)) //mxd. +callback
+{
+	if (strlen(partial) == 0)
+		return;
 
-	// Check results
-	if (nummatches > 0)
-	{
-		Com_Printf("\n%i %s for \"%s\":\n", nummatches, (nummatches > 1 ? "matches" : "match"), partial);
-
-		//mxd. Sort'em... https://stackoverflow.com/questions/3893937/c-array-sorting-tips
-		for (int i = 0; i < nummatches - 1; ++i)
-		{
-			for (int j = 0; j < nummatches - 1 - i; ++j)
-			{
-				int pos = 0;
-				while (pmatch[j][pos] && pmatch[j][pos] == pmatch[j + 1][pos])
-					pos++;
-
-				if (pmatch[j][pos] > pmatch[j + 1][pos])
-				{
-					char *temp = pmatch[j + 1];
-					pmatch[j + 1] = pmatch[j];
-					pmatch[j] = temp;
-
-					const byte temp2 = pmatchtype[j + 1];
-					pmatchtype[j + 1] = pmatchtype[j];
-					pmatchtype[j] = temp2;
-				}
-			}
-		}
-
-		// Print'em
-		int exactmatchindex = -1;
-		for (int i = 0; i < nummatches; i++)
-		{
-			// Exact match?
-			if (!Q_strcasecmp(partial, pmatch[i]))
-			{
-				char *highlight = (nummatches > 1 ? ">>" : "  "); // Marking a single match looks silly...
-				Com_Printf(S_COLOR_GREEN"%s%s (%s)\n", highlight, pmatch[i], pmatchtypename[pmatchtype[i]]);
-				exactmatchindex = i;
-			}
-			else // Partial match. Highlight matching part
-			{
-				char *matchchar = Q_strcasestr(pmatch[i], partial);
-
-				char before[64], match[64], after[64];
-				Q_strncpyz(before, pmatch[i], matchchar - pmatch[i] + 1);
-				Q_strncpyz(match, matchchar, len + 1);
-				Q_strncpyz(after, matchchar + len, strlen(pmatch[i]) - len + 1);
-
-				Com_Printf(S_COLOR_WHITE"  %s"S_COLOR_YELLOW"%s"S_COLOR_WHITE"%s (%s)\n", before, match, after, pmatchtypename[pmatchtype[i]]);
-			}
-		}
-
-		// If there's exact match or a single match, return it
-		if (exactmatchindex != -1)
-		{
-			*exactmatch = true;
-			return pmatch[exactmatchindex];
-		}
-
-		if (nummatches == 1)
-		{
-			*exactmatch = true;
-			return pmatch[0];
-		}
-	}
-	else
-	{
-		// No matches...
-		return NULL;
-	}
-
-	//mxd. Proceed only when all matches start with specified string
-	for (int i = 0; i < nummatches; ++i)
-	{
-		int pos = 0;
-		while (pmatch[i][pos] && partial[pos] && pmatch[i][pos] == partial[pos])
-			pos++;
-
-		if (pos != len)
-			return NULL;
-	}
-
-	//mxd. Find the common part among all found matches, which start with specified string
-	char *retval = malloc(256);
-	Q_strncpyz(retval, partial, len + 1);
-	int c = len;
-	qboolean diff = false;
-
-	while (!diff && c < 256)
-	{
-		retval[c] = pmatch[0][c];
-		for (int i = 0; i < nummatches; i++)
-		{
-			if (c > (int)strlen(pmatch[i]))
-				continue;
-
-			if (retval[c] != pmatch[i][c])
-			{
-				retval[c] = 0;
-				diff = true;
-				break;
-			}
-		}
-
-		c++;
-	}
-
-	return retval;
+	//mxd. Check, whether command name contains target string
+	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
+		if (Q_strcasestr(cmd->name, partial))
+			callback(cmd->name);
 }
 
 // A complete command line has been parsed, so try to execute it

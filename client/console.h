@@ -24,15 +24,29 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	NUM_CON_TIMES	8 // was 4
 #define CON_TEXTSIZE	32768
+#define CON_MAXCMDS		1024 //mxd
 #define MAXCMDLINE		1024 // Max length of console command line
 							 // Increased from 256, fixes buffer overflow if vert res > 2048
 							 // Allows max vert res of 8192 for fullscreen console 
+
+enum commandtype_t //mxd
+{
+	TYPE_COMMAND,
+	TYPE_ALIAS,
+	TYPE_CVAR
+};
+
+typedef struct //mxd
+{
+	char *command;
+	enum commandtype_t type;
+} matchingcommand_t;
 
 typedef struct
 {
 	qboolean initialized;
 
-	char	text[CON_TEXTSIZE];
+	char	text[CON_TEXTSIZE]; // Initially filled with space char.
 	int		currentline;	// Line where next message will be printed. Can exceed text[] size.
 	int		offsetx;		// Offset in current line for next print
 	int		displayline;	// Bottom of console displays this line
@@ -46,6 +60,14 @@ typedef struct
 	int		height;			// Total console height, in pixels. Changes when console is lowering/raising 
 
 	float	notifytimes[NUM_CON_TIMES]; // cls.realtime time the line was generated. Used to draw transparent notify lines
+
+	//mxd. Command auto-completion.
+	matchingcommand_t commands[CON_MAXCMDS];
+	char	*partialmatch;	// Text used to trigger autocompletion.
+	int		commandscount;
+	int		currentcommand;
+	int		hintstartline;	// First line at which autocompletion hint was printed.
+	int		hintendline;	// Last line at which autocompletion hint was printed.
 } console_t;
 
 extern console_t con;

@@ -31,7 +31,9 @@ cvar_t *con_oldconbar;	// Whether to draw bottom bar on old console
 
 static qboolean newconback_found = false; // Whether to draw Q3-style console
 
-static char key_lines[32][MAXCMDLINE]; // Manually entered console commands are stored here
+#define NUM_KEY_LINES 32 //mxd
+
+static char key_lines[NUM_KEY_LINES][MAXCMDLINE]; // Manually entered console commands are stored here
 static int edit_line;
 static int key_linepos; // Current index into key_lines[]
 
@@ -91,6 +93,10 @@ void Con_Clear_f(void)
 
 	//mxd. Also reset display line and curent line...
 	con.displayline = con.currentline = con.totallines;
+
+	//mxd. Also reset autocomplete hintlines...
+	con.hintstartline = -1;
+	con.hintendline = -1;
 }
 
 // Save the console contents out to a file
@@ -244,6 +250,8 @@ void Con_Init(void)
 	
 	con.linewidth = -1;
 	con.backedit = 0;
+	con.hintstartline = -1; //mxd
+	con.hintendline = -1; //mxd
 
 	Con_CheckResize();
 	Com_Printf("Console initialized.\n");
@@ -703,30 +711,191 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 
 #pragma endregion
 
-#pragma region ======================= LINE TYPING INTO THE CONSOLE
+#pragma region ======================= COMMAND AUTO-COMPLETION
 
-static void Con_CompleteCommand(void)
+//mxd
+static void Con_ClearAutocompleteList()
 {
-	char *s = key_lines[edit_line] + 1;
-	if (*s == '\\' || *s == '/')
-		s++;
+	for (int i = 0; i < con.commandscount; i++)
+		FreeString(con.commands[i].command);
 
-	qboolean exactmatch = false; //mxd
-	char *cmd = Cmd_CompleteCommand(s, &exactmatch);
-
-	// Knightmare - added command auto-complete
-	if (cmd)
+	if (con.partialmatch != NULL)
 	{
-		key_lines[edit_line][1] = '/';
-		Q_strncpyz(key_lines[edit_line] + 2, cmd, sizeof(key_lines[edit_line]) - 2);
-		key_linepos = strlen(cmd) + 2;
+		FreeString(con.partialmatch);
+		con.partialmatch = NULL;
+	}
 
-		if (exactmatch) //mxd. Add trailing space only when a single/exact match was found
-			key_lines[edit_line][key_linepos++] = ' ';
+	con.commandscount = 0;
+	con.currentcommand = -1;
+	con.hintstartline = -1;
+	con.hintendline = -1;
+}
 
-		key_lines[edit_line][key_linepos] = 0;
+//mxd
+static void Con_CompleteCommandCallback(const char *found)
+{
+	if (con.commandscount < CON_MAXCMDS)
+	{
+		con.commands[con.commandscount].command = CopyString(found);
+		con.commands[con.commandscount].type = TYPE_COMMAND;
+		con.commandscount++;
 	}
 }
+
+//mxd
+static void Con_CompleteAliasCallback(const char *found)
+{
+	if (con.commandscount < CON_MAXCMDS)
+	{
+		con.commands[con.commandscount].command = CopyString(found);
+		con.commands[con.commandscount].type = TYPE_ALIAS;
+		con.commandscount++;
+	}
+}
+
+//mxd
+static void Con_CompleteVariableCallback(const char *found)
+{
+	if (con.commandscount < CON_MAXCMDS)
+	{
+		con.commands[con.commandscount].command = CopyString(found);
+		con.commands[con.commandscount].type = TYPE_CVAR;
+		con.commandscount++;
+	}
+}
+
+//mxd
+static int Con_SortCommands(const matchingcommand_t *first, const matchingcommand_t *second)
+{
+	return Q_stricmp(first->command, second->command);
+}
+
+//mxd
+static void Con_PrintMatchingCommands()
+{
+	static char matchtypename[3][8] = { "command", "alias", "cvar" }; // Contents must match commandtype_t types
+
+	// Replace previous lines if no extra messages were printed
+	if (con.hintendline == con.currentline)
+	{
+		con.currentline = con.hintstartline;
+		con.displayline = con.hintstartline;
+	}
+	else
+	{
+		con.hintstartline = con.currentline;
+	}
+
+	const int len = strlen(con.partialmatch);
+	
+	// Print matches count
+	Com_Printf("\n%i matches for \"%s\":\n", con.commandscount, con.partialmatch);
+
+	// Print matches
+	for (int i = 0; i < con.commandscount; i++)
+	{
+		// Display cvar value
+		char *value = "";
+		if (con.commands[i].type == TYPE_CVAR)
+			value = va(": \"%s\"", Cvar_FindVar(con.commands[i].command)->string);
+
+		// Exact match?
+		if (i == con.currentcommand || !Q_strcasecmp(con.partialmatch, con.commands[i].command))
+		{
+			Com_Printf(S_COLOR_GREEN">>%s (%s)%s\n", con.commands[i].command, matchtypename[con.commands[i].type], value);
+			con.currentcommand = i;
+		}
+		else // Partial match. Highlight matching part
+		{
+			char *matchchar = Q_strcasestr(con.commands[i].command, con.partialmatch);
+
+			char before[64], match[64], after[64];
+			Q_strncpyz(before, con.commands[i].command, matchchar - con.commands[i].command + 1);
+			Q_strncpyz(match, matchchar, len + 1);
+			Q_strncpyz(after, matchchar + len, strlen(con.commands[i].command) - len + 1);
+
+			Com_Printf(S_COLOR_WHITE"  %s"S_COLOR_YELLOW"%s"S_COLOR_WHITE"%s (%s)%s\n", before, match, after, matchtypename[con.commands[i].type], value);
+		}
+	}
+
+	// Print usage hint
+	Com_Printf("Press Tab to select next match, Shift-Tab to select previous.\n");
+
+	// Store hint end line
+	con.hintendline = con.currentline;
+}
+
+//mxd. Copies given text to the input area
+static void Con_SetInputText(const char *text)
+{
+	const int len = strlen(text);
+	if(len == 0)
+		return;
+	
+	// Copy text
+	key_lines[edit_line][1] = '/';
+	Q_strncpyz(key_lines[edit_line] + 2, text, sizeof(key_lines[edit_line]) - 2);
+	key_linepos = len + 2;
+
+	// Add trailing space
+	key_lines[edit_line][key_linepos++] = ' ';
+
+	// Add null terminator
+	key_lines[edit_line][key_linepos] = 0;
+}
+
+static void Con_CompleteCommand()
+{
+	char partial[MAXCMDLINE];
+	
+	// Skip leading slash...
+	char *in = key_lines[edit_line] + 1;
+	while (*in && (*in == '\\' || *in == '/'))
+		in++;
+
+	// Copy partial command till the first space
+	char *out = partial;
+	while (*in && (*in != ' '))
+		*out++ = *in++;
+	*out = 0;
+
+	// Nothing to search for?
+	if(!partial[0])
+		return;
+
+	// Clear the list
+	Con_ClearAutocompleteList();
+
+	// Find matching commands, aliases and variables
+	Cmd_CompleteCommand(partial, Con_CompleteCommandCallback);
+	Cmd_CompleteAlias(partial, Con_CompleteAliasCallback);
+	Cvar_CompleteVariable(partial, Con_CompleteVariableCallback);
+
+	// Nothing found?
+	if (con.commandscount == 0)
+		return;
+
+	// Only one result was found, so copy it to the edit line
+	if (con.commandscount == 1)
+	{
+		Con_SetInputText(con.commands[0].command);
+	}
+	else // Display the list of matching cmds, aliases and cvars
+	{
+		// Store partial match
+		con.partialmatch = CopyString(partial);
+		
+		// Sort results
+		qsort(con.commands, con.commandscount, sizeof(matchingcommand_t), Con_SortCommands);
+
+		// Print results
+		Con_PrintMatchingCommands();
+	}
+}
+
+#pragma endregion 
+
+#pragma region ======================= KEY PROCESSING
 
 // Interactive line editing and console scrollback
 void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
@@ -735,11 +904,47 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 
 	key = Key_ConvertNumPadKey(key); //mxd
 
+	// Command completion
+	if (key == K_TAB)
+	{
+		if (con.commandscount < 2)
+		{
+			Con_CompleteCommand();
+		}
+		else
+		{
+			// Cycle through commands
+			if (Key_IsDown(K_SHIFT))
+			{
+				con.currentcommand--;
+				if (con.currentcommand < 0)
+					con.currentcommand = con.commandscount - 1;
+			}
+			else
+			{
+				con.currentcommand++;
+				if (con.currentcommand >= con.commandscount)
+					con.currentcommand = 0;
+			}
+
+			// Set as input
+			Con_SetInputText(con.commands[con.currentcommand].command);
+			Con_PrintMatchingCommands();
+		}
+
+		con.backedit = 0; // Knightmare added
+
+		return;
+	}
+
+	// Clipboard paste
 	if ((toupper(key) == 'V' && Key_IsDown(K_CTRL)) || ((key == K_INS || key == K_KP_INS) && Key_IsDown(K_SHIFT)))
 	{
 		char *cbd = Sys_GetClipboardData();
 		if (cbd)
 		{
+			Con_ClearAutocompleteList(); //mxd
+			
 			strtok(cbd, "\n\r\b");
 
 			int len = strlen(cbd);
@@ -757,14 +962,24 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 		}
 
 		con.backedit = 0;
+
+		return;
 	}
-	else if ((key == 'l' || key == 'c') && Key_IsDown(K_CTRL)) //mxd. +Clear via Ctrl-C 
+	
+	// Clear buffer
+	if ((key == 'l' || key == 'c') && Key_IsDown(K_CTRL)) //mxd. +Clear via Ctrl-C 
 	{
 		Cbuf_AddText("clear\n");
 		con.backedit = 0;
+
+		return;
 	}
-	else if (key == K_ENTER || key == K_KP_ENTER)
+	
+	// Execute a command
+	if (key == K_ENTER || key == K_KP_ENTER)
 	{
+		Con_ClearAutocompleteList(); //mxd
+		
 		// Backslash text are commands, else chat
 		if (key_lines[edit_line][1] == '\\' || key_lines[edit_line][1] == '/')
 			Cbuf_AddText(key_lines[edit_line] + 2);	// Skip the >
@@ -774,7 +989,7 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 		Cbuf_AddText("\n");
 		Com_Printf("%s\n", key_lines[edit_line]);
 
-		edit_line = (edit_line + 1) & 31;
+		edit_line = (edit_line + 1) & (NUM_KEY_LINES - 1);
 		history_line = edit_line;
 		key_lines[edit_line][0] = ']';
 		key_linepos = 1;
@@ -782,17 +997,17 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 
 		if (cls.state == ca_disconnected)
 			SCR_UpdateScreen();	// Force an update, because the command may take some time
+
+		return;
 	}
-	else if (key == K_TAB)
-	{
-		// Command completion
-		Con_CompleteCommand();
-		con.backedit = 0; // Knightmare added
-	}
-	else if (key == K_BACKSPACE)
+	
+	// Delete previous character
+	if (key == K_BACKSPACE)
 	{
 		if (key_linepos > 1)
 		{
+			Con_ClearAutocompleteList(); //mxd
+			
 			if (con.backedit && con.backedit < key_linepos)
 			{
 				if (key_linepos - con.backedit <= 1)
@@ -804,55 +1019,81 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 
 			key_linepos--; //mxd
 		}
+
+		return;
 	}
-	else if (key == K_DEL)
+	
+	// Delete next character
+	if (key == K_DEL)
 	{
 		if (key_linepos > 1 && con.backedit)
 		{
+			Con_ClearAutocompleteList(); //mxd
+			
 			for (int i = key_linepos - con.backedit; i < key_linepos; i++)
 				key_lines[edit_line][i] = key_lines[edit_line][i + 1];
 
 			con.backedit--;
 			key_linepos--;
 		}
+
+		return;
 	}
-	else if (key == K_LEFTARROW) // Added from Quake2max
+	
+	// Previous character
+	if (key == K_LEFTARROW) // Added from Quake2max
 	{
 		if (key_linepos > 1)
 		{
 			con.backedit++;
 			con.backedit = min(con.backedit, key_linepos - 1); //mxd
 		}
+
+		return;
 	}
-	else if (key == K_RIGHTARROW)
+	
+	// Next character
+	if (key == K_RIGHTARROW) // Added from Quake2max
 	{
 		if (key_linepos > 1)
 		{
 			con.backedit--;
 			con.backedit = max(con.backedit, 0); //mxd
 		}
-	} // end Q2max
-	else if (key == K_UPARROW || key == K_KP_UPARROW || (key == 'p' && Key_IsDown(K_CTRL)))
+
+		return;
+	}
+	
+	// Display previous history line
+	if (key == K_UPARROW || key == K_KP_UPARROW || (key == 'p' && Key_IsDown(K_CTRL)))
 	{
+		Con_ClearAutocompleteList(); //mxd
+		
 		do
 		{
-			history_line = (history_line - 1) & 31;
+			history_line = (history_line - 1) & (NUM_KEY_LINES - 1);
 		} while (history_line != edit_line && !key_lines[history_line][1]);
 
 		if (history_line == edit_line)
-			history_line = (edit_line + 1) & 31;
+			history_line = (edit_line + 1) & (NUM_KEY_LINES - 1);
 
 		Q_strncpyz(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 		key_linepos = strlen(key_lines[edit_line]);
+
+		return;
 	}
-	else if (key == K_DOWNARROW || key == K_KP_DOWNARROW || (key == 'n' && Key_IsDown(K_CTRL)))
+	
+	// Display next history line
+	if (key == K_DOWNARROW || key == K_KP_DOWNARROW || (key == 'n' && Key_IsDown(K_CTRL)))
 	{
 		if (history_line == edit_line)
 			return;
 
+		Con_ClearAutocompleteList(); //mxd
+
 		do
 		{
-			history_line = (history_line + 1) & 31;
+			history_line = (history_line + 1) & (NUM_KEY_LINES - 1);
 		} while (history_line != edit_line && !key_lines[history_line][1]);
 
 		if (history_line == edit_line)
@@ -865,8 +1106,12 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 			Q_strncpyz(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 			key_linepos = strlen(key_lines[edit_line]);
 		}
+
+		return;
 	}
-	else if (key == K_PGUP || key == K_KP_PGUP)
+	
+	// Scroll console up by lines on screen - 1
+	if (key == K_PGUP || key == K_KP_PGUP)
 	{
 		const int linesonscreen = Con_LinesOnScreen(); //mxd
 		const int firstline = Con_FirstLine();
@@ -876,13 +1121,21 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 			con.displayline -= linesonscreen - 2; // Was 2
 			con.displayline = max(con.displayline, firstline + linesonscreen - 2);
 		}
+
+		return;
 	}
-	else if (key == K_PGDN || key == K_KP_PGDN) // Quake2max change
+	
+	// Scroll console down by lines on screen - 1
+	if (key == K_PGDN || key == K_KP_PGDN) // Quake2max change
 	{
 		con.displayline += Con_LinesOnScreen() - 2; //mxd. Was 2
 		con.displayline = min(con.displayline, con.currentline);
+
+		return;
 	}
-	else if (key == K_MWHEELUP) //mxd
+	
+	// Scroll console up by 2 lines
+	if (key == K_MWHEELUP) //mxd
 	{
 		const int linesonscreen = Con_LinesOnScreen();
 		const int firstline = Con_FirstLine();
@@ -892,30 +1145,48 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 			con.displayline -= 2;
 			con.displayline = max(con.displayline, firstline + linesonscreen - 2);
 		}
+
+		return;
 	}
-	else if (key == K_MWHEELDOWN) //mxd
+	
+	// Scroll console down by 2 lines
+	if (key == K_MWHEELDOWN) //mxd
 	{
 		con.displayline += 2;
 		con.displayline = min(con.displayline, con.currentline);
+
+		return;
 	}
-	else if (key == K_HOME || key == K_KP_HOME)
+	
+	// Buffer start
+	if (key == K_HOME || key == K_KP_HOME)
 	{
 		const int linesonscreen = Con_LinesOnScreen(); //mxd
 		const int firstline = Con_FirstLine();
 
 		if (con.currentline - firstline >= linesonscreen) // Don't scroll if there are less lines than console space
 			con.displayline = firstline + linesonscreen - 2;
+
+		return;
 	}
-	else if (key == K_END || key == K_KP_END)
+	
+	// Buffer end
+	if (key == K_END || key == K_KP_END)
 	{
 		con.displayline = con.currentline;
+
+		return;
 	}
-	else if (key < 32 || key > 127)
+
+	// Non-printable
+	if (key < 32 || key > 126)
+		return;
+	
+	// Process input keys
+	if (key_linepos < MAXCMDLINE - 1)
 	{
-		// non printable
-	}
-	else if (key_linepos < MAXCMDLINE - 1)
-	{
+		Con_ClearAutocompleteList(); //mxd
+		
 		// Knightmare- added from Quake2Max
 		if (con.backedit) // Insert character...
 		{

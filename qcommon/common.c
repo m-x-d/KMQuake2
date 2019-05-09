@@ -1345,11 +1345,20 @@ void COM_AddParm(char *parm)
 	com_argv[com_argc++] = parm;
 }
 
-char *CopyString(char *in)
+char *CopyString(const char *in)
 {
 	char *out = Z_Malloc(strlen(in) + 1);
 	Q_strncpyz(out, in, strlen(in) + 1);
 	return out;
+}
+
+//mxd. From Q2E
+void FreeString(char *in)
+{
+	if (!in)
+		Com_Error(ERR_FATAL, "FreeString: NULL string\n");
+
+	Z_Free(in);
 }
 
 void Info_Print(char *s)

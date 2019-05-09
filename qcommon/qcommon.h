@@ -136,7 +136,8 @@ void COM_AddParm(char *parm);
 
 void COM_InitArgv(int argc, char **argv);
 
-char *CopyString(char *in);
+char *CopyString(const char *in);
+void FreeString(char *in); //mxd. From Q2E
 
 void StripHighBits(char *string, int highbits);
 void ExpandNewLines(char *string);
@@ -413,8 +414,11 @@ void Cmd_RemoveCommand(char *cmd_name);
 qboolean Cmd_Exists(char *cmd_name);
 // used by the cvar code to check for cvar / command name overlap
 
-char *Cmd_CompleteCommand(char *partial, qboolean *exactmatch); //mxd. +exactmatch
-// Attempts to match a partial command for automatic command line completion. Returns NULL if nothing fits.
+//mxd. Attempts to match a partial alias for automatic command line completion.
+void Cmd_CompleteAlias(const char *partial, void(*callback)(const char *found));
+
+// Attempts to match a partial command for automatic command line completion.
+void Cmd_CompleteCommand(const char *partial, void(*callback)(const char *found)); //mxd. +callback
 
 int Cmd_Argc(void);
 char *Cmd_Argv(int arg);
@@ -495,9 +499,8 @@ char *Cvar_DefaultString(char *var_name);
 cvar_t *Cvar_SetToDefault(char *var_name);
 // end Knightmare
 
-char *Cvar_CompleteVariable(char *partial);
-// Attempts to match a partial variable name for command line completion.
-// Returns NULL if nothing fits.
+//mxd. Attempts to match a partial variable name for command line completion.
+void Cvar_CompleteVariable(const char *partial, void(*callback)(const char *found));
 
 void Cvar_GetLatchedVars(void);
 // any CVAR_LATCHED variables that have been set will now take effect
