@@ -167,7 +167,7 @@ void Com_Printf(char *fmt, ...)
 		if (!logfile)
 		{
 			char name[MAX_QPATH];
-			Com_sprintf(name, sizeof(name), "%s/sbe_console.log", FS_Gamedir());
+			Com_sprintf(name, sizeof(name), "%s/"ENGINE_PREFIX"console.log", FS_Gamedir());
 			if (logfile_active->integer > 2)
 				logfile = fopen(name, "a");
 			else

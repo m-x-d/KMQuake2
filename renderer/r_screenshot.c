@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 
 #define MAX_SCREENSHOTS 1000
-#define SCREENSHOT_FORMAT_STRING "%s/screenshots/kmquake2_sbe_%03i.%s"
+#define SCREENSHOT_FORMAT_STRING "%s/screenshots/"ENGINE_PREFIX"%03i.%s"
 
 qboolean GetScreenshotFilename(char *filename, int size, const char *ext)
 {

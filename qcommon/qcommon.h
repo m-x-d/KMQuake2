@@ -24,8 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../game/q_shared.h"
 
-#define	VERSION		0.20 //was 3.21
-#define ENGINE_NAME "KMQuake 2 SBE" //mxd
+#define	VERSION			0.20 //was 3.21
+#define ENGINE_NAME		"KMQuake 2 SBE" //mxd
+#define ENGINE_PREFIX	"sbe_" //mxd. Prefix to use when saving/loading files, like sbe_config.cfg, sbe_console.log, sbe_gamex86.dll etc.
 
 #ifdef ERASER_COMPAT_BUILD //mxd. Formatted to be appended to ENGINE_NAME
 	#ifdef NET_SERVER_BUILD

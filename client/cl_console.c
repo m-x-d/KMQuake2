@@ -104,11 +104,11 @@ static void Con_Dump_f(void)
 {
 	if (Cmd_Argc() > 2)
 	{
-		Com_Printf("Usage: condump <filename>\n");
+		Com_Printf("Usage: condump [filename]\n");
 		return;
 	}
 
-	char *filename = (Cmd_Argc() == 1 ? "condump" : Cmd_Argv(1)); //mxd. +Default filename
+	char *filename = (Cmd_Argc() == 1 ? ENGINE_PREFIX"condump" : Cmd_Argv(1)); //mxd. +Default filename
 
 	char name[MAX_OSPATH];
 	Com_sprintf(name, sizeof(name), "%s/%s.txt", FS_Gamedir(), filename);
