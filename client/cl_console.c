@@ -774,17 +774,16 @@ static int Con_SortCommands(const matchingcommand_t *first, const matchingcomman
 static void Con_PrintMatchingCommands()
 {
 	static char matchtypename[3][8] = { "command", "alias", "cvar" }; // Contents must match commandtype_t types
+	static int prevcommand = -1; // con.currentcommand from previous call
+
+	// Store initial display line...
+	const int displayline = con.displayline;
 
 	// Replace previous lines if no extra messages were printed
 	if (con.hintendline == con.currentline)
-	{
 		con.currentline = con.hintstartline;
-		con.displayline = con.hintstartline;
-	}
 	else
-	{
 		con.hintstartline = con.currentline;
-	}
 
 	const int len = strlen(con.partialmatch);
 	
@@ -792,6 +791,7 @@ static void Con_PrintMatchingCommands()
 	Com_Printf("\n%i matches for \"%s\":\n", con.commandscount, con.partialmatch);
 
 	// Print matches
+	int currentcommandline = -1;
 	for (int i = 0; i < con.commandscount; i++)
 	{
 		// Display cvar value
@@ -804,6 +804,7 @@ static void Con_PrintMatchingCommands()
 		{
 			Com_Printf(S_COLOR_GREEN">>%s (%s)%s\n", con.commands[i].command, matchtypename[con.commands[i].type], value);
 			con.currentcommand = i;
+			currentcommandline = con.currentline;
 		}
 		else // Partial match. Highlight matching part
 		{
@@ -819,7 +820,50 @@ static void Con_PrintMatchingCommands()
 	}
 
 	// Print usage hint
-	Com_Printf("Press Tab to select next match, Shift-Tab to select previous.\n");
+	Com_Printf("Press Tab to select next match, Ctrl-Tab to select previous.\n");
+
+	// If current item is off-screen, scroll it into view
+	if(currentcommandline != -1)
+	{
+		int visiblelines = Con_LinesOnScreen();
+		if (con.currentline - displayline > 1) // Take the "backscroll marker" line into account. Use stored displayline, because con.displayline == con.currentline at this point.
+			visiblelines--;
+
+		// Scrolling up via Ctrl-Tab?
+		const qboolean scrollup = (prevcommand != -1 && prevcommand > con.currentcommand); 
+		const int scrollby = (scrollup ? 0 : visiblelines - 1);
+		
+		if (currentcommandline > displayline)
+		{
+			// Below console bottom
+			con.displayline = min(con.currentline, currentcommandline + scrollby);
+		}
+		else if (currentcommandline < displayline - visiblelines + 1)
+		{
+			// Above console top. Scroll to hintstartline when displaying the first item
+			con.displayline = (con.currentcommand == 0 ? con.hintstartline + visiblelines : max(con.hintstartline, currentcommandline + scrollby));
+		}
+		else
+		{
+			// Restore initial display line (it may've been modified by Con_Linefeed)...
+			con.displayline = displayline;
+		}
+
+		// Scroll to console bottom to show usage hint when current scroll position is close to con.currentline
+		if (con.currentline - currentcommandline < Con_LinesOnScreen()) // Ignore "backscroll marker" line.
+			con.displayline = con.currentline;
+
+		// Store current command index
+		prevcommand = con.currentcommand;
+	}
+	else
+	{
+		// If no current item, scroll to current line
+		con.displayline = con.currentline;
+
+		// Reset current command index
+		prevcommand = -1;
+	}
 
 	// Store hint end line
 	con.hintendline = con.currentline;
@@ -914,7 +958,7 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 		else
 		{
 			// Cycle through commands
-			if (Key_IsDown(K_SHIFT))
+			if (Key_IsDown(K_CTRL))
 			{
 				con.currentcommand--;
 				if (con.currentcommand < 0)
