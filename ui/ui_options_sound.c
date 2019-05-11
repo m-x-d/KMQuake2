@@ -28,14 +28,26 @@ static menuframework_s	s_options_sound_menu;
 static menuseparator_s	s_options_sound_header;
 static menuslider_s		s_options_sound_sfxvolume_slider;
 static menuslider_s		s_options_sound_musicvolume_slider;
-static menulist_s		s_options_sound_oggmusic_box;
-static menulist_s		s_options_sound_cdvolume_box;
+static menulist_s		s_options_sound_musicsource_box; //mxd
 static menulist_s		s_options_sound_quality_list;
 static menulist_s		s_options_sound_compatibility_list;
 static menuaction_s		s_options_sound_defaults_action;
 static menuaction_s		s_options_sound_back_action;
 
 #pragma region ======================= Menu item callbacks
+
+//mxd
+static void RestartSound()
+{
+	Menu_DrawTextBox(168, 192, 36, 3);
+	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 1, ALIGN_CENTER, S_COLOR_ALT"Restarting the sound system.", 255);
+	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 2, ALIGN_CENTER, S_COLOR_ALT"This could take up to a minute,", 255);
+	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 3, ALIGN_CENTER, S_COLOR_ALT"so please be patient.", 255);
+
+	// The text box won't show up unless we do a buffer swap
+	GLimp_EndFrame();
+	CL_Snd_Restart_f();
+}
 
 static void UpdateVolumeFunc(void *unused)
 {
@@ -47,14 +59,35 @@ static void UpdateMusicVolumeFunc(void *unused)
 	Cvar_SetValue("s_musicvolume", s_options_sound_musicvolume_slider.curvalue / 10);
 }
 
-static void UpdateOggMusicFunc(void *unused)
-{
-	Cvar_SetValue("cl_ogg_music", s_options_sound_oggmusic_box.curvalue);
-}
+extern void S_StopBackgroundTrack(void); //mxd
 
-static void UpdateCDVolumeFunc(void *unused)
+static void UpdateMusicSourceFunc(void *unused) //mxd
 {
-	Cvar_SetValue("cd_nocd", !s_options_sound_cdvolume_box.curvalue);
+	switch (s_options_sound_musicsource_box.curvalue)
+	{
+		case 0: // None
+			Cvar_SetInteger("cl_ogg_music", 0);
+			Cvar_SetInteger("cd_nocd", 1);
+			CDAudio_Stop();
+			S_StopBackgroundTrack();
+			break;
+
+		case 1: // CD
+			Cvar_SetInteger("cl_ogg_music", 0);
+			Cvar_SetInteger("cd_nocd", 0);
+			CDAudio_Update();
+			CL_PlayBackgroundTrack();
+			break;
+
+		case 2: // Ogg
+			Cvar_SetInteger("cl_ogg_music", 1);
+			Cvar_SetInteger("cd_nocd", 1);
+			CL_PlayBackgroundTrack();
+			break;
+
+		default:
+			Com_Error(ERR_FATAL, "Unexpected musicsource value!");
+	}
 }
 
 static void UpdateSoundQualityFunc(void *unused)
@@ -88,25 +121,29 @@ static void UpdateSoundQualityFunc(void *unused)
 
 	Cvar_SetValue("s_primary", s_options_sound_compatibility_list.curvalue);
 
-	Menu_DrawTextBox(168, 192, 36, 3);
-	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 1, ALIGN_CENTER, S_COLOR_ALT"Restarting the sound system.", 255);
-	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 2, ALIGN_CENTER, S_COLOR_ALT"This could take up to a minute,", 255);
-	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 3, ALIGN_CENTER, S_COLOR_ALT"so please be patient.", 255);
-
-	// The text box won't show up unless we do a buffer swap
-	GLimp_EndFrame();
-	CL_Snd_Restart_f();
+	RestartSound(); //mxd
 }
 
-#pragma endregion
+//mxd
+static int GetMusicSourceValue()
+{
+	const int ogg = Cvar_VariableInteger("cl_ogg_music");
+	const int cd = !Cvar_VariableInteger("cd_nocd");
+
+	if (!ogg && !cd) // None
+		return 0;
+
+	if (!ogg && cd) // CD
+		return 1;
+
+	return 2; // Ogg
+}
 
 static void SoundSetMenuItemValues(void)
 {
 	s_options_sound_sfxvolume_slider.curvalue = Cvar_VariableValue("s_volume") * 10;
 	s_options_sound_musicvolume_slider.curvalue = Cvar_VariableValue("s_musicvolume") * 10;
-	s_options_sound_oggmusic_box.curvalue = (Cvar_VariableValue("cl_ogg_music") > 0);
-	s_options_sound_cdvolume_box.curvalue = !Cvar_VariableValue("cd_nocd");
-	//s_options_sound_quality_list.curvalue = !Cvar_VariableValue("s_loadas8bit");
+	s_options_sound_musicsource_box.curvalue = GetMusicSourceValue(); //mxd
 	
 	//**  DMP convert setting into index for option display text
 	switch(Cvar_VariableInteger("s_khz"))
@@ -125,26 +162,21 @@ static void SoundResetDefaultsFunc(void *unused)
 {
 	Cvar_SetToDefault("s_volume");
 	Cvar_SetToDefault("cd_nocd");
+	Cvar_SetToDefault("cl_ogg_music"); //mxd
 	Cvar_SetToDefault("cd_loopcount");
 	Cvar_SetToDefault("s_khz");
 	Cvar_SetToDefault("s_loadas8bit");
 	Cvar_SetToDefault("s_primary");
 
-	Menu_DrawTextBox(168, 192, 36, 3);
-	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 1, ALIGN_CENTER, S_COLOR_ALT"Restarting the sound system.", 255);
-	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 2, ALIGN_CENTER, S_COLOR_ALT"This could take up to a minute,", 255);
-	SCR_DrawString(188, 192 + MENU_FONT_SIZE * 3, ALIGN_CENTER, S_COLOR_ALT"so please be patient.", 255);
-
-	// The text box won't show up unless we do a buffer swap
-	GLimp_EndFrame();
-	CL_Snd_Restart_f();
-
 	SoundSetMenuItemValues();
+	RestartSound(); //mxd
 }
+
+#pragma endregion
 
 void Options_Sound_MenuInit(void)
 {
-	static const char *cd_music_items[] = { "Disabled", "Enabled", 0 };
+	static const char *music_source_items[] = { "None", "CD music", "Ogg vorbis tracks", 0 }; //mxd
 	static const char *compatibility_items[] = { "Maximum compatibility", "Maximum performance", 0 };
 	static const char *quality_items[] =
 	{
@@ -190,23 +222,15 @@ void Options_Sound_MenuInit(void)
 	s_options_sound_musicvolume_slider.generic.statusbar	= "Volume of ogg vorbis music";
 	s_options_sound_musicvolume_slider.cvar					= Cvar_FindVar("s_musicvolume"); //mxd
 
-	s_options_sound_oggmusic_box.generic.type		= MTYPE_SPINCONTROL;
-	s_options_sound_oggmusic_box.generic.x			= 0;
-	s_options_sound_oggmusic_box.generic.y			= y += MENU_LINE_SIZE;
-	s_options_sound_oggmusic_box.generic.name		= "Ogg vorbis music";
-	s_options_sound_oggmusic_box.generic.callback	= UpdateOggMusicFunc;
-	s_options_sound_oggmusic_box.itemnames			= cd_music_items;
-	s_options_sound_oggmusic_box.curvalue 			= (Cvar_VariableValue("cl_ogg_music") > 0);
-	s_options_sound_oggmusic_box.generic.statusbar	= "Override of CD music with ogg vorbis tracks";
-
-	s_options_sound_cdvolume_box.generic.type		= MTYPE_SPINCONTROL;
-	s_options_sound_cdvolume_box.generic.x			= 0;
-	s_options_sound_cdvolume_box.generic.y			= y += MENU_LINE_SIZE;
-	s_options_sound_cdvolume_box.generic.name		= "CD music";
-	s_options_sound_cdvolume_box.generic.callback	= UpdateCDVolumeFunc;
-	s_options_sound_cdvolume_box.itemnames			= cd_music_items;
-	s_options_sound_cdvolume_box.curvalue 			= !Cvar_VariableValue("cd_nocd");
-	s_options_sound_cdvolume_box.generic.statusbar	= "Enables or disables CD music";
+	//mxd. Music source selector instead of separate "Enable CD music" and "Enable Ogg music" controls 
+	s_options_sound_musicsource_box.generic.type		= MTYPE_SPINCONTROL;
+	s_options_sound_musicsource_box.generic.x			= 0;
+	s_options_sound_musicsource_box.generic.y			= y += MENU_LINE_SIZE;
+	s_options_sound_musicsource_box.generic.name		= "Music source";
+	s_options_sound_musicsource_box.generic.callback	= UpdateMusicSourceFunc;
+	s_options_sound_musicsource_box.itemnames			= music_source_items;
+	s_options_sound_musicsource_box.curvalue 			= GetMusicSourceValue();
+	s_options_sound_musicsource_box.generic.statusbar	= "Whether to use music tracks from CD or ogg vorbis tracks";
 
 	s_options_sound_quality_list.generic.type		= MTYPE_SPINCONTROL;
 	s_options_sound_quality_list.generic.x			= 0;
@@ -244,8 +268,7 @@ void Options_Sound_MenuInit(void)
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_header);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_sfxvolume_slider);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_musicvolume_slider);
-	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_oggmusic_box);
-	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_cdvolume_box);
+	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_musicsource_box);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_quality_list);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_compatibility_list);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_defaults_action);
