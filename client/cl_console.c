@@ -800,7 +800,7 @@ static void Con_PrintMatchingCommands()
 			value = va(": \"%s\"", Cvar_FindVar(con.commands[i].command)->string);
 
 		// Exact match?
-		if (i == con.currentcommand || !Q_strcasecmp(con.partialmatch, con.commands[i].command))
+		if (i == con.currentcommand || (con.currentcommand == -1 && !Q_strcasecmp(con.partialmatch, con.commands[i].command)))
 		{
 			Com_Printf(S_COLOR_GREEN">>%s (%s)%s\n", con.commands[i].command, matchtypename[con.commands[i].type], value);
 			con.currentcommand = i;
