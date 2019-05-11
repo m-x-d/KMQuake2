@@ -714,19 +714,11 @@ void PlayerConfig_MenuDraw(void)
 	refdef_t refdef;
 	memset(&refdef, 0, sizeof(refdef));
 
-	float rx = 0;
-	float ry = 0;
-	float rw = SCREEN_WIDTH;
-	float rh = SCREEN_HEIGHT;
-
-	SCR_AdjustFrom640(&rx, &ry, &rw, &rh, ALIGN_CENTER);
-
-	refdef.x = rx;
-	refdef.y = ry;
-	refdef.width = rw;
-	refdef.height = rh;
+	//mxd. Use full screen size, but with 4:3 fov.
+	refdef.width = viddef.width;
+	refdef.height = viddef.height;
 	refdef.fov_x = 50;
-	refdef.fov_y = CalcFov(refdef.fov_x, refdef.width, refdef.height);
+	refdef.fov_y = CalcFov(refdef.fov_x, SCREEN_WIDTH * screenScale.avg, viddef.height);
 	refdef.time = cls.realtime * 0.001f;
  
 	if (s_pmi[s_player_model_box.curvalue].skindisplaynames)
@@ -737,7 +729,16 @@ void PlayerConfig_MenuDraw(void)
 		refdef.num_entities = 0;
 		refdef.entities = entity;
 
-		float yaw = anglemod(cl.time / 10.0f);
+		const float frametime = cl.time * 0.01f; //mxd
+
+		float backlerp; //mxd
+		if (frametime < (int)frametime)
+			backlerp = 1.0f - ((int)frametime - frametime);
+		else
+			backlerp = 1.0f - (frametime - (int)frametime);
+
+		//mxd. Oscillate side to side
+		float yaw = 190 + 45 * sinf(cl.time * 0.001f);
 		if (info_hand->value == 1)
 			yaw -= 90; //mxd. Fixes model facing when switching handedness
 
@@ -758,9 +759,9 @@ void PlayerConfig_MenuDraw(void)
 		VectorCopy(modelOrg, ent->origin); //mxd
 		VectorCopy(ent->origin, ent->oldorigin);
 
-		ent->frame = 0;
-		ent->oldframe = 0;
-		ent->backlerp = 0.0f;
+		ent->frame = (int)frametime % 40; // Idle animation is first and is 40 frames long
+		ent->oldframe = (int)(frametime - 1) % 40;
+		ent->backlerp = backlerp;
 		ent->angles[1] = yaw;
 
 		refdef.num_entities++;
@@ -783,9 +784,9 @@ void PlayerConfig_MenuDraw(void)
 			VectorCopy(modelOrg, ent->origin); //mxd
 			VectorCopy(ent->origin, ent->oldorigin);
 
-			ent->frame = 0;
-			ent->oldframe = 0;
-			ent->backlerp = 0.0;
+			ent->frame = (int)frametime % 40;
+			ent->oldframe = (int)(frametime - 1) % 40;
+			ent->backlerp = backlerp;
 			ent->angles[1] = yaw;
 
 			refdef.num_entities++;
@@ -795,12 +796,9 @@ void PlayerConfig_MenuDraw(void)
 		refdef.lightstyles = 0;
 		refdef.rdflags = RDF_NOWORLDMODEL;
 
+		R_RenderFrame(&refdef); //mxd. Draw below controls
 		Menu_Draw(&s_player_config_menu);
-
-		// Skin selection preview
 		PlayerConfig_DrawSkinSelection();
-
-		R_RenderFrame(&refdef);
 	}
 }
 
