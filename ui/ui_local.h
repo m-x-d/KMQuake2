@@ -117,7 +117,7 @@ typedef struct
 
 	int curvalue;
 
-	const char **itemnames;
+	const char **itemnames; // Last item is expected to be "\0"
 	int numitemnames;
 } menulist_s;
 

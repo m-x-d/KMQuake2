@@ -81,6 +81,7 @@ static void ModelCallback(void *unused)
 	char scratch[MAX_QPATH];
 
 	s_player_skin_box.itemnames = s_pmi[s_player_model_box.curvalue].skindisplaynames;
+	s_player_skin_box.numitemnames = s_pmi[s_player_model_box.curvalue].nskins; //mxd. Added to make SpinControl_DoSlide correctly wrap around when navigating backwards
 	s_player_skin_box.curvalue = 0;
 
 	// Only register model and skin on starup or when changed
@@ -179,32 +180,31 @@ static qboolean IsValidSkin(char **filelist, int numFiles, int index)
 	return false;
 }
 
-static qboolean PlayerConfig_ScanDirectories(void)
+static void PlayerConfig_ScanDirectories(void)
 {
-	char findname[1024];
-	char scratch[1024];
-	int ndirs = 0;
-	char **dirnames;
 	char *path = NULL;
-
+	
 	s_numplayermodels = 0;
 
 	// Loop back to here if there were no valid player models found in the selected path
-	do
+	while(true)
 	{
+		int ndirs;
+		char **dirnames = NULL;
+		
 		// Get a list of directories
-		do 
+		while((path = FS_NextPath(path)) != NULL)
 		{
-			path = FS_NextPath(path);
+			char findname[1024];
 			Com_sprintf(findname, sizeof(findname), "%s/players/*.*", path);
 
 			dirnames = FS_ListFiles(findname, &ndirs, SFF_SUBDIR, 0);
 			if (dirnames)
 				break;
-		} while (path);
+		}
 
-		if (!dirnames)
-			return false;
+		if (dirnames == NULL)
+			return;
 
 		// Go through the subdirectories
 		int npms = min(ndirs, MAX_PLAYERMODELS);
@@ -235,6 +235,7 @@ static qboolean PlayerConfig_ScanDirectories(void)
 				continue; // todo: add any skins for this model not already listed to skindisplaynames
 
 			// Verify the existence of tris.md2
+			char scratch[1024];
 			Q_strncpyz(scratch, dirnames[i], sizeof(scratch));
 			Q_strncatz(scratch, "/tris.md2", sizeof(scratch));
 			if (!Sys_FindFirst(scratch, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM))
@@ -262,36 +263,34 @@ static qboolean PlayerConfig_ScanDirectories(void)
 
 			// Count valid skins, which consist of a skin with a matching "_i" icon
 			int nskins = 0;
-			for (int k = 0; k < nimagefiles - 1; k++) //TODO: mxd. Why nimagefiles - 1, not nimagefiles?
+			for (int k = 0; k < nimagefiles; k++)
 				if (IsValidSkin(imagenames, nimagefiles, k))
 					nskins++;
 
-			if (!nskins)
+			if (nskins == 0)
 				continue;
 
+			// Add extra empty item at the end, because Menu_AddItem() counts number of spincontrol items by counting itemnames to '\0' item
 			char **skinnames = malloc(sizeof(char *) * (nskins + 1));
 			memset(skinnames, 0, sizeof(char *) * (nskins + 1));
 
 			// Copy the valid skins
-			if (nimagefiles > 0)
+			int skinindex = 0;
+			for (int k = 0; k < nimagefiles; k++)
 			{
-				int skinindex = 0;
-				for (int k = 0; k < nimagefiles - 1; k++)
+				if (IsValidSkin(imagenames, nimagefiles, k))
 				{
-					if (IsValidSkin(imagenames, nimagefiles, k))
-					{
-						char *a2 = strrchr(imagenames[k], '/');
-						char *b2 = strrchr(imagenames[k], '\\');
-						char *c2 = max(a2, b2);
+					char *a2 = strrchr(imagenames[k], '/');
+					char *b2 = strrchr(imagenames[k], '\\');
+					char *c2 = max(a2, b2);
 
-						Q_strncpyz(scratch, c2 + 1, sizeof(scratch));
+					Q_strncpyz(scratch, c2 + 1, sizeof(scratch));
 
-						if (strrchr(scratch, '.'))
-							*strrchr(scratch, '.') = 0;
+					if (strrchr(scratch, '.'))
+						*strrchr(scratch, '.') = 0;
 
-						skinnames[skinindex] = strdup(scratch);
-						skinindex++;
-					}
+					skinnames[skinindex] = strdup(scratch);
+					skinindex++;
 				}
 			}
 
@@ -314,11 +313,7 @@ static qboolean PlayerConfig_ScanDirectories(void)
 		
 		if (dirnames)
 			FS_FreeFileList(dirnames, ndirs);
-
-	// If no valid player models found in path, try next path, if there is one
-	} while (path);	// (s_numplayermodels == 0 && path);
-
-	return true; //** DMP warning fix
+	}
 }
 
 static int pmicmpfnc(const void *_a, const void *_b)
@@ -326,7 +321,7 @@ static int pmicmpfnc(const void *_a, const void *_b)
 	const playermodelinfo_s *a = (const playermodelinfo_s *) _a;
 	const playermodelinfo_s *b = (const playermodelinfo_s *) _b;
 
-	// Sort by male, female, then alphabetical
+	// Sort by male, female, cyborg then alphabetical
 	if (strcmp(a->directory, "male") == 0)
 		return -1;
 	if (strcmp(b->directory, "male") == 0)
@@ -335,6 +330,11 @@ static int pmicmpfnc(const void *_a, const void *_b)
 	if (strcmp(a->directory, "female") == 0)
 		return -1;
 	if (strcmp(b->directory, "female") == 0)
+		return 1;
+
+	if (strcmp(a->directory, "cyborg") == 0) //mxd
+		return -1;
+	if (strcmp(b->directory, "cyborg") == 0)
 		return 1;
 
 	return strcmp(a->directory, b->directory);

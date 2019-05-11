@@ -1137,7 +1137,7 @@ static void FS_AddGameDirectory(const char *dir)
 			return;
 
 		// Add the ones, which don't match pakX naming sceme
-		for (int i = 0; i < numfiles; i++) //BUG? mxd. This counted to numfiles - 1 in KMQ2. Why?
+		for (int i = 0; i < numfiles; i++)
 		{
 			qboolean numberedpak = false;
 
@@ -1526,15 +1526,17 @@ void FS_ExecAutoexec(void)
 	Sys_FindClose();
 }
 
+//mxd. Returns number of matching files, not number of matching files + 1, like in Vanilla!
 char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned canthave)
 {
 	int nfiles = 0;
-
+	
 	// Count number of matching files
 	char *filename = Sys_FindFirst(findname, musthave, canthave);
 	while (filename != NULL)
 	{
-		if (filename[strlen(filename) - 1] != '.')
+		// Sys_FindFirst / Sys_FindNext can return a relative path to current ("findname\.") or parent ("findname\..") directory. Skip those.
+		if (filename[strlen(filename) - 1] != '.') 
 			nfiles++;
 
 		filename = Sys_FindNext(musthave, canthave);
@@ -1547,13 +1549,14 @@ char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned c
 	if (nfiles == 0)
 		return NULL;
 
-	// Fill list with matching filenames
-	const int listsize = sizeof(char *) * (nfiles + 1); // Add space for a guard
+	// Allocate list
+	const size_t listsize = sizeof(char *) * nfiles;
 	char **list = malloc(listsize);
 	memset(list, 0, listsize);
 
+	// Fill list with matching filenames
 	filename = Sys_FindFirst(findname, musthave, canthave);
-	for (int i = 0; i < nfiles && filename != NULL; i++)
+	for(int i = 0; filename != NULL;)
 	{
 		if (filename[strlen(filename) - 1] != '.')
 		{
@@ -1561,6 +1564,7 @@ char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned c
 #ifdef _WIN32
 			strlwr(list[i]);
 #endif
+			i++;
 		}
 
 		filename = Sys_FindNext(musthave, canthave);
@@ -1640,10 +1644,10 @@ static void FS_Dir_f(void)
 		char **dirnames = FS_ListFiles(findname, &ndirs, 0, 0);
 		if (dirnames)
 		{
-			for (int i = 0; i < ndirs-1; i++)
+			for (int i = 0; i < ndirs; i++)
 			{
-				if (strrchr(dirnames[i], '/' ))
-					Com_Printf("%s\n", strrchr(dirnames[i], '/') + 1 );
+				if (strrchr(dirnames[i], '/'))
+					Com_Printf("%s\n", strrchr(dirnames[i], '/') + 1);
 				else
 					Com_Printf("%s\n", dirnames[i]);
 
