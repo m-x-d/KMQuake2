@@ -507,8 +507,11 @@ static void RulesChangeFunc(void *self)
 	
 	if (s_rules_box.curvalue == MAP_DM)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 8) // Set default of 8
+		if (atoi(s_maxclients_field.buffer) < 8) // Set default of 8
+		{
 			Q_strncpyz(s_maxclients_field.buffer, "8", sizeof(s_maxclients_field.buffer));
+			s_maxclients_field.cursor = strlen(s_maxclients_field.buffer); //mxd. Re-position the cursor
+		}
 
 		UI_RefreshMapList(MAP_DM);
 	}
@@ -517,30 +520,42 @@ static void RulesChangeFunc(void *self)
 		s_maxclients_field.generic.statusbar = "4 maximum for cooperative";
 
 		if (atoi(s_maxclients_field.buffer) > 4)
+		{
 			Q_strncpyz(s_maxclients_field.buffer, "4", sizeof(s_maxclients_field.buffer));
+			s_maxclients_field.cursor = strlen(s_maxclients_field.buffer); //mxd. Re-position the cursor
+		}
 
 		s_startserver_dmoptions_action.generic.statusbar = "N/A for cooperative";
 		UI_RefreshMapList(MAP_COOP);
 	}
 	else if (s_rules_box.curvalue == MAP_CTF)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 12) // Set default of 12
+		if (atoi(s_maxclients_field.buffer) < 12) // Set default of 12
+		{
 			Q_strncpyz(s_maxclients_field.buffer, "12", sizeof(s_maxclients_field.buffer));
+			s_maxclients_field.cursor = strlen(s_maxclients_field.buffer); //mxd. Re-position the cursor
+		}
 
 		UI_RefreshMapList(MAP_CTF);
 	}
 	else if (s_rules_box.curvalue == MAP_3TCTF)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 18) // Set default of 18
+		if (atoi(s_maxclients_field.buffer) < 18) // Set default of 18
+		{
 			Q_strncpyz(s_maxclients_field.buffer, "18", sizeof(s_maxclients_field.buffer));
+			s_maxclients_field.cursor = strlen(s_maxclients_field.buffer); //mxd. Re-position the cursor
+		}
 
 		UI_RefreshMapList(MAP_3TCTF);
 	}
 	// ROGUE GAMES
 	else if (roguepath() && s_rules_box.curvalue == MAP_TAG)
 	{
-		if (atoi(s_maxclients_field.buffer) <= 8) // Set default of 8
+		if (atoi(s_maxclients_field.buffer) < 8) // Set default of 8
+		{
 			Q_strncpyz(s_maxclients_field.buffer, "8", sizeof(s_maxclients_field.buffer));
+			s_maxclients_field.cursor = strlen(s_maxclients_field.buffer); //mxd. Re-position the cursor
+		}
 
 		UI_RefreshMapList(MAP_DM);
 	}
