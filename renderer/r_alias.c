@@ -181,7 +181,7 @@ void RB_RenderAliasMesh(maliasmodel_t *paliashdr, uint meshnum, uint skinnum, im
 	// Glow pass
 	if (mesh->skins[skinnum].glowimage && !shellModel)
 	{
-		const float glowcolor = (skinParms.glow.type > -1 ? RB_CalcGlowColor(skinParms) : 1.0f);
+		const float glowcolor = RB_CalcGlowColor(skinParms);
 		qglDisableClientState(GL_COLOR_ARRAY);
 		qglColor4f(glowcolor, glowcolor, glowcolor, 1.0f);
 

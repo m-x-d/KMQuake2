@@ -84,6 +84,8 @@ static float *RB_TableForFunc(const waveFunc_t *func)
 			return rb_inverseSawtoothTable;
 		case WAVEFORM_NOISE:
 			return rb_noiseTable;
+
+		case WAVEFORM_NONE:
 		default:
 			VID_Error(ERR_DROP, "RB_TableForFunc: unknown waveform type %i", func->type);
 			return rb_sinTable;
@@ -97,17 +99,16 @@ void RB_InitBackend(void)
 
 float RB_CalcGlowColor(renderparms_t parms)
 {
-	float out = 1.0f;
-
-	if (parms.glow.type > -1)
+	if (parms.glow.type != WAVEFORM_NONE)
 	{
 		float* table = RB_TableForFunc(&parms.glow);
 		const float rad = parms.glow.params[2] + parms.glow.params[3] * r_newrefdef.time;
-		out = table[((int)(rad * TABLE_SIZE)) & TABLE_MASK] * parms.glow.params[1] + parms.glow.params[0];
-		out = clamp(out, 0.0f, 1.0f);
+		const float out = table[((int)(rad * TABLE_SIZE)) & TABLE_MASK] * parms.glow.params[1] + parms.glow.params[0];
+
+		return clamp(out, 0.0f, 1.0f);
 	}
 
-	return out;
+	return 1.0f;
 }
 
 // Borrowed from EGL & Q2E
@@ -143,7 +144,7 @@ void RB_ModifyTextureCoords(float *inArray, float *inVerts, int numVerts, render
 		}
 	}
 
-	if (parms.stretch.type > -1)
+	if (parms.stretch.type != WAVEFORM_NONE)
 	{
 		float *table = RB_TableForFunc(&parms.stretch);
 		const float rad = parms.stretch.params[2] + parms.stretch.params[3] * r_newrefdef.time;
@@ -174,7 +175,7 @@ void RB_ModifyTextureCoords(float *inArray, float *inVerts, int numVerts, render
 			arr[1] /= parms.scale_y;
 	}
 
-	if (parms.turb.type > -1)
+	if (parms.turb.type != WAVEFORM_NONE)
 	{
 		float *table = RB_TableForFunc(&parms.turb);
 		const float t1 = parms.turb.params[2] + parms.turb.params[3] * r_newrefdef.time;

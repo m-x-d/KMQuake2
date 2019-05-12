@@ -35,6 +35,7 @@ typedef struct
 
 typedef enum
 {
+	WAVEFORM_NONE, //mxd
 	WAVEFORM_SIN,
 	WAVEFORM_TRIANGLE,
 	WAVEFORM_SQUARE,

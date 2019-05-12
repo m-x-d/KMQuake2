@@ -1689,7 +1689,7 @@ void Mod_ParseModelScript(maliasskin_t *skin, char **data, char *dataStart, int 
 			}
 			else if (!Q_strcasecmp(token, "identity"))
 			{
-				skinParms->glow.type = -1;
+				skinParms->glow.type = WAVEFORM_NONE;
 			}
 			else // only wave or identity
 			{
@@ -1728,14 +1728,14 @@ void Mod_SetRenderParmsDefaults(renderparms_t *parms)
 	parms->blend = false;
 	parms->blendfunc_src = -1;
 	parms->blendfunc_dst = -1;
-	parms->glow.type = -1;
 	parms->translate_x = 0.0f;
 	parms->translate_y = 0.0f;
 	parms->rotate = 0.0f;
 	parms->scale_x = 1.0f;
 	parms->scale_y = 1.0f;
-	parms->stretch.type = -1;
-	parms->turb.type = -1;
+	parms->glow.type = WAVEFORM_NONE;
+	parms->stretch.type = WAVEFORM_NONE;
+	parms->turb.type = WAVEFORM_NONE;
 	parms->scroll_x = 0.0f;
 	parms->scroll_y = 0.0f;
 }
