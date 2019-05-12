@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define VLIGHT_GRIDSIZE_X	256
 #define VLIGHT_GRIDSIZE_Y	256
 
-vec3_t	vlightgrid[VLIGHT_GRIDSIZE_X][VLIGHT_GRIDSIZE_Y];
+static vec3_t vlightgrid[VLIGHT_GRIDSIZE_X][VLIGHT_GRIDSIZE_Y];
 
 void VLight_InitAnormTable(void)
 {
@@ -54,7 +54,7 @@ void VLight_InitAnormTable(void)
 
 float VLight_GetLightValue(vec3_t normal, vec3_t dir, float apitch, float ayaw, qboolean dlight)
 {
-	float angle1, angle2, light;
+	float angle1, angle2;
 
 	if (normal[1] == 0 && normal[0] == 0)
 	{
@@ -91,19 +91,18 @@ float VLight_GetLightValue(vec3_t normal, vec3_t dir, float apitch, float ayaw, 
 	
 	if (dlight)
 	{
-		light = DotProduct(vlightgrid[pitchofs][yawofs], dir);
+		float light = DotProduct(vlightgrid[pitchofs][yawofs], dir);
 		light = clamp(light, 0, 1);
 
 		return light;
 	}
 	else
 	{
-		light = (DotProduct(vlightgrid[pitchofs][yawofs], dir) + 2.0f) * 63.5f;
+		float light = (DotProduct(vlightgrid[pitchofs][yawofs], dir) + 2.0f) * 63.5f;
 		light = clamp(light, VLIGHT_CLAMP_MIN, VLIGHT_CLAMP_MAX);
 		
 		return light / 256.0f;
 	}
-	
 }
 
 //mxd. Never used

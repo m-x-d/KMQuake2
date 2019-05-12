@@ -23,41 +23,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 #include "vlights.h"
 
-/*
-=============================================================
+static vec3_t *tempVertexArray[MD3_MAX_MESHES];
 
-  ALIAS MODELS
+static float aliasShadowAlpha;
 
-=============================================================
-*/
+static uint shadow_va;
+static uint shadow_index;
 
-vec3_t	*tempVertexArray[MD3_MAX_MESHES];
-
-vec3_t	aliasLightDir;
-float	aliasShadowAlpha;
-
-/*
-=================
-R_LightAliasModel
-=================
-*/
-void R_LightAliasModel (vec3_t baselight, vec3_t normal, vec3_t lightOut, byte normalindex, qboolean shaded)
+void R_LightAliasModel(vec3_t baselight, vec3_t normal, vec3_t lightOut, byte normalindex, qboolean shaded)
 {
-	if (r_fullbright->value != 0)
+	if (r_fullbright->integer)
 	{
 		VectorSet(lightOut, 1.0f, 1.0f, 1.0f);
 		return;
 	}
 
-	if (r_model_shading->value)
+	if (r_model_shading->integer)
 	{
 		if (shaded)
 		{
 			float lightscaler;
-			if (r_model_shading->value == 3)
-				lightscaler = 2.0 * shadedots[normalindex] - 1;
-			else if (r_model_shading->value == 2)
-				lightscaler = 1.5 * shadedots[normalindex] - 0.5;
+			if (r_model_shading->integer == 3)
+				lightscaler = 2.0f * shadedots[normalindex] - 1;
+			else if (r_model_shading->integer == 2)
+				lightscaler = 1.5f * shadedots[normalindex] - 0.5f;
 			else
 				lightscaler = shadedots[normalindex];
 
@@ -72,28 +61,21 @@ void R_LightAliasModel (vec3_t baselight, vec3_t normal, vec3_t lightOut, byte n
 		{
 			for (int i = 0; i < model_dlights_num; i++)
 			{
-				const float lightscaler = 2.0 * VLight_GetLightValue(normal, model_dlights[i].direction, currententity->angles[PITCH], currententity->angles[YAW], true);
+				const float lightscaler = 2.0f * VLight_GetLightValue(normal, model_dlights[i].direction, currententity->angles[PITCH], currententity->angles[YAW], true);
 				VectorMA(lightOut, lightscaler, model_dlights[i].color, lightOut);
 			}
 		}
 	}
 	else
 	{
-		const float lightscaler = 2.0 * VLight_GetLightValue(normal, aliasLightDir, currententity->angles[PITCH], currententity->angles[YAW], false);
-		VectorScale(baselight, lightscaler, lightOut);
+		VectorCopy(baselight, lightOut);
 	}
 
 	for (int i = 0; i < 3; i++)
-		lightOut[i] = max(min(lightOut[i], 1.0f), 0.0f);
+		lightOut[i] = clamp(lightOut[i], 0.0f, 1.0f);
 }
 
-
-/*
-=================
-R_AliasMeshesAreBatchable
-=================
-*/
-qboolean R_AliasMeshesAreBatchable (maliasmodel_t *paliashdr, unsigned meshnum1, unsigned meshnum2, unsigned skinnum)
+qboolean R_AliasMeshesAreBatchable(maliasmodel_t *paliashdr, uint meshnum1, uint meshnum2, uint skinnum)
 {
 	if (!paliashdr)
 		return false;
@@ -152,15 +134,8 @@ qboolean R_AliasMeshesAreBatchable (maliasmodel_t *paliashdr, unsigned meshnum1,
 	return true;
 }
 
-
-/*
-=================
-RB_RenderAliasMesh
-
-Backend for R_DrawAliasMeshes
-=================
-*/
-void RB_RenderAliasMesh (maliasmodel_t *paliashdr, unsigned meshnum, unsigned skinnum, image_t *skin)
+// Backend for R_DrawAliasMeshes
+void RB_RenderAliasMesh(maliasmodel_t *paliashdr, uint meshnum, uint skinnum, image_t *skin)
 {
 	entity_t *e = currententity;
 	const float thisalpha = colorArray[0][3];
@@ -200,15 +175,15 @@ void RB_RenderAliasMesh (maliasmodel_t *paliashdr, unsigned meshnum, unsigned sk
 		GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// md3 skin scripting
 
-	// draw
+	// Draw
 	RB_DrawArrays();
 
-	// glow pass
+	// Glow pass
 	if (mesh->skins[skinnum].glowimage && !shellModel)
 	{
-		const float glowcolor = (skinParms.glow.type > -1 ? RB_CalcGlowColor(skinParms) : 1.0);
+		const float glowcolor = (skinParms.glow.type > -1 ? RB_CalcGlowColor(skinParms) : 1.0f);
 		qglDisableClientState(GL_COLOR_ARRAY);
-		qglColor4f(glowcolor, glowcolor, glowcolor, 1.0);
+		qglColor4f(glowcolor, glowcolor, glowcolor, 1.0f);
 
 		GL_Enable(GL_BLEND);
 		GL_BlendFunc(GL_ONE, GL_ONE);
@@ -217,11 +192,11 @@ void RB_RenderAliasMesh (maliasmodel_t *paliashdr, unsigned meshnum, unsigned sk
 
 		RB_DrawArrays();
 
-		qglColor4f(1.0, 1.0, 1.0, 1.0);
+		qglColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		qglEnableClientState(GL_COLOR_ARRAY);
 	}
 
-	// envmap pass
+	// Envmap pass
 	if (skinParms.envmap > 0.0f && !shellModel)
 	{
 		GL_Enable(GL_BLEND);
@@ -230,8 +205,8 @@ void RB_RenderAliasMesh (maliasmodel_t *paliashdr, unsigned meshnum, unsigned sk
 		qglTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
 		qglTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
 		
-		// apply alpha to array
-		for (int i = 0; i < rb_vertex; i++)
+		// Apply alpha to array
+		for (uint i = 0; i < rb_vertex; i++)
 			colorArray[i][3] = thisalpha * skinParms.envmap;
 
 		GL_Bind(glMedia.envmappic->texnum);
@@ -246,57 +221,50 @@ void RB_RenderAliasMesh (maliasmodel_t *paliashdr, unsigned meshnum, unsigned sk
 	}
 
 	RB_DrawMeshTris();
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
-	// restore state
+	// Restore state
 	GL_Enable(GL_CULL_FACE);
 	GL_Disable(GL_ALPHA_TEST);
 	GL_Disable(GL_BLEND);
 	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-
-/*
-=================
-R_DrawAliasMeshes
-=================
-*/
-void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly, qboolean mirrored)
+void R_DrawAliasMeshes(maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly, qboolean mirrored)
 {
-	int				k, meshnum, skinnum;
-	vec3_t			move, delta, vectors[3];
-	vec3_t			curScale, oldScale, curNormal, oldNormal;
-	vec2_t			tempSkinCoord;
-	vec3_t			meshlight, lightcolor;
-	float			alpha, shellscale;
-	image_t			*skin;
-
 	const qboolean shellModel = e->flags & RF_MASK_SHELL;
 	const float backlerp = e->backlerp;
-	const float frontlerp = 1.0 - backlerp;
+	const float frontlerp = 1.0f - backlerp;
 
+	float alpha;
 	if (shellModel && FlowingShell())
-		alpha = 0.7;
+		alpha = 0.7f;
 	else if (e->flags & RF_TRANSLUCENT)
 		alpha = e->alpha;
 	else
-		alpha = 1.0;
+		alpha = 1.0f;
 
 	maliasframe_t *frame = paliashdr->frames + e->frame;
 	maliasframe_t *oldframe = paliashdr->frames + e->oldframe;
 
+	vec3_t curScale, oldScale;
 	VectorScale(frame->scale, frontlerp, curScale);
 	VectorScale(oldframe->scale, backlerp, oldScale);
 
 	const float mirrormult = (mirrored ? -1.0f : 1.0f);
 
-	// move should be the delta back to the previous frame * backlerp
+	// Move should be the delta back to the previous frame * backlerp
+	vec3_t delta;
 	VectorSubtract(e->oldorigin, e->origin, delta);
+
+	vec3_t vectors[3];
 	AngleVectors(e->angles, vectors[0], vectors[1], vectors[2]);
 
-	move[0] = DotProduct(delta, vectors[0]);	// forward
-	move[1] = -DotProduct(delta, vectors[1]);	// left
-	move[2] = DotProduct(delta, vectors[2]);	// up
+	vec3_t move;
+	move[0] =  DotProduct(delta, vectors[0]); // Forward
+	move[1] = -DotProduct(delta, vectors[1]); // Left
+	move[2] =  DotProduct(delta, vectors[2]); // Up
 
 	VectorAdd(move, oldframe->translate, move);
 
@@ -308,32 +276,35 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 	R_SetVertexRGBScale(true);
 	R_SetShellBlend(true);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 
-	// new outer loop for whole model
-	for (k = 0, meshnum = 0; k < paliashdr->num_meshes; k++, meshnum++)
+	// New outer loop for whole model
+	for (int meshnum = 0; meshnum < paliashdr->num_meshes; meshnum++)
 	{
-		const maliasmesh_t mesh = paliashdr->meshes[k];
+		const maliasmesh_t mesh = paliashdr->meshes[meshnum];
 
-		// select skin
+		// Select skin
+		int skinnum;
+		image_t *skin;
 		if (e->skin)
 		{
-			// custom player skin
+			// Custom player skin
 			skinnum = 0;
 			skin = e->skin;
 		}
 		else
 		{
-			skinnum = (e->skinnum < mesh.num_skins ? e->skinnum : 0); // catch bad skinnums
-			skin = currentmodel->skins[k][skinnum];
+			skinnum = (e->skinnum < mesh.num_skins ? e->skinnum : 0); // Catch bad skinnums
+			skin = currentmodel->skins[meshnum][skinnum];
 			if (!skin)
 			{
 				skinnum = 0;
-				skin = currentmodel->skins[k][0];
+				skin = currentmodel->skins[meshnum][0];
 			}
 		}
 
-		if (!skin)
+		if (skin == NULL)
 		{
 			skinnum = 0;
 			skin = glMedia.notexture;
@@ -343,8 +314,9 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 		const renderparms_t skinParms = mesh.skins[skinnum].renderparms;
 
 		if (skinParms.nodraw)
-			continue; // skip this mesh for this skin
+			continue; // Skip this mesh for this skin
 
+		vec3_t meshlight;
 		if (skinParms.fullbright)
 			VectorSet(meshlight, 1.0f, 1.0f, 1.0f);
 		else
@@ -357,7 +329,7 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 		maliasvertex_t *ov = mesh.vertexes + e->oldframe * mesh.num_verts;
 		const int baseindex = rb_vertex;
 
-		// set indices for each triangle
+		// Set indices for each triangle
 		for (int i = 0; i < mesh.num_tris; i++)
 		{
 			indexArray[rb_index++] = rb_vertex + mesh.indexes[3 * i + 0];
@@ -384,10 +356,12 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 		for (int i = 0; i < mesh.num_verts; i++, v++, ov++)
 		{
 			// Lerp verts
+			vec3_t curNormal;
 			curNormal[0] = sinf(v->normal[0]) * cosf(v->normal[1]); //mxd. Replaced precalculated r_sinTable/r_cosTable values with sinf()/cosf()
 			curNormal[1] = sinf(v->normal[0]) * sinf(v->normal[1]);
 			curNormal[2] = cosf(v->normal[0]);
 
+			vec3_t oldNormal;
 			oldNormal[0] = sinf(ov->normal[0]) * cosf(ov->normal[1]);
 			oldNormal[1] = sinf(ov->normal[0]) * sinf(ov->normal[1]);
 			oldNormal[2] = cosf(ov->normal[0]);
@@ -395,29 +369,30 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 			for (int c = 0; c < 3; c++) //mxd
 				tempNormalsArray[i][c] = curNormal[c] + (oldNormal[c] - curNormal[c]) * backlerp;
 
+			float shellscale = 0.0f;
 			if (shellModel)
 				shellscale = (e->flags & RF_WEAPONMODEL ? WEAPON_SHELL_SCALE: POWERSUIT_SCALE);
-			else
-				shellscale = 0.0f;
 
-			VectorSet ( tempVertexArray[meshnum][i], 
+			VectorSet(tempVertexArray[meshnum][i], 
 				(move[0] + ov->xyz[0] * oldScale[0] + v->xyz[0] * curScale[0] + tempNormalsArray[i][0] * shellscale),
 				(move[1] + ov->xyz[1] * oldScale[1] + v->xyz[1] * curScale[1] + tempNormalsArray[i][1] * shellscale) * mirrormult,
-				(move[2] + ov->xyz[2] * oldScale[2] + v->xyz[2] * curScale[2] + tempNormalsArray[i][2] * shellscale) );
+				(move[2] + ov->xyz[2] * oldScale[2] + v->xyz[2] * curScale[2] + tempNormalsArray[i][2] * shellscale));
 
-			// skip drawing if we're only lerping the verts for a shadow-only rendering pass
+			// Skip drawing if we're only lerping the verts for a shadow-only rendering pass
 			if (lerpOnly)
 				continue;
 
 			tempNormalsArray[i][1] *= mirrormult;
 
-			// calc lighting and alpha
+			// Calc lighting and alpha
+			vec3_t lightcolor;
 			if (shellModel)
 				VectorCopy(meshlight, lightcolor);
 			else
 				R_LightAliasModel(meshlight, tempNormalsArray[i], lightcolor, v->lightnormalindex, !skinParms.nodiffuse);
 
-			// get tex coords
+			// Get tex coords
+			vec2_t tempSkinCoord;
 			if (shellModel && FlowingShell())
 			{
 				tempSkinCoord[0] = (tempVertexArray[meshnum][i][0] + tempVertexArray[meshnum][i][1]) * DIV40 + shellFlowH;
@@ -429,10 +404,11 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 				tempSkinCoord[1] = mesh.stcoords[i].st[1];
 			}
 
-			// add to arrays
+			// Add to arrays
 			VA_SetElem2(texCoordArray[0][rb_vertex], tempSkinCoord[0], tempSkinCoord[1]);
 			VA_SetElem3(vertexArray[rb_vertex], tempVertexArray[meshnum][i][0], tempVertexArray[meshnum][i][1], tempVertexArray[meshnum][i][2]);
 			VA_SetElem4(colorArray[rb_vertex], lightcolor[0], lightcolor[1], lightcolor[2], meshalpha);
+
 			rb_vertex++;
 		}
 
@@ -442,16 +418,16 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 		if (!shellModel)
 			RB_ModifyTextureCoords(&texCoordArray[0][baseindex][0], &vertexArray[baseindex][0], mesh.num_verts, skinParms);
 
-		// compare renderparms for next mesh and check for overflow
-		if (k < paliashdr->num_meshes - 1)
+		// Compare renderparms for next mesh and check for overflow
+		if (meshnum < paliashdr->num_meshes - 1)
 		{
-			if ( ( shellModel || R_AliasMeshesAreBatchable(paliashdr, k, k + 1, e->skinnum) )
-				&& !RB_CheckArrayOverflow(paliashdr->meshes[k + 1].num_verts, paliashdr->meshes[k + 1].num_tris * 3) )
+			if ((shellModel || R_AliasMeshesAreBatchable(paliashdr, meshnum, meshnum + 1, e->skinnum))
+				&& !RB_CheckArrayOverflow(paliashdr->meshes[meshnum + 1].num_verts, paliashdr->meshes[meshnum + 1].num_tris * 3))
 				continue;
 		}
 
 		RB_RenderAliasMesh(paliashdr, meshnum, skinnum, skin);
-	} // end new outer loop
+	} // End new outer loop
 
 	R_SetShellBlend(false);
 	R_SetVertexRGBScale(false);
@@ -459,14 +435,7 @@ void R_DrawAliasMeshes (maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly
 	GL_ShadeModel(GL_FLAT);
 }
 
-
-unsigned shadow_va, shadow_index;
-/*
-=============
-R_BuildShadowVolume
-based on code from BeefQuake R6
-=============
-*/
+// Based on code from BeefQuake R6
 void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
 {
 	vec3_t  v0, v1, v2, v3;
@@ -487,7 +456,9 @@ void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float pr
 			+ (light[2] - v0[2]) * ((v0[0] - v1[0]) * (v2[1] - v1[1]) - (v0[1] - v1[1]) * (v2[0] - v1[0])) > 0;
 	}
 
-	shadow_va = shadow_index = 0;
+	shadow_va = 0;
+	shadow_index = 0;
+
 	for (int i = 0; i < mesh.num_tris; i++)
 	{
 		if (!triangleFacingLight[i])
@@ -537,11 +508,10 @@ void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float pr
 		return;
 	}
 		
-
-	// cap the volume
+	// Cap the volume
 	for (int i = 0; i < mesh.num_tris; i++)
 	{
-		if (!triangleFacingLight[i]) // changed to draw only front facing polys- thanx to Kirk Barnes
+		if (!triangleFacingLight[i]) // Changed to draw only front facing polys - thanx to Kirk Barnes
 			continue;
 
 		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 0]], v0);
@@ -563,7 +533,7 @@ void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float pr
 		indexArray[shadow_index++] = shadow_va;
 		shadow_va++;
 
-		// rear with reverse order
+		// Rear with reverse order
 		for (int j = 0; j < 3; j++)
 		{
 			v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 0]][j];
@@ -594,12 +564,6 @@ void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float pr
 	free(triangleFacingLight); //mxd
 }
 
-
-/*
-=============
-R_DrawShadowVolume 
-=============
-*/
 void R_DrawShadowVolume(void)
 {
 	if (glConfig.drawRangeElements)
@@ -608,54 +572,50 @@ void R_DrawShadowVolume(void)
 		qglDrawElements(GL_TRIANGLES, shadow_index, GL_UNSIGNED_INT, indexArray);
 }
 
-
-/*
-=============
-R_DrawAliasVolumeShadow
-based on code from BeefQuake R6
-=============
-*/
+// Based on code from BeefQuake R6
 void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 {
-	vec3_t light, temp, vecAdd;
-
 	dlight_t *dl = r_newrefdef.dlights;
+	vec3_t vecAdd = { 680, 0, 1024 }; // Set base vector, was 576, 0, 1024
 
-	VectorSet(vecAdd, 680, 0, 1024); // set base vector, was 576,0,1024
-
-	// compute average light vector from dlights
+	// Compute average light vector from dlights
 	for (int i = 0; i < r_newrefdef.num_dlights; i++, dl++)
 	{
 		if (VectorCompare(dl->origin, currententity->origin))
 			continue;
 		
+		vec3_t temp;
 		VectorSubtract(dl->origin, currententity->origin, temp);
 		const float dist = dl->intensity - VectorLength(temp);
 		if (dist <= 0)
 			continue;
 
 		// Factor in the intensity of a dlight
-		VectorScale(temp, dist * 0.25, temp);
+		VectorScale(temp, dist * 0.25f, temp);
 		VectorAdd(vecAdd, temp, vecAdd);
 	}
 
 	VectorNormalize(vecAdd);
 	VectorScale(vecAdd, 1024, vecAdd);
 
-	// get projection distance from lightspot height
+	// Get projection distance from lightspot height
 	float highest = bbox[0][2];
 	float lowest = highest;
 	for (int i = 0; i < 8; i++)
 	{
-		if (bbox[i][2] > highest) highest = bbox[i][2];
-		if (bbox[i][2] < lowest) lowest = bbox[i][2];
+		if (bbox[i][2] > highest) 
+			highest = bbox[i][2];
+
+		if (bbox[i][2] < lowest) 
+			lowest = bbox[i][2];
 	}
 
 	const float projected_distance = (fabsf(highest - lightspot[2]) + (highest - lowest)) / vecAdd[2];
 
+	vec3_t light;
 	VectorCopy(vecAdd, light);
 	
-	// reverse-rotate light vector based on angles
+	// Reverse-rotate light vector based on angles
 	float angle = -currententity->angles[PITCH] / 180 * M_PI;
 	const float cosp = cosf(angle);
 	const float sinp = sinf(angle);
@@ -664,33 +624,32 @@ void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 	const float cosy = cosf(angle);
 	const float siny = sinf(angle);
 
-	angle = -currententity->angles[ROLL] / 180 * M_PI * R_RollMult(); // roll is backwards
+	angle = -currententity->angles[ROLL] / 180 * M_PI * R_RollMult(); // Roll is backwards
 	const float cosr = cosf(angle);
 	const float sinr = sinf(angle);
 
-	// rotate for yaw (z axis)
+	// Rotate for yaw (z axis)
 	float ix = light[0];
 	float iy = light[1];
 	light[0] = cosy * ix - siny * iy;
 	light[1] = siny * ix + cosy * iy;
 
-	// rotate for pitch (y axis)
+	// Rotate for pitch (y axis)
 	ix = light[0];
 	float iz = light[2];
 	light[0] =  cosp * ix + sinp * iz;
 	light[2] = -sinp * ix + cosp * iz;
 
-	// rotate for roll (x axis)
+	// Rotate for roll (x axis)
 	iy = light[1];
 	iz = light[2];
 	light[1] = cosr * iy - sinr * iz;
 	light[2] = sinr * iy + cosr * iz;
 
-
-	// set up stenciling
+	// Set up stenciling
 	if (!r_shadowvolumes->value)
 	{
-		qglPushAttrib(GL_STENCIL_BUFFER_BIT); // save stencil buffer
+		qglPushAttrib(GL_STENCIL_BUFFER_BIT); // Save stencil buffer
 		qglClear(GL_STENCIL_BUFFER_BIT);
 
 		qglColorMask(0, 0, 0, 0);
@@ -701,10 +660,10 @@ void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 		qglStencilFunc(GL_ALWAYS, 0, 255);
 	}
 
-	// build shadow volumes and render each to stencil buffer
+	// Build shadow volumes and render each to stencil buffer
 	for (int i = 0; i < paliashdr->num_meshes; i++)
 	{
-		const int skinnum = (currententity->skinnum<paliashdr->meshes[i].num_skins ? currententity->skinnum : 0);
+		const int skinnum = (currententity->skinnum < paliashdr->meshes[i].num_skins ? currententity->skinnum : 0);
 		if (paliashdr->meshes[i].skins[skinnum].renderparms.noshadow)
 			continue;
 
@@ -741,13 +700,13 @@ void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 			}
 			else
 			{
-				// increment stencil if backface is behind depthbuffer
-				GL_CullFace(GL_BACK); // quake is backwards, this culls front faces
+				// Increment stencil if backface is behind depthbuffer
+				GL_CullFace(GL_BACK); // Quake is backwards, this culls front faces
 				qglStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
 				R_DrawShadowVolume();
 
-				// decrement stencil if frontface is behind depthbuffer
-				GL_CullFace(GL_FRONT); // quake is backwards, this culls back faces
+				// Decrement stencil if frontface is behind depthbuffer
+				GL_CullFace(GL_FRONT); // Quake is backwards, this culls back faces
 				qglStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
 				R_DrawShadowVolume();
 			}
@@ -760,7 +719,7 @@ void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 		GL_UnlockArrays();
 	}
 
-	// end stenciling and draw stenciled volume
+	// End stenciling and draw stenciled volume
 	if (!r_shadowvolumes->value)
 	{
 		GL_CullFace(GL_FRONT);
@@ -770,40 +729,36 @@ void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 		GL_DepthMask(1);
 		qglColorMask(1, 1, 1, 1);
 		
-		// draw shadows for this model now
-		R_ShadowBlend(aliasShadowAlpha * currententity->alpha); // was r_shadowalpha->value
-		qglPopAttrib(); // restore stencil buffer
+		// Draw shadows for this model now
+		R_ShadowBlend(aliasShadowAlpha * currententity->alpha); // Was r_shadowalpha->value
+		qglPopAttrib(); // Restore stencil buffer
 	}
 }
 
-
-/*
-=================
-R_DrawAliasPlanarShadow
-=================
-*/
-void R_DrawAliasPlanarShadow (maliasmodel_t *paliashdr)
+void R_DrawAliasPlanarShadow(maliasmodel_t *paliashdr)
 {
 	vec3_t shadevector;
 	R_ShadowLight(currententity->origin, shadevector);
 
 	const float lheight = currententity->origin[2] - lightspot[2];
 	const float height = -lheight + 0.1f;
-	const float thisAlpha = aliasShadowAlpha * (currententity->flags & RF_TRANSLUCENT ? currententity->alpha : 1.0); // was r_shadowalpha->value
+	const float thisAlpha = aliasShadowAlpha * (currententity->flags & RF_TRANSLUCENT ? currententity->alpha : 1.0f); // Was r_shadowalpha->value
 
-	// don't draw shadows above view origin, thnx to MrG
+	// Don't draw shadows above view origin, thnx to MrG
 	if (r_newrefdef.vieworg[2] < (currententity->origin[2] + height))
 		return;
 
 	GL_Stencil(true, false);
 	GL_BlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE_MINUS_SRC_ALPHA);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
+
 	for (int i = 0; i < paliashdr->num_meshes; i++) 
 	{
 		const maliasmesh_t mesh = paliashdr->meshes[i];
+		const int skinnum = (currententity->skinnum < mesh.num_skins ? currententity->skinnum : 0);
 
-		const int skinnum = (currententity->skinnum<mesh.num_skins ? currententity->skinnum : 0);
 		if (mesh.skins[skinnum].renderparms.noshadow)
 			continue;
 
@@ -821,30 +776,24 @@ void R_DrawAliasPlanarShadow (maliasmodel_t *paliashdr)
 			point[0] -= shadevector[0] * (point[2] + lheight);
 			point[1] -= shadevector[1] * (point[2] + lheight);
 			point[2] = height;
+
 			VA_SetElem3(vertexArray[rb_vertex], point[0], point[1], point[2]);
 			VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, thisAlpha);
+
 			rb_vertex++;
 		}
 	}
 
 	RB_DrawArrays();
-	rb_vertex = rb_index = 0;
+
+	rb_vertex = 0;
+	rb_index = 0;
 
 	GL_Stencil(false, false);
 }
 
-
-/*
-=================
-R_CullAliasModel
-=================
-*/
-static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
+static qboolean R_CullAliasModel(vec3_t bbox[8], entity_t *e)
 {
-	vec3_t mins, maxs, tmp;
-	vec3_t vectors[3];
-	int aggregatemask = ~0;
-
 	maliasmodel_t *paliashdr = (maliasmodel_t *)currentmodel->extradata;
 
 	if (e->frame >= paliashdr->num_frames || e->frame < 0)
@@ -862,7 +811,8 @@ static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
 	maliasframe_t *pframe = paliashdr->frames + e->frame;
 	maliasframe_t *poldframe = paliashdr->frames + e->oldframe;
 
-	// compute axially aligned mins and maxs
+	// Compute axially aligned mins and maxs
+	vec3_t mins, maxs;
 	if (pframe == poldframe)
 	{
 		VectorCopy(pframe->mins, mins);
@@ -885,13 +835,17 @@ static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
 	}
 
 	// jitspoe's bbox rotation fix
-	// compute and rotate bonding box
-	e->angles[ROLL] = -e->angles[ROLL]; // roll is backwards
+	// Compute and rotate bonding box
+	vec3_t vectors[3];
+	e->angles[ROLL] = -e->angles[ROLL]; // Roll is backwards
 	AngleVectors(e->angles, vectors[0], vectors[1], vectors[2]);
-	e->angles[ROLL] = -e->angles[ROLL]; // roll is backwards
+	e->angles[ROLL] = -e->angles[ROLL]; // Roll is backwards
+
 	VectorSubtract(vec3_origin, vectors[1], vectors[1]); // AngleVectors returns "right" instead of "left"
+	
 	for (int i = 0; i < 8; i++)
 	{
+		vec3_t tmp;
 		tmp[0] = ((i & 1) ? mins[0] : maxs[0]);
 		tmp[1] = ((i & 2) ? mins[1] : maxs[1]);
 		tmp[2] = ((i & 4) ? mins[2] : maxs[2]);
@@ -901,7 +855,8 @@ static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
 		bbox[i][2] = vectors[0][2] * tmp[0] + vectors[1][2] * tmp[1] + vectors[2][2] * tmp[2] + e->origin[2];
 	}
 
-	// cull
+	// Cull
+	int aggregatemask = ~0;
 	for (int i = 0; i < 8; i++)
 	{
 		int mask = 0;
@@ -915,34 +870,25 @@ static qboolean R_CullAliasModel (vec3_t bbox[8], entity_t *e)
 		aggregatemask &= mask;
 	}
 
-	if (aggregatemask)
-		return true;
-
-	return false;
+	return (aggregatemask > 0);
 }
 
-
-/*
-=================
-R_DrawAliasModel
-=================
-*/
 void CL_Shadow_Decal(vec3_t org, float size, float alpha); //mxd
 
-void R_DrawAliasModel (entity_t *e)
+void R_DrawAliasModel(entity_t *e)
 {
 	vec3_t bbox[8];
 	qboolean mirrorview = false;
 	qboolean mirrormodel = false;
 
-	// also skip this for viewermodels and cameramodels
+	// Also skip this for viewermodels and cameramodels
 	if (!(e->flags & RF_WEAPONMODEL || e->flags & RF_VIEWERMODEL || e->renderfx & RF2_CAMERAMODEL))
 	{
 		if (R_CullAliasModel(bbox, e))
 			return;
 	}
 
-	// mirroring support
+	// Mirroring support
 	if (e->flags & RF_WEAPONMODEL)
 	{
 		if (r_lefthand->value == 2)
@@ -966,13 +912,13 @@ void R_DrawAliasModel (entity_t *e)
 
 	R_SetShadeLight();
 
-	if (e->flags & RF_DEPTHHACK) // hack the depth range to prevent view model from poking into walls
+	if (e->flags & RF_DEPTHHACK) // Hack the depth range to prevent view model from poking into walls
 	{
-		const float scaler = (r_newrefdef.rdflags & RDF_NOWORLDMODEL ? 0.01 : 0.3); //mxd
+		const float scaler = (r_newrefdef.rdflags & RDF_NOWORLDMODEL ? 0.01f : 0.3f); //mxd
 		GL_DepthRange(gldepthmin, gldepthmin + scaler * (gldepthmax - gldepthmin));
 	}
 
-	// mirroring support
+	// Mirroring support
 	if (mirrorview || mirrormodel)
 		R_FlipModel(true, mirrormodel);
 
@@ -986,14 +932,14 @@ void R_DrawAliasModel (entity_t *e)
 
 	if (e->frame >= paliashdr->num_frames || e->frame < 0)
 	{
-		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such frame %d\n", currentmodel->name, e->frame);
+		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such frame %i\n", currentmodel->name, e->frame);
 		e->frame = 0;
 		e->oldframe = 0;
 	}
 
 	if (e->oldframe >= paliashdr->num_frames || e->oldframe < 0)
 	{
-		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %d\n", currentmodel->name, e->oldframe);
+		VID_Printf(PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %i\n", currentmodel->name, e->oldframe);
 		e->frame = 0;
 		e->oldframe = 0;
 	}
@@ -1005,11 +951,11 @@ void R_DrawAliasModel (entity_t *e)
 
 	qglPopMatrix();
 
-	// mirroring support
+	// Mirroring support
 	if (mirrorview || mirrormodel)
 		R_FlipModel(false, mirrormodel);
 
-	// show model bounding box
+	// Show model bounding box
 	R_DrawAliasModelBBox(bbox, e, 1.0f, 1.0f, 1.0f, 1.0f);
 
 	if (e->flags & RF_DEPTHHACK)
@@ -1018,7 +964,7 @@ void R_DrawAliasModel (entity_t *e)
 	aliasShadowAlpha = R_CalcShadowAlpha(e);
 
 	if (!(e->flags & (RF_WEAPONMODEL | RF_NOSHADOW))
-		&& !(e->flags & RF_MASK_SHELL && e->flags & RF_TRANSLUCENT) // no shadows from shells
+		&& !(e->flags & RF_MASK_SHELL && e->flags & RF_TRANSLUCENT) // No shadows from shells
 		&& r_shadows->value >= 1 && aliasShadowAlpha >= DIV255)
 	{
  		//mxd. Simple decal shadows...

@@ -53,6 +53,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef enum {false, true} qboolean;
 typedef unsigned char byte;
+typedef unsigned int  uint; //mxd. C# style
+typedef unsigned long ulong; //mxd. C# style
 
 #ifndef NULL
 	#define NULL ((void *)0)
@@ -71,11 +73,11 @@ typedef unsigned char byte;
 #endif
 
 // from Quake3 source
-#ifdef _MSC_VER	// _WIN32
+#ifdef _MSC_VER // _WIN32
 __inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list Args) //TODO: mxd. Replace with vsnprintf?
 {
-	const int ret = _vsnprintf(Dest, Count, Format, Args);  
-	Dest[Count-1] = 0;	// null terminate
+	const int ret = _vsnprintf(Dest, Count, Format, Args);
+	Dest[Count - 1] = 0; // null terminate
 	return ret;
 }
 #else

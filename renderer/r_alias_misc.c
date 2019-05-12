@@ -23,25 +23,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 
 // Precalculated dot products for quantized angles
-float	r_avertexnormal_dots[SHADEDOT_QUANT][256] =
+float r_avertexnormal_dots[SHADEDOT_QUANT][256] =
 #include "anormtab.h"
 ;
 
-float		*shadedots = r_avertexnormal_dots[0];
+float *shadedots = r_avertexnormal_dots[0];
 
-vec3_t		shadelight;
+vec3_t shadelight;
 
-m_dlight_t	model_dlights[MAX_MODEL_DLIGHTS];
-int			model_dlights_num;
+m_dlight_t model_dlights[MAX_MODEL_DLIGHTS];
+int model_dlights_num;
 
-float		shellFlowH, shellFlowV;
+float shellFlowH;
+float shellFlowV;
 
-/*
-=================
-mirrorValue
-=================
-*/
-float mirrorValue (float value, qboolean mirrormodel)
+//mxd. Unused
+/*float mirrorValue (float value, qboolean mirrormodel)
 {
 	if (mirrormodel)
 	{
@@ -51,16 +48,11 @@ float mirrorValue (float value, qboolean mirrormodel)
 	}
 
 	return value;
-}
+}*/
 
-
-/*
-=================
-R_CalcShadowAlpha
-=================
-*/
 #define SHADOW_FADE_DIST 128
-float R_CalcShadowAlpha (entity_t *e)
+
+float R_CalcShadowAlpha(entity_t *e)
 {
 	vec3_t vec;
 	float minRange, outAlpha;
@@ -70,38 +62,32 @@ float R_CalcShadowAlpha (entity_t *e)
 
 	if (r_newrefdef.fov_y >= 90)
 		minRange = r_shadowrange->value;
-	else // reduced FOV means longer range
-		minRange = r_shadowrange->value * (90 / r_newrefdef.fov_y); // this can't be zero
+	else // Reduced FOV means longer range
+		minRange = r_shadowrange->value * (90 / r_newrefdef.fov_y); // This can't be zero
 	const float maxRange = minRange + SHADOW_FADE_DIST;
 
-	if (dist <= minRange) // in range
+	if (dist <= minRange) // In range
 		outAlpha = r_shadowalpha->value;
-	else if (dist >= maxRange) // out of range
+	else if (dist >= maxRange) // Out of range
 		outAlpha = 0.0f;
-	else // fade based on distance
+	else // Fade based on distance
 		outAlpha = r_shadowalpha->value * (fabsf(dist - maxRange) / SHADOW_FADE_DIST);
 
 	return outAlpha;
 }
 
-
-/*
-==============
-R_ShadowBlend
-Draws projection shadow(s) from stenciled volume
-==============
-*/
+// Draws projection shadow(s) from stenciled volume
 void R_ShadowBlend(float shadowalpha)
 {
 	if (r_shadows->value != 3)
 		return;
 
 	qglPushMatrix();
-    qglLoadIdentity();
+	qglLoadIdentity();
 
 	// FIXME: get rid of these
-    qglRotatef(-90, 1, 0, 0);	    // put Z going up
-    qglRotatef(90,  0, 0, 1);	    // put Z going up
+	qglRotatef(-90, 1, 0, 0); // Put Z going up
+	qglRotatef(90,  0, 0, 1); // Put Z going up
 
 	GL_Disable(GL_ALPHA_TEST);
 	GL_Enable(GL_BLEND);
@@ -112,7 +98,9 @@ void R_ShadowBlend(float shadowalpha)
 	qglStencilFunc(GL_NOTEQUAL, 0, 255);
 	qglStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
+
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
 	indexArray[rb_index++] = rb_vertex + 2;
@@ -150,79 +138,51 @@ void R_ShadowBlend(float shadowalpha)
 	qglColor4f(1, 1, 1, 1);
 }
 
-
-/*
-=================
-capColorVec
-=================
-*/
-void capColorVec(vec3_t color)
+//mxd. Unused
+/*void capColorVec(vec3_t color)
 {
 	for (int i = 0; i < 3; i++)
 		color[i] = clamp(color[i], 0.0f, 1.0f);
-}
+}*/
 
-/*
-=================
-R_SetVertexRGBScale
-=================
-*/
 void R_SetVertexRGBScale(qboolean toggle)
 {
 	if (!r_rgbscale->value || !glConfig.mtexcombine)
 		return;
 
-	if (toggle) // turn on
+	if (toggle) // Turn on
 	{
 		qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
 		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, r_rgbscale->value);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, r_rgbscale->integer);
 		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_MODULATE);
 		
 		GL_TexEnv(GL_COMBINE_ARB);
 	}
-	else // turn off
+	else // Turn off
 	{
 		GL_TexEnv(GL_MODULATE);
 		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
 	}
 }
 
-
-/*
-=================
-EnvMapShell
-=================
-*/
 qboolean EnvMapShell(void)
 {
 	return (r_shelltype->value == 2 || (r_shelltype->value == 1 && currententity->alpha == 1.0f));
 }
 
-
-/*
-=================
-FlowingShell
-=================
-*/
 qboolean FlowingShell(void)
 {
 	return (r_shelltype->value == 1 && currententity->alpha != 1.0f);
 }
 
-
-/*
-=================
-R_SetShellBlend
-=================
-*/
 void R_SetShellBlend(qboolean toggle)
 {
-	// shells only
+	// Shells only
 	if (!(currententity->flags & RF_MASK_SHELL))
 		return;
 
-	if (toggle) //turn on
+	if (toggle) // Turn on
 	{
 		// Psychospaz's envmapping
 		if (EnvMapShell())
@@ -246,10 +206,10 @@ void R_SetShellBlend(qboolean toggle)
 
 		GL_Stencil(true, true);
 
-		shellFlowH =  0.25 * sin(r_newrefdef.time * 0.5 * M_PI);
-		shellFlowV = -(r_newrefdef.time / 2.0); 
+		shellFlowH = 0.25f * sinf(r_newrefdef.time * 0.5f * M_PI);
+		shellFlowV = -(r_newrefdef.time / 2.0f); 
 	}
-	else // turn off
+	else // Turn off
 	{
 		// Psychospaz's envmapping
 		if (EnvMapShell())
@@ -266,15 +226,10 @@ void R_SetShellBlend(qboolean toggle)
 	}
 }
 
-/*
-=================
-R_FlipModel
-=================
-*/
+extern void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar);
+
 void R_FlipModel(qboolean on, qboolean cullOnly)
 {
-	extern void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar);
-
 	if (on)
 	{
 		if (!cullOnly)
@@ -302,12 +257,8 @@ void R_FlipModel(qboolean on, qboolean cullOnly)
 	}
 }
 
-/*
-=================
-R_SetBlendModeOn
-=================
-*/
-void R_SetBlendModeOn(image_t *skin)
+//mxd. Unused
+/*void R_SetBlendModeOn(image_t *skin)
 {
 	GL_TexEnv(GL_MODULATE);
 
@@ -333,14 +284,10 @@ void R_SetBlendModeOn(image_t *skin)
 
 		GL_Enable(GL_BLEND);
 	}
-}
+}*/
 
-/*
-=================
-R_SetBlendModeOff
-=================
-*/
-void R_SetBlendModeOff(void)
+//mxd. Unused
+/*void R_SetBlendModeOff(void)
 {
 	if (currententity->flags & RF_TRANSLUCENT)
 	{
@@ -348,39 +295,35 @@ void R_SetBlendModeOff(void)
 		GL_Disable(GL_BLEND);
 		GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
-}
+}*/
 
-/*
-=================
-R_SetShadeLight
-=================
-*/
 void R_SetShadeLight(void)
 {
 	if (currententity->flags & RF_MASK_SHELL)
 	{
 		VectorClear(shadelight);
+
 		if (currententity->flags & RF_SHELL_HALF_DAM)
 		{
-			shadelight[0] = 0.56;
-			shadelight[1] = 0.59;
-			shadelight[2] = 0.45;
+			shadelight[0] = 0.56f;
+			shadelight[1] = 0.59f;
+			shadelight[2] = 0.45f;
 		}
 
 		if (currententity->flags & RF_SHELL_DOUBLE)
 		{
-			shadelight[0] = 0.9;
-			shadelight[1] = 0.7;
+			shadelight[0] = 0.9f;
+			shadelight[1] = 0.7f;
 		}
 
 		if (currententity->flags & RF_SHELL_RED)
-			shadelight[0] = 1.0;
+			shadelight[0] = 1.0f;
 
 		if (currententity->flags & RF_SHELL_GREEN)
-			shadelight[1] = 1.0;
+			shadelight[1] = 1.0f;
 
 		if (currententity->flags & RF_SHELL_BLUE)
-			shadelight[2] = 1.0;
+			shadelight[2] = 1.0f;
 	}
 	else if (currententity->flags & RF_FULLBRIGHT)
 	{
@@ -389,9 +332,9 @@ void R_SetShadeLight(void)
 	else
 	{
 		// Set up basic lighting...
-		if (r_model_shading->value && r_model_dlights->value)
+		if (r_model_shading->value && r_model_dlights->integer)
 		{
-			const int max = clamp(r_model_dlights->value, 0, MAX_MODEL_DLIGHTS); //mxd. +clamp
+			const int max = clamp(r_model_dlights->integer, 0, MAX_MODEL_DLIGHTS); //mxd. +clamp
 			R_LightPointDynamics(currententity->origin, shadelight, model_dlights, &model_dlights_num, max);
 		}
 		else
@@ -400,11 +343,10 @@ void R_SetShadeLight(void)
 			model_dlights_num = 0;
 		}
 
-		// player lighting hack for communication back to server
-		// big hack!
+		// Player lighting hack for communication back to server
 		if (currententity->flags & RF_WEAPONMODEL)
 		{
-			// pick the greatest component, which should be the same as the mono value returned by software
+			// Pick the greatest component, which should be the same as the mono value returned by software
 			r_lightlevel->value = 150 * max(shadelight[0], max(shadelight[1], shadelight[2])); //mxd
 		}
 	}
@@ -413,7 +355,7 @@ void R_SetShadeLight(void)
 	{
 		int i;
 		for (i = 0; i < 3; i++)
-			if (shadelight[i] > 0.02)
+			if (shadelight[i] > 0.02f)
 				break;
 
 		if (i == 3)
@@ -422,30 +364,25 @@ void R_SetShadeLight(void)
 
 	if (currententity->flags & RF_GLOW)
 	{
-		// bonus items will pulse with time
-		const float scale = 0.2 * sinf(r_newrefdef.time * 7);
+		// Bonus items will pulse with time
+		const float scale = 0.2f * sinf(r_newrefdef.time * 7);
 		for (int i = 0; i < 3; i++)
 		{
-			const float min = shadelight[i] * 0.8;
+			const float minlight = shadelight[i] * 0.8f;
 			shadelight[i] += scale;
-			shadelight[i] = max(min, shadelight[i]);
+			shadelight[i] = max(minlight, shadelight[i]);
 		}
 	}
 
 	if (r_newrefdef.rdflags & RDF_IRGOGGLES && currententity->flags & RF_IR_VISIBLE)
-		VectorSet(shadelight, 1.0, 0.0, 0.0); //mxd
+		VectorSet(shadelight, 1.0f, 0.0f, 0.0f); //mxd
 
-	shadedots = r_avertexnormal_dots[((int)(currententity->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1)];
+	shadedots = r_avertexnormal_dots[((int)(currententity->angles[1] * (SHADEDOT_QUANT / 360.0f))) & (SHADEDOT_QUANT - 1)];
 }
 
-/*
-=================
-R_DrawAliasModelBBox
-=================
-*/
 void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha)
 {
-	if (!r_showbbox->value)
+	if (!r_showbbox->integer)
 		return;
 
 	if (e->flags & RF_WEAPONMODEL || e->flags & RF_VIEWERMODEL || e->flags & RF_BEAM || e->renderfx & RF2_CAMERAMODEL)
@@ -457,7 +394,9 @@ void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, f
 	qglColor4f(red, green, blue, alpha);
 	GL_DisableTexture(0);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
+
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
 	indexArray[rb_index++] = rb_vertex + 2;
@@ -501,7 +440,9 @@ void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, f
 	}
 
 	RB_DrawArrays();
-	rb_vertex = rb_index = 0;
+
+	rb_vertex = 0;
+	rb_index = 0;
 
 	GL_EnableTexture(0);
 	qglColor4f(1.0f, 1.0f, 1.0f, 1.0f);

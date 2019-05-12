@@ -443,8 +443,8 @@ qboolean FlowingShell();
 float R_CalcShadowAlpha(entity_t *e);
 void R_ShadowBlend(float alpha);
 void R_FlipModel(qboolean on, qboolean cullOnly);
-void R_SetBlendModeOn(image_t *skin);
-void R_SetBlendModeOff(void);
+//void R_SetBlendModeOn(image_t *skin); //mxd. Unused
+//void R_SetBlendModeOff(void); //mxd. Unused
 void R_SetShadeLight(void);
 void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha);
 
@@ -465,13 +465,13 @@ void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, f
 #define VA_SetElem3v(v,a)	((v)[0]=(a)[0],(v)[1]=(a)[1],(v)[2]=(a)[2])
 #define VA_SetElem4v(v,a)	((v)[0]=(a)[0],(v)[1]=(a)[1],(v)[2]=(a)[2],(v)[3]=(a)[3])
 
-extern unsigned	indexArray[MAX_INDICES];
+extern uint indexArray[MAX_INDICES];
 extern float texCoordArray[MAX_TEXTURE_UNITS][MAX_VERTICES][2];
 extern float inTexCoordArray[MAX_VERTICES][2];
 extern float vertexArray[MAX_VERTICES][3];
 extern float colorArray[MAX_VERTICES][4];
-extern unsigned rb_vertex;
-extern unsigned rb_index;
+extern uint rb_vertex;
+extern uint rb_index;
 // end vertex array stuff
 
 void RB_InitBackend();
