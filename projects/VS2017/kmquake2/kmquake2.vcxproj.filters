@@ -381,6 +381,9 @@
     <ClCompile Include="..\..\..\win32\sys_info.c">
       <Filter>Source Files\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_model_script.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\cdaudio.h">

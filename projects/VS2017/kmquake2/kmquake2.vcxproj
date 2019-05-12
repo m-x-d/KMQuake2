@@ -221,6 +221,7 @@
     <ClCompile Include="..\..\..\renderer\r_image_wal.c" />
     <ClCompile Include="..\..\..\renderer\r_light.c" />
     <ClCompile Include="..\..\..\renderer\r_main.c" />
+    <ClCompile Include="..\..\..\renderer\r_model_script.c" />
     <ClCompile Include="..\..\..\renderer\r_particle_setup.c" />
     <ClCompile Include="..\..\..\renderer\r_model.c" />
     <ClCompile Include="..\..\..\renderer\r_particle.c" />
