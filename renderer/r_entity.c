@@ -190,9 +190,6 @@ static void ParseRenderEntity(entity_t *ent)
 
 		switch (currentmodel->type)
 		{
-#ifndef MD2_AS_MD3
-			case mod_md2: R_DrawAliasMD2Model(currententity); break;
-#endif
 			case mod_alias:  R_DrawAliasModel(currententity); break; //Harven MD3
 			case mod_brush:  R_DrawBrushModel(currententity); break;
 			case mod_sprite: R_DrawSpriteModel(currententity); break;

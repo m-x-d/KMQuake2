@@ -114,8 +114,6 @@ __inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list A
 
 #define LOC_SUPPORT	// whether to include loc file support
 
-#define MD2_AS_MD3 // whether to load md2s into md3 memory representation
-
 #define CLIENT_SPLIT_NETFRAME // whether to use split net and render frames in the client
 
 #define CLIENT_THIRDPERSON_CVAR "cg_thirdperson"

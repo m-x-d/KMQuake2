@@ -231,9 +231,6 @@
     <ClCompile Include="..\..\..\renderer\r_alias.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\renderer\r_alias_md2.c">
-      <Filter>Source Files\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\renderer\r_alias_misc.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
