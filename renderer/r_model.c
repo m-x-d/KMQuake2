@@ -35,11 +35,8 @@ static model_t mod_inline[MAX_MOD_KNOWN];
 int registration_sequence;
 qboolean registration_active; // Map registration flag
 
-/*
-===============
-Mod_PointInLeaf
-===============
-*/
+#pragma region ======================= Helper functions
+
 mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model)
 {
 	if (!model || !model->nodes)
@@ -61,13 +58,7 @@ mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model)
 	}
 }
 
-
-/*
-===================
-Mod_DecompressVis
-===================
-*/
-byte *Mod_DecompressVis(byte *in, model_t *model)
+static byte *Mod_DecompressVis(byte *in, model_t *model)
 {
 	static byte	decompressed[MAX_MAP_LEAFS / 8];
 
@@ -76,10 +67,10 @@ byte *Mod_DecompressVis(byte *in, model_t *model)
 
 	if (!in)
 	{
-		// no vis info, so make all visible
+		// No vis info, so make all visible
 		while (row)
 		{
-			*out++ = 0xff;
+			*out++ = 255;
 			row--;
 		}
 
@@ -106,11 +97,6 @@ byte *Mod_DecompressVis(byte *in, model_t *model)
 	return decompressed;
 }
 
-/*
-==============
-Mod_ClusterPVS
-==============
-*/
 byte *Mod_ClusterPVS(int cluster, model_t *model)
 {
 	static byte novis[MAX_MAP_LEAFS / 8]; //mxd. Made local
@@ -130,14 +116,19 @@ byte *Mod_ClusterPVS(int cluster, model_t *model)
 	return Mod_DecompressVis((byte *)model->vis + model->vis->bitofs[cluster][DVIS_PVS], model);
 }
 
+float Mod_RadiusFromBounds(vec3_t mins, vec3_t maxs)
+{
+	vec3_t corner;
+	for (int i = 0; i < 3; i++)
+		corner[i] = (fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]));
 
-//===============================================================================
+	return VectorLength(corner);
+}
 
-/*
-================
-Mod_Modellist_f
-================
-*/
+#pragma endregion 
+
+#pragma region ======================= Console functions
+
 void Mod_Modellist_f(void)
 {
 	int total = 0;
@@ -155,25 +146,99 @@ void Mod_Modellist_f(void)
 	VID_Printf(PRINT_ALL, "Total resident: %i\n", total);
 }
 
-/*
-===============
-Mod_Init
-===============
-*/
-void Mod_Init(void)
+#pragma endregion 
+
+#pragma region ======================= .wal size hashing
+
+// Store the names and sizes of .wal files
+typedef struct walsize_s
 {
-	registration_active = false; // map registration flag
+	long	hash;
+	int		width;
+	int		height;
+} walsize_t;
+
+#define NUM_WALSIZES 1024 //mxd. Was 256
+static walsize_t walSizeList[NUM_WALSIZES];
+static unsigned walSizeListIndex;
+
+static void Mod_InitWalSizeList(void)
+{
+	for (int i = 0; i < NUM_WALSIZES; i++)
+	{
+		walSizeList[i].hash = 0;
+		walSizeList[i].width = 0;
+		walSizeList[i].height = 0;
+	}
+
+	walSizeListIndex = 0;
 }
 
+static qboolean Mod_CheckWalSizeList(const char *name, int *width, int *height)
+{
+	if (!strlen(name)) //mxd. Sanity check
+	{
+		if (width)
+			*width = 0;
+		if (height)
+			*height = 0;
 
+		return true;
+	}
 
-/*
-==================
-Mod_ForName
+	const long hash = Com_HashFileName(name, 0, false); //mxd. Rewritten to use hash only
+	for (int i = 0; i < NUM_WALSIZES; i++)
+	{
+		if (hash == walSizeList[i].hash)
+		{
+			// Return size of texture
+			if (width)
+				*width = walSizeList[i].width;
+			if (height)
+				*height = walSizeList[i].height;
 
-Loads in a model for the given name
-==================
-*/
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static void Mod_AddToWalSizeList(const char *name, int width, int height)
+{
+	walSizeList[walSizeListIndex].hash = Com_HashFileName(name, 0, false);
+	walSizeList[walSizeListIndex].width = width;
+	walSizeList[walSizeListIndex].height = height;
+	walSizeListIndex++;
+
+	// Wrap around to start of list
+	if (walSizeListIndex >= NUM_WALSIZES)
+		walSizeListIndex = 0;
+}
+
+// Adapted from Q2E
+static void Mod_GetWalSize(const char *name, int *width, int *height)
+{
+	char path[MAX_QPATH];
+	Com_sprintf(path, sizeof(path), "textures/%s.wal", name);
+
+	if (Mod_CheckWalSizeList(name, width, height)) // Check if already in list
+		return;
+
+	GetWalInfo(path, width, height); //mxd
+	Mod_AddToWalSizeList(name, *width, *height); // Add to list
+}
+
+#pragma endregion 
+
+#pragma region ======================= Model loading
+
+void Mod_Init(void)
+{
+	registration_active = false; // Map registration flag
+}
+
+// Loads in a model for the given name
 model_t *Mod_ForName(char *name, qboolean crash)
 {
 	if (!name[0])
@@ -263,20 +328,13 @@ model_t *Mod_ForName(char *name, qboolean crash)
 	return mod;
 }
 
-/*
-===============================================================================
-	BRUSHMODEL LOADING
-===============================================================================
-*/
+#pragma endregion
 
-byte *mod_base;
+#pragma region ======================= Brushmodel loading
 
-/*
-=================
-Mod_LoadLighting
-=================
-*/
-void Mod_LoadLighting(lump_t *l)
+static byte *mod_base;
+
+static void Mod_LoadLighting(lump_t *l)
 {
 	if (l->filelen)
 	{
@@ -289,13 +347,7 @@ void Mod_LoadLighting(lump_t *l)
 	}
 }
 
-
-/*
-=================
-Mod_LoadVisibility
-=================
-*/
-void Mod_LoadVisibility(lump_t *l)
+static void Mod_LoadVisibility(lump_t *l)
 {
 	if (l->filelen)
 	{
@@ -315,13 +367,7 @@ void Mod_LoadVisibility(lump_t *l)
 	}
 }
 
-
-/*
-=================
-Mod_LoadVertexes
-=================
-*/
-void Mod_LoadVertexes(lump_t *l)
+static void Mod_LoadVertexes(lump_t *l)
 {
 	dvertex_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -335,27 +381,7 @@ void Mod_LoadVertexes(lump_t *l)
 			out->position[c] = LittleFloat(in->point[c]);
 }
 
-/*
-=================
-RadiusFromBounds
-=================
-*/
-float Mod_RadiusFromBounds(vec3_t mins, vec3_t maxs)
-{
-	vec3_t corner;
-	for (int i = 0; i < 3; i++)
-		corner[i] = (fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]));
-
-	return VectorLength(corner);
-}
-
-
-/*
-=================
-Mod_LoadSubmodels
-=================
-*/
-void Mod_LoadSubmodels(lump_t *l)
+static void Mod_LoadSubmodels(lump_t *l)
 {
 	dmodel_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -368,7 +394,7 @@ void Mod_LoadSubmodels(lump_t *l)
 	{
 		for (int j = 0; j < 3 ; j++)
 		{
-			// spread the mins / maxs by a pixel
+			// Spread the mins / maxs by a pixel
 			out->mins[j] = LittleFloat(in->mins[j]) - 1;
 			out->maxs[j] = LittleFloat(in->maxs[j]) + 1;
 			out->origin[j] = LittleFloat(in->origin[j]);
@@ -381,12 +407,7 @@ void Mod_LoadSubmodels(lump_t *l)
 	}
 }
 
-/*
-=================
-Mod_LoadEdges
-=================
-*/
-void Mod_LoadEdges(lump_t *l)
+static void Mod_LoadEdges(lump_t *l)
 {
 	dedge_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -402,114 +423,7 @@ void Mod_LoadEdges(lump_t *l)
 	}
 }
 
-//=======================================================
-
-// Store the names and sizes of size reference .wal files
-typedef struct walsize_s
-{
-	long	hash;
-	int		width;
-	int		height;
-} walsize_t;
-
-#define NUM_WALSIZES 1024 //mxd. Was 256
-walsize_t walSizeList[NUM_WALSIZES];
-static unsigned walSizeListIndex;
-
-/*
-===============
-Mod_InitWalSizeList
-===============
-*/
-void Mod_InitWalSizeList (void)
-{
-	for (int i = 0; i < NUM_WALSIZES; i++)
-	{
-		walSizeList[i].hash = 0;
-		walSizeList[i].width = 0;
-		walSizeList[i].height = 0;
-	}
-
-	walSizeListIndex = 0;
-}
-
-/*
-===============
-Mod_CheckWalSizeList
-===============
-*/
-qboolean Mod_CheckWalSizeList (const char *name, int *width, int *height)
-{
-	if (!strlen(name)) //mxd. Sanity check
-	{
-		if (width)
-			*width = 0;
-		if (height)
-			*height = 0;
-
-		return true;
-	}
-	
-	const long hash = Com_HashFileName(name, 0, false); //mxd. Rewritten to use hash only
-	for (int i = 0; i < NUM_WALSIZES; i++)
-	{
-		if (hash == walSizeList[i].hash)
-		{	
-			// Return size of texture
-			if (width)
-				*width = walSizeList[i].width;
-			if (height)
-				*height = walSizeList[i].height;
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-/*
-===============
-Mod_AddToWalSizeList
-===============
-*/
-void Mod_AddToWalSizeList(const char *name, int width, int height)
-{
-	walSizeList[walSizeListIndex].hash = Com_HashFileName(name, 0, false);
-	walSizeList[walSizeListIndex].width = width;
-	walSizeList[walSizeListIndex].height = height;
-	walSizeListIndex++;
-
-	// Wrap around to start of list
-	if (walSizeListIndex >= NUM_WALSIZES)
-		walSizeListIndex = 0;
-}
-
-/*
-=================
-Mod_GetWalSize
-Adapted from Q2E
-=================
-*/
-static void Mod_GetWalSize(const char *name, int *width, int *height)
-{
-	char path[MAX_QPATH];
-	Com_sprintf(path, sizeof(path), "textures/%s.wal", name);
-
-	if (Mod_CheckWalSizeList(name, width, height)) // check if already in list
-		return;
-
-	GetWalInfo(path, width, height); //mxd
-	Mod_AddToWalSizeList(name, *width, *height); // add to list
-}
-
-
-/*
-=================
-Mod_LoadTexinfo
-=================
-*/
-void Mod_LoadTexinfo (lump_t *l)
+static void Mod_LoadTexinfo(lump_t *l)
 {
 	char name[MAX_QPATH];
 
@@ -569,17 +483,11 @@ void Mod_LoadTexinfo (lump_t *l)
 	}
 }
 
-/*
-================
-CalcSurfaceExtents
-
-Fills in s->texturemins[] and s->extents[]
-================
-*/
-void CalcSurfaceExtents(msurface_t *s)
+// Fills in s->texturemins[] and s->extents[]
+static void CalcSurfaceExtents(msurface_t *s)
 {
-	float	mins[2], maxs[2];
-	mvertex_t	*v;
+	float mins[2], maxs[2];
+	mvertex_t *v;
 
 	mins[0] = mins[1] = 999999;
 	maxs[0] = maxs[1] = -99999;
@@ -596,14 +504,13 @@ void CalcSurfaceExtents(msurface_t *s)
 		
 		for (int j = 0; j < 2; j++)
 		{
-			/* The following calculation is sensitive to floating-point precision.  It needs to produce the same result that the
-			* light compiler does, because R_BuildLightMap uses surf->extents to know the width/height of a surface's lightmap,
-			* and incorrect rounding here manifests itself as patches of "corrupted" looking lightmaps.
-			* Most light compilers are win32 executables, so they use x87 floating point.  This means the multiplies and adds
-			* are done at 80-bit precision, and the result is rounded down to 32-bits and stored in val.
-			* Adding the casts to double seems to be good enough to fix lighting glitches when Quakespasm is compiled as x86_64
-			* and using SSE2 floating-point.  A potential trouble spot is the hallway at the beginning of mfxsp17.  -- ericw
-			*/
+			// The following calculation is sensitive to floating-point precision.  It needs to produce the same result that the
+			// light compiler does, because R_BuildLightMap uses surf->extents to know the width/height of a surface's lightmap,
+			// and incorrect rounding here manifests itself as patches of "corrupted" looking lightmaps.
+			// Most light compilers are win32 executables, so they use x87 floating point.  This means the multiplies and adds
+			// are done at 80-bit precision, and the result is rounded down to 32-bits and stored in val.
+			// Adding the casts to double seems to be good enough to fix lighting glitches when Quakespasm is compiled as x86_64
+			// and using SSE2 floating-point.  A potential trouble spot is the hallway at the beginning of mfxsp17.  -- ericw
 			const float val = (double)v->position[0] * (double)tex->vecs[j][0] +
 							  (double)v->position[1] * (double)tex->vecs[j][1] +
 							  (double)v->position[2] * (double)tex->vecs[j][2] +
@@ -624,18 +531,13 @@ void CalcSurfaceExtents(msurface_t *s)
 	}
 }
 
-void R_BuildPolygonFromSurface(msurface_t *fa);
-void R_CreateSurfaceLightmap(msurface_t *surf);
-void R_SetupLightmapPoints(msurface_t *surf); //mxd
-void R_EndBuildingLightmaps(void);
-void R_BeginBuildingLightmaps(model_t *m);
+extern void R_BuildPolygonFromSurface(msurface_t *fa);
+extern void R_CreateSurfaceLightmap(msurface_t *surf);
+extern void R_SetupLightmapPoints(msurface_t *surf); //mxd
+extern void R_EndBuildingLightmaps(void);
+extern void R_BeginBuildingLightmaps(model_t *m);
 
-/*
-=================
-Mod_LoadFaces
-=================
-*/
-void Mod_LoadFaces(lump_t *l)
+static void Mod_LoadFaces(lump_t *l)
 {
 	dface_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -690,7 +592,7 @@ void Mod_LoadFaces(lump_t *l)
 				out->texturemins[i] = -8192;
 			}
 
-			R_SubdivideSurface(out); // cut up polygon for warps
+			R_SubdivideSurface(out); // Cut up polygon for warps
 		}
 		// Knightmare- Psychospaz's envmapping. Windows get glass (envmap) effect, warp surfaces don't
 		else if (out->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
@@ -708,13 +610,7 @@ void Mod_LoadFaces(lump_t *l)
 	R_EndBuildingLightmaps();
 }
 
-
-/*
-=================
-Mod_SetParent
-=================
-*/
-void Mod_SetParent(mnode_t *node, mnode_t *parent)
+static void Mod_SetParent(mnode_t *node, mnode_t *parent)
 {
 	node->parent = parent;
 	if (node->contents == -1)
@@ -724,12 +620,7 @@ void Mod_SetParent(mnode_t *node, mnode_t *parent)
 	}
 }
 
-/*
-=================
-Mod_LoadNodes
-=================
-*/
-void Mod_LoadNodes(lump_t *l)
+static void Mod_LoadNodes(lump_t *l)
 {
 	dnode_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -751,7 +642,7 @@ void Mod_LoadNodes(lump_t *l)
 
 		out->firstsurface = (unsigned short)LittleShort(in->firstface);
 		out->numsurfaces =  (unsigned short)LittleShort(in->numfaces);
-		out->contents = -1;	// differentiate from leafs
+		out->contents = -1; // Differentiate from leafs
 
 		for (int j = 0; j < 2; j++)
 		{
@@ -763,15 +654,10 @@ void Mod_LoadNodes(lump_t *l)
 		}
 	}
 	
-	Mod_SetParent(loadmodel->nodes, NULL);	// sets nodes and leafs
+	Mod_SetParent(loadmodel->nodes, NULL); // Sets nodes and leafs
 }
 
-/*
-=================
-Mod_LoadLeafs
-=================
-*/
-void Mod_LoadLeafs(lump_t *l)
+static void Mod_LoadLeafs(lump_t *l)
 {
 	dleaf_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -812,12 +698,7 @@ void Mod_LoadLeafs(lump_t *l)
 	}	
 }
 
-/*
-=================
-Mod_LoadMarksurfaces
-=================
-*/
-void Mod_LoadMarksurfaces(lump_t *l)
+static void Mod_LoadMarksurfaces(lump_t *l)
 {
 	unsigned short *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -836,12 +717,7 @@ void Mod_LoadMarksurfaces(lump_t *l)
 	}
 }
 
-/*
-=================
-Mod_LoadSurfedges
-=================
-*/
-void Mod_LoadSurfedges(lump_t *l)
+static void Mod_LoadSurfedges(lump_t *l)
 {
 	int *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -854,13 +730,7 @@ void Mod_LoadSurfedges(lump_t *l)
 		out[i] = LittleLong(in[i]);
 }
 
-
-/*
-=================
-Mod_LoadPlanes
-=================
-*/
-void Mod_LoadPlanes(lump_t *l)
+static void Mod_LoadPlanes(lump_t *l)
 {
 	dplane_t *in = (void *)(mod_base + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
@@ -885,16 +755,10 @@ void Mod_LoadPlanes(lump_t *l)
 	}
 }
 
-
-/*
-=================
-Mod_ParseWorldspawnKey (https://github.com/Shpoike/Quakespasm/blob/843ba06637951fee6b81958b8c36c718900b752c/quakespasm/Quake/gl_model.c#L1017)
-This just quickly scans the worldspawn entity for a single key. Returning both _prefixed and non prefixed keys.
-(wantkey argument should not have a _prefix.)
-Also, blame Spike!
-=================
-*/
-const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer, size_t sizeofbuffer)
+// Adapted from https://github.com/Shpoike/Quakespasm/blob/843ba06637951fee6b81958b8c36c718900b752c/quakespasm/Quake/gl_model.c#L1017
+// This just quickly scans the worldspawn entity for a single key. Returning both _prefixed and non prefixed keys.
+// (wantkey argument should not have a _prefix.)
+static const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer, size_t sizeofbuffer)
 {
 	// Get entstring...
 	char map_entitystring[MAX_MAP_ENTSTRING];
@@ -915,7 +779,7 @@ const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer,
 		{
 			com_token = COM_Parse(&data);
 
-			if (!data || com_token[0] == '}') // error or end of worldspawn
+			if (!data || com_token[0] == '}') // Error or end of worldspawn
 				break;
 
 			if (com_token[0] == '_')
@@ -925,7 +789,7 @@ const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer,
 
 			com_token = COM_Parse(&data);
 
-			if (!data) // error
+			if (!data) // Error
 				break; 
 
 			if (!strcmp(wantkey, foundkey))
@@ -939,13 +803,8 @@ const char *Mod_ParseWorldspawnKey(lump_t *l, const char *wantkey, char *buffer,
 	return NULL;
 }
 
-
-/*
-=================
-Mod_GetAllocSizeBrushModel (mxd)
-=================
-*/
-size_t Mod_GetAllocSizeBrushModel(void *buffer)
+//mxd
+static size_t Mod_GetAllocSizeBrushModel(void *buffer)
 {
 	if (loadmodel != mod_known)
 		VID_Error(ERR_DROP, "Loaded a brush model after the world");
@@ -1101,13 +960,7 @@ size_t Mod_GetAllocSizeBrushModel(void *buffer)
 	return allocSize;
 }
 
-
-/*
-=================
-Mod_LoadBrushModel
-=================
-*/
-void Mod_LoadBrushModel(model_t *mod, void *buffer)
+static void Mod_LoadBrushModel(model_t *mod, void *buffer)
 {
 	//mxd. Allocate memory
 	loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeBrushModel(buffer)); //mxd. Was 0x1000000
@@ -1132,7 +985,7 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 	gl_lms.lmshift = lmshift;
 	gl_lms.lmscale = 1 << lmshift;
 
-	// load into heap
+	// Load into heap
 	Mod_LoadVertexes(&header->lumps[LUMP_VERTEXES]);
 	Mod_LoadEdges(&header->lumps[LUMP_EDGES]);
 	Mod_LoadSurfedges(&header->lumps[LUMP_SURFEDGES]);
@@ -1145,11 +998,9 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 	Mod_LoadLeafs(&header->lumps[LUMP_LEAFS]);
 	Mod_LoadNodes(&header->lumps[LUMP_NODES]);
 	Mod_LoadSubmodels(&header->lumps[LUMP_MODELS]);
-	mod->numframes = 2; // regular and alternate animation
+	mod->numframes = 2; // Regular and alternate animation
 	
-	//
-	// set up the submodels
-	//
+	// Set up submodels
 	for (int i = 0; i < mod->numsubmodels; i++)
 	{
 		mmodel_t *bm = &mod->submodels[i];
@@ -1174,15 +1025,11 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 	}
 }
 
-//=============================================================================
+#pragma endregion
 
-/*
-@@@@@@@@@@@@@@@@@@@@@
-R_BeginRegistration
+#pragma region ======================= Model registration
 
-Specifies the model that will be used as the world
-@@@@@@@@@@@@@@@@@@@@@
-*/
+// Specifies the model that will be used as the world
 void R_BeginRegistration(char *model)
 {
 	registration_sequence++;
@@ -1198,26 +1045,21 @@ void R_BeginRegistration(char *model)
 	if (strcmp(mod_known[0].name, fullname) || flushmap->integer)
 	{
 		Mod_Free(&mod_known[0]);
-		// clear this on map change (case of different server and autodownloading)
+
+		// Clear this on map change (case of different server and autodownloading)
 		R_InitFailedImgList();
 	}
 
 	r_worldmodel = Mod_ForName(fullname, true);
 	r_viewcluster = -1;
-	registration_active = true;	// map registration flag
+	registration_active = true; // Map registration flag
 }
 
-
-/*
-@@@@@@@@@@@@@@@@@@@@@
-R_RegisterModel
-@@@@@@@@@@@@@@@@@@@@@
-*/
 struct model_s *R_RegisterModel(char *name)
 {
 	// Knightmare- MD3 autoreplace code
 	const int len = strlen(name);
-	if (!strcmp(name + len - 4, ".md2")) // look if we have a .md2 file
+	if (!strcmp(name + len - 4, ".md2")) // Look if we have a .md2 file
 	{
 		char s[128];
 		Q_strncpyz(s, name, sizeof(s));
@@ -1234,7 +1076,7 @@ struct model_s *R_RegisterModel(char *name)
 	{
 		mod->registration_sequence = registration_sequence;
 
-		// register any images used by the models
+		// Register any images used by the models
 		if (mod->type == mod_sprite)
 		{
 			dsprite_t *sprout = (dsprite_t *)mod->extradata;
@@ -1282,24 +1124,18 @@ struct model_s *R_RegisterModel(char *name)
 	return mod;
 }
 
-
-/*
-@@@@@@@@@@@@@@@@@@@@@
-R_EndRegistration
-@@@@@@@@@@@@@@@@@@@@@
-*/
 void R_EndRegistration(void)
 {
 	for (int i = 0; i < mod_numknown; i++)
 	{
 		model_t *mod = mod_known + i;
 		if (mod->name[0] && mod->registration_sequence != registration_sequence)
-			Mod_Free(mod); // don't need this model
+			Mod_Free(mod); // Don't need this model
 	}
 
 	R_FreeUnusedImages();
 
-	registration_active = false; // map registration flag
+	registration_active = false; // Map registration flag
 }
 
 //mxd
@@ -1308,28 +1144,21 @@ int R_GetRegistartionSequence(struct model_s *model)
 	return model->registration_sequence;
 }
 
-//=============================================================================
+#pragma endregion
 
+#pragma region ======================= Model unloading
 
-/*
-================
-Mod_Free
-================
-*/
 void Mod_Free(model_t *mod)
 {
 	ModChunk_Free(mod->extradata); //mxd
 	memset(mod, 0, sizeof(*mod));
 }
 
-/*
-================
-Mod_FreeAll
-================
-*/
 void Mod_FreeAll(void)
 {
 	for (int i = 0; i < mod_numknown; i++)
 		if (mod_known[i].extradatasize)
 			Mod_Free(&mod_known[i]);
 }
+
+#pragma endregion
