@@ -381,6 +381,15 @@
     <ClCompile Include="..\..\..\renderer\r_model_script.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_model_md2.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_model_md3.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_model_sprite.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\cdaudio.h">
