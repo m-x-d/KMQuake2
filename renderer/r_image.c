@@ -220,24 +220,61 @@ void GL_TextureSolidMode(char *string)
 	gl_tex_solid_format = gl_solid_modes[mode].mode;
 }
 
-void R_ImageList_f (void)
-{
-	const char *palstrings[3] = { "RGB ", "RGBA", "PAL " }; //mxd. +RGBA
+#pragma region ======================= Console functions
 
-	VID_Printf(PRINT_ALL, "------------------\n");
+//mxd
+typedef struct
+{
+	char *name;
+	int width;
+	int height;
+	int paltype;
+	imagetype_t type;
+} imageinfo_t;
+
+//mxd. Sort by type, then by name
+static int R_SortImageinfos(const imageinfo_t *first, const imageinfo_t *second)
+{
+	if (first->type != second->type)
+		return first->type - second->type;
+
+	return Q_stricmp(first->name, second->name);
+}
+
+void R_ImageList_f(void)
+{
+	const char *palstrings[] = { "RGB ", "RGBA" }; //mxd. +RGBA
+
+	//mxd. Collect image infos first...
+	imageinfo_t *infos = malloc(sizeof(imageinfo_t) * numgltextures);
+	int numinfos = 0;
 	int texels = 0;
-	int texcount = 0; //mxd
 
 	image_t *image = gltextures;
 	for (int i = 0; i < numgltextures; i++, image++)
 	{
-		if (image->texnum <= 0)
-			continue;
+		if (image->texnum > 0)
+		{
+			infos[numinfos].name = image->name;
+			infos[numinfos].width = image->upload_width;
+			infos[numinfos].height = image->upload_height;
+			infos[numinfos].paltype = image->has_alpha;
+			infos[numinfos].type = image->type;
+			numinfos++;
 
-		texels += image->upload_width * image->upload_height;
-		texcount++; //mxd
+			texels += image->upload_width * image->upload_height;
+		}
+	}
 
-		switch (image->type)
+	//mxd. Sort infos
+	qsort(infos, numinfos, sizeof(imageinfo_t), R_SortImageinfos);
+
+	// Print results
+	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Loaded textures:\n");
+
+	for (int i = 0; i < numinfos; i++)
+	{
+		switch (infos[i].type)
 		{
 			case it_skin:	VID_Printf(PRINT_ALL, "Skin:     "); break;
 			case it_sprite:	VID_Printf(PRINT_ALL, "Sprite:   "); break;
@@ -247,14 +284,17 @@ void R_ImageList_f (void)
 			case it_sky:	VID_Printf(PRINT_ALL, "Sky:      "); break;
 			default:		VID_Printf(PRINT_ALL, "Unknown:  "); break;
 		}
-
-		VID_Printf(PRINT_ALL, "%4i x %-4i %s: %s\n", image->upload_width, image->upload_height, palstrings[(image->paletted ? 2 : image->has_alpha)], image->name);
+		
+		VID_Printf(PRINT_ALL, "%4i x %-4i %s: %s\n", infos[i].width, infos[i].height, palstrings[infos[i].paltype], infos[i].name);
 	}
 
-	VID_Printf(PRINT_ALL, "Total textures count: %i\n", texcount); //mxd
-	VID_Printf(PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
+	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Total: %i textures, %i texels (not counting mipmaps)\n", numinfos, texels); //mxd
+
+	//mxd. Free memory
+	free(infos);
 }
 
+#pragma endregion 
 
 /*
 =============================================================================
