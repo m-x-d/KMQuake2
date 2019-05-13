@@ -129,21 +129,52 @@ float Mod_RadiusFromBounds(vec3_t mins, vec3_t maxs)
 
 #pragma region ======================= Console functions
 
+//mxd
+typedef struct
+{
+	char *name;
+	size_t size;
+} modelinfo_t;
+
+//mxd
+static int Mod_SortModelinfos(const modelinfo_t *first, const modelinfo_t *second)
+{
+	return Q_stricmp(first->name, second->name);
+}
+
 void Mod_Modellist_f(void)
 {
-	int total = 0;
-	VID_Printf(PRINT_ALL, "Loaded models:\n");
+	//mxd. Collect model infos first...
+	modelinfo_t *infos = malloc(sizeof(modelinfo_t) * mod_numknown);
+	int numinfos = 0;
+	int bytestotal = 0;
+
 	model_t *mod = mod_known;
 	for (int i = 0; i < mod_numknown; i++, mod++)
 	{
-		if (!mod->name[0])
-			continue;
+		if (mod->name[0])
+		{
+			infos[numinfos].name = mod->name;
+			infos[numinfos].size = mod->extradatasize;
+			numinfos++;
 
-		VID_Printf(PRINT_ALL, "%8i : %s\n", mod->extradatasize, mod->name);
-		total += mod->extradatasize;
+			bytestotal += mod->extradatasize;
+		}
 	}
 
-	VID_Printf(PRINT_ALL, "Total resident: %i\n", total);
+	//mxd. Sort infos by name
+	qsort(infos, numinfos, sizeof(modelinfo_t), Mod_SortModelinfos);
+
+	// Print results
+	VID_Printf(PRINT_ALL, "Loaded models:\n");
+
+	for (int i = 0; i < numinfos; i++)
+		VID_Printf(PRINT_ALL, "%7.2f Kb. : %s\n", infos[i].size / 1024.0f, infos[i].name); // Print size in Kb.
+
+	VID_Printf(PRINT_ALL, "Total: %i models (%0.2f Mb.)\n", numinfos, bytestotal / (1024.0f * 1024.0f)); // Print size in Mb.
+
+	//mxd. Free memory
+	free(infos);
 }
 
 #pragma endregion 
