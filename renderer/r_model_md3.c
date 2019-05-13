@@ -22,14 +22,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 
 // Calc exact alloc size for MD3 in memory
-size_t Mod_GetAllocSizeMD3(void *buffer)
+static size_t GetAllocSizeMD3(void *buffer)
 {
 	dmd3_t *pinmodel = (dmd3_t *)buffer;
 	const int numFrames = LittleLong(pinmodel->num_frames);
 	const int numTags = LittleLong(pinmodel->num_tags);
 	const int numMeshes = LittleLong(pinmodel->num_meshes);
 
-	// calc sizes rounded to cacheline
+	// Calc sizes rounded to cacheline
 	const size_t headerSize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
 	const size_t frameSize = ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * numFrames);
 	const size_t tagSize = ALIGN_TO_CACHELINE(sizeof(maliastag_t) * numFrames * numTags);
@@ -62,39 +62,39 @@ extern void Mod_BuildTriangleNeighbors(maliasmesh_t *mesh); //mxd
 
 void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 {
-	char name[MD3_MAX_PATH];
+	//mxd. Allocate memory
+	mod->extradata = ModChunk_Begin(GetAllocSizeMD3(buffer));
 
 	dmd3_t *pinmodel = (dmd3_t *)buffer;
 	const int version = LittleLong(pinmodel->version);
 
 	if (version != MD3_ALIAS_VERSION)
-		VID_Error(ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, version, MD3_ALIAS_VERSION);
+		VID_Error(ERR_DROP, "Model %s has wrong version number (%i should be %i)", mod->name, version, MD3_ALIAS_VERSION);
 
 	maliasmodel_t *poutmodel = ModChunk_Alloc(sizeof(maliasmodel_t));
 
-	// byte swap the header fields and sanity check
+	// Byte-swap the header fields
 	poutmodel->num_frames = LittleLong(pinmodel->num_frames);
 	poutmodel->num_tags = LittleLong(pinmodel->num_tags);
 	poutmodel->num_meshes = LittleLong(pinmodel->num_meshes);
 
+	// Sanity checks
 	if (poutmodel->num_frames <= 0)
-		VID_Error(ERR_DROP, "model %s has no frames", mod->name);
+		VID_Error(ERR_DROP, "Model %s has no frames", mod->name);
 	else if (poutmodel->num_frames > MD3_MAX_FRAMES)
-		VID_Error(ERR_DROP, "model %s has too many frames (%i, maximum is %i)", mod->name, poutmodel->num_frames, MD3_MAX_FRAMES);
+		VID_Error(ERR_DROP, "Model %s has too many frames (%i, maximum is %i)", mod->name, poutmodel->num_frames, MD3_MAX_FRAMES);
 
 	if (poutmodel->num_tags > MD3_MAX_TAGS)
-		VID_Error(ERR_DROP, "model %s has too many tags (%i, maximum is %i)", mod->name, poutmodel->num_tags, MD3_MAX_TAGS);
+		VID_Error(ERR_DROP, "Model %s has too many tags (%i, maximum is %i)", mod->name, poutmodel->num_tags, MD3_MAX_TAGS);
 	else if (poutmodel->num_tags < 0)
-		VID_Error(ERR_DROP, "model %s has invalid number of tags", mod->name);
+		VID_Error(ERR_DROP, "Model %s has invalid number of tags", mod->name);
 
 	if (poutmodel->num_meshes <= 0)
-		VID_Error(ERR_DROP, "model %s has no meshes", mod->name);
+		VID_Error(ERR_DROP, "Model %s has no meshes", mod->name);
 	else if (poutmodel->num_meshes > MD3_MAX_MESHES)
-		VID_Error(ERR_DROP, "model %s has too many meshes (%i, maximum is %i)", mod->name, poutmodel->num_meshes, MD3_MAX_MESHES);
+		VID_Error(ERR_DROP, "Model %s has too many meshes (%i, maximum is %i)", mod->name, poutmodel->num_meshes, MD3_MAX_MESHES);
 
-	//
-	// load the frames
-	//
+	// Load frames
 	dmd3frame_t *pinframe = (dmd3frame_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_frames));
 	maliasframe_t *poutframe = poutmodel->frames = ModChunk_Alloc(sizeof(maliasframe_t) * poutmodel->num_frames);
 
@@ -118,9 +118,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 		AddPointToBounds(poutframe->maxs, mod->mins, mod->maxs);
 	}
 
-	//
-	// load the tags
-	//
+	// Load tags
 	dmd3tag_t *pintag = (dmd3tag_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_tags));
 	maliastag_t *pouttag = poutmodel->tags = ModChunk_Alloc(sizeof(maliastag_t) * poutmodel->num_frames * poutmodel->num_tags);
 
@@ -139,9 +137,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 		}
 	}
 
-	//
-	// load the meshes
-	//
+	// Load meshes
 	dmd3mesh_t *pinmesh = (dmd3mesh_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_meshes));
 	maliasmesh_t *poutmesh = poutmodel->meshes = ModChunk_Alloc(sizeof(maliasmesh_t)*poutmodel->num_meshes);
 
@@ -150,31 +146,30 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 		memcpy(poutmesh->name, pinmesh->name, MD3_MAX_PATH);
 
 		if (strncmp((const char *)pinmesh->id, "IDP3", 4))
-			VID_Error(ERR_DROP, "mesh %s in model %s has wrong id (%i should be %i)", poutmesh->name, mod->name, LittleLong((int)pinmesh->id), IDMD3HEADER);
+			VID_Error(ERR_DROP, "Mesh %s in model %s has wrong id (%i should be %i)", poutmesh->name, mod->name, LittleLong((int)pinmesh->id), IDMD3HEADER);
 
 		poutmesh->num_tris = LittleLong(pinmesh->num_tris);
 		poutmesh->num_skins = LittleLong(pinmesh->num_skins);
 		poutmesh->num_verts = LittleLong(pinmesh->num_verts);
 
 		if (poutmesh->num_skins <= 0)
-			VID_Error(ERR_DROP, "mesh %i in model %s has no skins", i, mod->name);
+			VID_Error(ERR_DROP, "Mesh %i in model %s has no skins", i, mod->name);
 		else if (poutmesh->num_skins > MD3_MAX_SHADERS)
-			VID_Error(ERR_DROP, "mesh %i in model %s has too many skins (%i, maximum is %i)", i, mod->name, poutmesh->num_skins, MD3_MAX_SHADERS);
+			VID_Error(ERR_DROP, "Mesh %i in model %s has too many skins (%i, maximum is %i)", i, mod->name, poutmesh->num_skins, MD3_MAX_SHADERS);
 
 		if (poutmesh->num_tris <= 0)
-			VID_Error(ERR_DROP, "mesh %i in model %s has no triangles", i, mod->name);
+			VID_Error(ERR_DROP, "Mesh %i in model %s has no triangles", i, mod->name);
 
 		if (poutmesh->num_verts <= 0)
-			VID_Error(ERR_DROP, "mesh %i in model %s has no vertices", i, mod->name);
+			VID_Error(ERR_DROP, "Mesh %i in model %s has no vertices", i, mod->name);
 
-		//
-		// register all skins
-		//
+		// Register all skins
 		dmd3skin_t *pinskin = (dmd3skin_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_skins));
 		maliasskin_t *poutskin = poutmesh->skins = ModChunk_Alloc(sizeof(maliasskin_t) * poutmesh->num_skins);
 
 		for (int j = 0; j < poutmesh->num_skins; j++, pinskin++, poutskin++)
 		{
+			char name[MD3_MAX_PATH];
 			memcpy(name, pinskin->name, MD3_MAX_PATH);
 
 			if (name[1] == 'o') //mxd. Dafuk is that?..
@@ -183,13 +178,11 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 				name[0] = 'p';
 
 			memcpy(poutskin->name, name, MD3_MAX_PATH);
-			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
+			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // Set null glowskin
 			mod->skins[i][j] = R_FindImage(name, it_skin, false);
 		}
 
-		//
-		// load the indexes
-		//
+		// Load indices
 		index_t *pinindex = (index_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_tris));
 		index_t *poutindex = poutmesh->indexes = ModChunk_Alloc(sizeof(index_t) * poutmesh->num_tris * 3);
 
@@ -197,9 +190,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 			for (int c = 0; c < 3; c++)
 				poutindex[c] = (index_t)LittleLong(pinindex[c]);
 
-		//
-		// load the texture coordinates
-		//
+		// Load texture coordinates
 		dmd3coord_t *pincoord = (dmd3coord_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_tcs));
 		maliascoord_t *poutcoord = poutmesh->stcoords = ModChunk_Alloc(sizeof(maliascoord_t) * poutmesh->num_verts);
 
@@ -209,9 +200,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 			poutcoord->st[1] = LittleFloat(pincoord->st[1]);
 		}
 
-		//
-		// load the vertexes and normals
-		//
+		// Load vertices and normals
 		dmd3vertex_t *pinvert = (dmd3vertex_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_verts));
 		maliasvertex_t *poutvert = poutmesh->vertexes = ModChunk_Alloc(poutmodel->num_frames * poutmesh->num_verts * sizeof(maliasvertex_t));
 
@@ -236,7 +225,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 				normal[1] = sinf(lat) * sinf(lng);
 				normal[2] = cosf(lng);
 
-				// use ye olde quantized normals for shading
+				// Use ye olde quantized normals for shading
 				float maxdot = -999999.0;
 				int maxdotindex = -1;
 
@@ -256,15 +245,13 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 
 		pinmesh = (dmd3mesh_t *)((byte *)pinmesh + LittleLong(pinmesh->meshsize));
 
-		//
-		// build triangle neighbors
-		//
+		// Build triangle neighbors
 		poutmesh->trneighbors = ModChunk_Alloc(sizeof(int) * poutmesh->num_tris * 3);
 		Mod_BuildTriangleNeighbors(poutmesh);
 	}
 
 	mod->hasAlpha = false;
-	Mod_LoadModelScript(mod, poutmodel); // md3 skin scripting
+	Mod_LoadModelScript(mod, poutmodel); // MD3 skin scripting
 
 	mod->type = mod_alias;
 }

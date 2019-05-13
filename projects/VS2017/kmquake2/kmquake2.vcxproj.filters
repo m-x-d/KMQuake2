@@ -390,6 +390,9 @@
     <ClCompile Include="..\..\..\renderer\r_model_sprite.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_model_malloc.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\cdaudio.h">

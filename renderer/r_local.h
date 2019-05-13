@@ -403,8 +403,6 @@ void R_BeginFrame(float camera_separation);
 //
 // r_model.c
 //
-void R_DrawAliasMD2Model(entity_t *e);
-void R_DrawAliasMD2ModelShadow(entity_t *e);
 void R_DrawAliasModel(entity_t *e); // Harven MD3
 void R_DrawBrushModel(entity_t *e);
 void R_DrawSpriteModel(entity_t *e);

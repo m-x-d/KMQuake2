@@ -21,18 +21,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-extern int modfilelen; //mxd
-
-// Calc exact alloc size for sprite in memory
-size_t Mod_GetAllocSizeSprite()
+void Mod_LoadSpriteModel(model_t *mod, void *buffer, size_t filesize)
 {
-	return ALIGN_TO_CACHELINE(modfilelen);
-}
-
-void Mod_LoadSpriteModel(model_t *mod, void *buffer)
-{
+	//mxd. Allocate memory
+	const size_t memsize = ALIGN_TO_CACHELINE(filesize);
+	mod->extradata = ModChunk_Begin(memsize);
+	
 	dsprite_t *sprin = (dsprite_t *)buffer;
-	dsprite_t *sprout = ModChunk_Alloc(modfilelen);
+	dsprite_t *sprout = ModChunk_Alloc(memsize);
 
 	sprout->ident = LittleLong(sprin->ident);
 	sprout->version = LittleLong(sprin->version);

@@ -27,7 +27,7 @@ static uint *md2TempStIndex;
 
 #pragma region ======================= Helper methods
 
-int Mod_FindTriangleWithEdge(maliasmesh_t *mesh, index_t p1, index_t p2, int ignore)
+static int FindTriangleWithEdge(maliasmesh_t *mesh, index_t p1, index_t p2, int ignore)
 {
 	int count = 0;
 	int match = -1;
@@ -66,13 +66,13 @@ void Mod_BuildTriangleNeighbors(maliasmesh_t *mesh)
 
 	for (i = 0, n = mesh->trneighbors, index = mesh->indexes; i < mesh->num_tris; i++, n += 3, index += 3)
 	{
-		n[0] = Mod_FindTriangleWithEdge(mesh, index[0], index[1], i);
-		n[1] = Mod_FindTriangleWithEdge(mesh, index[1], index[2], i);
-		n[2] = Mod_FindTriangleWithEdge(mesh, index[2], index[0], i);
+		n[0] = FindTriangleWithEdge(mesh, index[0], index[1], i);
+		n[1] = FindTriangleWithEdge(mesh, index[1], index[2], i);
+		n[2] = FindTriangleWithEdge(mesh, index[2], index[0], i);
 	}
 }
 
-void NormalToLatLong(const vec3_t normal, byte bytes[2])
+static void NormalToLatLong(const vec3_t normal, byte bytes[2])
 {
 	if (normal[0] == 0 && normal[1] == 0)
 	{
@@ -102,14 +102,14 @@ void NormalToLatLong(const vec3_t normal, byte bytes[2])
 #pragma endregion
 
 // Calc exact alloc size for MD2 in memory
-size_t Mod_GetAllocSizeMD2(void *buffer)
+static size_t GetAllocSizeMD2(void *buffer)
 {
 	dmdl_t *pinmodel = (dmdl_t *)buffer;
 
 	const int numFrames = LittleLong(pinmodel->num_frames);
 	const int numTris = LittleLong(pinmodel->num_tris);
 
-	// count unique verts
+	// Count unique verts
 	int numVerts = 0;
 	const int numIndex = numTris * 3;
 	dtriangle_t *pintri = (dtriangle_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_tris));
@@ -159,9 +159,9 @@ size_t Mod_GetAllocSizeMD2(void *buffer)
 		if (md2IndRemap[i] == -1)
 			numVerts++;
 
-	const int numSkins = max(LittleLong(pinmodel->num_skins), 1);	// hack because player models have no skin refs
+	const int numSkins = max(LittleLong(pinmodel->num_skins), 1); // Hack because player models have no skin refs
 
-	// calc sizes rounded to cacheline
+	// Calc sizes rounded to cacheline
 	const size_t headerSize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
 	const size_t meshSize = ALIGN_TO_CACHELINE(sizeof(maliasmesh_t));
 	const size_t indexSize = ALIGN_TO_CACHELINE(sizeof(index_t) * numTris * 3);
@@ -177,24 +177,24 @@ size_t Mod_GetAllocSizeMD2(void *buffer)
 }
 
 // Based on md2 loading code in Q2E 0.40
-// Mod_GetAllocSizeMD2() must be called first to init index and remap arrays.
 void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 {
-	char name[MD3_MAX_PATH];
+	//mxd. Allocate memory
+	mod->extradata = ModChunk_Begin(GetAllocSizeMD2(buffer));
 
 	dmdl_t *pinmodel = (dmdl_t *)buffer;
 	maliasmodel_t *poutmodel = ModChunk_Alloc(sizeof(maliasmodel_t));
 
-	// byte swap the header fields and sanity check
+	// Byte-swap the header fields and sanity check
 	const int version = LittleLong(pinmodel->version);
 	if (version != ALIAS_VERSION)
-		VID_Error(ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, version, ALIAS_VERSION);
+		VID_Error(ERR_DROP, "Model %s has wrong version number (%i should be %i)", mod->name, version, ALIAS_VERSION);
 
 	poutmodel->num_frames = LittleLong(pinmodel->num_frames);
 	if (poutmodel->num_frames <= 0)
-		VID_Error(ERR_DROP, "model %s has invalid number of frames (%i)", mod->name, poutmodel->num_frames);
+		VID_Error(ERR_DROP, "Model %s has invalid number of frames (%i)", mod->name, poutmodel->num_frames);
 	else if (poutmodel->num_frames > MAX_FRAMES)
-		VID_Error(ERR_DROP, "model %s has too many frames (%i, maximum is %i)", mod->name, poutmodel->num_frames, MAX_FRAMES);
+		VID_Error(ERR_DROP, "Model %s has too many frames (%i, maximum is %i)", mod->name, poutmodel->num_frames, MAX_FRAMES);
 
 	poutmodel->num_tags = 0;
 	poutmodel->num_meshes = 1;
@@ -202,38 +202,32 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 	const double skinWidth = 1.0 / (double)LittleLong(pinmodel->skinwidth);
 	const double skinHeight = 1.0 / (double)LittleLong(pinmodel->skinheight);
 
-	//
-	// load mesh info
-	//
+	// Load mesh info
 	maliasmesh_t *poutmesh = poutmodel->meshes = ModChunk_Alloc(sizeof(maliasmesh_t));
 
 	Com_sprintf(poutmesh->name, sizeof(poutmesh->name), "md2mesh"); // mesh name in script must match this
 
 	poutmesh->num_tris = LittleLong(pinmodel->num_tris);
 	if (poutmesh->num_tris <= 0)
-		VID_Error(ERR_DROP, "model %s has invalid number of triangles (%i)", mod->name, poutmesh->num_tris);
+		VID_Error(ERR_DROP, "Model %s has invalid number of triangles (%i)", mod->name, poutmesh->num_tris);
 
 	poutmesh->num_verts = LittleLong(pinmodel->num_xyz);
 	if (poutmesh->num_verts <= 0)
-		VID_Error(ERR_DROP, "model %s has invalid number of vertices (%i)", mod->name, poutmesh->num_verts);
+		VID_Error(ERR_DROP, "Model %s has invalid number of vertices (%i)", mod->name, poutmesh->num_verts);
 
 	poutmesh->num_skins = LittleLong(pinmodel->num_skins);
 	if (poutmesh->num_skins < 0)
-		Com_Error(ERR_DROP, "model %s has invalid number of skins (%i)", mod->name, poutmesh->num_skins);
+		Com_Error(ERR_DROP, "Model %s has invalid number of skins (%i)", mod->name, poutmesh->num_skins);
 	else if (poutmesh->num_skins > MAX_MD2SKINS)
-		Com_Error(ERR_DROP, "model %s has too many skins (%i, maximum is %i)", mod->name, poutmesh->num_skins, MAX_MD2SKINS);
+		Com_Error(ERR_DROP, "Model %s has too many skins (%i, maximum is %i)", mod->name, poutmesh->num_skins, MAX_MD2SKINS);
 
-	//
-	// build list of unique vertices
-	//
+	// Build the list of unique vertices
 	const int numIndices = poutmesh->num_tris * 3;
 	int numVertices = 0;
 
 	index_t *poutindex = poutmesh->indexes = ModChunk_Alloc(sizeof(index_t) * poutmesh->num_tris * 3);
 
-	//
-	// count unique vertices
-	//
+	// Count unique vertices
 	for (int i = 0; i < numIndices; i++)
 	{
 		if (md2IndRemap[i] != -1)
@@ -245,30 +239,22 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 
 	poutmesh->num_verts = numVertices;
 
-	//
-	// remap remaining indices
-	//
+	// Remap remaining indices
 	for (int i = 0; i < numIndices; i++)
-	{
 		if (md2IndRemap[i] != i)
 			poutindex[i] = poutindex[md2IndRemap[i]];
-	}
 
-	//
-	// load base S and T vertices
-	//
+	// Load base S and T vertices
 	dstvert_t *pincoord = (dstvert_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_st));
 	maliascoord_t *poutcoord = poutmesh->stcoords = ModChunk_Alloc(sizeof(maliascoord_t) * poutmesh->num_verts);
 
 	for (int i = 0; i < numIndices; i++)
 	{
-		poutcoord[poutindex[i]].st[0] = (float)(((double)LittleShort(pincoord[md2TempStIndex[md2IndRemap[i]]].s) + 0.5) * skinWidth);
-		poutcoord[poutindex[i]].st[1] = (float)(((double)LittleShort(pincoord[md2TempStIndex[md2IndRemap[i]]].t) + 0.5) * skinHeight);
+		poutcoord[poutindex[i]].st[0] = (float)(((double)LittleShort(pincoord[md2TempStIndex[md2IndRemap[i]]].s) + 0.5f) * skinWidth);
+		poutcoord[poutindex[i]].st[1] = (float)(((double)LittleShort(pincoord[md2TempStIndex[md2IndRemap[i]]].t) + 0.5f) * skinHeight);
 	}
 
-	//
-	// load the frames
-	//
+	// Load frames
 	maliasframe_t *poutframe = poutmodel->frames = ModChunk_Alloc(sizeof(maliasframe_t) * poutmodel->num_frames);
 	maliasvertex_t *poutvert = poutmesh->vertexes = ModChunk_Alloc(poutmodel->num_frames * poutmesh->num_verts * sizeof(maliasvertex_t));
 
@@ -294,9 +280,7 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 		AddPointToBounds(poutframe->mins, mod->mins, mod->maxs);
 		AddPointToBounds(poutframe->maxs, mod->mins, mod->maxs);
 
-		//
-		// load the vertexes and normals
-		//
+		// Load vertices and normals
 		for (int j = 0; j < numIndices; j++)
 		{
 			for (int c = 0; c < 3; c++)
@@ -312,22 +296,19 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 		}
 	}
 
-	//
-	// build triangle neighbors
-	//
+	// Build triangle neighbors
 	poutmesh->trneighbors = ModChunk_Alloc(sizeof(int) * poutmesh->num_tris * 3);
 	Mod_BuildTriangleNeighbors(poutmesh);
 
-	//
-	// register all skins
-	//
-	if (poutmesh->num_skins <= 0) // hack for player models with no skin refs
+	// Register all skins
+	char name[MD3_MAX_PATH];
+	if (poutmesh->num_skins <= 0) // Hack for player models with no skin refs
 	{
 		maliasskin_t *poutskin = poutmesh->skins = ModChunk_Alloc(sizeof(maliasskin_t));
 		poutmesh->num_skins = 1;
 		Com_sprintf(name, sizeof(name), "players/male/grunt.pcx");
 		memcpy(poutskin->name, name, MD3_MAX_PATH);
-		Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
+		Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // Set null glowskin
 		mod->skins[0][0] = R_FindImage(name, it_skin, false);
 	}
 	else
@@ -337,13 +318,13 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 		{
 			memcpy(name, ((char *)pinmodel + LittleLong(pinmodel->ofs_skins) + i * MAX_SKINNAME), MD3_MAX_PATH);
 			memcpy(poutskin->name, name, MD3_MAX_PATH);
-			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // set null glowskin
+			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // Set null glowskin
 			mod->skins[0][i] = R_FindImage(name, it_skin, false);
 		}
 	}
 
 	mod->hasAlpha = false;
-	Mod_LoadModelScript(mod, poutmodel); // md3 skin scripting
+	Mod_LoadModelScript(mod, poutmodel); // MD3 skin scripting
 
 	mod->type = mod_alias;
 }

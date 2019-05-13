@@ -256,24 +256,19 @@ float Mod_RadiusFromBounds(vec3_t mins, vec3_t maxs); //mxd
 
 void Mod_Modellist_f(void);
 
-void *ModChunk_Alloc(size_t size); //mxd
-
 void Mod_FreeAll(void);
 void Mod_Free(model_t *mod);
 
 extern qboolean registration_active; // Map registration flag
 
-// Sprite loading
-size_t Mod_GetAllocSizeSprite();
-void Mod_LoadSpriteModel(model_t *mod, void *buffer);
+// Model memory allocation
+size_t ModChunk_End(void);
+void ModChunk_Free(void *base);
+void *ModChunk_Begin(size_t maxsize);
+void *ModChunk_Alloc(size_t size);
 
-// MD2 model loading
-size_t Mod_GetAllocSizeMD2(void *buffer);
+// MD2 / MD3 / Sprite / MD2/MD3 .script loading
 void Mod_LoadAliasMD2Model(model_t *mod, void *buffer);
-
-// MD3 model loading
-size_t Mod_GetAllocSizeMD3(void *buffer); //Harven++
 void Mod_LoadAliasMD3Model(model_t *mod, void *buffer); //Harven++
-
-// MD2/MD3 .script loading
+void Mod_LoadSpriteModel(model_t *mod, void *buffer, size_t memsize);
 void Mod_LoadModelScript(model_t *mod, maliasmodel_t *aliasmod);

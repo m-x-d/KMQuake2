@@ -220,6 +220,7 @@
     <ClCompile Include="..\..\..\renderer\r_image_wal.c" />
     <ClCompile Include="..\..\..\renderer\r_light.c" />
     <ClCompile Include="..\..\..\renderer\r_main.c" />
+    <ClCompile Include="..\..\..\renderer\r_model_malloc.c" />
     <ClCompile Include="..\..\..\renderer\r_model_md2.c" />
     <ClCompile Include="..\..\..\renderer\r_model_md3.c" />
     <ClCompile Include="..\..\..\renderer\r_model_script.c" />

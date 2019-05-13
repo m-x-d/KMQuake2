@@ -22,26 +22,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 
 model_t	*loadmodel;
-int		modfilelen;
 
-void *ModChunk_Begin(size_t maxsize);
-//void *ModChunk_Alloc (size_t size); //mxd. Moved to r_model.h
-size_t ModChunk_End(void);
-void ModChunk_Free(void *base);
-size_t Mod_GetAllocSizeBrushModel(void *buffer); //mxd
 void Mod_LoadBrushModel(model_t *mod, void *buffer);
 
-byte	mod_novis[MAX_MAP_LEAFS / 8];
+#define MAX_MOD_KNOWN (MAX_MODELS * 2) // Knightmare- was 512
+static model_t mod_known[MAX_MOD_KNOWN];
+static int mod_numknown;
 
-#define	MAX_MOD_KNOWN (MAX_MODELS * 2) // Knightmare- was 512
-model_t	mod_known[MAX_MOD_KNOWN];
-int		mod_numknown;
+// The inline * models from the current map are kept seperate
+static model_t mod_inline[MAX_MOD_KNOWN];
 
-// the inline * models from the current map are kept seperate
-model_t	mod_inline[MAX_MOD_KNOWN];
-
-int		registration_sequence;
-qboolean registration_active; // map registration flag
+int registration_sequence;
+qboolean registration_active; // Map registration flag
 
 /*
 ===============
@@ -121,8 +113,19 @@ Mod_ClusterPVS
 */
 byte *Mod_ClusterPVS(int cluster, model_t *model)
 {
+	static byte novis[MAX_MAP_LEAFS / 8]; //mxd. Made local
+	static qboolean initialized = false;
+	
 	if (cluster == -1 || !model->vis)
-		return mod_novis;
+	{
+		if(!initialized)
+		{
+			memset(novis, 255, sizeof(novis));
+			initialized = true;
+		}
+		
+		return novis;
+	}
 
 	return Mod_DecompressVis((byte *)model->vis + model->vis->bitofs[cluster][DVIS_PVS], model);
 }
@@ -159,7 +162,6 @@ Mod_Init
 */
 void Mod_Init(void)
 {
-	memset(mod_novis, 0xff, sizeof(mod_novis));
 	registration_active = false; // map registration flag
 }
 
@@ -174,29 +176,22 @@ Loads in a model for the given name
 */
 model_t *Mod_ForName(char *name, qboolean crash)
 {
-	model_t *mod;
-	int i;
-	
 	if (!name[0])
-		VID_Error(ERR_DROP, "Mod_ForName: NULL name");
+		VID_Error(ERR_DROP, "%s: empty name", __func__);
 
-	//
-	// inline models are grabbed only from worldmodel
-	//
+	// Inline models are grabbed only from worldmodel
 	if (name[0] == '*')
 	{
-		i = atoi(name + 1);
-		if (i < 1 || !r_worldmodel || i >= r_worldmodel->numsubmodels)
-			VID_Error(ERR_DROP, "bad inline model number");
+		const int index = atoi(name + 1);
+		if (!r_worldmodel || index < 1 ||  index >= r_worldmodel->numsubmodels)
+			VID_Error(ERR_DROP, "%s: bad inline model number: %i", __func__, index);
 
-		return &mod_inline[i];
+		return &mod_inline[index];
 	}
 
-	//
-	// search the currently loaded models
-	//
-
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
+	// Search the currently loaded models
+	model_t *mod = mod_known;
+	for (int i = 0; i < mod_numknown; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
@@ -205,35 +200,31 @@ model_t *Mod_ForName(char *name, qboolean crash)
 			return mod;
 	}
 	
-	//
-	// find a free model slot spot
-	//
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
-	{
+	// Find a free model slot spot
+	mod = mod_known;
+	int mod_index;
+	for (mod_index = 0; mod_index < mod_numknown; mod_index++, mod++)
 		if (!mod->name[0])
-			break;	// free spot
-	}
+			break; // Free spot
 
-	if (i == mod_numknown)
+	if (mod_index == mod_numknown)
 	{
 		if (mod_numknown == MAX_MOD_KNOWN)
-			VID_Error(ERR_DROP, "mod_numknown == MAX_MOD_KNOWN");
+			VID_Error(ERR_DROP, "%s: too many models (%i max.)", __func__, MAX_MOD_KNOWN);
 
 		mod_numknown++;
 	}
 
 	Q_strncpyz(mod->name, name, sizeof(mod->name));
 	
-	//
-	// load the file
-	//
+	// Load the file
 	unsigned *buf;
-	modfilelen = FS_LoadFile(mod->name, &buf);
+	const int modfilelen = FS_LoadFile(mod->name, (void**)&buf);
 
 	if (!buf)
 	{
 		if (crash)
-			VID_Error(ERR_DROP, "Mod_NumForName: %s not found", mod->name);
+			VID_Error(ERR_DROP, "%s: file '%s' does not exist", __func__, mod->name);
 
 		memset(mod->name, 0, sizeof(mod->name));
 		return NULL;
@@ -241,36 +232,28 @@ model_t *Mod_ForName(char *name, qboolean crash)
 	
 	loadmodel = mod;
 
-	//
-	// fill it in
-	//
+	// Fill it in
 	switch (LittleLong(*(unsigned *)buf))
 	{
-	case IDALIASHEADER:
-		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeMD2(buf));
-		Mod_LoadAliasMD2Model(mod, buf);
-		break;
+		case IDALIASHEADER:
+			Mod_LoadAliasMD2Model(mod, buf);
+			break;
 
-	//Harven++ MD3
-	case IDMD3HEADER:
-		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeMD3(buf));
-		Mod_LoadAliasMD3Model(mod, buf);
-		break;
-	//Harven-- MD3
+		case IDMD3HEADER: //Harven++ MD3
+			Mod_LoadAliasMD3Model(mod, buf);
+			break;
 	
-	case IDSPRITEHEADER:
-		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeSprite());
-		Mod_LoadSpriteModel(mod, buf);
-		break;
+		case IDSPRITEHEADER:
+			Mod_LoadSpriteModel(mod, buf, modfilelen);
+			break;
 	
-	case IDBSPHEADER:
-		loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeBrushModel(buf)); //mxd. Was 0x1000000
-		Mod_LoadBrushModel(mod, buf);
-		break;
+		case IDBSPHEADER:
+			Mod_LoadBrushModel(mod, buf);
+			break;
 
-	default:
-		VID_Error(ERR_DROP, "Mod_NumForName: unknown fileid for %s", mod->name);
-		break;
+		default:
+			VID_Error(ERR_DROP, "Mod_NumForName: unknown fileid for %s", mod->name);
+			break;
 	}
 
 	loadmodel->extradatasize = ModChunk_End();
@@ -1051,7 +1034,7 @@ size_t Mod_GetAllocSizeBrushModel(void *buffer)
 	l = &header->lumps[LUMP_SURFEDGES];
 	int *surfedge = (void *)((byte *)header + l->fileofs);
 
-	for(unsigned i = 0; i < count; i++, face++)
+	for(int i = 0; i < count; i++, face++)
 	{
 		const int flags = LittleLong(texinfo[LittleShort(face->texinfo)].flags);
 		int facesize;
@@ -1126,6 +1109,9 @@ Mod_LoadBrushModel
 */
 void Mod_LoadBrushModel(model_t *mod, void *buffer)
 {
+	//mxd. Allocate memory
+	loadmodel->extradata = ModChunk_Begin(Mod_GetAllocSizeBrushModel(buffer)); //mxd. Was 0x1000000
+	
 	loadmodel->type = mod_brush;
 
 	dheader_t *header = (dheader_t *)buffer;
@@ -1186,76 +1172,6 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 
 		starmod->numleafs = bm->visleafs;
 	}
-}
-
-/*
-===============================================================================
-	MODEL MEMORY ALLOCATION
-===============================================================================
-*/
-
-// It turns out that the Hunk_Begin(), Hunk_Alloc(), and Hunk_Free()
-// functions used for BSP, alias model, and sprite loading are a wrapper around
-// VirtualAlloc()/VirtualFree() on Win32 and they should only be used
-// rarely and for large blocks of memory.  After about 185-190 VirtualAlloc()
-// reserve calls are made on Win7 x64, the subsequent call fails.  Bad Carmack, bad!
-
-// These ModChunk_ functions are a replacement that wrap around malloc()/free()
-// and return pointers into sections aligned on cache lines.
-// The only caveat is that the allocation size passed to ModChunk_Begin() is
-// immediately allocated, not reserved.  Calling it with a maximum memory size
-// for each model type would be hugely wasteful.  So a size equal or greater to
-// the total amount requested via ModChunk_Alloc() calls in the model loading
-// functions must be calculated first.
-
-int		modChunkCount;
-
-byte	*modChunkMemBase;
-size_t	modChunkMaxSize;
-size_t	modChunkCurSize;
-
-
-void *ModChunk_Begin(size_t maxsize)
-{
-	// alocate a chunk of memory, should be exact size needed!
-	modChunkCurSize = 0;
-	modChunkMaxSize = maxsize;
-
-	modChunkMemBase = malloc(maxsize);
-
-	if (!modChunkMemBase)
-		Sys_Error("ModChunk_Begin: malloc of size %i failed, %i chunks already allocated", maxsize, modChunkCount);
-
-	memset(modChunkMemBase, 0, maxsize);
-
-	return (void *)modChunkMemBase;
-}
-
-void *ModChunk_Alloc(size_t size)
-{
-	// round to cacheline
-	size = ALIGN_TO_CACHELINE(size);
-
-	modChunkCurSize += size;
-	if (modChunkCurSize > modChunkMaxSize)
-		Sys_Error("ModChunk_Alloc: overflow");
-
-	return (void *)(modChunkMemBase + modChunkCurSize - size);
-}
-
-size_t ModChunk_End(void)
-{
-	// free the remaining unused virtual memory
-	modChunkCount++;
-	return modChunkCurSize;
-}
-
-void ModChunk_Free(void *base)
-{
-	if (base)
-		free(base);
-
-	modChunkCount--;
 }
 
 //=============================================================================
