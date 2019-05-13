@@ -242,11 +242,6 @@ typedef struct model_s
 	void *extradata;
 
 	qboolean hasAlpha; // If model has scripted transparency
-
-#ifdef PROJECTION_SHADOWS // Projection shadows from BeefQuake R6
-	//signed int	edge_tri[MAX_TRIANGLES][3]; // make this dynamically allocated?
-	int *edge_tri;
-#endif // end projection shadows from BeefQuake R6
 } model_t;
 
 //============================================================================

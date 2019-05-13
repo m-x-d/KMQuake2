@@ -1291,61 +1291,6 @@ void ModChunk_Free(void *base)
 
 #ifndef MD2_AS_MD3
 
-#ifdef PROJECTION_SHADOWS // projection shadows from BeefQuake R6
-/*
-=================
-Mod_FindMD2TriangleWithEdge
-=================
-*/
-signed int Mod_FindMD2TriangleWithEdge (short p1, short p2, dtriangle_t *ignore, dmdl_t *hdr)
-{
-	dtriangle_t *tris = (dtriangle_t *)((unsigned char*)hdr + hdr->ofs_tris);
-	int i, match, count;
-
-	count = 0;
-	match = -1;
-
-	for (i=0; i<hdr->num_tris; i++, tris++)
-	{
-		if ( (tris->index_xyz[0] == p2 && tris->index_xyz[1] == p1)
-			|| (tris->index_xyz[1] == p2 && tris->index_xyz[2] == p1)
-			|| (tris->index_xyz[2] == p2 && tris->index_xyz[0] == p1) ) {
-			if (tris != ignore)
-				match = i;
-			count++;
-		}
-		else if ( (tris->index_xyz[0] == p1 && tris->index_xyz[1] == p2)
-			|| (tris->index_xyz[1] == p1 && tris->index_xyz[2] == p2)
-			|| (tris->index_xyz[2] == p1 && tris->index_xyz[0] == p2) )
-			count++;
-	}
-
-	if (count > 2)
-		match = -1;
-	return match;
-}
-
-/*
-=================
-Mod_BuildMD2TriangleNeighbors
-=================
-*/
-void Mod_BuildMD2TriangleNeighbors (model_t *mod)
-{
-	dmdl_t		*hdr = (dmdl_t *)mod->extradata;
-	dtriangle_t *tris = (dtriangle_t *)((unsigned char*)hdr + hdr->ofs_tris);
-	int			i, *n;
-
-	for (i=0, n=mod->edge_tri; i<hdr->num_tris; i++, n+=3, tris++)
-	{
-		n[0] = Mod_FindMD2TriangleWithEdge(tris->index_xyz[0], tris->index_xyz[1], tris, hdr);
-		n[1] = Mod_FindMD2TriangleWithEdge(tris->index_xyz[1], tris->index_xyz[2], tris, hdr);
-		n[2] = Mod_FindMD2TriangleWithEdge(tris->index_xyz[2], tris->index_xyz[0], tris, hdr);
-	}
-}
-#endif // end projection shadows from BeefQuake R6
-
-
 /*
 =================
 Mod_GetAllocSizeMD2Old
@@ -1480,11 +1425,6 @@ void Mod_LoadAliasMD2ModelOld (model_t *mod, void *buffer)
 	mod->maxs[0] = 32;
 	mod->maxs[1] = 32;
 	mod->maxs[2] = 32;
-
-#ifdef PROJECTION_SHADOWS // projection shadows from BeefQuake R6
-	mod->edge_tri = malloc(sizeof(int) * pheader->num_tris * 3);
-	Mod_BuildMD2TriangleNeighbors (mod);
-#endif // end projection shadows from BeefQuake R6
 
 	mod->hasAlpha = false;
 	//Mod_LoadMD2ModelScript (mod, pheader); // md2 skin scripting
@@ -2343,12 +2283,6 @@ Mod_Free
 void Mod_Free(model_t *mod)
 {
 	ModChunk_Free(mod->extradata); //mxd
-
-#ifdef PROJECTION_SHADOWS // projection shadows from BeefQuake R6
-	if (mod->edge_tri)
-		free (mod->edge_tri);
-#endif // end projection shadows from BeefQuake R6
-
 	memset(mod, 0, sizeof(*mod));
 }
 
