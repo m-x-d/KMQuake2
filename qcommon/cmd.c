@@ -667,10 +667,13 @@ void Cmd_ExecuteString(char *text)
 
 void Cmd_List_f(void)
 {
+	Com_Printf(S_COLOR_GREEN"Available console comands:\n"); //mxd
+	
 	int i = 0;
 	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next, i++)
 		Com_Printf("%s\n", cmd->name);
-	Com_Printf("%i commands\n", i);
+
+	Com_Printf(S_COLOR_GREEN"Total: %i commands\n", i);
 }
 
 void Cmd_Init(void)

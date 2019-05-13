@@ -579,10 +579,13 @@ void Com_Printf(char *msg, ...);
 #define SURF_NOLIGHTENV	0x01000000	// No lightmap or envmap trans/warp surface
 #define SURF_ALPHATEST	0x02000000	// Alpha test flag
 
-#define SURF_MIRROR		0x10000000
+//TODO: mxd. Update arrays in V_Texture_f if new flags are added
+
+//mxd. Unused
+/*#define SURF_MIRROR		0x10000000
 #define SURF_CHOPPY		0x20000000
 #define SURF_CHOPPY2	0x40000000
-#define SURF_CHOPPY3	0x80000000
+#define SURF_CHOPPY3	0x80000000*/
 //end Knightmare
 
 // Content masks
@@ -616,15 +619,15 @@ typedef struct cplane_s
 typedef struct cmodel_s
 {
 	vec3_t mins, maxs;
-	vec3_t origin;		// For sounds or lights
+	vec3_t origin; // For sounds or lights
 	int headnode;
 } cmodel_t;
 
 typedef struct csurface_s
 {
-	char name[16];
-	int flags;
-	int value;
+	char name[16];	// Texture name (textures/*.wal).
+	int flags;		// miptex flags + overrides.
+	int value;		// Light emission, etc.
 } csurface_t;
 
 typedef struct mapsurface_s // Used internally due to name len probs //ZOID

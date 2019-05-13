@@ -731,28 +731,80 @@ void V_Viewpos_f (void)
 V_Texture_f
 =============
 */
-void V_Texture_f (void)
+void V_Texture_f(void)
 {
-	vec3_t forward, start, end;
+	//mxd. Flag names
+	static int flags[] =
+	{
+		SURF_LIGHT, SURF_SLICK, SURF_SKY, SURF_WARP, SURF_TRANS33, SURF_TRANS66, SURF_FLOWING,
+		SURF_METAL, SURF_DIRT, SURF_VENT, SURF_GRATE, SURF_TILE, SURF_GRASS, SURF_SNOW, SURF_FORCE, SURF_GRAVEL, SURF_ICE, SURF_SAND, SURF_WOOD, SURF_STANDARD,
+		SURF_NOLIGHTENV, SURF_ALPHATEST
+	};
 
-	if (!developer->value) // only works in developer mode
-		return;
+	static char *flagnames[] =
+	{
+		"LIGHT", "SLICK", "SKY", "WARP", "TRANS33", "TRANS66", "FLOWING",
+		"METAL", "DIRT", "VENT", "GRATE", "TILE", "GRASS", "SNOW", "FORCE", "GRAVEL", "ICE", "SAND", "WOOD", "STANDARD",
+		"NOLIGHTENV", "ALPHATEST"
+	};
+
+	static int flagscount = sizeof(flags) / sizeof(flags[0]);
+	
+	vec3_t forward, start, end;
 
 	VectorCopy(cl.refdef.vieworg, start);
 	AngleVectors(cl.refdef.viewangles, forward, NULL, NULL);
 	VectorMA(start, 8192, forward, end);
-	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_ALL);
+	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_SOLID | MASK_WATER); //mxd. Was MASK_ALL
+
+	Con_ClearNotify(); //mxd
 
 	if (!tr.ent)
 	{
-		Com_Printf("Nothing hit?\n");
+		Com_Printf("Nothing hit...\n");
+	}
+	else if (!tr.surface || !tr.surface->name[0]) //mxd. We may get a nullsurface here
+	{
+		Com_Printf("Not a brush!\n");
 	}
 	else
 	{
-		if (!tr.surface)
-			Com_Printf("Not a brush\n");
-		else
-			Com_Printf("Texture=%s, surface=0x%08x, value=%d\n", tr.surface->name, tr.surface->flags, tr.surface->value);
+		Com_Printf("Texture:     %s\n", tr.surface->name);
+		Com_Printf("Surf. flags: 0x%08x", tr.surface->flags); // Don't add newline yet
+
+		//mxd. Let's actually print em...
+		int numflags = 0;
+		if(tr.surface->flags != 0)
+		{
+			for (int i = 0; i < flagscount; i++)
+				if (tr.surface->flags & flags[i])
+					numflags++;
+
+			if(numflags > 0)
+			{
+				char buffer[1024];
+				Q_snprintfz(buffer, sizeof(buffer), " [");
+
+				int usedflags = 0;
+				for (int i = 0; i < flagscount; i++)
+				{
+					if (tr.surface->flags & flags[i])
+					{
+						char *format = (usedflags < numflags - 1 ? "%s, " : "%s");
+						Q_strncatz(buffer, va(format, flagnames[i]), sizeof(buffer));
+						usedflags++;
+					}
+				}
+
+				Q_strncatz(buffer, "]\n", sizeof(buffer));
+				Com_Printf("%s", buffer);
+			}
+		}
+
+		if(numflags == 0)
+			Com_Printf("\n"); // Add newline now
+
+		Com_Printf("Light value: %i\n", tr.surface->value);
 	}
 }
 
@@ -765,7 +817,7 @@ void V_Surf_f (void)
 {
 	vec3_t forward, start, end;
 
-	if (!developer->value) // only works in developer mode
+	if (!developer->value) // Only works in developer mode
 		return;
 
 	// Disable this in multiplayer
@@ -774,7 +826,7 @@ void V_Surf_f (void)
 
 	if (Cmd_Argc() < 2)
 	{
-		Com_Printf("Syntax: surf <value>\n");
+		Com_Printf("Usage: surf <flags>: assigns given integer as surface flags\n");
 		return;
 	}
 
@@ -783,19 +835,14 @@ void V_Surf_f (void)
 	VectorCopy(cl.refdef.vieworg, start);
 	AngleVectors(cl.refdef.viewangles, forward, NULL, NULL);
 	VectorMA(start, 8192, forward, end);
-	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_ALL);
+	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_SOLID | MASK_WATER); //mxd. Was MASK_ALL
 
 	if (!tr.ent)
-	{
-		Com_Printf("Nothing hit?\n");
-	}
+		Com_Printf("Nothing hit...\n");
+	else if (!tr.surface || !tr.surface->name[0]) //mxd. We may get a nullsurface here
+		Com_Printf("Not a brush!\n");
 	else
-	{
-		if (!tr.surface)
-			Com_Printf("Not a brush\n");
-		else
-			tr.surface->flags = s;
-	}
+		tr.surface->flags = s;
 }
 
 
