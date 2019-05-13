@@ -623,7 +623,7 @@ static void Mod_LoadFaces(lump_t *l)
 				out->texturemins[i] = -8192;
 			}
 
-			R_SubdivideSurface(out); // Cut up polygon for warps
+			R_SubdivideSurface(loadmodel, out); // Cut up polygon for warps
 		}
 		// Knightmare- Psychospaz's envmapping. Windows get glass (envmap) effect, warp surfaces don't
 		else if (out->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))

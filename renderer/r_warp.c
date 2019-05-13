@@ -21,12 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-extern model_t *loadmodel;
-msurface_t *warpface;
-
 #define SUBDIVIDE_SIZE 64
 
-void BoundPoly(int numverts, float *verts, vec3_t mins, vec3_t maxs)
+static void BoundPoly(int numverts, float *verts, vec3_t mins, vec3_t maxs)
 {
 	mins[0] = mins[1] = mins[2] = 999999;
 	maxs[0] = maxs[1] = maxs[2] = -999999;
@@ -44,29 +41,29 @@ void BoundPoly(int numverts, float *verts, vec3_t mins, vec3_t maxs)
 	}
 }
 
-void SubdividePolygon(int numverts, float *verts)
+static void SubdividePolygon(msurface_t *warpface, int numverts, float *verts)
 {
-	vec3_t	mins, maxs;
-	vec3_t	front[64], back[64];
-	float	dist[64];
-	vec3_t	total;
+	vec3_t mins, maxs;
+	vec3_t front[64], back[64];
+	float dist[64];
+	vec3_t total;
 
 	if (numverts > 60)
-		VID_Error(ERR_DROP, "SubdividePolygon: numverts = %i", numverts);
+		VID_Error(ERR_DROP, "SubdividePolygon: too many verts (%i / 60)", numverts);
 
 	BoundPoly(numverts, verts, mins, maxs);
 
 	for (int i = 0; i < 3; i++)
 	{
-		float m = (mins[i] + maxs[i]) * 0.5;
-		m = SUBDIVIDE_SIZE * floor(m / SUBDIVIDE_SIZE + 0.5);
+		float m = (mins[i] + maxs[i]) * 0.5f;
+		m = SUBDIVIDE_SIZE * floorf(m / SUBDIVIDE_SIZE + 0.5f);
 
 		if (maxs[i] - m < 8 || m - mins[i] < 8)
 			continue;
 
 		// Cut it
 		float *v = verts + i;
-		for (int j = 0; j < numverts; j++, v+= 3)
+		for (int j = 0; j < numverts; j++, v += 3)
 			dist[j] = *v - m;
 
 		// Wrap cases
@@ -108,8 +105,8 @@ void SubdividePolygon(int numverts, float *verts)
 			}
 		}
 
-		SubdividePolygon(f, front[0]);
-		SubdividePolygon(b, back[0]);
+		SubdividePolygon(warpface, f, front[0]);
+		SubdividePolygon(warpface, b, back[0]);
 
 		return;
 	}
@@ -146,7 +143,7 @@ void SubdividePolygon(int numverts, float *verts)
 		poly->verts[i + 1][4] = t;
 	}
 
-	VectorScale(total, 1.0 / (float)numverts, poly->verts[0]);
+	VectorScale(total, 1.0f / (float)numverts, poly->verts[0]);
 	VectorCopy(poly->verts[0], poly->center); // For vertex lighting
 	poly->verts[0][3] = total_s / numverts;
 	poly->verts[0][4] = total_t / numverts;
@@ -156,49 +153,47 @@ void SubdividePolygon(int numverts, float *verts)
 }
 
 // Breaks a polygon up along axial 64 unit boundaries so that turbulent warps can be done reasonably.
-void R_SubdivideSurface(msurface_t *fa)
+void R_SubdivideSurface(model_t *model, msurface_t *fa)
 {
 	vec3_t verts[64];
 	float *vec;
 
-	warpface = fa;
-
 	// Convert edges back to a normal polygon
 	for (int i = 0; i < fa->numedges; i++)
 	{
-		const int lindex = loadmodel->surfedges[fa->firstedge + i];
+		const int lindex = model->surfedges[fa->firstedge + i];
 
 		if (lindex > 0)
-			vec = loadmodel->vertexes[loadmodel->edges[lindex].v[0]].position;
+			vec = model->vertexes[model->edges[lindex].v[0]].position;
 		else
-			vec = loadmodel->vertexes[loadmodel->edges[-lindex].v[1]].position;
+			vec = model->vertexes[model->edges[-lindex].v[1]].position;
 
 		VectorCopy(vec, verts[i]);
 	}
 
-	SubdividePolygon(fa->numedges, verts[0]);
+	SubdividePolygon(fa, fa->numedges, verts[0]);
 }
 
 // mxd. Returns the number of verts, which will be created during warp polygon subdivision.
 // Used in Mod_GetAllocSizeBrushModel.
 
-size_t warppolyvertssize; // In bytes
+static size_t warppolyvertssize; // In bytes
 
-void CalculateWarpPolygonVertsSize(int numverts, float *verts)
+static void CalculateWarpPolygonVertsSize(int numverts, float *verts)
 {
-	vec3_t	mins, maxs;
-	vec3_t	front[64], back[64];
-	float	dist[64];
+	vec3_t mins, maxs;
+	vec3_t front[64], back[64];
+	float dist[64];
 	
 	if (numverts > 60)
-		VID_Error(ERR_DROP, "SubdividePolygon: numverts = %i", numverts);
+		VID_Error(ERR_DROP, "SubdividePolygon: too many verts (%i / 60)", numverts);
 
 	BoundPoly(numverts, verts, mins, maxs);
 
 	for (int i = 0; i < 3; i++)
 	{
-		float m = (mins[i] + maxs[i]) * 0.5;
-		m = SUBDIVIDE_SIZE * floor(m / SUBDIVIDE_SIZE + 0.5);
+		float m = (mins[i] + maxs[i]) * 0.5f;
+		m = SUBDIVIDE_SIZE * floorf(m / SUBDIVIDE_SIZE + 0.5f);
 
 		if (maxs[i] - m < 8 || m - mins[i] < 8)
 			continue;
@@ -293,7 +288,7 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 unsigned int dst_texture_NV, dst_texture_ARB;
 
 // Create the texture which warps texture shaders
-void CreateDSTTex_NV(void)
+static void CreateDSTTex_NV(void)
 {
 	char data[DST_SIZE][DST_SIZE][2];
 
@@ -317,7 +312,7 @@ void CreateDSTTex_NV(void)
 }
 
 // Create the texture which warps texture shaders
-void CreateDSTTex_ARB(void)
+static void CreateDSTTex_ARB(void)
 {
 	unsigned char dist[DST_SIZE][DST_SIZE][4];
 
@@ -348,7 +343,8 @@ void CreateDSTTex_ARB(void)
 // Resets the texture which warps texture shaders. Needed after a vid_restart.
 void R_InitDSTTex(void)
 {
-	dst_texture_NV = dst_texture_ARB = 0;
+	dst_texture_NV = 0;
+	dst_texture_ARB = 0;
 	CreateDSTTex_NV();
 	CreateDSTTex_ARB();
 }
@@ -357,7 +353,7 @@ void R_InitDSTTex(void)
 extern image_t *R_TextureAnimation(msurface_t *surf);
 
 // Backend for R_DrawWarpSurface
-void RB_RenderWarpSurface(msurface_t *fa)
+static void RB_RenderWarpSurface(msurface_t *fa)
 {
 	float		args[7] = {0, 0.05, 0, 0, 0.04, 0, 0};
 	image_t		*image = R_TextureAnimation(fa);
@@ -393,7 +389,7 @@ void RB_RenderWarpSurface(msurface_t *fa)
 
 		GL_Enable(GL_FRAGMENT_PROGRAM_ARB);
 		qglBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragment_programs[F_PROG_WARP]);
-		qglProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, r_rgbscale->value, r_rgbscale->value, r_rgbscale->value, 1.0);
+		qglProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, r_rgbscale->value, r_rgbscale->value, r_rgbscale->value, 1.0f);
 	}
 	else if (texShaderWarpNV)
 	{
@@ -409,9 +405,9 @@ void RB_RenderWarpSurface(msurface_t *fa)
 		qglTexEnvfv(GL_TEXTURE_SHADER_NV, GL_OFFSET_TEXTURE_MATRIX_NV, &args[1]);
 
 		// Psychospaz's lighting
-		// use this so that the new water isnt so bright anymore
+		// Use this so that the new water isnt so bright anymore.
 		// We won't bother check for the extensions availabiliy, as the hardware required
-		// to make it this far definately supports this as well
+		// to make it this far definately supports this as well.
 		if (light)
 			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
 
@@ -450,7 +446,9 @@ void RB_RenderWarpSurface(msurface_t *fa)
 	}
 
 	RB_DrawMeshTris();
-	rb_vertex = rb_index = 0;
+
+	rb_vertex = 0;
+	rb_index = 0;
 }
 
 // Does a water warp on the pre-fragmented glpoly_t chain.
@@ -467,10 +465,10 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 
 	c_brush_surfs++;
 
-	const float dstscroll = -64 * ( (r_newrefdef.time * 0.15) - (int)(r_newrefdef.time * 0.15) );
+	const float dstscroll = -64 * ((r_newrefdef.time * 0.15f) - (int)(r_newrefdef.time * 0.15f));
 
 	if (fa->texinfo->flags & SURF_FLOWING)
-		scroll = -64 * ( (r_newrefdef.time * 0.5) - (int)(r_newrefdef.time * 0.5) );
+		scroll = -64 * ((r_newrefdef.time * 0.5f) - (int)(r_newrefdef.time * 0.5f));
 	else
 		scroll = 0.0f;
 

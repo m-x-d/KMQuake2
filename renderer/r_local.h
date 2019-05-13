@@ -411,7 +411,7 @@ void R_RenderDlights();
 void R_DrawAlphaSurfaces();
 void R_RenderBrushPoly(msurface_t *fa);
 void R_DrawInitLocal();
-void R_SubdivideSurface(msurface_t *fa);
+void R_SubdivideSurface(model_t *model, msurface_t *fa); //mxd. +model
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
 void R_RotateForEntity(entity_t *e, qboolean full);
 int R_RollMult();
