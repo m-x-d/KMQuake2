@@ -396,9 +396,19 @@ void Key_WriteBindings(FILE *f)
 
 void Key_Bindlist_f(void)
 {
+	Com_Printf(S_COLOR_GREEN"Assigned keybinds:\n"); //mxd
+	
+	int numbinds = 0; //mxd
 	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	{
 		if (keybindings[i] && keybindings[i][0])
+		{
 			Com_Printf("%s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+			numbinds++; //mxd
+		}
+	}
+
+	Com_Printf(S_COLOR_GREEN"Total: %i keybinds\n", numbinds); //mxd
 }
 
 void Key_Init(void)
