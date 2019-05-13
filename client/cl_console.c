@@ -500,7 +500,6 @@ void Con_DrawNotify(void)
 		yoffset += (int)(FONT_SIZE * 2); // Make extra space so we have room
 	}
 
-	int lines = 0;
 	for (int i = con.currentline - NUM_CON_TIMES + 1; i <= con.currentline; i++)
 	{
 		if (i < 0)
@@ -512,31 +511,14 @@ void Con_DrawNotify(void)
 
 		time = cls.realtime - time;
 		if (time > con_notifytime->value * 1000)
+		{
+			con.notifytimes[i % NUM_CON_TIMES] = 0; //mxd
 			continue;
-
-		// Vertical offset set by closest to dissapearing
-		lines++;
-	}
-
-	if (lines == 0)
-		return;
-
-	for (int i = con.currentline - NUM_CON_TIMES + 1; i <= con.currentline; i++)
-	{
-		if (i < 0)
-			continue;
-
-		float time = con.notifytimes[i % NUM_CON_TIMES];
-		if (time == 0)
-			continue;
-
-		time = cls.realtime - time;
-		if (time > con_notifytime->value * 1000)
-			continue;
+		}
 
 		char *text = con.text + (i % con.totallines) * con.linewidth;
 			
-		int alpha = (int)(255 * sqrtf((1.0f - time / (con_notifytime->value * 1000.0f + 1.0f)) * (yoffset + 8.0f) / (8.0f * lines)));
+		int alpha = (int)(255 * sqrtf((1.0f - time / (con_notifytime->value * 1000.0f + 1.0f)))); //mxd. Don't use yoffset / number of lines to modify alpha
 		alpha = clamp(alpha, 0, 255); //mxd
 
 		Com_sprintf(output, sizeof(output), "");
