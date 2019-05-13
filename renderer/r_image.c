@@ -509,9 +509,8 @@ here starts modified code by Heffo/changes by Nexus
 */
 
 static int		upload_width, upload_height; //** DMP made local to module
-static qboolean uploaded_paletted;			 //** DMP ditto
 
-int nearest_power_of_2(int size)
+static int nearest_power_of_2(int size)
 {
 	int i = 2;
 
@@ -541,8 +540,6 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	unsigned 	*scaled;
 	int			scaled_width, scaled_height;
 	int			comp;
-
-	uploaded_paletted = false;
 
 	// Scan the texture for any non-255 alpha
 	const int size = width * height;
@@ -711,15 +708,15 @@ qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
 // Nexus - changes for hires-textures
 image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t type, int bits)
 {
-	image_t	*image;
-	int		i;
+	image_t *image;
+	int imagenum;
 	
 	// Find a free image_t
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	for (imagenum = 0, image = gltextures; imagenum < numgltextures; imagenum++, image++)
 		if (!image->texnum)
 			break;
 
-	if (i == numgltextures)
+	if (imagenum == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
 			VID_Error(ERR_DROP, "%s: map has too many textures (max. is %i)", __func__, MAX_GLTEXTURES);
@@ -789,7 +786,7 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 		image->texnum = TEXNUM_SCRAPS + texnum;
 		image->has_alpha = true;
 		image->sl = (x + 0.01f) / (float)BLOCK_WIDTH;
-		image->sh = (x + image->width - 0.01) / (float)BLOCK_WIDTH;
+		image->sh = (x + image->width - 0.01f) / (float)BLOCK_WIDTH;
 		image->tl = (y + 0.01f) / (float)BLOCK_WIDTH;
 		image->th = (y + image->height - 0.01f) / (float)BLOCK_WIDTH;
 	}
@@ -806,7 +803,6 @@ nonscrap:
 
 		image->upload_width = upload_width; // After power of 2 and scales
 		image->upload_height = upload_height;
-		image->paletted = uploaded_paletted;
 		image->sl = 0;
 		image->sh = 1;
 		image->tl = 0;
