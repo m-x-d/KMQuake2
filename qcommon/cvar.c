@@ -442,65 +442,89 @@ void Cvar_WriteVariables(char *path)
 
 void Cvar_List_f(void)
 {
-	char *wc;
+	char *wildcard = NULL;
 
 	// RIOT's Quake3-sytle cvarlist
-	const int c = Cmd_Argc();
+	const int argc = Cmd_Argc();
 
-	if (c != 1 && c!= 2)
+	if (argc != 1 && argc != 2)
 	{
-		Com_Printf("usage: cvarlist [wildcard]\n");
+		Com_Printf("Usage: cvarlist [wildcard]\n");
 		return;
 	}
 
-	if (c == 2)
-		wc = Cmd_Argv(1);
-	else
-		wc = "*";
+	if (argc == 2)
+		wildcard = Cmd_Argv(1);
 
-	int i = 0;
-	int j = 0;
-	for (cvar_t *var = cvar_vars; var; var = var->next, i++)
+	int numtotal = 0;
+	int nummatching = 0;
+	qboolean legendshown = false;
+	for (cvar_t *var = cvar_vars; var; var = var->next, numtotal++)
 	{
-		if (wildcardfit(wc, var->name))
+		if (!wildcard || wildcardfit(wildcard, var->name))
 		{
-			j++;
+			nummatching++;
+
+			if(!legendshown) //mxd. Print legend only when there are matches
+			{
+				Com_Printf(S_COLOR_GREEN"Legend: A: Archive, U: UserInfo, S: ServerInfo, N: NoSet, L: Latch, C: Cheat\n");
+				legendshown = true;
+			}
+
+			char buffer[1024] = { 0 }; //mxd. Replaced Com_Printf with Q_strncatz (performance gain)
+
 			if (var->flags & CVAR_ARCHIVE)
-				Com_Printf("A");
+				Q_strncatz(buffer, "A", sizeof(buffer));
 			else
-				Com_Printf(" ");
+				Q_strncatz(buffer, "-", sizeof(buffer));
 
 			if (var->flags & CVAR_USERINFO)
-				Com_Printf("U");
+				Q_strncatz(buffer, "U", sizeof(buffer));
 			else
-				Com_Printf(" ");
+				Q_strncatz(buffer, "-", sizeof(buffer));
 
 			if (var->flags & CVAR_SERVERINFO)
-				Com_Printf("S");
+				Q_strncatz(buffer, "S", sizeof(buffer));
 			else
-				Com_Printf(" ");
+				Q_strncatz(buffer, "-", sizeof(buffer));
 
 			if (var->flags & CVAR_NOSET)
-				Com_Printf("-");
+				Q_strncatz(buffer, "N", sizeof(buffer));
 			else if (var->flags & CVAR_LATCH)
-				Com_Printf("L");
+				Q_strncatz(buffer, "L", sizeof(buffer));
 			else
-				Com_Printf(" ");
+				Q_strncatz(buffer, "-", sizeof(buffer));
 
 			if (var->flags & CVAR_CHEAT)
-				Com_Printf("C");
+				Q_strncatz(buffer, "C", sizeof(buffer));
 			else
-				Com_Printf(" ");
+				Q_strncatz(buffer, "-", sizeof(buffer));
 
 			// Show latched value if applicable
 			if ((var->flags & CVAR_LATCH) && var->latched_string)
-				Com_Printf(" %s \"%s\" - default: \"%s\", latched: \"%s\"\n", var->name, var->string, var->default_string, var->latched_string);
+			{
+				if (Q_stricmp(var->string, var->default_string)) //mxd. Print default_string only on mismatch
+					Q_strncatz(buffer, va(" %s: \"%s\" (default: \"%s\", latched: \"%s\")\n", var->name, var->string, var->default_string, var->latched_string), sizeof(buffer));
+				else
+					Q_strncatz(buffer, va(" %s: \"%s\" (latched: \"%s\")\n", var->name, var->string, var->latched_string), sizeof(buffer));
+			}
+			else if (Q_stricmp(var->string, var->default_string)) //mxd. Print default_string only on mismatch
+			{
+				Q_strncatz(buffer, va(" %s: \"%s\" (default: \"%s\")\n", var->name, var->string, var->default_string), sizeof(buffer));
+			}
 			else
-				Com_Printf(" %s \"%s\" - default: \"%s\"\n", var->name, var->string, var->default_string);
+			{
+				Q_strncatz(buffer, va(" %s: \"%s\"\n", var->name, var->string), sizeof(buffer));
+			}
+
+			Com_Printf("%s", buffer);
 		}
 	}
 
-	Com_Printf(" %i cvars, %i matching\n", i, j);
+	if(argc == 1) //mxd
+		Com_Printf(S_COLOR_GREEN"%i cvars\n", numtotal);
+	else
+		Com_Printf(S_COLOR_GREEN"%i cvars, %i matching\n", numtotal, nummatching);
 }
 
 
