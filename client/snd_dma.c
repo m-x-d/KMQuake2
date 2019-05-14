@@ -1184,21 +1184,20 @@ void S_Update_(void)
 	SNDDMA_Submit();
 }
 
-/*
-===============================================================================
-
-console functions
-
-===============================================================================
-*/
+#pragma region ======================= Console functions 
 
 void S_Play(void)
 {
-	char name[256];
-
+	if(Cmd_Argc() == 1) //mxd. Usage
+	{
+		Com_Printf("Usage: play <filename1> [filename2] [filename3] ...\n");
+		return;
+	}
+	
 	int i = 1;
 	while (i < Cmd_Argc())
 	{
+		char name[MAX_OSPATH];
 		if (!strrchr(Cmd_Argv(i), '.'))
 		{
 			Q_strncpyz(name, Cmd_Argv(i), sizeof(name));
@@ -1210,44 +1209,101 @@ void S_Play(void)
 		}
 
 		sfx_t* sfx = S_RegisterSound(name);
-		S_StartSound(NULL, cl.playernum + 1, 0, sfx, 1.0, 1.0, 0);
+		S_StartSound(NULL, cl.playernum + 1, 0, sfx, 1.0f, 1.0f, 0.0f);
 
 		i++;
 	}
 }
 
+//mxd
+typedef struct
+{
+	char *name;
+	size_t size;
+	int bits;
+	qboolean looping;
+	qboolean placeholder;
+	qboolean notloaded;
+} soundinfo_t;
+
+//mxd
+static int S_SortSoundinfos(const soundinfo_t *first, const soundinfo_t *second)
+{
+	return Q_stricmp(first->name, second->name);
+}
+
 void S_SoundList(void)
 {
-	int		i;
-	sfx_t	*sfx;
+	//mxd. Collect sound infos first...
+	const uint infossize = sizeof(soundinfo_t) * num_sfx;
+	soundinfo_t *infos = malloc(infossize);
+	memset(infos, 0, infossize);
+	int numinfos = 0;
+	int bytestotal = 0;
 
-	int total = 0;
-	for (sfx = known_sfx, i = 0; i < num_sfx; i++, sfx++)
+	sfx_t *sfx = known_sfx;
+	for (int i = 0; i < num_sfx; i++, sfx++)
 	{
 		if (!sfx->registration_sequence)
 			continue;
+
+		infos[numinfos].name = sfx->name;
 
 		sfxcache_t* sc = sfx->cache;
 		if (sc)
 		{
 			const int size = sc->length * sc->width * (sc->stereo + 1);
-			total += size;
+			bytestotal += size;
 
-			if (sc->loopstart >= 0)
-				Com_Printf("L");
-			else
-				Com_Printf(" ");
-
-			Com_Printf("(%2db) %6i : %s\n", sc->width * 8, size, sfx->name);
+			infos[numinfos].looping = (sc->loopstart >= 0);
+			infos[numinfos].bits = sc->width * 8;
+			infos[numinfos].size = size;
 		}
 		else
 		{
 			if (sfx->name[0] == '*')
-				Com_Printf("  placeholder : %s\n", sfx->name);
+				infos[numinfos].placeholder = true;
 			else
-				Com_Printf("  not loaded  : %s\n", sfx->name);
+				infos[numinfos].notloaded = true;
+		}
+
+		numinfos++;
+	}
+
+	if (numinfos == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No sounds loaded.\n");
+		free(infos);
+		return;
+	}
+
+	//mxd. Sort infos by name
+	qsort(infos, numinfos, sizeof(soundinfo_t), S_SortSoundinfos);
+
+	// Print results
+	Com_Printf(S_COLOR_GREEN"Loaded sounds:\n");
+
+	for (int i = 0; i < numinfos; i++)
+	{
+		if (infos[i].placeholder)
+		{
+			Com_Printf(S_COLOR_YELLOW"---- : ------- : placeholder : %s\n", infos[i].name);
+		}
+		else if (infos[i].notloaded)
+		{
+			Com_Printf(S_COLOR_YELLOW"---- : ------- :  not loaded : %s\n", infos[i].name);
+		}
+		else
+		{
+			const char *looping = infos[i].looping ? "LOOP" : "----";
+			Com_Printf("%s : %2i bits : %7.2f Kb. : %s\n", looping, infos[i].bits, infos[i].size / 1024.0f, infos[i].name); // Print size in Kb.
 		}
 	}
 
-	Com_Printf("Total resident: %i\n", total);
+	Com_Printf(S_COLOR_GREEN"Total: %i sounds (%0.2f Mb.).\n", numinfos, bytestotal / (1024.0f * 1024.0f)); // Print size in Mb.
+
+	//mxd. Free memory
+	free(infos);
 }
+
+#pragma endregion 
