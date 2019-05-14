@@ -266,6 +266,13 @@ void R_ImageList_f(void)
 		}
 	}
 
+	if (numinfos == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No textures loaded.\n");
+		free(infos);
+		return;
+	}
+
 	//mxd. Sort infos
 	qsort(infos, numinfos, sizeof(imageinfo_t), R_SortImageinfos);
 
@@ -288,7 +295,7 @@ void R_ImageList_f(void)
 		VID_Printf(PRINT_ALL, "%4i x %-4i %s: %s\n", infos[i].width, infos[i].height, palstrings[infos[i].paltype], infos[i].name);
 	}
 
-	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Total: %i textures, %i texels (not counting mipmaps)\n", numinfos, texels); //mxd
+	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Total: %i textures, %i texels (not counting mipmaps).\n", numinfos, texels); //mxd
 
 	//mxd. Free memory
 	free(infos);

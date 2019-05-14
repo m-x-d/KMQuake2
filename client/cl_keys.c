@@ -408,7 +408,7 @@ void Key_Bindlist_f(void)
 		}
 	}
 
-	Com_Printf(S_COLOR_GREEN"Total: %i keybinds\n", numbinds); //mxd
+	Com_Printf(S_COLOR_GREEN"Total: %i keybinds.\n", numbinds); //mxd
 }
 
 void Key_Init(void)

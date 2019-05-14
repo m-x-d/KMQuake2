@@ -162,6 +162,13 @@ void Mod_Modellist_f(void)
 		}
 	}
 
+	if (numinfos == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No models loaded.\n");
+		free(infos);
+		return;
+	}
+
 	//mxd. Sort infos by name
 	qsort(infos, numinfos, sizeof(modelinfo_t), Mod_SortModelinfos);
 
@@ -171,7 +178,7 @@ void Mod_Modellist_f(void)
 	for (int i = 0; i < numinfos; i++)
 		VID_Printf(PRINT_ALL, "%7.2f Kb. : %s\n", infos[i].size / 1024.0f, infos[i].name); // Print size in Kb.
 
-	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Total: %i models (%0.2f Mb.)\n", numinfos, bytestotal / (1024.0f * 1024.0f)); // Print size in Mb.
+	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Total: %i models (%0.2f Mb.).\n", numinfos, bytestotal / (1024.0f * 1024.0f)); // Print size in Mb.
 
 	//mxd. Free memory
 	free(infos);

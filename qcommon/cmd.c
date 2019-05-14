@@ -272,28 +272,28 @@ void Cmd_Exec_f(void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf("exec <filename> : execute a script file\n");
+		Com_Printf("Usage: exec <filename> : execute a script file\n");
 		return;
 	}
 
 	const int len = FS_LoadFile(Cmd_Argv(1), (void **)&f);
 	if (!f)
 	{
-		Com_Printf("couldn't exec %s\n", Cmd_Argv(1));
+		Com_Printf("Couldn't exec '%s'.\n", Cmd_Argv(1));
 		return;
 	}
-	Com_Printf("execing %s\n", Cmd_Argv(1));
+	Com_Printf("Execing '%s'.\n", Cmd_Argv(1));
 	
 	// The file doesn't have a trailing 0, so we need to copy it off
 	char *f2 = Z_Malloc(len + 2); // Echon fix- was len+1
-	memcpy (f2, f, len);
+	memcpy(f2, f, len);
 	f2[len] = '\n';  // Echon fix added
 	f2[len + 1] = '\0'; // Echon fix- was len, = 0
 
 	Cbuf_InsertText(f2);
 
 	Z_Free(f2);
-	FS_FreeFile (f);
+	FS_FreeFile(f);
 }
 
 // Just prints the rest of the line to the console
@@ -308,13 +308,26 @@ void Cmd_Echo_f(void)
 void Cmd_Alias_f(void)
 {
 	cmdalias_t *a;
-	char cmd[1024];
-
+	
 	if (Cmd_Argc() == 1)
 	{
-		Com_Printf("Current alias commands:\n");
+		//mxd. Count commands first...
+		int numaliases = 0;
+		for (a = cmd_alias; a; a = a->next)
+			numaliases++;
+
+		if(numaliases == 0)
+		{
+			Com_Printf(S_COLOR_GREEN"No alias commands.\n");
+			return;
+		}
+
+		Com_Printf(S_COLOR_GREEN"Current alias commands:\n");
+
 		for (a = cmd_alias; a; a = a->next)
 			Com_Printf("%s : %s", a->name, a->value); //mxd. a->value already has '\n' at the end
+
+		Com_Printf(S_COLOR_GREEN"Total: %i alias commands.\n", numaliases);
 
 		return;
 	}
@@ -322,7 +335,7 @@ void Cmd_Alias_f(void)
 	char *s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Com_Printf("Alias name is too long\n");
+		Com_Printf(S_COLOR_RED"Alias name is too long!\n");
 		return;
 	}
 
@@ -346,7 +359,7 @@ void Cmd_Alias_f(void)
 	Q_strncpyz(a->name, s, sizeof(a->name));
 
 	// Copy the rest of the command line
-	cmd[0] = 0; // Start out with a null string
+	char cmd[1024] = { 0 }; // Start out with a null string
 	const int c = Cmd_Argc();
 	for (int i = 2; i < c; i++)
 	{
@@ -673,7 +686,7 @@ void Cmd_List_f(void)
 	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next, i++)
 		Com_Printf("%s\n", cmd->name);
 
-	Com_Printf(S_COLOR_GREEN"Total: %i commands\n", i);
+	Com_Printf(S_COLOR_GREEN"Total: %i commands.\n", i);
 }
 
 void Cmd_Init(void)
