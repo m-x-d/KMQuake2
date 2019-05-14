@@ -18,12 +18,9 @@
    02111-1307, USA.
 */
 
-#ifndef WILDCARDS_H
-#define WILDCARDS_H
+#pragma once
 
-extern int wildcardfit (char *wildcard, char *test);
-/* this function implements the UN*X wildcards and returns  */
-/* 0  if *wildcard does not match *test                     */
-/* 1  if *wildcard matches *test                            */
+#include "../game/q_shared.h" //mxd. For qboolean
 
-#endif
+// This function implements the UN*X wildcards
+extern qboolean wildcardfit(char *wildcard, char *test);

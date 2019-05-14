@@ -18,173 +18,136 @@
    02111-1307, USA.
 */
 
-/* Documenttitle and purpose:                                       */
-/*   Implementation of the UN*X wildcards in C. So they are         */
-/*   available in a portable way and can be used whereever          */
-/*   needed.                                                        */
-/*                                                                  */
-/* Version:                                                         */
-/*   1.2                                                            */
-/*                                                                  */
-/* Test cases:                                                      */
-/*   Please look into the Shellscript testwildcards.main            */
-/*                                                                  */
-/* Author(s):                                                       */
-/*   Florian Schintke (schintke@gmx.de)                             */
-/*                                                                  */
-/* Tester:                                                          */
-/*   Florian Schintke (schintke@gmx.de)                             */
-/*                                                                  */
-/* Testing state:                                                   */
-/*   tested with the atac tool                                      */
-/*   Latest test state is documented in testwildcards.report        */
-/*   The program that tested this functions is available as         */
-/*   testwildcards.c                                                */
-/*                                                                  */
-/* Dates:                                                           */
-/*   First editing: unknown, but before 04/02/1997                  */
-/*   Last Change  : 04/07/2000                                      */
-/*                                                                  */
-/* Known Bugs:                                                      */
-/*                                                                  */
-
-//#include <stdio.h>
-
 #include "wildcard.h"
 
-int set (char **wildcard, char **test);
-/* Scans a set of characters and returns 0 if the set mismatches at this */
-/* position in the teststring and 1 if it is matching                    */
-/* wildcard is set to the closing ] and test is unmodified if mismatched */
-/* and otherwise the char pointer is pointing to the next character      */
+// Scans a set of characters and returns 0 if the set mismatches at this
+// position in the teststring and 1 if it is matching.
+// Wildcard is set to the closing ] and test is unmodified if mismatched
+// and otherwise the char pointer is pointing to the next character.
+qboolean set(char **wildcard, char **test);
 
-int asterisk (char **wildcard, char **test);
-/* scans an asterisk */
+// Scans an asterisk
+qboolean asterisk(char **wildcard, char **test);
 
-int wildcardfit (char *wildcard, char *test)
+qboolean wildcardfit(char *wildcard, char *test)
 {
-	int fit = 1;
+	qboolean fit = true;
 
-	for (; '\000' != *wildcard && 1 == fit && '\000' != *test; wildcard++)
+	for (; *wildcard != '\000' && fit && *test != '\000'; wildcard++)
 	{
 		switch (*wildcard)
 		{
-		case '[':
-			wildcard++; /* leave out the opening square bracket */
-			fit = set(&wildcard, &test);
-			/* we don't need to decrement the wildcard as in case of asterisk because the closing ] is still there */
-			break;
-		case '?':
-			test++;
-			break;
-		case '*':
-			fit = asterisk(&wildcard, &test);
-			/* the asterisk was skipped by asterisk() but the loop will increment by itself. So we have to decrement */
-			wildcard--;
-			break;
-		default:
-			fit = (int)(*wildcard == *test);
-			test++;
+			case '[':
+				wildcard++; // Leave out the opening square bracket
+				fit = set(&wildcard, &test);
+				// We don't need to decrement the wildcard as in case of asterisk because the closing ] is still there.
+				break;
+
+			case '?':
+				test++;
+				break;
+
+			case '*':
+				fit = asterisk(&wildcard, &test);
+				// The asterisk was skipped by asterisk() but the loop will increment by itself. So we have to decrement.
+				wildcard--;
+				break;
+
+			default:
+				fit = (*wildcard == *test);
+				test++;
 		}
 	}
 
-	while (*wildcard == '*' && 1 == fit)
-		/* here the teststring is empty otherwise you cannot leave the previous loop */
-		wildcard++;
-
-	return (int)(1 == fit && '\0' == *test && '\0' == *wildcard);
+	// Here the teststring is empty otherwise you cannot leave the previous loop
+	if(fit)
+		while (*wildcard == '*')
+			wildcard++;
+	
+	return (fit && *test == '\0' && *wildcard == '\0');
 }
 
-int set(char **wildcard, char **test)
+qboolean set(char **wildcard, char **test)
 {
-	int fit = 0;
-	int negation = 0;
-	int at_beginning = 1;
+	qboolean fit = false;
+	qboolean negation = false;
+	qboolean at_beginning = true;
 
-	if ('!' == **wildcard)
+	if (**wildcard == '!')
 	{
-		negation = 1;
+		negation = true;
 		(*wildcard)++;
 	}
 
-	while (']' != **wildcard || 1 == at_beginning)
+	while (**wildcard != ']' || at_beginning)
 	{
-		if (0 == fit)
+		if (!fit)
 		{
-			if ('-' == **wildcard
+			if (**wildcard == '-'
 				&& *(*wildcard - 1) < *(*wildcard + 1)
-				&& ']' != *(*wildcard + 1)
-				&& 0 == at_beginning)
+				&& *(*wildcard + 1) != ']'
+				&& !at_beginning)
 			{
 				if (**test >= *(*wildcard - 1) && **test <= *(*wildcard + 1))
 				{
-					fit = 1;
+					fit = true;
 					(*wildcard)++;
 				}
 			}
 			else if (**wildcard == **test)
 			{
-				fit = 1;
+				fit = true;
 			}
 		}
 
 		(*wildcard)++;
-		at_beginning = 0;
+		at_beginning = false;
 	}
 
-	if (1 == negation)
-		/* change from zero to one and vice versa */
-		fit = 1 - fit;
+	// Flip
+	if (negation)
+		fit = !fit;
 
-	if (1 == fit)
+	if (fit)
 		(*test)++;
 
 	return fit;
 }
 
-int asterisk (char **wildcard, char **test)
+qboolean asterisk(char **wildcard, char **test)
 {
-	/* Warning: uses multiple returns */
-	int fit = 1;
-
-	/* erase the leading asterisk */
+	// Erase the leading asterisk
 	(*wildcard)++;
-	while ( '\000' != **test && ('?' == **wildcard || '*' == **wildcard) )
+	while (**test != '\000' && (**wildcard == '?' || **wildcard == '*'))
 	{
-		if ('?' == **wildcard)
+		if (**wildcard == '?')
 			(*test)++;
 		(*wildcard)++;
 	}
 
-	/* Now it could be that test is empty and wildcard contains aterisks. Then we delete them to get a proper state */
-	while ('*' == **wildcard)
+	// Now it could be that test is empty and wildcard contains aterisks. Then we delete them to get a proper state.
+	while (**wildcard == '*')
 		(*wildcard)++;
 
-	/*if ('\0' == **test && '\0' != **wildcard)
-		return (fit = 0);
+	if (**test == '\0')
+		return (**wildcard == '\0');
 
-	if ('\0' == **test && '\0' == **wildcard)
-		return (fit = 1);*/
-
-	if ('\0' == **test)
-		return '\0' == **wildcard;
-
-	/* Neither test nor wildcard are empty!          */
-	/* the first character of wildcard isn't in [*?] */
-	if (0 == wildcardfit(*wildcard, *test))
+	// Neither test nor wildcard are empty!
+	// The first character of wildcard isn't in [*?]
+	if (!wildcardfit(*wildcard, *test))
 	{
 		do
 		{
 			(*test)++;
-			/* skip as much characters as possible in the teststring stop if a character match occurs */
-			while (**wildcard != **test && '[' != **wildcard && '\0' != **test)
+
+			// Skip as much characters as possible in the teststring stop if a character match occurs
+			while (**test != '\0' && **wildcard != **test && **wildcard != '[')
 				(*test)++;
-		} while ('\0' != **test && 0 == wildcardfit(*wildcard, *test)); //mxd
-		//} while ('\0' != **test ? 0 == wildcardfit(*wildcard, *test) : (0 != (fit = 0)));
+
+			if (**test == '\0')
+				return (**wildcard == '\0');
+		} while (!wildcardfit(*wildcard, *test));
 	}
 
-	if ('\0' == **test && '\0' == **wildcard)
-		fit = 1;
-
-	return fit;
+	return true;
 }
