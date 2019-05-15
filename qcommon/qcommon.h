@@ -663,33 +663,33 @@ int CM_NumInlineModels(void);
 char *CM_EntityString(void);
 
 // creates a clipping hull for an arbitrary box
-int CM_HeadnodeForBox(vec3_t mins, vec3_t maxs);
+int CM_HeadnodeForBox(const vec3_t mins, const vec3_t maxs);
 
 
 // returns an ORed contents mask
-int CM_PointContents(vec3_t p, int headnode);
-int CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t angles);
+int CM_PointContents(vec3_t p, const int headnode);
+int CM_TransformedPointContents(const vec3_t p, const int headnode, const vec3_t origin, vec3_t angles);
 
-trace_t CM_BoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headnode, int brushmask);
-trace_t CM_TransformedBoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headnode, int brushmask, vec3_t origin, vec3_t angles);
+trace_t CM_BoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, const int headnode, const int brushmask);
+trace_t CM_TransformedBoxTrace(const vec3_t start, const vec3_t end, vec3_t mins, vec3_t maxs, const int headnode, const int brushmask, const vec3_t origin, vec3_t angles);
 
-byte *CM_ClusterPVS(int cluster);
-byte *CM_ClusterPHS(int cluster);
+byte *CM_ClusterPVS(const int cluster);
+byte *CM_ClusterPHS(const int cluster);
 
-int CM_PointLeafnum(vec3_t p);
+int CM_PointLeafnum(const vec3_t p);
 
 // call with topnode set to the headnode, returns with topnode set to the first node that splits the box
-int CM_BoxLeafnums(vec3_t mins, vec3_t maxs, int *list, int listsize, int *topnode);
+int CM_BoxLeafnums(vec3_t mins, vec3_t maxs, int *list, const int listsize, int *topnode);
 
-int CM_LeafContents(int leafnum);
-int CM_LeafCluster(int leafnum);
-int CM_LeafArea(int leafnum);
+int CM_LeafContents(const int leafnum);
+int CM_LeafCluster(const int leafnum);
+int CM_LeafArea(const int leafnum);
 
-void CM_SetAreaPortalState(int portalnum, qboolean open);
-qboolean CM_AreasConnected(int area1, int area2);
+void CM_SetAreaPortalState(const int portalnum, qboolean open);
+qboolean CM_AreasConnected(const int area1, const int area2);
 
-int CM_WriteAreaBits(byte *buffer, int area);
-qboolean CM_HeadnodeVisible(int headnode, byte *visbits);
+int CM_WriteAreaBits(byte *buffer, const int area);
+qboolean CM_HeadnodeVisible(const int nodenum, byte *visbits);
 
 void CM_WritePortalState(FILE *f);
 

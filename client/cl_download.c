@@ -51,6 +51,10 @@ byte *precache_model; // Used for skin checking in alias models
 
 void CL_InitFailedDownloadList(void);
 
+// From qcommon/cmodel.c
+extern int numtexinfo;
+extern mapsurface_t map_surfaces[];
+
 void CL_RequestNextDownload(void)
 {
 	unsigned	map_checksum; // For detecting cheater maps
@@ -468,10 +472,6 @@ void CL_RequestNextDownload(void)
 		precache_check = texture_cnt + 1;
 		precache_tex = 0;
 	}
-
-	// From qcommon/cmodel.c
-	extern int numtexinfo;
-	extern mapsurface_t map_surfaces[];
 
 	// Confirm existance of .wal textures, download any that don't exist
 	if (precache_check == texture_cnt + 1)

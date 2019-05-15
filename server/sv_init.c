@@ -195,7 +195,7 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 
 	if (serverstate != ss_game)
 	{
-		sv.models[1] = CM_LoadMap ("", false, &checksum); // No real map
+		sv.models[1] = CM_LoadMap("", false, &checksum); // No real map
 	}
 	else
 	{
