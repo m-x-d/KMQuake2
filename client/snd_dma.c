@@ -1272,7 +1272,7 @@ void S_SoundList(void)
 	}
 
 	//mxd. Sort infos by name
-	qsort(infos, numinfos, sizeof(soundinfo_t), S_SortSoundinfos);
+	qsort(infos, numinfos, sizeof(soundinfo_t), (int(*)(const void *, const void *))S_SortSoundinfos);
 
 	// Print results
 	Com_Printf(S_COLOR_GREEN"Loaded sounds:\n");

@@ -912,7 +912,7 @@ static void Con_CompleteCommand()
 		con.partialmatch = CopyString(partial);
 		
 		// Sort results
-		qsort(con.commands, con.commandscount, sizeof(matchingcommand_t), Con_SortCommands);
+		qsort(con.commands, con.commandscount, sizeof(matchingcommand_t), (int(*)(const void *, const void *))Con_SortCommands);
 
 		// Print results
 		Con_PrintMatchingCommands();

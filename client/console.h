@@ -22,8 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-#define	NUM_CON_TIMES	8 // was 4
-#define CON_TEXTSIZE	32768
+#define NUM_CON_TIMES	8 // was 4
+#define CON_TEXTSIZE	65536 //mxd. Was 32768
 #define CON_MAXCMDS		1024 //mxd
 #define MAXCMDLINE		1024 // Max length of console command line
 							 // Increased from 256, fixes buffer overflow if vert res > 2048

@@ -274,7 +274,7 @@ void R_ImageList_f(void)
 	}
 
 	//mxd. Sort infos
-	qsort(infos, numinfos, sizeof(imageinfo_t), R_SortImageinfos);
+	qsort(infos, numinfos, sizeof(imageinfo_t), (int(*)(const void *, const void *))R_SortImageinfos);
 
 	// Print results
 	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Loaded textures:\n");

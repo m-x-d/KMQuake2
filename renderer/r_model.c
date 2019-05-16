@@ -168,7 +168,7 @@ void Mod_Modellist_f(void)
 	}
 
 	//mxd. Sort infos by name
-	qsort(infos, numinfos, sizeof(modelinfo_t), Mod_SortModelinfos);
+	qsort(infos, numinfos, sizeof(modelinfo_t), (int(*)(const void *, const void *))Mod_SortModelinfos);
 
 	// Print results
 	VID_Printf(PRINT_ALL, S_COLOR_GREEN"Loaded models:\n");
