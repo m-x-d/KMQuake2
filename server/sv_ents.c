@@ -17,23 +17,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+// sv_ents.c
 
 #include "server.h"
 
-/*
-=============================================================================
-Encode a client frame onto the network channel
-=============================================================================
-*/
+#pragma region ======================= Client frame onto the network channel encoding
 
-/*
-=============
-SV_EmitPacketEntities
-
-Writes a delta update of an entity_state_t list to the message.
-=============
-*/
-void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t *msg)
+// Writes a delta update of an entity_state_t list to the message.
+static void SV_EmitPacketEntities(client_frame_t *from, client_frame_t *to, sizebuf_t *msg)
 {
 	entity_state_t *oldent, *newent;
 	int oldnum, newnum;
@@ -68,22 +59,22 @@ void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t 
 
 		if (newnum == oldnum)
 		{
-			// delta update from old position
-			// because the force parm is false, this will not result in any bytes being emited if the entity has not changed at all
-			// note that players are always 'newentities', this updates their oldorigin always and prevents warping
+			// Delta update from old position.
+			// Because the force parm is false, this will not result in any bytes being emited if the entity has not changed at all.
+			// Note that players are always 'newentities', this updates their oldorigin always and prevents warping.
 			MSG_WriteDeltaEntity(oldent, newent, msg, false, newent->number <= maxclients->value);
 			oldindex++;
 			newindex++;
 		}
 		else if (newnum < oldnum)
 		{
-			// this is a new entity, send it from the baseline
+			// This is a new entity, send it from the baseline
 			MSG_WriteDeltaEntity(&sv.baselines[newnum], newent, msg, true, true);
 			newindex++;
 		}
 		else // newnum > oldnum
 		{
-			// the old entity isn't present in the new message
+			// The old entity isn't present in the new message
 			int bits = U_REMOVE;
 			if (oldnum >= 256)
 				bits |= U_NUMBER16 | U_MOREBITS1;
@@ -101,23 +92,17 @@ void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t 
 		}
 	}
 
-	MSG_WriteShort(msg, 0); // end of packetentities
+	MSG_WriteShort(msg, 0); // End of packetentities
 }
 
-
-/*
-=============
-SV_WritePlayerstateToClient
-=============
-*/
-void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, sizebuf_t *msg)
+static void SV_WritePlayerstateToClient(client_frame_t *from, client_frame_t *to, sizebuf_t *msg)
 {
 	player_state_t *ops;
-	player_state_t dummy;
-
+	
 	player_state_t *ps = &to->ps;
 	if (!from)
 	{
+		player_state_t dummy;
 		memset(&dummy, 0, sizeof(dummy));
 		ops = &dummy;
 	}
@@ -126,9 +111,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		ops = &from->ps;
 	}
 
-	//
-	// determine what needs to be sent
-	//
+	// Determine what needs to be sent
 	int pflags = 0;
 
 	if (ps->pmove.pm_type != ops->pmove.pm_type)
@@ -184,7 +167,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (ps->gunskin2 != ops->gunskin2)
 		pflags |= PS_WEAPONSKIN2;
 
-	// server-side speed control!
+	// Server-side speed control!
 	if (ps->maxspeed != ops->maxspeed)
 		pflags |= PS_MAXSPEED;
 
@@ -204,16 +187,11 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	pflags |= PS_WEAPONINDEX;
 	pflags |= PS_WEAPONINDEX2; //Knightmare added
 
-
-	//
-	// write it
-	//
+	// Write it
 	MSG_WriteByte(msg, svc_playerinfo);
 	MSG_WriteLong(msg, pflags); //Knightmare- write as long
 
-	//
-	// write the pmove_state_t
-	//
+	// Write the pmove_state_t
 	if (pflags & PS_M_TYPE)
 		MSG_WriteByte(msg, ps->pmove.pm_type);
 
@@ -253,9 +231,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		MSG_WriteShort(msg, ps->pmove.delta_angles[2]);
 	}
 
-	//
-	// write the rest of the player_state_t
-	//
+	// Write the rest of the player_state_t
 	if (pflags & PS_VIEWOFFSET)
 	{
 		MSG_WriteChar(msg, ps->viewoffset[0] * 4);
@@ -277,7 +253,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		MSG_WriteChar(msg, ps->kick_angles[2] * 4);
 	}
 
-	if (pflags & PS_WEAPONINDEX)	//Knightmare- 12/23/2001- send as short
+	if (pflags & PS_WEAPONINDEX) //Knightmare- 12/23/2001- send as short
 		MSG_WriteShort(msg, ps->gunindex);
 
 #ifdef NEW_PLAYER_STATE_MEMBERS	//Knightmare added
@@ -310,7 +286,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (pflags & PS_WEAPONSKIN2)
 		MSG_WriteShort(msg, ps->gunskin2);
 
-	// server-side speed control!
+	// Server-side speed control!
 	if (pflags & PS_MAXSPEED)
 		MSG_WriteShort(msg, ps->maxspeed);
 
@@ -353,76 +329,61 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 			MSG_WriteShort(msg, ps->stats[i]);
 }
 
-
-/*
-==================
-SV_WriteFrameToClient
-==================
-*/
-void SV_WriteFrameToClient (client_t *client, sizebuf_t *msg)
+void SV_WriteFrameToClient(client_t *client, sizebuf_t *msg)
 {
 	client_frame_t *oldframe;
-	int				lastframe;
+	int lastframe;
 
-	// this is the frame we are creating
+	// This is the frame we are creating
 	client_frame_t *frame = &client->frames[sv.framenum & UPDATE_MASK];
 
 	if (client->lastframe <= 0)
 	{
-		// client is asking for a retransmit
+		// Client is asking for a retransmit
 		oldframe = NULL;
 		lastframe = -1;
 	}
 	else if (sv.framenum - client->lastframe >= UPDATE_BACKUP - 3)
 	{
-		// client hasn't gotten a good message through in a long time
+		// Client hasn't gotten a good message through in a long time
 		oldframe = NULL;
 		lastframe = -1;
 	}
 	else
 	{
-		// we have a valid message to delta from
+		// We have a valid message to delta from
 		oldframe = &client->frames[client->lastframe & UPDATE_MASK];
 		lastframe = client->lastframe;
 	}
 
 	MSG_WriteByte(msg, svc_frame);
 	MSG_WriteLong(msg, sv.framenum);
-	MSG_WriteLong(msg, lastframe);	// what we are delta'ing from
-	MSG_WriteByte(msg, client->surpressCount);	// rate dropped packets
+	MSG_WriteLong(msg, lastframe); // What we are delta'ing from
+	MSG_WriteByte(msg, client->surpressCount); // Rate dropped packets
 	client->surpressCount = 0;
 
-	// send over the areabits
+	// Send over the areabits
 	MSG_WriteByte(msg, frame->areabytes);
 	SZ_Write(msg, frame->areabits, frame->areabytes);
 
-	// delta encode the playerstate
+	// Delta encode the playerstate
 	SV_WritePlayerstateToClient(oldframe, frame, msg);
 
-	// delta encode the entities
+	// Delta encode the entities
 	SV_EmitPacketEntities(oldframe, frame, msg);
 }
 
+#pragma endregion
 
-/*
-=============================================================================
-	Build a client frame structure
-=============================================================================
-*/
+#pragma region ======================= Client frame structure building
 
-byte fatpvs[65536 / 8];	// 32767 is MAX_MAP_LEAFS
+static byte fatpvs[65536 / 8]; // 32767 is MAX_MAP_LEAFS
 
-/*
-============
-SV_FatPVS
-
-The client will interpolate the view position, so we can't use a single PVS point
-===========
-*/
-void SV_FatPVS (vec3_t org)
+// The client will interpolate the view position, so we can't use a single PVS point
+static void SV_FatPVS(vec3_t org)
 {
-	int		leafs[64];
-	vec3_t	mins, maxs;
+	int leafs[64];
+	vec3_t mins, maxs;
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -436,13 +397,13 @@ void SV_FatPVS (vec3_t org)
 
 	const int longs = (CM_NumClusters() + 31) >> 5;
 
-	// convert leafs to clusters
+	// Convert leafs to clusters
 	for (int i = 0; i < count; i++)
 		leafs[i] = CM_LeafCluster(leafs[i]);
 
 	memcpy(fatpvs, CM_ClusterPVS(leafs[0]), longs << 2);
 	
-	// or in all the other leaf bits
+	// Or in all the other leaf bits
 	for (int i = 1; i < count; i++)
 	{
 		int j;
@@ -451,7 +412,7 @@ void SV_FatPVS (vec3_t org)
 				break;
 
 		if (j != i)
-			continue; // already have the cluster we want
+			continue; // Already have the cluster we want
 
 		byte *src = CM_ClusterPVS(leafs[i]);
 		for (j = 0; j < longs; j++)
@@ -459,75 +420,66 @@ void SV_FatPVS (vec3_t org)
 	}
 }
 
-
-/*
-=============
-SV_BuildClientFrame
-
-Decides which entities are going to be visible to the client, and copies off the playerstat and areabits.
-=============
-*/
-void SV_BuildClientFrame (client_t *client)
+// Decides which entities are going to be visible to the client, and copies off the playerstat and areabits.
+void SV_BuildClientFrame(client_t *client)
 {
 	int i;
 	vec3_t org;
 
 	edict_t *clent = client->edict;
 	if (!clent->client)
-		return; // not in game yet
+		return; // Not in game yet
 
-	// this is the frame we are creating
+	// This is the frame we are creating
 	client_frame_t *frame = &client->frames[sv.framenum & UPDATE_MASK];
 
-	frame->senttime = svs.realtime; // save it for ping calc later
+	frame->senttime = svs.realtime; // Save it for ping calc later
 
-	// find the client's PVS
+	// Find the client's PVS
 	for (i = 0; i < 3; i++)
-		org[i] = clent->client->ps.pmove.origin[i] * 0.125 + clent->client->ps.viewoffset[i];
+		org[i] = clent->client->ps.pmove.origin[i] * 0.125f + clent->client->ps.viewoffset[i];
 
 	const int leafnum = CM_PointLeafnum(org);
 	const int clientarea = CM_LeafArea(leafnum);
 	const int clientcluster = CM_LeafCluster(leafnum);
 
-	// calculate the visible areas
+	// Calculate the visible areas
 	frame->areabytes = CM_WriteAreaBits(frame->areabits, clientarea);
 
-	// grab the current player_state_t
+	// Grab the current player_state_t
 	frame->ps = clent->client->ps;
 
 	SV_FatPVS(org);
 	byte *clientphs = CM_ClusterPHS(clientcluster);
 
-	// build up the list of visible entities
+	// Build up the list of visible entities
 	frame->num_entities = 0;
 	frame->first_entity = svs.next_client_entities;
 
-	int c_fullsend = 0;
-
-	for (int e = 1; e<ge->num_edicts; e++)
+	for (int e = 1; e < ge->num_edicts; e++)
 	{
 		edict_t *ent = EDICT_NUM(e);
 
-		// ignore ents without visible models
+		// Ignore ents without visible models
 		if (ent->svflags & SVF_NOCLIENT)
 			continue;
 
-		// ignore ents without visible models unless they have an effect
+		// Ignore ents without visible models unless they have an effect
 		if (!ent->s.modelindex && !ent->s.effects && !ent->s.sound && !ent->s.event)
 			continue;
 
-		// ignore if not touching a PV leaf
+		// Ignore if not touching a PV leaf
 		if (ent != clent)
 		{
-			// check area
+			// Check area
 			if (!CM_AreasConnected(clientarea, ent->areanum))
 			{
-				// doors can legally straddle two areas, so we may need to check another one
+				// Doors can legally straddle two areas, so we may need to check another one
 				if (!ent->areanum2 || !CM_AreasConnected(clientarea, ent->areanum2))
-					continue; // blocked by a door
+					continue; // Blocked by a door
 			}
 
-			// beams just check one point for PHS
+			// Beams just check one point for PHS
 			if (ent->s.renderfx & RF_BEAM)
 			{
 				const int cn = ent->clusternums[0];
@@ -541,15 +493,13 @@ void SV_BuildClientFrame (client_t *client)
 
 				if (ent->num_clusters == -1)
 				{
-					// too many leafs for individual check, go by headnode
+					// Too many leafs for individual check, go by headnode
 					if (!CM_HeadnodeVisible(ent->headnode, bitvector))
 						continue;
-
-					c_fullsend++;
 				}
 				else
 				{
-					// check individual leafs
+					// Check individual leafs
 					for (i = 0; i < ent->num_clusters; i++)
 					{
 						const int cn = ent->clusternums[i];
@@ -558,31 +508,30 @@ void SV_BuildClientFrame (client_t *client)
 					}
 
 					if (i == ent->num_clusters)
-						continue; // not visible
+						continue; // Not visible
 				}
 
 				if (!ent->s.modelindex)
 				{
-					// don't send sounds if they will be attenuated away
+					// Don't send sounds if they will be attenuated away
 					vec3_t delta;
 					float maxdist;
 
 #if defined(NEW_ENTITY_STATE_MEMBERS) && defined(LOOP_SOUND_ATTENUATION)
 					if (ent->s.attenuation > 0.0f && ent->s.attenuation < ATTN_STATIC)
-						maxdist = 1.2 / (ent->s.attenuation * 0.0005);
+						maxdist = 1.2f / (ent->s.attenuation * 0.0005f);
 					else
 #endif
 						maxdist = 400;
 
 					VectorSubtract(org, ent->s.origin, delta);
-					const float len = VectorLength(delta);
-					if (len > maxdist) // 400
+					if (VectorLength(delta) > maxdist) // 400
 						continue;
 				}
 			}
 		}
 
-		// add it to the circular client_entities array
+		// Add it to the circular client_entities array
 		entity_state_t *state = &svs.client_entities[svs.next_client_entities % svs.num_client_entities];
 		if (ent->s.number != e)
 		{
@@ -591,7 +540,7 @@ void SV_BuildClientFrame (client_t *client)
 		}
 		*state = ent->s;
 
-		// don't mark players missiles as solid
+		// Don't mark players missiles as solid
 		if (ent->owner == client->edict)
 			state->solid = 0;
 
@@ -600,28 +549,21 @@ void SV_BuildClientFrame (client_t *client)
 	}
 }
 
-
-/*
-==================
-SV_RecordDemoMessage
-
-Save everything in the world out without deltas.
-Used for recording footage for merged or assembled demos.
-==================
-*/
-void SV_RecordDemoMessage (void)
+// Save everything in the world out without deltas.
+// Used for recording footage for merged or assembled demos.
+void SV_RecordDemoMessage(void)
 {
-	entity_state_t	nostate;
-	sizebuf_t	buf;
-	byte		buf_data[32768];
-
 	if (!svs.demofile)
 		return;
 
+	entity_state_t nostate;
 	memset(&nostate, 0, sizeof(nostate));
+
+	sizebuf_t buf;
+	byte buf_data[32768];
 	SZ_Init(&buf, buf_data, sizeof(buf_data));
 
-	// write a frame message that doesn't contain a player_state_t
+	// Write a frame message that doesn't contain a player_state_t
 	MSG_WriteByte(&buf, svc_frame);
 	MSG_WriteLong(&buf, sv.framenum);
 
@@ -631,7 +573,7 @@ void SV_RecordDemoMessage (void)
 	edict_t *ent = EDICT_NUM(e);
 	while (e < ge->num_edicts) 
 	{
-		// ignore ents without visible models unless they have an effect
+		// Ignore ents without visible models unless they have an effect
 		if (ent->inuse && ent->s.number && 
 			(ent->s.modelindex || ent->s.effects || ent->s.sound || ent->s.event) && 
 			!(ent->svflags & SVF_NOCLIENT))
@@ -641,13 +583,15 @@ void SV_RecordDemoMessage (void)
 		ent = EDICT_NUM(e);
 	}
 
-	MSG_WriteShort(&buf, 0); // end of packetentities
+	MSG_WriteShort(&buf, 0); // End of packetentities
 
-	// now add the accumulated multicast information
+	// Now add the accumulated multicast information
 	SZ_Write(&buf, svs.demo_multicast.data, svs.demo_multicast.cursize);
 	SZ_Clear(&svs.demo_multicast);
 
-	// now write the entire message to the file, prefixed by the length
+	// Now write the entire message to the file, prefixed by the length
 	fwrite(&buf.cursize, 4, 1, svs.demofile);
 	fwrite(buf.data, buf.cursize, 1, svs.demofile);
 }
+
+#pragma endregion
