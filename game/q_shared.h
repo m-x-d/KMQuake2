@@ -346,8 +346,6 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines);
 void Com_sprintf(char *dest, int size, char *fmt, ...);
 long Com_HashFileName(const char *fname, int hashSize, qboolean sized);
 
-void Com_PageInMemory(byte *buffer, int size);
-
 //=============================================
 
 #define COLOR_GRAY		'0'

@@ -13,7 +13,6 @@ extern int Q_strcasecmp ( char * s1 , char * s2 ) ;
 extern int Q_strncasecmp ( char * s1 , char * s2 , int n ) ;
 extern char * Q_strcasestr ( const char * haystack , const char * needle ) ;
 extern int Q_stricmp ( const char * s1 , const char * s2 ) ;
-extern void Com_PageInMemory ( byte * buffer , int size ) ;
 extern char * COM_ParseExt ( char * * data_p , qboolean allowNewLines ) ;
 extern char * COM_Parse ( char * * data_p ) ;
 extern void COM_SkipRestOfLine ( char * * data_p ) ;

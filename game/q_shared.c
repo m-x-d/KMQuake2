@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "q_shared.h"
 
-#ifdef _WIN32
+#ifdef WIN32
 	#include "../win32/winquake.h"
 #endif
 
@@ -29,6 +29,7 @@ vec2_t vec2_origin = { 0, 0 };
 vec3_t vec3_origin = { 0, 0, 0 };
 vec4_t vec4_origin = { 0, 0, 0, 0 };
 
+#pragma region ======================= Math functions
 
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
@@ -215,7 +216,6 @@ void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4])
 	out[2][3] = in1[2][0] * in2[0][3] + in1[2][1] * in2[1][3] + in1[2][2] * in2[2][3] + in1[2][3];
 }
 
-
 //============================================================================
 
 float LerpAngle(float a1, float a2, float frac)
@@ -226,7 +226,6 @@ float LerpAngle(float a1, float a2, float frac)
 		a2 += 360;
 	return a1 + frac * (a2 - a1);
 }
-
 
 float anglemod(float a)
 {
@@ -282,49 +281,50 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *plane)
 	// General case
 	switch (plane->signbits)
 	{
-	case 0:
-		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
-		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
-		break;
+		case 0:
+			dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
+			dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
+			break;
 
-	case 1:
-		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
-		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
-		break;
+		case 1:
+			dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
+			dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
+			break;
 
-	case 2:
-		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
-		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
-		break;
+		case 2:
+			dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
+			dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
+			break;
 
-	case 3:
-		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
-		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
-		break;
+		case 3:
+			dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
+			dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
+			break;
 
-	case 4:
-		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
-		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
-		break;
+		case 4:
+			dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
+			dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
+			break;
 
-	case 5:
-		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
-		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
-		break;
+		case 5:
+			dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emins[2];
+			dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emaxs[2];
+			break;
 
-	case 6:
-		dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
-		dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
-		break;
+		case 6:
+			dist1 = plane->normal[0] * emaxs[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
+			dist2 = plane->normal[0] * emins[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
+			break;
 
-	case 7:
-		dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
-		dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
-		break;
+		case 7:
+			dist1 = plane->normal[0] * emins[0] + plane->normal[1] * emins[1] + plane->normal[2] * emins[2];
+			dist2 = plane->normal[0] * emaxs[0] + plane->normal[1] * emaxs[1] + plane->normal[2] * emaxs[2];
+			break;
 
-	default:
-		dist1 = dist2 = 0; // shut up compiler
-		break;
+		default: // Shut up compiler
+			dist1 = 0;
+			dist2 = 0; 
+			break;
 	}
 
 	int sides = 0;
@@ -617,8 +617,9 @@ qboolean AxisCompare(const vec3_t axis1[3], const vec3_t axis2[3])
 	return true;
 }
 
+#pragma endregion
 
-//====================================================================================
+#pragma region ======================= File path functions 
 
 // Returns filename ("c:/dir/file.txt" -> "file.txt") //mxd. Never used
 char *COM_SkipPath(char *pathname)
@@ -705,11 +706,9 @@ void COM_DefaultExtension(char *path, char *extension)
 	strcat(path, extension);
 }
 
-/*
-============================================================================
-	BYTE ORDER FUNCTIONS
-============================================================================
-*/
+#pragma endregion 
+
+#pragma region ======================= Byte order functions
 
 // Can't just use function pointers, or dll linkage can mess up when qcommon is included in multiple places
 // Knightmare- made these static
@@ -806,7 +805,7 @@ void Swap_Init(void)
 // Does a varargs printf into a temp buffer, so I don't need to have varargs versions of all text functions.
 char *va(char *format, ...)
 {
-	va_list		argptr;
+	va_list argptr;
 	static char	string[1024];
 	
 	va_start(argptr, format);
@@ -816,24 +815,18 @@ char *va(char *format, ...)
 	return string;
 }
 
-/*
-=======================================================================
-	TEXT PARSING
-=======================================================================
-*/
+#pragma endregion
 
-char com_token[MAX_TOKEN_CHARS];
+#pragma region ======================= Text parsing
 
 char *COM_SkipWhiteSpace(char *data_p, qboolean *hasNewLines)
 {
-	int	c;
-
-	while ((c = *data_p) <= ' ')
+	while (*data_p <= ' ')
 	{
-		if (!c)
+		if (!*data_p)
 			return NULL;
 
-		if (c == '\n')
+		if (*data_p == '\n')
 			*hasNewLines = true;
 
 		data_p++;
@@ -873,6 +866,8 @@ void COM_SkipRestOfLine(char **data_p)
 // Parses a token out of a string
 char *COM_Parse(char **data_p)
 {
+	static char com_token[MAX_TOKEN_CHARS]; //mxd. Made local
+	
 	int c;
 
 	char *data = *data_p;
@@ -958,6 +953,8 @@ skipwhite:
 // Parse a token out of a string. From Q2E
 char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 {
+	static char com_token[MAX_TOKEN_CHARS]; //mxd. Made local
+	
 	int c;
 	int len = 0;
 	qboolean hasNewLines = false;
@@ -1055,24 +1052,14 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 	return com_token;
 }
 
-int paged_total;
+#pragma endregion
 
-void Com_PageInMemory(byte *buffer, int size)
-{
-	for (int i = size - 1; i > 0; i -= 4096)
-		paged_total += buffer[i];
-}
-
-/*
-============================================================================
-	LIBRARY REPLACEMENT FUNCTIONS
-============================================================================
-*/
+#pragma region ======================= Library replacement functions
 
 // FIXME: replace all Q_stricmp with Q_strcasecmp
 int Q_stricmp(const char *s1, const char *s2)
 {
-#if defined(WIN32)
+#ifdef WIN32
 	return _stricmp(s1, s2);
 #else
 	return strcasecmp(s1, s2);
@@ -1230,8 +1217,8 @@ void Com_sprintf(char *dest, int size, char *fmt, ...)
 
 long Com_HashFileName(const char *fname, int hashSize, qboolean sized)
 {
-	int		i = 0;
-	long	hash = 0;
+	int i = 0;
+	long hash = 0;
 
 	if (fname[0] == '/' || fname[0] == '\\')
 		i++; // Skip leading slash
@@ -1249,24 +1236,23 @@ long Com_HashFileName(const char *fname, int hashSize, qboolean sized)
 
 	hash = (hash ^ (hash >> 10) ^ (hash >> 20));
 
-	if (sized) 
+	if (sized)
 		hash &= (hashSize - 1);
 
 	return hash;
 }
 
-/*
-=====================================================================
-	INFO STRINGS
-=====================================================================
-*/
+#pragma endregion
+
+#pragma region ======================= Info strings
 
 // Searches the string for the given key and returns the associated value, or an empty string.
 char *Info_ValueForKey(char *s, char *key)
 {
-	char pkey[512];
-	static char value[2][512];	// Use two buffers so compares work without stomping on each other
+	static char value[2][512]; // Use two buffers so compares work without stomping on each other
 	static int valueindex;
+
+	char pkey[512];
 
 	valueindex ^= 1;
 	if (*s == '\\')
@@ -1287,15 +1273,13 @@ char *Info_ValueForKey(char *s, char *key)
 
 		o = value[valueindex];
 
-		while (*s != '\\' && *s)
+		while (*s && *s != '\\')
 		{
-			if (!*s)
-				return "";
 			*o++ = *s++;
 		}
 		*o = 0;
 
-		if (!strcmp (key, pkey) )
+		if (!strcmp(key, pkey))
 			return value[valueindex];
 
 		if (!*s)
@@ -1330,11 +1314,8 @@ void Info_RemoveKey(char *s, char *key)
 		s++;
 
 		o = value;
-		while (*s != '\\' && *s)
+		while (*s && *s != '\\')
 		{
-			if (!*s)
-				return;
-
 			*o++ = *s++;
 		}
 		*o = 0;
@@ -1353,40 +1334,32 @@ void Info_RemoveKey(char *s, char *key)
 // Some characters are illegal in info strings because they can mess up the server's parsing
 qboolean Info_Validate(char *s)
 {
-	if (strstr (s, "\""))
-		return false;
-
-	if (strstr (s, ";"))
-		return false;
-
-	return true;
+	return (!strchr(s, '\"') && !strchr(s, ';'));
 }
 
 void Info_SetValueForKey(char *s, char *key, char *value)
 {
-	char newi[MAX_INFO_STRING];
-
-	if (strstr(key, "\\") || strstr(value, "\\"))
+	if (strchr(key, '\\') || strchr(value, '\\'))
 	{
-		Com_Printf("Can't use keys or values with a \\\n");
+		Com_Printf("Can't use keys or values with a '\\' character (key: '%s', value: '%s').\n", key, value);
 		return;
 	}
 
-	if (strstr(key, ";"))
+	if (strchr(key, ';'))
 	{
-		Com_Printf("Can't use keys or values with a semicolon\n");
+		Com_Printf("Can't use keys with a semicolon (key: '%s').\n", key);
 		return;
 	}
 
-	if (strstr(key, "\"") || (value && strstr(value, "\"")))
+	if (strchr(key, '\"') || strchr(value, '\"'))
 	{
-		Com_Printf("Can't use keys or values with a \"\n");
+		Com_Printf("Can't use keys or values with a '\"' character (key: '%s', value: '%s').\n", key, value);
 		return;
 	}
 
-	if (strlen(key) > MAX_INFO_KEY - 1 || (value && strlen(value) > MAX_INFO_KEY - 1))
+	if (strlen(key) > MAX_INFO_KEY - 1 || strlen(value) > MAX_INFO_KEY - 1)
 	{
-		Com_Printf("Keys and values must be < 64 characters.\n");
+		Com_Printf("Keys and values must be less than 64 characters long (key: '%s' [%i chars], value: '%s' [%i chars]).\n", key, strlen(key), value, strlen(value));
 		return;
 	}
 
@@ -1394,11 +1367,12 @@ void Info_SetValueForKey(char *s, char *key, char *value)
 	if (!value || !strlen(value))
 		return;
 
+	char newi[MAX_INFO_STRING];
 	Com_sprintf(newi, sizeof(newi), "\\%s\\%s", key, value);
 
 	if (strlen(newi) + strlen(s) > MAX_INFO_STRING)
 	{
-		Com_Printf("Info string length exceeded\n");
+		Com_Printf("Info string length exceeded (%i / %i chars).\n", strlen(newi) + strlen(s), MAX_INFO_STRING);
 		return;
 	}
 
@@ -1416,3 +1390,5 @@ void Info_SetValueForKey(char *s, char *key, char *value)
 
 	*s = 0;
 }
+
+#pragma endregion

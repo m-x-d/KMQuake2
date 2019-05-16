@@ -353,12 +353,6 @@ void S_EndRegistration (void)
 
 			memset(sfx, 0, sizeof(*sfx));
 		}
-		else if (sfx->cache) // make sure it is paged in
-		{
-			const int size = sfx->cache->length * sfx->cache->width;
-			Com_PageInMemory((byte *)sfx->cache, size);
-		}
-
 	}
 
 	// load everything in

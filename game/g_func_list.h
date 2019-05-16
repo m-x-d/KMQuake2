@@ -13,7 +13,6 @@
 {"Q_strncasecmp", (byte *)Q_strncasecmp},
 {"Q_strcasestr", (byte *)Q_strcasestr},
 {"Q_stricmp", (byte *)Q_stricmp},
-{"Com_PageInMemory", (byte *)Com_PageInMemory},
 {"COM_ParseExt", (byte *)COM_ParseExt},
 {"COM_Parse", (byte *)COM_Parse},
 {"COM_SkipRestOfLine", (byte *)COM_SkipRestOfLine},
