@@ -306,7 +306,8 @@ void Con_Print(char *text)
 	}
 
 	// Add to con.text[], char by char
-	char colorchar = 0; //mxd. Last encountered COLOR_ char 
+	char colorchar = 0; //mxd. Last encountered COLOR_ char
+	int colorcharslen = 0; //mxd. Length of all encountered COLOR_ chars in current line
 	while (*text)
 	{
 		// Count word length
@@ -319,12 +320,16 @@ void Con_Print(char *text)
 		if (IsColoredString(text))
 		{
 			len -= 2;
+			colorcharslen += 2;
 			colorchar = text[1];
 		}
 
 		// Word wrap
-		if (len != con.linewidth && con.offsetx + len > con.linewidth)
+		if (len < con.linewidth && con.offsetx + len - colorcharslen > con.linewidth)
+		{
 			con.offsetx = 0;
+			colorcharslen = 0; //mxd. Reset on newline
+		}
 
 		// Clear current line without advancing to the next one?
 		if (carriage_return)
@@ -343,6 +348,7 @@ void Con_Print(char *text)
 				const int pos = (con.currentline % con.totallines) * con.linewidth;
 				con.text[pos + (con.offsetx++)] = Q_COLOR_ESCAPE;
 				con.text[pos + (con.offsetx++)] = colorchar;
+				colorcharslen += 2;
 			}
 			
 			// Mark time for transparent overlay
@@ -355,11 +361,13 @@ void Con_Print(char *text)
 			case '\n':
 				con.offsetx = 0;
 				colorchar = 0; //mxd
+				colorcharslen = 0; //mxd. Reset on newline
 				break;
 
 			case '\r':
 				con.offsetx = 0;
 				colorchar = 0; //mxd
+				colorcharslen = 0; //mxd. Reset on newline
 				carriage_return = true;
 				break;
 
@@ -367,8 +375,11 @@ void Con_Print(char *text)
 			{
 				const int pos = (con.currentline % con.totallines) * con.linewidth;
 				con.text[pos + (con.offsetx++)] = *text | mask | con.ormask;
-				if (con.offsetx >= con.linewidth)
+				if (con.offsetx - colorcharslen >= con.linewidth) // Triggered only when a single word is longer than con.linewidth
+				{
 					con.offsetx = 0;
+					colorcharslen = 0; //mxd. Reset on newline
+				}
 				break;
 			}
 		}
