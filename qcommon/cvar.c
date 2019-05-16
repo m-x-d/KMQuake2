@@ -555,6 +555,9 @@ static void Cvar_List_f(void)
 		Com_Printf(S_COLOR_GREEN"%i cvars\n", numtotal);
 	else
 		Com_Printf(S_COLOR_GREEN"%i cvars, %i matching\n", numtotal, nummatching);
+
+	//mxd. Free memory
+	free(infos);
 }
 
 qboolean userinfo_modified;

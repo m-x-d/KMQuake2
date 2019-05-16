@@ -308,7 +308,8 @@ void Cmd_Echo_f(void)
 void Cmd_Alias_f(void)
 {
 	cmdalias_t *a;
-	
+
+	// When no args, print existing aliases
 	if (Cmd_Argc() == 1)
 	{
 		//mxd. Count commands first...
@@ -335,7 +336,7 @@ void Cmd_Alias_f(void)
 	char *s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Com_Printf(S_COLOR_RED"Alias name is too long!\n");
+		Com_Printf(S_COLOR_RED"Alias name is too long (%i / %i chars)!\n", strlen(s), MAX_ALIAS_NAME - 1);
 		return;
 	}
 
@@ -678,15 +679,55 @@ void Cmd_ExecuteString(char *text)
 	Cmd_ForwardToServer();
 }
 
+//mxd
+typedef struct
+{
+	cmd_function_t *cmd;
+} cmdinfo_t;
+
+//mxd
+static int Cmd_SortCmdinfos(const cmdinfo_t *first, const cmdinfo_t *second)
+{
+	const qboolean togglefirst = (first->cmd->name[0] == '+' || first->cmd->name[0] == '-');
+	const qboolean togglesecond = (second->cmd->name[0] == '+' || second->cmd->name[0] == '-');
+	
+	// Sort by +/- chars only when commands match
+	if (togglefirst && togglesecond && !Q_stricmp(first->cmd->name + 1, second->cmd->name + 1))
+		return (first->cmd->name[0] == '+' ? -1 : 1); // Show +cmd before -cmd
+	
+	// Otherwise ignore +/- chars
+	char *name1 = (togglefirst ? first->cmd->name + 1 : first->cmd->name);
+	char *name2 = (togglesecond ? second->cmd->name + 1 : second->cmd->name);
+	
+	return Q_stricmp(name1, name2);
+}
+
 void Cmd_List_f(void)
 {
-	Com_Printf(S_COLOR_GREEN"Available console comands:\n"); //mxd
-	
-	int i = 0;
-	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next, i++)
-		Com_Printf("%s\n", cmd->name);
+	//mxd. Collect command infos first...
+	int numcommands = 0;
+	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
+		numcommands++;
 
-	Com_Printf(S_COLOR_GREEN"Total: %i commands.\n", i);
+	cmdinfo_t *infos = malloc(sizeof(cmdinfo_t) * numcommands);
+
+	numcommands = 0;
+	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
+		infos[numcommands++].cmd = cmd;
+
+	//mxd. Sort by name
+	qsort(infos, numcommands, sizeof(cmdinfo_t), (int(*)(const void *, const void *))Cmd_SortCmdinfos);
+
+	//mxd. Print results
+	Com_Printf(S_COLOR_GREEN"Available console comands:\n");
+
+	for (int i = 0; i < numcommands; i++)
+		Com_Printf(" %s\n", infos[i].cmd->name);
+
+	Com_Printf(S_COLOR_GREEN"Total: %i commands.\n", numcommands);
+
+	//mxd. Free memory
+	free(infos);
 }
 
 void Cmd_Init(void)
