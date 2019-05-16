@@ -534,7 +534,6 @@ void MSG_WriteFloat(sizebuf_t *sb, float f)
 	
 	
 	dat.f = f;
-	dat.l = LittleLong(dat.l);
 	
 	SZ_Write(sb, &dat.l, 4);
 }
@@ -1079,7 +1078,6 @@ float MSG_ReadFloat(sizebuf_t *msg_read)
 	}
 
 	msg_read->readcount += 4;
-	dat.l = LittleLong(dat.l);
 
 	return dat.f;
 }
@@ -1626,7 +1624,6 @@ void Qcommon_Init(int argc, char **argv)
 	// Prepare enough of the subsystems to handle cvar and command buffer management
 	COM_InitArgv(argc, argv);
 
-	Swap_Init();
 	Cbuf_Init();
 
 	Cmd_Init();

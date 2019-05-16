@@ -151,10 +151,6 @@ static void CIN_ReadChunk(cinematic_t *cin)
 	FS_Read(&chunk->size, sizeof(chunk->size), cin->file);
 	FS_Read(&chunk->argument, sizeof(chunk->argument), cin->file);
 
-	chunk->id = LittleShort(chunk->id);
-	chunk->size = LittleLong(chunk->size);
-	chunk->argument = LittleShort(chunk->argument);
-
 	cin->remaining -= sizeof(roqChunk_t);
 }
 
@@ -165,8 +161,8 @@ static void CIN_ReadInfo(cinematic_t *cin)
 	FS_Read(data, sizeof(data), cin->file);
 	cin->remaining -= sizeof(data);
 
-	cin->vidWidth = LittleShort(data[0]);
-	cin->vidHeight = LittleShort(data[1]);
+	cin->vidWidth = data[0];
+	cin->vidHeight = data[1];
 
 	if (cin->roqBuffer)
 		Z_Free(cin->roqBuffer);
@@ -434,7 +430,6 @@ static void CIN_ReadVideoFrame(cinematic_t *cin)
 		FS_Read(&size, sizeof(size), cin->file);
 		cin->remaining -= sizeof(size);
 
-		size = LittleLong(size);
 		if (size < 1 || size > sizeof(compressed))
 			Com_Error(ERR_DROP, "CIN_ReadVideoFrame: bad compressed frame size (%i)", size);
 
@@ -468,8 +463,6 @@ static void CIN_ReadVideoFrame(cinematic_t *cin)
 					{
 						FS_Read(&vqFlg, sizeof(vqFlg), cin->file);
 						pos -= sizeof(vqFlg);
-
-						vqFlg = LittleShort(vqFlg);
 						vqFlgPos = 7;
 					}
 
@@ -512,8 +505,6 @@ static void CIN_ReadVideoFrame(cinematic_t *cin)
 							{
 								FS_Read(&vqFlg, sizeof(vqFlg), cin->file);
 								pos -= sizeof(vqFlg);
-
-								vqFlg = LittleShort(vqFlg);
 								vqFlgPos = 7;
 							}
 
@@ -691,10 +682,8 @@ static qboolean CIN_ReadNextFrame(cinematic_t *cin)
 			FS_Read(&command, sizeof(command), cin->file);
 			cin->remaining -= sizeof(command);
 
-			command = LittleLong(command);
-
 			if (cin->remaining <= 0 || command == 2)
-				return false;	// Done
+				return false; // Done
 
 			if (command == 1)
 				CIN_ReadPalette(cin);
@@ -766,16 +755,6 @@ static qboolean CIN_StaticCinematic(cinematic_t *cin, const char *name)
 
 	// Parse the PCX file
 	pcx_t *pcx = (pcx_t *)buffer;
-
-	pcx->xmin = LittleShort(pcx->xmin);
-	pcx->ymin = LittleShort(pcx->ymin);
-	pcx->xmax = LittleShort(pcx->xmax);
-	pcx->ymax = LittleShort(pcx->ymax);
-	pcx->hres = LittleShort(pcx->hres);
-	pcx->vres = LittleShort(pcx->vres);
-	pcx->bytes_per_line = LittleShort(pcx->bytes_per_line);
-	pcx->palette_type = LittleShort(pcx->palette_type);
-
 	byte *in = &pcx->data;
 
 	if (pcx->manufacturer != 0x0A || pcx->version != 5 || pcx->encoding != 1)
@@ -1167,15 +1146,9 @@ cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int 
 	{
 		FS_Read(&cin->vidWidth, sizeof(cin->vidWidth), cin->file);
 		FS_Read(&cin->vidHeight, sizeof(cin->vidHeight), cin->file);
-		cin->vidWidth = LittleLong(cin->vidWidth);
-		cin->vidHeight = LittleLong(cin->vidHeight);
-
 		FS_Read(&cin->sndRate, sizeof(cin->sndRate), cin->file);
 		FS_Read(&cin->sndWidth, sizeof(cin->sndWidth), cin->file);
 		FS_Read(&cin->sndChannels, sizeof(cin->sndChannels), cin->file);
-		cin->sndRate = LittleLong(cin->sndRate);
-		cin->sndWidth = LittleLong(cin->sndWidth);
-		cin->sndChannels = LittleLong(cin->sndChannels);
 
 		cin->remaining -= 20;
 

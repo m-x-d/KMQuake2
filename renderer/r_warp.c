@@ -257,26 +257,23 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 {
 	vec3_t verts[64];
 
-	const int numedges = LittleShort(face->numedges);
-	const int firstedge = LittleLong(face->firstedge);
-
 	// Convert edges back to a normal polygon
-	for (int i = 0; i < numedges; i++)
+	for (int i = 0; i < face->numedges; i++)
 	{
-		const int lindex = LittleLong(surfedges[firstedge + i]);
+		const int lindex = surfedges[face->firstedge + i];
 		
 		int vindex;
 		if (lindex > 0)
-			vindex = (unsigned short)LittleShort(edges[lindex].v[0]);
+			vindex = edges[lindex].v[0];
 		else
-			vindex = (unsigned short)LittleShort(edges[-lindex].v[1]);
+			vindex = edges[-lindex].v[1];
 
 		for (int c = 0; c < 3; c++)
-			verts[i][c] = LittleFloat(vertexes[vindex].point[c]);
+			verts[i][c] = vertexes[vindex].point[c];
 	}
 
 	warppolyvertssize = 0;
-	CalculateWarpPolygonVertsSize(numedges, verts[0]);
+	CalculateWarpPolygonVertsSize(face->numedges, verts[0]);
 
 	return warppolyvertssize;
 }

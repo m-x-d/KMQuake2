@@ -25,37 +25,27 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static size_t GetAllocSizeMD3(void *buffer)
 {
 	dmd3_t *pinmodel = (dmd3_t *)buffer;
-	const int numFrames = LittleLong(pinmodel->num_frames);
-	const int numTags = LittleLong(pinmodel->num_tags);
-	const int numMeshes = LittleLong(pinmodel->num_meshes);
 
 	// Calc sizes rounded to cacheline
-	const size_t headerSize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
-	const size_t frameSize = ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * numFrames);
-	const size_t tagSize = ALIGN_TO_CACHELINE(sizeof(maliastag_t) * numFrames * numTags);
-	const size_t meshSize = ALIGN_TO_CACHELINE(sizeof(maliasmesh_t) * numMeshes);
+	uint totalsize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * pinmodel->num_frames);
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliastag_t) * pinmodel->num_frames * pinmodel->num_tags);
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliasmesh_t) * pinmodel->num_meshes);
 
-	dmd3mesh_t *pinmesh = (dmd3mesh_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_meshes));
-	size_t skinSize = 0, indexSize = 0, coordSize = 0, vertSize = 0, trNeighborsSize = 0;
+	dmd3mesh_t *pinmesh = (dmd3mesh_t *)((byte *)pinmodel + pinmodel->ofs_meshes);
 
-	for (int i = 0; i < numMeshes; i++)
+	for (int i = 0; i < pinmodel->num_meshes; i++)
 	{
-		const int numSkins = LittleLong(pinmesh->num_skins);
-		const int numTris = LittleLong(pinmesh->num_tris);
-		const int numVerts = LittleLong(pinmesh->num_verts);
+		totalsize += ALIGN_TO_CACHELINE(sizeof(maliasskin_t) * pinmesh->num_skins);
+		totalsize += ALIGN_TO_CACHELINE(sizeof(index_t) * pinmesh->num_tris * 3);
+		totalsize += ALIGN_TO_CACHELINE(sizeof(maliascoord_t) * pinmesh->num_verts);
+		totalsize += ALIGN_TO_CACHELINE(pinmodel->num_frames * pinmesh->num_verts * sizeof(maliasvertex_t));
+		totalsize += ALIGN_TO_CACHELINE(sizeof(int) * pinmesh->num_tris * 3);
 
-		skinSize += ALIGN_TO_CACHELINE(sizeof(maliasskin_t) * numSkins);
-		indexSize += ALIGN_TO_CACHELINE(sizeof(index_t) * numTris * 3);
-		coordSize += ALIGN_TO_CACHELINE(sizeof(maliascoord_t) * numVerts);
-		vertSize += ALIGN_TO_CACHELINE(numFrames * numVerts * sizeof(maliasvertex_t));
-		trNeighborsSize += ALIGN_TO_CACHELINE(sizeof(int) * numTris * 3);
-
-		pinmesh = (dmd3mesh_t *)((byte *)pinmesh + LittleLong(pinmesh->meshsize));
+		pinmesh = (dmd3mesh_t *)((byte *)pinmesh + pinmesh->meshsize);
 	}
 
-	const size_t allocSize = headerSize + frameSize + tagSize + meshSize + skinSize + indexSize + coordSize + vertSize + trNeighborsSize;
-
-	return allocSize;
+	return totalsize;
 }
 
 extern void Mod_BuildTriangleNeighbors(maliasmesh_t *mesh); //mxd
@@ -66,17 +56,16 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 	mod->extradata = ModChunk_Begin(GetAllocSizeMD3(buffer));
 
 	dmd3_t *pinmodel = (dmd3_t *)buffer;
-	const int version = LittleLong(pinmodel->version);
 
-	if (version != MD3_ALIAS_VERSION)
-		VID_Error(ERR_DROP, "Model %s has wrong version number (%i should be %i)", mod->name, version, MD3_ALIAS_VERSION);
+	if (pinmodel->version != MD3_ALIAS_VERSION)
+		VID_Error(ERR_DROP, "Model %s has wrong version number (%i should be %i)", mod->name, pinmodel->version, MD3_ALIAS_VERSION);
 
 	maliasmodel_t *poutmodel = ModChunk_Alloc(sizeof(maliasmodel_t));
 
-	// Byte-swap the header fields
-	poutmodel->num_frames = LittleLong(pinmodel->num_frames);
-	poutmodel->num_tags = LittleLong(pinmodel->num_tags);
-	poutmodel->num_meshes = LittleLong(pinmodel->num_meshes);
+	// Copy header fields
+	poutmodel->num_frames = pinmodel->num_frames;
+	poutmodel->num_tags = pinmodel->num_tags;
+	poutmodel->num_meshes = pinmodel->num_meshes;
 
 	// Sanity checks
 	if (poutmodel->num_frames <= 0)
@@ -95,7 +84,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 		VID_Error(ERR_DROP, "Model %s has too many meshes (%i, maximum is %i)", mod->name, poutmodel->num_meshes, MD3_MAX_MESHES);
 
 	// Load frames
-	dmd3frame_t *pinframe = (dmd3frame_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_frames));
+	dmd3frame_t *pinframe = (dmd3frame_t *)((byte *)pinmodel + pinmodel->ofs_frames);
 	maliasframe_t *poutframe = poutmodel->frames = ModChunk_Alloc(sizeof(maliasframe_t) * poutmodel->num_frames);
 
 	mod->radius = 0;
@@ -105,13 +94,13 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			poutframe->mins[j] = LittleFloat(pinframe->mins[j]);
-			poutframe->maxs[j] = LittleFloat(pinframe->maxs[j]);
+			poutframe->mins[j] = pinframe->mins[j];
+			poutframe->maxs[j] = pinframe->maxs[j];
 			poutframe->scale[j] = MD3_XYZ_SCALE;
-			poutframe->translate[j] = LittleFloat(pinframe->translate[j]);
+			poutframe->translate[j] = pinframe->translate[j];
 		}
 
-		poutframe->radius = LittleFloat(pinframe->radius);
+		poutframe->radius = pinframe->radius;
 
 		mod->radius = max(mod->radius, poutframe->radius);
 		AddPointToBounds(poutframe->mins, mod->mins, mod->maxs);
@@ -119,7 +108,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 	}
 
 	// Load tags
-	dmd3tag_t *pintag = (dmd3tag_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_tags));
+	dmd3tag_t *pintag = (dmd3tag_t *)((byte *)pinmodel + pinmodel->ofs_tags);
 	maliastag_t *pouttag = poutmodel->tags = ModChunk_Alloc(sizeof(maliastag_t) * poutmodel->num_frames * poutmodel->num_tags);
 
 	for (int i = 0; i < poutmodel->num_frames; i++)
@@ -129,28 +118,28 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 			memcpy(pouttag->name, pintag->name, MD3_MAX_PATH);
 			for (int j = 0; j < 3; j++)
 			{
-				pouttag->orient.origin[j] = LittleFloat(pintag->orient.origin[j]);
+				pouttag->orient.origin[j] = pintag->orient.origin[j];
 
 				for (int c = 0; c < 3; c++)
-					pouttag->orient.axis[c][j] = LittleFloat(pintag->orient.axis[c][j]);
+					pouttag->orient.axis[c][j] = pintag->orient.axis[c][j];
 			}
 		}
 	}
 
 	// Load meshes
-	dmd3mesh_t *pinmesh = (dmd3mesh_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_meshes));
+	dmd3mesh_t *pinmesh = (dmd3mesh_t *)((byte *)pinmodel + pinmodel->ofs_meshes);
 	maliasmesh_t *poutmesh = poutmodel->meshes = ModChunk_Alloc(sizeof(maliasmesh_t)*poutmodel->num_meshes);
 
 	for (int i = 0; i < poutmodel->num_meshes; i++, poutmesh++)
 	{
 		memcpy(poutmesh->name, pinmesh->name, MD3_MAX_PATH);
 
-		if (strncmp((const char *)pinmesh->id, "IDP3", 4))
-			VID_Error(ERR_DROP, "Mesh %s in model %s has wrong id (%i should be %i)", poutmesh->name, mod->name, LittleLong((int)pinmesh->id), IDMD3HEADER);
+		if (strncmp(pinmesh->id, "IDP3", 4))
+			VID_Error(ERR_DROP, "Mesh %s in model %s has wrong id (%s should be IDP3)", poutmesh->name, mod->name, pinmesh->id);
 
-		poutmesh->num_tris = LittleLong(pinmesh->num_tris);
-		poutmesh->num_skins = LittleLong(pinmesh->num_skins);
-		poutmesh->num_verts = LittleLong(pinmesh->num_verts);
+		poutmesh->num_tris = pinmesh->num_tris;
+		poutmesh->num_skins = pinmesh->num_skins;
+		poutmesh->num_verts = pinmesh->num_verts;
 
 		if (poutmesh->num_skins <= 0)
 			VID_Error(ERR_DROP, "Mesh %i in model %s has no skins", i, mod->name);
@@ -164,7 +153,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 			VID_Error(ERR_DROP, "Mesh %i in model %s has no vertices", i, mod->name);
 
 		// Register all skins
-		dmd3skin_t *pinskin = (dmd3skin_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_skins));
+		dmd3skin_t *pinskin = (dmd3skin_t *)((byte *)pinmesh + pinmesh->ofs_skins);
 		maliasskin_t *poutskin = poutmesh->skins = ModChunk_Alloc(sizeof(maliasskin_t) * poutmesh->num_skins);
 
 		for (int j = 0; j < poutmesh->num_skins; j++, pinskin++, poutskin++)
@@ -183,25 +172,25 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 		}
 
 		// Load indices
-		index_t *pinindex = (index_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_tris));
+		index_t *pinindex = (index_t *)((byte *)pinmesh + pinmesh->ofs_tris);
 		index_t *poutindex = poutmesh->indexes = ModChunk_Alloc(sizeof(index_t) * poutmesh->num_tris * 3);
 
 		for (int j = 0; j < poutmesh->num_tris; j++, pinindex += 3, poutindex += 3)
 			for (int c = 0; c < 3; c++)
-				poutindex[c] = (index_t)LittleLong(pinindex[c]);
+				poutindex[c] = pinindex[c];
 
 		// Load texture coordinates
-		dmd3coord_t *pincoord = (dmd3coord_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_tcs));
+		dmd3coord_t *pincoord = (dmd3coord_t *)((byte *)pinmesh + pinmesh->ofs_tcs);
 		maliascoord_t *poutcoord = poutmesh->stcoords = ModChunk_Alloc(sizeof(maliascoord_t) * poutmesh->num_verts);
 
 		for (int j = 0; j < poutmesh->num_verts; j++, pincoord++, poutcoord++)
 		{
-			poutcoord->st[0] = LittleFloat(pincoord->st[0]);
-			poutcoord->st[1] = LittleFloat(pincoord->st[1]);
+			poutcoord->st[0] = pincoord->st[0];
+			poutcoord->st[1] = pincoord->st[1];
 		}
 
 		// Load vertices and normals
-		dmd3vertex_t *pinvert = (dmd3vertex_t *)((byte *)pinmesh + LittleLong(pinmesh->ofs_verts));
+		dmd3vertex_t *pinvert = (dmd3vertex_t *)((byte *)pinmesh + pinmesh->ofs_verts);
 		maliasvertex_t *poutvert = poutmesh->vertexes = ModChunk_Alloc(poutmodel->num_frames * poutmesh->num_verts * sizeof(maliasvertex_t));
 
 		for (int l = 0; l < poutmodel->num_frames; l++)
@@ -209,10 +198,10 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 			for (int j = 0; j < poutmesh->num_verts; j++, pinvert++, poutvert++)
 			{
 				for (int c = 0; c < 3; c++)
-					poutvert->xyz[c] = LittleShort(pinvert->point[c]);
+					poutvert->xyz[c] = pinvert->point[c];
 
-				poutvert->normal[0] = (LittleShort(pinvert->norm) >> 0) & 0xff;
-				poutvert->normal[1] = (LittleShort(pinvert->norm) >> 8) & 0xff;
+				poutvert->normal[0] = (pinvert->norm >> 0) & 0xff;
+				poutvert->normal[1] = (pinvert->norm >> 8) & 0xff;
 
 				float lat = (pinvert->norm >> 8) & 0xff;
 				float lng = (pinvert->norm & 0xff);
@@ -243,7 +232,7 @@ void Mod_LoadAliasMD3Model(model_t *mod, void *buffer)
 			}
 		}
 
-		pinmesh = (dmd3mesh_t *)((byte *)pinmesh + LittleLong(pinmesh->meshsize));
+		pinmesh = (dmd3mesh_t *)((byte *)pinmesh + pinmesh->meshsize);
 
 		// Build triangle neighbors
 		poutmesh->trneighbors = ModChunk_Alloc(sizeof(int) * poutmesh->num_tris * 3);

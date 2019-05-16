@@ -1021,11 +1021,10 @@ void Draw_GetPalette()
 		const int g = pal[i * 3 + 1];
 		const int b = pal[i * 3 + 2];
 		
-		const unsigned v = (255 << 24) + (r << 0) + (g << 8) + (b << 16);
-		d_8to24table[i] = LittleLong(v);
+		d_8to24table[i] = (255 << 24) + (r << 0) + (g << 8) + (b << 16);
 	}
 
-	d_8to24table[255] &= LittleLong(0xffffff);	// 255 is transparent
+	d_8to24table[255] &= 0xffffff; // Color 255 is transparent
 
 	free(pic);
 	free(pal);

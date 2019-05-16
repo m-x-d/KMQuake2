@@ -23,33 +23,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void Mod_LoadSpriteModel(model_t *mod, void *buffer, size_t filesize)
 {
-	//mxd. Allocate memory
+	//mxd. Allocate memory, copy sprite to extradata
 	const size_t memsize = ALIGN_TO_CACHELINE(filesize);
-	mod->extradata = ModChunk_Begin(memsize);
+	ModChunk_Begin(memsize);
+	mod->extradata = ModChunk_Alloc(memsize);
+	memcpy(mod->extradata, buffer, filesize); //mxd
+
+	dsprite_t *sprout = (dsprite_t *)mod->extradata;
 	
-	dsprite_t *sprin = (dsprite_t *)buffer;
-	dsprite_t *sprout = ModChunk_Alloc(memsize);
-
-	sprout->ident = LittleLong(sprin->ident);
-	sprout->version = LittleLong(sprin->version);
-	sprout->numframes = LittleLong(sprin->numframes);
-
+	// Sanity checks
 	if (sprout->version != SPRITE_VERSION)
 		VID_Error(ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, sprout->version, SPRITE_VERSION);
 
 	if (sprout->numframes > MAX_MD2SKINS)
 		VID_Error(ERR_DROP, "%s has too many frames (%i > %i)", mod->name, sprout->numframes, MAX_MD2SKINS);
 
-	// Byte-swap everything
+	// Load images
 	for (int i = 0; i < sprout->numframes; i++)
-	{
-		sprout->frames[i].width = LittleLong(sprin->frames[i].width);
-		sprout->frames[i].height = LittleLong(sprin->frames[i].height);
-		sprout->frames[i].origin_x = LittleLong(sprin->frames[i].origin_x);
-		sprout->frames[i].origin_y = LittleLong(sprin->frames[i].origin_y);
-		memcpy(sprout->frames[i].name, sprin->frames[i].name, MAX_SKINNAME);
 		mod->skins[0][i] = R_FindImage(sprout->frames[i].name, it_sprite, false);
-	}
 
 	mod->type = mod_sprite;
 }

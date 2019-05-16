@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef enum {false, true} qboolean;
 typedef unsigned char byte;
+typedef unsigned short ushort; //mxd. C# style
 typedef unsigned int  uint; //mxd. C# style
 typedef unsigned long ulong; //mxd. C# style
 
@@ -193,10 +194,6 @@ typedef enum
 	MULTICAST_PHS_R,
 	MULTICAST_PVS_R
 } multicast_t;
-
-short ShortSwap(short l);
-int LongSwap(int l);
-float FloatSwap(float f);
 
 /*
 ==============================================================
@@ -401,13 +398,6 @@ char *Q_strupr(char *string);
 //=============================================
 
 short BigShort(short l);
-short LittleShort(short l);
-int BigLong(int l);
-int LittleLong(int l);
-float BigFloat(float l);
-float LittleFloat(float l);
-
-void Swap_Init(void);
 char *va(char *format, ...);
 
 //=============================================

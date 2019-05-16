@@ -389,7 +389,6 @@ void SV_SendClientMessages(void)
 			return;
 		}
 
-		msglen = LittleLong(msglen);
 		if (msglen == -1)
 		{
 			SV_DemoCompleted();

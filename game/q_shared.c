@@ -710,96 +710,12 @@ void COM_DefaultExtension(char *path, char *extension)
 
 #pragma region ======================= Byte order functions
 
-// Can't just use function pointers, or dll linkage can mess up when qcommon is included in multiple places
-// Knightmare- made these static
-static short	(*_BigShort) (short l);
-static short	(*_LittleShort) (short l);
-static int		(*_BigLong) (int l);
-static int		(*_LittleLong) (int l);
-static float	(*_BigFloat) (float l);
-static float	(*_LittleFloat) (float l);
-
-short	BigShort(short l) { return _BigShort(l); }
-short	LittleShort(short l) { return _LittleShort(l); }
-int		BigLong(int l) { return _BigLong(l); }
-int		LittleLong(int l) { return _LittleLong(l); }
-float	BigFloat(float l) { return _BigFloat(l); }
-float	LittleFloat(float l) { return _LittleFloat(l); }
-
-short ShortSwap(short l)
+short BigShort(short l)
 {
 	const byte b1 = l & 255;
 	const byte b2 = (l >> 8) & 255;
 
 	return (b1 << 8) + b2;
-}
-
-short ShortNoSwap(short l)
-{
-	return l;
-}
-
-int LongSwap(int l)
-{
-	const byte b1 = l & 255;
-	const byte b2 = (l >> 8) & 255;
-	const byte b3 = (l >> 16) & 255;
-	const byte b4 = (l >> 24) & 255;
-
-	return ((int)b1 << 24) + ((int)b2 << 16) + ((int)b3 << 8) + b4;
-}
-
-int LongNoSwap(int l)
-{
-	return l;
-}
-
-float FloatSwap(float f)
-{
-	union
-	{
-		float	f;
-		byte	b[4];
-	} dat1, dat2;
-	
-	
-	dat1.f = f;
-	dat2.b[0] = dat1.b[3];
-	dat2.b[1] = dat1.b[2];
-	dat2.b[2] = dat1.b[1];
-	dat2.b[3] = dat1.b[0];
-
-	return dat2.f;
-}
-
-float FloatNoSwap(float f)
-{
-	return f;
-}
-
-void Swap_Init(void)
-{
-	byte swaptest[2] = { 1, 0 };
-
-	// Set the byte swapping variables in a portable manner	
-	if (*(short *)swaptest == 1)
-	{
-		_BigShort = ShortSwap;
-		_LittleShort = ShortNoSwap;
-		_BigLong = LongSwap;
-		_LittleLong = LongNoSwap;
-		_BigFloat = FloatSwap;
-		_LittleFloat = FloatNoSwap;
-	}
-	else
-	{
-		_BigShort = ShortNoSwap;
-		_LittleShort = ShortSwap;
-		_BigLong = LongNoSwap;
-		_LittleLong = LongSwap;
-		_BigFloat = FloatNoSwap;
-		_LittleFloat = FloatSwap;
-	}
 }
 
 // Does a varargs printf into a temp buffer, so I don't need to have varargs versions of all text functions.

@@ -40,16 +40,6 @@ void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height
 
 	// Parse the PCX file
 	pcx_t *pcx = (pcx_t *)raw;
-
-	pcx->xmin = LittleShort(pcx->xmin);
-	pcx->ymin = LittleShort(pcx->ymin);
-	pcx->xmax = LittleShort(pcx->xmax);
-	pcx->ymax = LittleShort(pcx->ymax);
-	pcx->hres = LittleShort(pcx->hres);
-	pcx->vres = LittleShort(pcx->vres);
-	pcx->bytes_per_line = LittleShort(pcx->bytes_per_line);
-	pcx->palette_type = LittleShort(pcx->palette_type);
-
 	raw = &pcx->data;
 
 	if (pcx->manufacturer != 0x0a

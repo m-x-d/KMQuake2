@@ -106,17 +106,14 @@ static size_t GetAllocSizeMD2(void *buffer)
 {
 	dmdl_t *pinmodel = (dmdl_t *)buffer;
 
-	const int numFrames = LittleLong(pinmodel->num_frames);
-	const int numTris = LittleLong(pinmodel->num_tris);
-
 	// Count unique verts
-	int numVerts = 0;
-	const int numIndex = numTris * 3;
-	dtriangle_t *pintri = (dtriangle_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_tris));
+	int num_verts = 0;
+	const int num_index = pinmodel->num_tris * 3;
+	dtriangle_t *pintri = (dtriangle_t *)((byte *)pinmodel + pinmodel->ofs_tris);
 
 	//mxd. (re)allocate remap arrays...
 	static int remaparraysize = 0;
-	const int newremaparraysize = numTris * 3 * sizeof(int);
+	const int newremaparraysize = pinmodel->num_tris * 3 * sizeof(int);
 
 	if (newremaparraysize > remaparraysize)
 	{
@@ -134,46 +131,44 @@ static size_t GetAllocSizeMD2(void *buffer)
 		md2TempStIndex = malloc(remaparraysize);
 	}
 
-	for (int i = 0; i < numTris; i++)
+	for (int i = 0; i < pinmodel->num_tris; i++)
 	{
 		for (int c = 0; c < 3; c++)
 		{
-			md2TempIndex[i * 3 + c] = (unsigned)LittleShort(pintri[i].index_xyz[c]);
-			md2TempStIndex[i * 3 + c] = (unsigned)LittleShort(pintri[i].index_st[c]);
+			md2TempIndex[i * 3 + c] = (uint)pintri[i].index_xyz[c];
+			md2TempStIndex[i * 3 + c] = (uint)pintri[i].index_st[c];
 		}
 	}
 
 	memset(md2IndRemap, -1, remaparraysize);
 
-	for (int i = 0; i < numIndex; i++)
+	for (int i = 0; i < num_index; i++)
 	{
 		if (md2IndRemap[i] != -1)
 			continue;
 
-		for (int j = 0; j < numIndex; j++)
+		for (int j = 0; j < num_index; j++)
 			if (i != j && md2TempIndex[j] == md2TempIndex[i] && md2TempStIndex[j] == md2TempStIndex[i])
 				md2IndRemap[j] = i;
 	}
 
-	for (int i = 0; i < numIndex; i++)
+	for (int i = 0; i < num_index; i++)
 		if (md2IndRemap[i] == -1)
-			numVerts++;
+			num_verts++;
 
-	const int numSkins = max(LittleLong(pinmodel->num_skins), 1); // Hack because player models have no skin refs
+	const int num_skins = max(pinmodel->num_skins, 1); // Hack because player models have no skin refs
 
 	// Calc sizes rounded to cacheline
-	const size_t headerSize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
-	const size_t meshSize = ALIGN_TO_CACHELINE(sizeof(maliasmesh_t));
-	const size_t indexSize = ALIGN_TO_CACHELINE(sizeof(index_t) * numTris * 3);
-	const size_t coordSize = ALIGN_TO_CACHELINE(sizeof(maliascoord_t) * numVerts);
-	const size_t frameSize = ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * numFrames);
-	const size_t vertSize = ALIGN_TO_CACHELINE(numFrames * numVerts * sizeof(maliasvertex_t));
-	const size_t trNeighborsSize = ALIGN_TO_CACHELINE(sizeof(int) * numTris * 3);
-	const size_t skinSize = ALIGN_TO_CACHELINE(sizeof(maliasskin_t) * numSkins);
+	uint totalsize = ALIGN_TO_CACHELINE(sizeof(maliasmodel_t));
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliasmesh_t));
+	totalsize += ALIGN_TO_CACHELINE(sizeof(index_t) * pinmodel->num_tris * 3);
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliascoord_t) * num_verts);
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliasframe_t) * pinmodel->num_frames);
+	totalsize += ALIGN_TO_CACHELINE(pinmodel->num_frames * num_verts * sizeof(maliasvertex_t));
+	totalsize += ALIGN_TO_CACHELINE(sizeof(int) * pinmodel->num_tris * 3);
+	totalsize += ALIGN_TO_CACHELINE(sizeof(maliasskin_t) * num_skins);
 
-	const size_t allocSize = headerSize + meshSize + indexSize + coordSize + frameSize + vertSize + trNeighborsSize + skinSize;
-
-	return allocSize;
+	return totalsize;
 }
 
 // Based on md2 loading code in Q2E 0.40
@@ -185,12 +180,11 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 	dmdl_t *pinmodel = (dmdl_t *)buffer;
 	maliasmodel_t *poutmodel = ModChunk_Alloc(sizeof(maliasmodel_t));
 
-	// Byte-swap the header fields and sanity check
-	const int version = LittleLong(pinmodel->version);
-	if (version != ALIAS_VERSION)
-		VID_Error(ERR_DROP, "Model %s has wrong version number (%i should be %i)", mod->name, version, ALIAS_VERSION);
+	// Sanity checks
+	if (pinmodel->version != ALIAS_VERSION)
+		VID_Error(ERR_DROP, "Model %s has wrong version number (%i should be %i)", mod->name, pinmodel->version, ALIAS_VERSION);
 
-	poutmodel->num_frames = LittleLong(pinmodel->num_frames);
+	poutmodel->num_frames = pinmodel->num_frames;
 	if (poutmodel->num_frames <= 0)
 		VID_Error(ERR_DROP, "Model %s has invalid number of frames (%i)", mod->name, poutmodel->num_frames);
 	else if (poutmodel->num_frames > MAX_FRAMES)
@@ -199,23 +193,23 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 	poutmodel->num_tags = 0;
 	poutmodel->num_meshes = 1;
 
-	const double skinWidth = 1.0 / (double)LittleLong(pinmodel->skinwidth);
-	const double skinHeight = 1.0 / (double)LittleLong(pinmodel->skinheight);
+	const double skinWidth = 1.0 / (double)pinmodel->skinwidth;
+	const double skinHeight = 1.0 / (double)pinmodel->skinheight;
 
 	// Load mesh info
 	maliasmesh_t *poutmesh = poutmodel->meshes = ModChunk_Alloc(sizeof(maliasmesh_t));
 
-	Com_sprintf(poutmesh->name, sizeof(poutmesh->name), "md2mesh"); // mesh name in script must match this
+	Com_sprintf(poutmesh->name, sizeof(poutmesh->name), "md2mesh"); // Mesh name in script must match this
 
-	poutmesh->num_tris = LittleLong(pinmodel->num_tris);
+	poutmesh->num_tris = pinmodel->num_tris;
 	if (poutmesh->num_tris <= 0)
 		VID_Error(ERR_DROP, "Model %s has invalid number of triangles (%i)", mod->name, poutmesh->num_tris);
 
-	poutmesh->num_verts = LittleLong(pinmodel->num_xyz);
+	poutmesh->num_verts = pinmodel->num_xyz;
 	if (poutmesh->num_verts <= 0)
 		VID_Error(ERR_DROP, "Model %s has invalid number of vertices (%i)", mod->name, poutmesh->num_verts);
 
-	poutmesh->num_skins = LittleLong(pinmodel->num_skins);
+	poutmesh->num_skins = pinmodel->num_skins;
 	if (poutmesh->num_skins < 0)
 		Com_Error(ERR_DROP, "Model %s has invalid number of skins (%i)", mod->name, poutmesh->num_skins);
 	else if (poutmesh->num_skins > MAX_MD2SKINS)
@@ -245,13 +239,13 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 			poutindex[i] = poutindex[md2IndRemap[i]];
 
 	// Load base S and T vertices
-	dstvert_t *pincoord = (dstvert_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_st));
+	dstvert_t *pincoord = (dstvert_t *)((byte *)pinmodel + pinmodel->ofs_st);
 	maliascoord_t *poutcoord = poutmesh->stcoords = ModChunk_Alloc(sizeof(maliascoord_t) * poutmesh->num_verts);
 
 	for (int i = 0; i < numIndices; i++)
 	{
-		poutcoord[poutindex[i]].st[0] = (float)(((double)LittleShort(pincoord[md2TempStIndex[md2IndRemap[i]]].s) + 0.5f) * skinWidth);
-		poutcoord[poutindex[i]].st[1] = (float)(((double)LittleShort(pincoord[md2TempStIndex[md2IndRemap[i]]].t) + 0.5f) * skinHeight);
+		poutcoord[poutindex[i]].st[0] = (float)(((double)pincoord[md2TempStIndex[md2IndRemap[i]]].s + 0.5f) * skinWidth);
+		poutcoord[poutindex[i]].st[1] = (float)(((double)pincoord[md2TempStIndex[md2IndRemap[i]]].t + 0.5f) * skinHeight);
 	}
 
 	// Load frames
@@ -263,12 +257,12 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 
 	for (int i = 0; i < poutmodel->num_frames; i++, poutframe++, poutvert += numVertices)
 	{
-		daliasframe_t *pinframe = (daliasframe_t *)((byte *)pinmodel + LittleLong(pinmodel->ofs_frames) + i * LittleLong(pinmodel->framesize));
+		daliasframe_t *pinframe = (daliasframe_t *)((byte *)pinmodel + pinmodel->ofs_frames + i * pinmodel->framesize);
 
 		for (int c = 0; c < 3; c++)
 		{
-			poutframe->scale[c] = LittleFloat(pinframe->scale[c]);
-			poutframe->translate[c] = LittleFloat(pinframe->translate[c]);
+			poutframe->scale[c] = pinframe->scale[c];
+			poutframe->translate[c] = pinframe->translate[c];
 		}
 
 		VectorCopy(poutframe->translate, poutframe->mins);
@@ -316,7 +310,7 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 		maliasskin_t *poutskin = poutmesh->skins = ModChunk_Alloc(sizeof(maliasskin_t) * poutmesh->num_skins);
 		for (int i = 0; i < poutmesh->num_skins; i++, poutskin++)
 		{
-			memcpy(name, ((char *)pinmodel + LittleLong(pinmodel->ofs_skins) + i * MAX_SKINNAME), MD3_MAX_PATH);
+			memcpy(name, ((char *)pinmodel + pinmodel->ofs_skins + i * MAX_SKINNAME), MD3_MAX_PATH);
 			memcpy(poutskin->name, name, MD3_MAX_PATH);
 			Com_sprintf(poutskin->glowname, sizeof(poutskin->glowname), "\0"); // Set null glowskin
 			mod->skins[0][i] = R_FindImage(name, it_skin, false);

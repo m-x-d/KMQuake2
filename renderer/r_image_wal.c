@@ -34,11 +34,7 @@ image_t *R_LoadWal(char *name, imagetype_t type)
 		return NULL;
 	}
 
-	const int width = LittleLong(mt->width);
-	const int height = LittleLong(mt->height);
-	const int ofs = LittleLong(mt->offsets[0]);
-
-	image_t *image = R_LoadPic(name, (byte *)mt + ofs, width, height, it_wall, 8);
+	image_t *image = R_LoadPic(name, (byte *)mt + mt->offsets[0], mt->width, mt->height, it_wall, 8);
 
 	FS_FreeFile((void *)mt);
 
@@ -62,8 +58,8 @@ void GetWalInfo(char *name, int *width, int *height) //mxd. From YQ2
 		return;
 	}
 
-	*width = LittleLong(mt->width);
-	*height = LittleLong(mt->height);
+	*width = mt->width;
+	*height = mt->height;
 
 	FS_FreeFile((void *)mt);
 }

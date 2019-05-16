@@ -139,12 +139,12 @@ static void CMod_LoadSubmodels(lump_t *l, byte *data)
 		for (int j = 0; j < 3; j++)
 		{
 			// Spread the mins / maxs by a pixel
-			out->mins[j] = LittleFloat(in->mins[j]) - 1;
-			out->maxs[j] = LittleFloat(in->maxs[j]) + 1;
-			out->origin[j] = LittleFloat(in->origin[j]);
+			out->mins[j] = in->mins[j] - 1;
+			out->maxs[j] = in->maxs[j] + 1;
+			out->origin[j] = in->origin[j];
 		}
 
-		out->headnode = LittleLong(in->headnode);
+		out->headnode = in->headnode;
 	}
 }
 
@@ -167,8 +167,8 @@ static void CMod_LoadSurfaces(lump_t *l, byte *data)
 	{
 		strncpy(out->c.name, in->texture, sizeof(out->c.name) - 1);
 		strncpy(out->rname, in->texture, sizeof(out->rname) - 1);
-		out->c.flags = LittleLong(in->flags);
-		out->c.value = LittleLong(in->value);
+		out->c.flags = in->flags;
+		out->c.value = in->value;
 	}
 }
 
@@ -190,9 +190,9 @@ static void CMod_LoadNodes(lump_t *l, byte *data)
 
 	for (int i = 0; i < count; i++, out++, in++)
 	{
-		out->plane = map_planes + LittleLong(in->planenum);
+		out->plane = map_planes + in->planenum;
 		for (int j = 0; j < 2; j++)
-			out->children[j] = LittleLong(in->children[j]);
+			out->children[j] = in->children[j];
 	}
 
 }
@@ -213,9 +213,9 @@ static void CMod_LoadBrushes(lump_t *l, byte *data)
 
 	for (int i = 0; i < count; i++, out++, in++)
 	{
-		out->firstbrushside = LittleLong(in->firstside);
-		out->numsides = LittleLong(in->numsides);
-		out->contents = LittleLong(in->contents);
+		out->firstbrushside = in->firstside;
+		out->numsides = in->numsides;
+		out->contents = in->contents;
 	}
 }
 
@@ -238,11 +238,11 @@ static void CMod_LoadLeafs(lump_t *l, byte *data)
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
-		out->contents = LittleLong(in->contents);
-		out->cluster = LittleShort(in->cluster);
-		out->area = LittleShort(in->area);
-		out->firstleafbrush = LittleShort(in->firstleafbrush);
-		out->numleafbrushes = LittleShort(in->numleafbrushes);
+		out->contents = in->contents;
+		out->cluster = in->cluster;
+		out->area = in->area;
+		out->firstleafbrush = in->firstleafbrush;
+		out->numleafbrushes = in->numleafbrushes;
 
 		if (out->cluster >= numclusters)
 			numclusters = out->cluster + 1;
@@ -287,13 +287,13 @@ static void CMod_LoadPlanes(lump_t *l, byte *data)
 		int bits = 0;
 		for (int j = 0; j < 3; j++)
 		{
-			out->normal[j] = LittleFloat(in->normal[j]);
+			out->normal[j] = in->normal[j];
 			if (out->normal[j] < 0)
 				bits |= 1 << j;
 		}
 
-		out->dist = LittleFloat(in->dist);
-		out->type = LittleLong(in->type);
+		out->dist = in->dist;
+		out->type = in->type;
 		out->signbits = bits;
 	}
 }
@@ -311,11 +311,8 @@ static void CMod_LoadLeafBrushes(lump_t *l, byte *data)
 	if (count > MAX_MAP_LEAFBRUSHES)
 		Com_Error(ERR_DROP, "Map has too many leafbrushes");
 
-	unsigned short *out = map_leafbrushes;
+	memcpy(map_leafbrushes, in, count * sizeof(ushort)); //mxd
 	numleafbrushes = count;
-
-	for (int i = 0; i < count; i++, in++, out++)
-		*out = LittleShort(*in);
 }
 
 static void CMod_LoadBrushSides(lump_t *l, byte *data)
@@ -335,13 +332,11 @@ static void CMod_LoadBrushSides(lump_t *l, byte *data)
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
-		const int num = (unsigned short)LittleShort(in->planenum);
-		out->plane = &map_planes[num];
-		const int texinfo = LittleShort(in->texinfo);
-		if (texinfo >= numtexinfo)
+		out->plane = &map_planes[in->planenum];
+		if (in->texinfo >= numtexinfo)
 			Com_Error(ERR_DROP, "Bad brushside texinfo");
 
-		out->surface = &map_surfaces[texinfo];
+		out->surface = &map_surfaces[in->texinfo];
 	}
 }
 
@@ -361,8 +356,8 @@ static void CMod_LoadAreas(lump_t *l, byte *data)
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
-		out->numareaportals = LittleLong(in->numareaportals);
-		out->firstareaportal = LittleLong(in->firstareaportal);
+		out->numareaportals = in->numareaportals;
+		out->firstareaportal = in->firstareaportal;
 		out->floodvalid = 0;
 		out->floodnum = 0;
 	}
@@ -379,14 +374,8 @@ static void CMod_LoadAreaPortals(lump_t *l, byte *data)
 	if (count > MAX_MAP_AREAS)
 		Com_Error(ERR_DROP, "Map has too many areas");
 
-	dareaportal_t *out = map_areaportals;
+	memcpy(map_areaportals, in, count * sizeof(dareaportal_t));
 	numareaportals = count;
-
-	for (int i = 0; i < count; i++, in++, out++)
-	{
-		out->portalnum = LittleLong(in->portalnum);
-		out->otherarea = LittleLong(in->otherarea);
-	}
 }
 
 static void CMod_LoadVisibility(lump_t *l, byte *data)
@@ -396,13 +385,6 @@ static void CMod_LoadVisibility(lump_t *l, byte *data)
 		Com_Error(ERR_DROP, "Map has too large visibility lump");
 
 	memcpy(map_visibility, data + l->fileofs, l->filelen);
-
-	map_vis->numclusters = LittleLong(map_vis->numclusters);
-	for (int i = 0; i < map_vis->numclusters; i++)
-	{
-		map_vis->bitofs[i][0] = LittleLong(map_vis->bitofs[i][0]);
-		map_vis->bitofs[i][1] = LittleLong(map_vis->bitofs[i][1]);
-	}
 }
 
 static void CMod_LoadEntityString(lump_t *l, byte *data, char *name)
@@ -503,13 +485,10 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	if (!buf)
 		Com_Error(ERR_DROP, "Couldn't load %s", name);
 
-	last_checksum = LittleLong(Com_BlockChecksum(buf, length));
+	last_checksum = Com_BlockChecksum(buf, length);
 	*checksum = last_checksum;
 
 	dheader_t header = *(dheader_t *)buf;
-	for (int i = 0; i < sizeof(dheader_t) / 4; i++)
-		((int *)&header)[i] = LittleLong( ((int *)&header)[i] );
-
 	if (header.version != BSPVERSION)
 		Com_Error(ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i)", name, header.version, BSPVERSION);
 

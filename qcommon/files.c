@@ -872,14 +872,11 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 
 	fread(&header, 1, sizeof(dpackheader_t), handle);
 	
-	if (LittleLong(header.ident) != IDPAKHEADER)
+	if (header.ident != IDPAKHEADER)
 	{
 		fclose(handle);
 		Com_Error(ERR_FATAL, "FS_LoadPAK: %s is not a pack file", packPath);
 	}
-
-	header.dirofs = LittleLong(header.dirofs);
-	header.dirlen = LittleLong(header.dirlen);
 
 	const int numFiles = header.dirlen / sizeof(dpackfile_t);
 	if (numFiles > MAX_FILES_IN_PACK || numFiles == 0)
@@ -897,7 +894,7 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 
 	// Create sort table
 	int *sortIndices = Z_Malloc(numFiles * sizeof(int));
-	long *sortHashes = Z_Malloc(numFiles * sizeof(unsigned));
+	long *sortHashes = Z_Malloc(numFiles * sizeof(long)); //mxd. sizeof(unsigned) -> sizeof(long)
 	nameHashes = sortHashes;
 
 	for (int i = 0; i < numFiles; i++)
@@ -913,8 +910,8 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 	{
 		Q_strncpyz(files[i].name, info[sortIndices[i]].name, sizeof(files[i].name));
 		files[i].hash = sortHashes[sortIndices[i]];
-		files[i].offset = LittleLong(info[sortIndices[i]].filepos);
-		files[i].size = LittleLong(info[sortIndices[i]].filelen);
+		files[i].offset = info[sortIndices[i]].filepos;
+		files[i].size = info[sortIndices[i]].filelen;
 		files[i].ignore = FS_FileInPakBlacklist(files[i].name, false); // Check against pak loading blacklist
 
 		if (!files[i].ignore) // Add type flag for this file

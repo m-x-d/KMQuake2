@@ -186,8 +186,7 @@ void CL_WriteDemoMessage(void)
 {
 	// The first eight bytes are just packet sequencing stuff
 	const int len = net_message.cursize - 8;
-	int swlen = LittleLong(len);
-	fwrite(&swlen, 4, 1, cls.demofile);
+	fwrite(&len, 4, 1, cls.demofile);
 	fwrite(net_message.data + 8, len, 1, cls.demofile);
 }
 
@@ -277,8 +276,7 @@ void CL_Record_f(void)
 			if (buf.cursize + (int)strlen(cl.configstrings[i]) + 32 > buf.maxsize)
 			{
 				// Write it out
-				int len = LittleLong(buf.cursize);
-				fwrite(&len, 4, 1, cls.demofile);
+				fwrite(&buf.cursize, 4, 1, cls.demofile);
 				fwrite(buf.data, buf.cursize, 1, cls.demofile);
 				buf.cursize = 0;
 			}
@@ -301,8 +299,7 @@ void CL_Record_f(void)
 		if (buf.cursize + 64 > buf.maxsize)
 		{
 			// Write it out
-			int len = LittleLong(buf.cursize);
-			fwrite(&len, 4, 1, cls.demofile);
+			fwrite(&buf.cursize, 4, 1, cls.demofile);
 			fwrite(buf.data, buf.cursize, 1, cls.demofile);
 			buf.cursize = 0;
 		}
@@ -315,8 +312,7 @@ void CL_Record_f(void)
 	MSG_WriteString(&buf, "precache\n");
 
 	// Write it to the demo file
-	int len = LittleLong(buf.cursize);
-	fwrite(&len, 4, 1, cls.demofile);
+	fwrite(&buf.cursize, 4, 1, cls.demofile);
 	fwrite(buf.data, buf.cursize, 1, cls.demofile);
 
 	// The rest of the demo file will be individual frames

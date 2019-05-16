@@ -648,7 +648,6 @@ void SV_RecordDemoMessage (void)
 	SZ_Clear(&svs.demo_multicast);
 
 	// now write the entire message to the file, prefixed by the length
-	int len = LittleLong(buf.cursize);
-	fwrite(&len, 4, 1, svs.demofile);
+	fwrite(&buf.cursize, 4, 1, svs.demofile);
 	fwrite(buf.data, buf.cursize, 1, svs.demofile);
 }

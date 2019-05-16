@@ -332,7 +332,7 @@ model_t *Mod_ForName(char *name, qboolean crash)
 	}
 
 	// Fill it in
-	switch (LittleLong(*(unsigned *)buf))
+	switch (buf[0])
 	{
 		case IDALIASHEADER:
 			Mod_LoadAliasMD2Model(mod, buf);
@@ -389,13 +389,6 @@ static void Mod_LoadVisibility(model_t *m, byte *data)
 	{
 		m->vis = ModChunk_Alloc(l->filelen);
 		memcpy(m->vis, data + l->fileofs, l->filelen);
-
-		m->vis->numclusters = LittleLong(m->vis->numclusters);
-		for (int i = 0; i < m->vis->numclusters; i++)
-		{
-			m->vis->bitofs[i][0] = LittleLong(m->vis->bitofs[i][0]);
-			m->vis->bitofs[i][1] = LittleLong(m->vis->bitofs[i][1]);
-		}
 	}
 	else
 	{
@@ -416,7 +409,7 @@ static void Mod_LoadVertexes(model_t *m, byte *data)
 
 	for (int i = 0; i < count; i++, in++, out++)
 		for(int c = 0; c < 3; c++)
-			out->position[c] = LittleFloat(in->point[c]);
+			out->position[c] = in->point[c];
 }
 
 static void Mod_LoadSubmodels(model_t *m, byte *data)
@@ -435,15 +428,15 @@ static void Mod_LoadSubmodels(model_t *m, byte *data)
 		for (int j = 0; j < 3 ; j++)
 		{
 			// Spread the mins / maxs by a pixel
-			out->mins[j] = LittleFloat(in->mins[j]) - 1;
-			out->maxs[j] = LittleFloat(in->maxs[j]) + 1;
-			out->origin[j] = LittleFloat(in->origin[j]);
+			out->mins[j] = in->mins[j] - 1;
+			out->maxs[j] = in->maxs[j] + 1;
+			out->origin[j] = in->origin[j];
 		}
 
 		out->radius = Mod_RadiusFromBounds(out->mins, out->maxs);
-		out->headnode = LittleLong(in->headnode);
-		out->firstface = LittleLong(in->firstface);
-		out->numfaces = LittleLong(in->numfaces);
+		out->headnode = in->headnode;
+		out->firstface = in->firstface;
+		out->numfaces = in->numfaces;
 	}
 }
 
@@ -460,8 +453,8 @@ static void Mod_LoadEdges(model_t *m, byte *data)
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
-		out->v[0] = (unsigned short)LittleShort(in->v[0]);
-		out->v[1] = (unsigned short)LittleShort(in->v[1]);
+		out->v[0] = in->v[0];
+		out->v[1] = in->v[1];
 	}
 }
 
@@ -479,12 +472,12 @@ static void Mod_LoadTexinfo(model_t *m, byte *data)
 	for (int i = 0; i < count; i++, in++, out++)
 	{
 		for (int j = 0; j < 8; j++)
-			out->vecs[0][j] = LittleFloat(in->vecs[0][j]);
+			out->vecs[0][j] = in->vecs[0][j];
 
-		out->flags = LittleLong(in->flags);
-		const int next = LittleLong(in->nexttexinfo);
-		if (next > 0)
-			out->next = m->texinfo + next;
+		out->flags = in->flags;
+
+		if (in->nexttexinfo > 0)
+			out->next = m->texinfo + in->nexttexinfo;
 		else
 			out->next = NULL;
 
@@ -597,23 +590,20 @@ static void Mod_LoadFaces(model_t *m, byte *data)
 
 	for (int surfnum = 0; surfnum < count; surfnum++, in++, out++)
 	{
-		out->firstedge = LittleLong(in->firstedge);
-		out->numedges = LittleShort(in->numedges);
+		out->firstedge = in->firstedge;
+		out->numedges = in->numedges;
 		out->flags = 0;
 		out->polys = NULL;
 
-		const int planenum = (unsigned short)LittleShort(in->planenum);
-		const int side = LittleShort(in->side);
-		if (side)
+		if (in->side)
 			out->flags |= SURF_PLANEBACK;
 
-		out->plane = m->planes + planenum;
+		out->plane = m->planes + in->planenum;
 
-		const int ti = LittleShort(in->texinfo);
-		if (ti < 0 || ti >= m->numtexinfo)
+		if (in->texinfo < 0 || in->texinfo >= m->numtexinfo)
 			VID_Error(ERR_DROP, "Mod_LoadFaces: bad texinfo number");
 
-		out->texinfo = m->texinfo + ti;
+		out->texinfo = m->texinfo + in->texinfo;
 
 		CalcSurfaceExtents(m, out);
 
@@ -621,11 +611,10 @@ static void Mod_LoadFaces(model_t *m, byte *data)
 		for (int i = 0; i < MAXLIGHTMAPS; i++)
 			out->styles[i] = in->styles[i];
 
-		const int lightofs = LittleLong(in->lightofs);
-		if (lightofs == -1)
+		if (in->lightofs == -1)
 			out->samples = NULL;
 		else
-			out->samples = m->lightdata + lightofs;
+			out->samples = m->lightdata + in->lightofs;
 		
 		// Set the drawing flags
 		if (out->texinfo->flags & SURF_WARP)
@@ -680,24 +669,21 @@ static void Mod_LoadNodes(model_t *m, byte *data)
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			out->minmaxs[j] = LittleShort(in->mins[j]);
-			out->minmaxs[j + 3] = LittleShort(in->maxs[j]);
+			out->minmaxs[j] = in->mins[j];
+			out->minmaxs[j + 3] = in->maxs[j];
 		}
 	
-		const int p = LittleLong(in->planenum);
-		out->plane = m->planes + p;
-
-		out->firstsurface = (unsigned short)LittleShort(in->firstface);
-		out->numsurfaces =  (unsigned short)LittleShort(in->numfaces);
+		out->plane = m->planes + in->planenum;
+		out->firstsurface = in->firstface;
+		out->numsurfaces =  in->numfaces;
 		out->contents = -1; // Differentiate from leafs
 
 		for (int j = 0; j < 2; j++)
 		{
-			const int childindex = LittleLong(in->children[j]);
-			if (childindex >= 0)
-				out->children[j] = m->nodes + childindex;
+			if (in->children[j] >= 0)
+				out->children[j] = m->nodes + in->children[j];
 			else
-				out->children[j] = (mnode_t *)(m->leafs + (-1 - childindex));
+				out->children[j] = (mnode_t *)(m->leafs + (-1 - in->children[j]));
 		}
 	}
 	
@@ -719,16 +705,16 @@ static void Mod_LoadLeafs(model_t *m, byte *data)
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			out->minmaxs[j] = LittleShort(in->mins[j]);
-			out->minmaxs[j + 3] = LittleShort(in->maxs[j]);
+			out->minmaxs[j] = in->mins[j];
+			out->minmaxs[j + 3] = in->maxs[j];
 		}
 
-		out->contents = LittleLong(in->contents);
-		out->cluster = LittleShort(in->cluster);
-		out->area = LittleShort(in->area);
+		out->contents = in->contents;
+		out->cluster = in->cluster;
+		out->area = in->area;
 
-		out->firstmarksurface = m->marksurfaces + (unsigned short)LittleShort(in->firstleafface); // Knightmare- make sure this doesn't turn negative!
-		out->nummarksurfaces = (unsigned short)LittleShort(in->numleaffaces);
+		out->firstmarksurface = m->marksurfaces + in->firstleafface; // Knightmare- make sure this doesn't turn negative!
+		out->nummarksurfaces = in->numleaffaces;
 		
 		// Underwater flag for caustics
 		if (out->contents & (MASK_WATER))
@@ -760,11 +746,10 @@ static void Mod_LoadMarksurfaces(model_t *m, byte *data)
 
 	for (int i = 0; i < count; i++)
 	{
-		const int j = (unsigned short)LittleShort(in[i]);
-		if (j >= m->numsurfaces)
+		if (in[i] >= m->numsurfaces)
 			VID_Error(ERR_DROP, "Mod_ParseMarksurfaces: bad surface number");
 
-		out[i] = m->surfaces + j;
+		out[i] = m->surfaces + in[i];
 	}
 }
 
@@ -774,13 +759,12 @@ static void Mod_LoadSurfedges(model_t *m, byte *data)
 	
 	int *in = (void *)(data + l->fileofs);
 	const int count = l->filelen / sizeof(*in);
-	int *out = ModChunk_Alloc(count * sizeof(*out));
 	
-	m->surfedges = out;
-	m->numsurfedges = count;
+	const uint size = count * sizeof(int);
+	m->surfedges = ModChunk_Alloc(size);
+	memcpy(m->surfedges, in, size); //mxd
 
-	for (int i = 0; i < count ; i++)
-		out[i] = LittleLong(in[i]);
+	m->numsurfedges = count;
 }
 
 static void Mod_LoadPlanes(model_t *m, byte *data)
@@ -799,13 +783,13 @@ static void Mod_LoadPlanes(model_t *m, byte *data)
 		int bits = 0;
 		for (int j = 0; j < 3; j++)
 		{
-			out->normal[j] = LittleFloat(in->normal[j]);
+			out->normal[j] = in->normal[j];
 			if (out->normal[j] < 0)
 				bits |= 1 << j;
 		}
 
-		out->dist = LittleFloat(in->dist);
-		out->type = LittleLong(in->type);
+		out->dist = in->dist;
+		out->type = in->type;
 		out->signbits = bits;
 	}
 }
@@ -868,14 +852,8 @@ static size_t Mod_GetAllocSizeBrushModel(model_t *model, void *data)
 	
 	// Header...
 	dheader_t *header = (dheader_t *)data;
-
-	const int version = LittleLong(header->version);
-	if (version != BSPVERSION)
-		VID_Error(ERR_DROP, "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", model->name, version, BSPVERSION);
-
-	// Swap all the lumps
-	for (unsigned i = 0; i < sizeof(dheader_t) / 4; i++)
-		((int *)header)[i] = LittleLong(((int *)header)[i]);
+	if (header->version != BSPVERSION)
+		VID_Error(ERR_DROP, "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", model->name, header->version, BSPVERSION);
 
 	size_t allocSize = ALIGN_TO_CACHELINE(sizeof(dheader_t));
 
@@ -952,7 +930,7 @@ static size_t Mod_GetAllocSizeBrushModel(model_t *model, void *data)
 
 	for(int i = 0; i < count; i++, face++)
 	{
-		const int flags = LittleLong(texinfo[LittleShort(face->texinfo)].flags);
+		const int flags = texinfo[face->texinfo].flags;
 		int facesize;
 
 		if(flags & SURF_WARP)
@@ -961,11 +939,10 @@ static size_t Mod_GetAllocSizeBrushModel(model_t *model, void *data)
 		}
 		else
 		{
-			const int numverts = LittleShort(face->numedges);
-			facesize = sizeof(glpoly_t) + (numverts - 4) * VERTEXSIZE * sizeof(float);
+			facesize = sizeof(glpoly_t) + (face->numedges - 4) * VERTEXSIZE * sizeof(float);
 
 			if (flags & (SURF_TRANS33 | SURF_TRANS66)) // 2x vertex light fields
-				facesize += numverts * 6 * sizeof(byte);
+				facesize += face->numedges * 6 * sizeof(byte);
 		}
 
 		allocSize += ALIGN_TO_CACHELINE(facesize);

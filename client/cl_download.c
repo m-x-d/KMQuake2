@@ -161,21 +161,21 @@ void CL_RequestNextDownload(void)
 
 					//mxd. Rewritten for clarity
 					qboolean skipmodel = true;
-					const int modelid = LittleLong(*(unsigned *)precache_model);
+					const int modelid = *(unsigned *)precache_model;
 					if (modelid == IDALIASHEADER) // md2 model?
 					{
 						dmdl_t *md2header = (dmdl_t *)precache_model;
-						skipmodel = (LittleLong(md2header->version) != ALIAS_VERSION);
+						skipmodel = (md2header->version != ALIAS_VERSION);
 					}
 					else if(modelid == IDMD3HEADER) // md3 model?
 					{
 						dmd3_t *md3header = (dmd3_t *)precache_model;
-						skipmodel = (LittleLong(md3header->version) != MD3_ALIAS_VERSION);
+						skipmodel = (md3header->version != MD3_ALIAS_VERSION);
 					}
 					else if(modelid == IDSPRITEHEADER) // sprite?
 					{
 						dsprite_t *spriteheader = (dsprite_t *)precache_model;
-						skipmodel = (LittleLong(spriteheader->version) != SPRITE_VERSION);
+						skipmodel = (spriteheader->version != SPRITE_VERSION);
 					}
 
 					if(skipmodel)
@@ -190,12 +190,12 @@ void CL_RequestNextDownload(void)
 					}
 				}
 
-				if (LittleLong(*(unsigned *)precache_model) == IDALIASHEADER) // md2
+				if (*(unsigned *)precache_model == IDALIASHEADER) // md2
 				{
 					dmdl_t *md2header = (dmdl_t *)precache_model;
-					while (precache_model_skin - 1 < LittleLong(md2header->num_skins))
+					while (precache_model_skin - 1 < md2header->num_skins)
 					{
-						skinname = (char *)precache_model + LittleLong(md2header->ofs_skins) + (precache_model_skin - 1) * MAX_SKINNAME;
+						skinname = (char *)precache_model + md2header->ofs_skins + (precache_model_skin - 1) * MAX_SKINNAME;
 
 						// r1ch: spam warning for models that are broken
 						if (strchr(skinname, '\\'))
@@ -212,18 +212,18 @@ void CL_RequestNextDownload(void)
 						precache_model_skin++;
 					}
 				}
-				else if (LittleLong(*(unsigned *)precache_model) == IDMD3HEADER) // md3
+				else if (*(unsigned *)precache_model == IDMD3HEADER) // md3
 				{
 					dmd3_t *md3header = (dmd3_t *)precache_model;
-					while (precache_model_skin - 1 < LittleLong(md3header->num_skins))
+					while (precache_model_skin - 1 < md3header->num_skins)
 					{
-						dmd3mesh_t *md3mesh = (dmd3mesh_t *)((byte *)md3header + LittleLong(md3header->ofs_meshes));
+						dmd3mesh_t *md3mesh = (dmd3mesh_t *)((byte *)md3header + md3header->ofs_meshes);
 						for (int i = 0; i < md3header->num_meshes; i++)
 						{
-							if (precache_model_skin - 1 >= LittleLong(md3header->num_skins))
+							if (precache_model_skin - 1 >= md3header->num_skins)
 								break;
 
-							skinname = (char *)precache_model + LittleLong(md3mesh->ofs_skins) + (precache_model_skin - 1) * MD3_MAX_PATH;
+							skinname = (char *)precache_model + md3mesh->ofs_skins + (precache_model_skin - 1) * MD3_MAX_PATH;
 
 							// r1ch: spam warning for models that are broken
 							if (strchr(skinname, '\\'))
@@ -239,14 +239,14 @@ void CL_RequestNextDownload(void)
 
 							precache_model_skin++;
 
-							md3mesh = (dmd3mesh_t *)((byte *)md3mesh + LittleLong(md3mesh->meshsize));
+							md3mesh = (dmd3mesh_t *)((byte *)md3mesh + md3mesh->meshsize);
 						}
 					}
 				}
 				else // sprite
 				{
 					dsprite_t *spriteheader = (dsprite_t *)precache_model;
-					while (precache_model_skin - 1 < LittleLong(spriteheader->numframes))
+					while (precache_model_skin - 1 < spriteheader->numframes)
 					{
 						skinname = spriteheader->frames[(precache_model_skin - 1)].name;
 
