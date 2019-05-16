@@ -440,7 +440,19 @@ void Cvar_WriteVariables(char *path)
 	fclose(f);
 }
 
-void Cvar_List_f(void)
+//mxd
+typedef struct
+{
+	cvar_t *cvar;
+} cvarinfo_t;
+
+//mxd
+static int Cvar_SortCvars(const cvarinfo_t *first, const cvarinfo_t *second)
+{
+	return Q_stricmp(first->cvar->name, second->cvar->name);
+}
+
+static void Cvar_List_f(void)
 {
 	char *wildcard = NULL;
 
@@ -454,71 +466,89 @@ void Cvar_List_f(void)
 	}
 
 	if (argc == 2)
+	{
 		wildcard = Cmd_Argv(1);
 
+		//mxd. If no wildcard chars are provided, treat as "arg*"
+		if (strchr(wildcard, '*') == NULL && strchr(wildcard, '?') == NULL)
+			wildcard = va("%s*", wildcard);
+	}
+
+	//mxd. Collect matching cvars first...
 	int numtotal = 0;
+	for (cvar_t *var = cvar_vars; var; var = var->next)
+		numtotal++;
+
+	cvarinfo_t *cvarinfos = malloc(sizeof(cvarinfo_t) * numtotal);
+
 	int nummatching = 0;
-	qboolean legendshown = false;
-	for (cvar_t *var = cvar_vars; var; var = var->next, numtotal++)
-	{
+	for (cvar_t *var = cvar_vars; var; var = var->next)
 		if (!wildcard || wildcardfit(wildcard, var->name))
+			cvarinfos[nummatching++].cvar = var;
+
+	//mxd. Sort by name
+	qsort(cvarinfos, nummatching, sizeof(cvarinfo_t), (int(*)(const void *, const void *))Cvar_SortCvars);
+
+	//mxd. Print results
+	for (int i = 0; i < nummatching; i++)
+	{
+		// Print legend
+		if(i == 0)
+			Com_Printf(S_COLOR_GREEN"Legend: A: Archive, U: UserInfo, S: ServerInfo, N: NoSet, L: Latch, C: Cheat\n");
+		
+		cvar_t *var = cvarinfos[i].cvar;
+
+		char buffer[1024] = { 0 }; //mxd. Replaced Com_Printf with Q_strncatz (performance gain)
+
+		const qboolean customvalue = Q_stricmp(var->string, var->default_string);
+		if(customvalue)
+			Q_strncatz(buffer, S_COLOR_CYAN, sizeof(buffer)); // Mark cvars with non-default values in cyan
+
+		if (var->flags & CVAR_ARCHIVE)
+			Q_strncatz(buffer, "A", sizeof(buffer));
+		else
+			Q_strncatz(buffer, "-", sizeof(buffer));
+
+		if (var->flags & CVAR_USERINFO)
+			Q_strncatz(buffer, "U", sizeof(buffer));
+		else
+			Q_strncatz(buffer, "-", sizeof(buffer));
+
+		if (var->flags & CVAR_SERVERINFO)
+			Q_strncatz(buffer, "S", sizeof(buffer));
+		else
+			Q_strncatz(buffer, "-", sizeof(buffer));
+
+		if (var->flags & CVAR_NOSET)
+			Q_strncatz(buffer, "N", sizeof(buffer));
+		else if (var->flags & CVAR_LATCH)
+			Q_strncatz(buffer, "L", sizeof(buffer));
+		else
+			Q_strncatz(buffer, "-", sizeof(buffer));
+
+		if (var->flags & CVAR_CHEAT)
+			Q_strncatz(buffer, "C", sizeof(buffer));
+		else
+			Q_strncatz(buffer, "-", sizeof(buffer));
+
+		// Show latched value if applicable
+		if ((var->flags & CVAR_LATCH) && var->latched_string)
 		{
-			nummatching++;
-
-			if(!legendshown) //mxd. Print legend only when there are matches
-			{
-				Com_Printf(S_COLOR_GREEN"Legend: A: Archive, U: UserInfo, S: ServerInfo, N: NoSet, L: Latch, C: Cheat\n");
-				legendshown = true;
-			}
-
-			char buffer[1024] = { 0 }; //mxd. Replaced Com_Printf with Q_strncatz (performance gain)
-
-			if (var->flags & CVAR_ARCHIVE)
-				Q_strncatz(buffer, "A", sizeof(buffer));
+			if (customvalue) //mxd. Print default_string only on mismatch
+				Q_strncatz(buffer, va(" %s: \"%s\" (default: \"%s\", latched: \"%s\")\n", var->name, var->string, var->default_string, var->latched_string), sizeof(buffer));
 			else
-				Q_strncatz(buffer, "-", sizeof(buffer));
-
-			if (var->flags & CVAR_USERINFO)
-				Q_strncatz(buffer, "U", sizeof(buffer));
-			else
-				Q_strncatz(buffer, "-", sizeof(buffer));
-
-			if (var->flags & CVAR_SERVERINFO)
-				Q_strncatz(buffer, "S", sizeof(buffer));
-			else
-				Q_strncatz(buffer, "-", sizeof(buffer));
-
-			if (var->flags & CVAR_NOSET)
-				Q_strncatz(buffer, "N", sizeof(buffer));
-			else if (var->flags & CVAR_LATCH)
-				Q_strncatz(buffer, "L", sizeof(buffer));
-			else
-				Q_strncatz(buffer, "-", sizeof(buffer));
-
-			if (var->flags & CVAR_CHEAT)
-				Q_strncatz(buffer, "C", sizeof(buffer));
-			else
-				Q_strncatz(buffer, "-", sizeof(buffer));
-
-			// Show latched value if applicable
-			if ((var->flags & CVAR_LATCH) && var->latched_string)
-			{
-				if (Q_stricmp(var->string, var->default_string)) //mxd. Print default_string only on mismatch
-					Q_strncatz(buffer, va(" %s: \"%s\" (default: \"%s\", latched: \"%s\")\n", var->name, var->string, var->default_string, var->latched_string), sizeof(buffer));
-				else
-					Q_strncatz(buffer, va(" %s: \"%s\" (latched: \"%s\")\n", var->name, var->string, var->latched_string), sizeof(buffer));
-			}
-			else if (Q_stricmp(var->string, var->default_string)) //mxd. Print default_string only on mismatch
-			{
-				Q_strncatz(buffer, va(" %s: \"%s\" (default: \"%s\")\n", var->name, var->string, var->default_string), sizeof(buffer));
-			}
-			else
-			{
-				Q_strncatz(buffer, va(" %s: \"%s\"\n", var->name, var->string), sizeof(buffer));
-			}
-
-			Com_Printf("%s", buffer);
+				Q_strncatz(buffer, va(" %s: \"%s\" (latched: \"%s\")\n", var->name, var->string, var->latched_string), sizeof(buffer));
 		}
+		else if (customvalue) //mxd. Print default_string only on mismatch
+		{
+			Q_strncatz(buffer, va(" %s: \"%s\" (default: \"%s\")\n", var->name, var->string, var->default_string), sizeof(buffer));
+		}
+		else
+		{
+			Q_strncatz(buffer, va(" %s: \"%s\"\n", var->name, var->string), sizeof(buffer));
+		}
+
+		Com_Printf("%s", buffer);
 	}
 
 	if(argc == 1) //mxd
@@ -527,13 +557,11 @@ void Cvar_List_f(void)
 		Com_Printf(S_COLOR_GREEN"%i cvars, %i matching\n", numtotal, nummatching);
 }
 
-
 qboolean userinfo_modified;
-
 
 char *Cvar_BitInfo(int bit)
 {
-	static char	info[MAX_INFO_STRING];
+	static char info[MAX_INFO_STRING];
 	info[0] = 0;
 
 	for (cvar_t *var = cvar_vars; var; var = var->next)
