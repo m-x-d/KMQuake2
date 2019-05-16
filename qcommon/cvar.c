@@ -447,7 +447,7 @@ typedef struct
 } cvarinfo_t;
 
 //mxd
-static int Cvar_SortCvars(const cvarinfo_t *first, const cvarinfo_t *second)
+static int Cvar_SortCvarinfos(const cvarinfo_t *first, const cvarinfo_t *second)
 {
 	return Q_stricmp(first->cvar->name, second->cvar->name);
 }
@@ -479,15 +479,15 @@ static void Cvar_List_f(void)
 	for (cvar_t *var = cvar_vars; var; var = var->next)
 		numtotal++;
 
-	cvarinfo_t *cvarinfos = malloc(sizeof(cvarinfo_t) * numtotal);
+	cvarinfo_t *infos = malloc(sizeof(cvarinfo_t) * numtotal);
 
 	int nummatching = 0;
 	for (cvar_t *var = cvar_vars; var; var = var->next)
 		if (!wildcard || wildcardfit(wildcard, var->name))
-			cvarinfos[nummatching++].cvar = var;
+			infos[nummatching++].cvar = var;
 
 	//mxd. Sort by name
-	qsort(cvarinfos, nummatching, sizeof(cvarinfo_t), (int(*)(const void *, const void *))Cvar_SortCvars);
+	qsort(infos, nummatching, sizeof(cvarinfo_t), (int(*)(const void *, const void *))Cvar_SortCvarinfos);
 
 	//mxd. Print results
 	for (int i = 0; i < nummatching; i++)
@@ -496,7 +496,7 @@ static void Cvar_List_f(void)
 		if(i == 0)
 			Com_Printf(S_COLOR_GREEN"Legend: A: Archive, U: UserInfo, S: ServerInfo, N: NoSet, L: Latch, C: Cheat\n");
 		
-		cvar_t *var = cvarinfos[i].cvar;
+		cvar_t *var = infos[i].cvar;
 
 		char buffer[1024] = { 0 }; //mxd. Replaced Com_Printf with Q_strncatz (performance gain)
 
