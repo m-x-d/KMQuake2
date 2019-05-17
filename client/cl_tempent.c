@@ -622,15 +622,12 @@ void CL_ParseLaser (int colors)
 
 //=============
 //ROGUE
-void CL_ParseSteam (void)
+void CL_ParseSteam(void)
 {
-	vec3_t	pos, dir;
-	int		r;
-	int		cnt;
-	int		magnitude;
+	vec3_t pos, dir;
 
-	const int id = MSG_ReadShort(&net_message);		// an id of -1 is an instant effect
-	if (id != -1) // sustains
+	const int id = MSG_ReadShort(&net_message); // An id of -1 is an instant effect
+	if (id != -1) // Sustains
 	{
 		cl_sustain_t *s = CL_FindFreeSustain();
 
@@ -640,7 +637,7 @@ void CL_ParseSteam (void)
 			s->count = MSG_ReadByte(&net_message);
 			MSG_ReadPos(&net_message, s->org);
 			MSG_ReadDir(&net_message, s->dir);
-			r = MSG_ReadByte(&net_message);
+			const int r = MSG_ReadByte(&net_message);
 			s->color = r & 0xff;
 			s->magnitude = MSG_ReadShort(&net_message);
 			s->endtime = cl.time + MSG_ReadLong(&net_message);
@@ -651,21 +648,21 @@ void CL_ParseSteam (void)
 		else
 		{
 			// FIXME - read the stuff anyway
-			cnt = MSG_ReadByte(&net_message);
+			MSG_ReadByte(&net_message);
 			MSG_ReadPos(&net_message, pos);
 			MSG_ReadDir(&net_message, dir);
-			r = MSG_ReadByte(&net_message);
-			magnitude = MSG_ReadShort(&net_message);
-			magnitude = MSG_ReadLong(&net_message); // really interval
+			MSG_ReadByte(&net_message);
+			MSG_ReadShort(&net_message);
+			MSG_ReadLong(&net_message); // Interval
 		}
 	}
-	else // instant
+	else // Instant
 	{
-		cnt = MSG_ReadByte(&net_message);
+		const int cnt = MSG_ReadByte(&net_message);
 		MSG_ReadPos(&net_message, pos);
 		MSG_ReadDir(&net_message, dir);
-		r = MSG_ReadByte(&net_message);
-		magnitude = MSG_ReadShort(&net_message);
+		const int r = MSG_ReadByte(&net_message);
+		const int magnitude = MSG_ReadShort(&net_message);
 
 		const int color = r & 0xff;
 		CL_ParticleSteamEffect(pos, dir,
@@ -882,7 +879,8 @@ void CL_ParseTEnt (void)
 		if (r == SPLASH_SPARKS)
 		{
 			r = rand() & 3;
-			S_StartSound(pos, 0, 0, clMedia.sfx_spark[r], 1, ATTN_STATIC, 0);
+			if(r < 3)
+				S_StartSound(pos, 0, 0, clMedia.sfx_spark[r], 1, ATTN_STATIC, 0);
 		}
 	}
 	break;
