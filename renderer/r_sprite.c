@@ -17,26 +17,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-
 // r_sprite.c -- sprite rendering
 // moved from r_main.c
 
 #include "r_local.h"
 
-/*
-=============================================================
-	SPRITE MODELS
-=============================================================
-*/
-
-/*
-=================
-R_DrawSpriteModel
-=================
-*/
-void R_DrawSpriteModel (entity_t *e)
+void R_DrawSpriteModel(entity_t *e)
 {
-	// don't even bother culling, because it's just a single polygon without a surface cache
+	// Don't even bother culling, because it's just a single polygon without a surface cache
 	dsprite_t *psprite = (dsprite_t *)currentmodel->extradata;
 
 	e->frame %= psprite->numframes;
@@ -48,21 +36,17 @@ void R_DrawSpriteModel (entity_t *e)
 	c_alias_polys += 2;
 
 	//mxd. Rotated sprite
-	float *up, *right;
+	vec3_t up, right;
 	if(e->angles[ROLL])
 	{
-		vec3_t tmp, ang_right, ang_up;
-
+		vec3_t tmp;
 		VecToAngleRolled(vpn, e->angles[ROLL], tmp); // Roll the forward view vector
-		AngleVectors(tmp, NULL, ang_right, ang_up);
-
-		up = ang_up;
-		right = ang_right;
+		AngleVectors(tmp, NULL, right, up);
 	}
-	else // normal sprite
+	else // Normal sprite
 	{
-		up = vup;
-		right = vright;
+		VectorCopy(vup, up);
+		VectorCopy(vright, right);
 	}
 	
 	const float alpha = (e->flags & RF_TRANSLUCENT ? e->alpha : 1.0f);
@@ -131,7 +115,9 @@ void R_DrawSpriteModel (entity_t *e)
 	VectorMA(e->origin, -frame->origin_y * scale, up, point[3]);
 	VectorMA(point[3], (frame->width - frame->origin_x) * scale, right, point[3]);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
+
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
 	indexArray[rb_index++] = rb_vertex + 2;
@@ -162,5 +148,6 @@ void R_DrawSpriteModel (entity_t *e)
 	if (e->flags & RF_DEPTHHACK) //mxd
 		GL_DepthRange(gldepthmin, gldepthmax);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 }
