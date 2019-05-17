@@ -142,6 +142,13 @@ static int Mod_SortModelinfos(const modelinfo_t *first, const modelinfo_t *secon
 
 void Mod_Modellist_f(void)
 {
+	//mxd. Paranoia check...
+	if(mod_numknown == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No models loaded.\n");
+		return;
+	}
+	
 	//mxd. Collect model infos first...
 	modelinfo_t *infos = malloc(sizeof(modelinfo_t) * mod_numknown);
 	int numinfos = 0;
@@ -471,8 +478,9 @@ static void Mod_LoadTexinfo(model_t *m, byte *data)
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
-		for (int j = 0; j < 8; j++)
-			out->vecs[0][j] = in->vecs[0][j];
+		for (int a = 0; a < 2; a++)
+			for (int b = 0; b < 4; b++)
+				out->vecs[a][b] = in->vecs[a][b];
 
 		out->flags = in->flags;
 
@@ -1182,14 +1190,12 @@ void Mod_Free(model_t *mod)
 	//mxd. Free normalmap/shadowmap-related data
 	for (int i = 0; i < mod->numsurfaces; i++)
 	{
-		if (mod->surfaces[i].lightmap_points)
-			free(mod->surfaces[i].lightmap_points);
-		if (mod->surfaces[i].normalmap_normals)
-			free(mod->surfaces[i].normalmap_normals);
+		free(mod->surfaces[i].lightmap_points);
+		free(mod->surfaces[i].normalmap_normals);
 	}
 
 	//mxd. Free more normalmap-related data
-	if (mod->texinfo && mod->texinfo->nmapvectors)
+	if (mod->texinfo)
 		free(mod->texinfo->nmapvectors);
 	
 	ModChunk_Free(mod->extradata); //mxd

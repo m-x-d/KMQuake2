@@ -505,7 +505,7 @@ void SV_Map_f(void)
 
 	// If not a pcx, demo, or cinematic, check to make sure the level exists
 	char *map = Cmd_Argv(1);
-	if (!strstr(map, "."))
+	if (!strchr(map, '.')) //mxd. strstr -> strchr
 	{
 		char expanded[MAX_QPATH];
 		Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", map);
@@ -539,7 +539,7 @@ void SV_Loadgame_f(void)
 	Com_Printf("Loading game...\n");
 
 	char *dir = Cmd_Argv(1);
-	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\"))
+	if (strstr(dir, "..") || strchr(dir, '/') || strchr(dir, '\\')) //mxd. strstr -> strchr
 		Com_Printf("Invalid savedir path: '%s'.\n", dir);
 
 	// Make sure the server.ssv file exists
@@ -615,7 +615,7 @@ void SV_Savegame_f(void)
 	}
 
 	char *dir = Cmd_Argv(1);
-	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\"))
+	if (strstr(dir, "..") || strchr(dir, '/') || strchr(dir, '\\')) //mxd. strstr -> strchr
 		Com_Printf("Invalid savedir path: '%s'.\n", dir);
 
 	Com_Printf(S_COLOR_CYAN"Saving game \"%s\"...\n", dir);

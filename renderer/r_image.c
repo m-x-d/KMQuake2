@@ -245,6 +245,13 @@ void R_ImageList_f(void)
 {
 	const char *palstrings[] = { "RGB ", "RGBA" }; //mxd. +RGBA
 
+	//mxd. Paranoia check...
+	if(numgltextures == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No textures loaded.\n");
+		return;
+	}
+
 	//mxd. Collect image infos first...
 	imageinfo_t *infos = malloc(sizeof(imageinfo_t) * numgltextures);
 	int numinfos = 0;
@@ -670,7 +677,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	if (mipmap && glConfig.anisotropic && r_anisotropic->value)
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, r_anisotropic->value);
 
-	return (samples == GL_ALPHA_FORMAT || samples == GL_COMPRESSED_RGBA_ARB);
+	return (samples == GL_ALPHA_FORMAT);
 }
 
 // Returns has_alpha
@@ -901,7 +908,7 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 	}
 
 	//mxd. All internal textures should be already loaded, all external ones must have an extension
-	if(strlen(ext) == 0)
+	if(!*ext)
 	{
 		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: failed to load internal texture '%s'\n", __func__, name); //mxd
 		return NULL;

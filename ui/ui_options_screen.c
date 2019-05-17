@@ -179,7 +179,7 @@ char **SetCrosshairNames(void)
 			p = strstr(crosshairfiles[i], "/pics/");
 			p++;
 
-			p = strstr(p, "/");
+			p = strchr(p, '/'); //mxd. strstr -> strchr
 			p++;
 
 			if (!strstr(p, ".tga") && !strstr(p, ".png") && !strstr(p, ".jpg") && !strstr(p, ".pcx"))
@@ -230,10 +230,10 @@ char **SetCrosshairNames(void)
 	{
 		for (int i = 0; i < ncrosshairs && ncrosshairnames < MAX_CROSSHAIRS; i++)
 		{
-			if (!crosshairfiles || !crosshairfiles[i])
+			if (!crosshairfiles[i])
 				continue;
 
-			p = strstr(crosshairfiles[i], "/");
+			p = strchr(crosshairfiles[i], '/'); //mxd. strstr -> strchr
 			p++;
 
 			if (!strstr(p, ".tga") && !strstr(p, ".png") && !strstr(p, ".jpg") && !strstr(p, ".pcx"))

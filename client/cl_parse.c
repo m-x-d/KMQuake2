@@ -159,7 +159,7 @@ void CL_LoadClientinfo(clientinfo_t *ci, char *s)
 	// Isolate the player's name
 	strncpy(ci->name, s, sizeof(ci->name));
 	ci->name[sizeof(ci->name) - 1] = 0;
-	char *t = strstr(s, "\\");
+	char *t = strchr(s, '\\'); //mxd. strstr -> strchr
 	if (t)
 	{
 		ci->name[t - s] = 0;
@@ -184,9 +184,9 @@ void CL_LoadClientinfo(clientinfo_t *ci, char *s)
 	{
 		// Isolate the model name
 		Q_strncpyz(model_name, s, sizeof(model_name));
-		t = strstr(model_name, "/");
+		t = strchr(model_name, '/'); //mxd. strstr -> strchr
 		if (!t)
-			t = strstr(model_name, "\\");
+			t = strchr(model_name, '\\'); //mxd. strstr -> strchr
 		if (!t)
 			t = model_name;
 		*t = 0;

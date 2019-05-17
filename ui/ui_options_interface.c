@@ -170,7 +170,7 @@ char **SetFontNames(void)
 			p = strstr(fontfiles[i], "/fonts/");
 			p++;
 
-			p = strstr(p, "/");
+			p = strchr(p, '/'); //mxd. strstr -> strchr
 			p++;
 
 			if (!strstr(p, ".tga") && !strstr(p, ".png") && !strstr(p, ".jpg") && !strstr(p, ".pcx"))
@@ -203,10 +203,10 @@ char **SetFontNames(void)
 	{
 		for (int i = 0; i < nfonts && nfontnames < MAX_FONTS; i++)
 		{
-			if (!fontfiles || !fontfiles[i]) // Knightmare added array base check
+			if (!fontfiles[i]) // Knightmare added array base check
 				continue;
 
-			p = strstr(fontfiles[i], "/");
+			p = strchr(fontfiles[i], '/'); //mxd. strstr -> strchr
 			p++;
 
 			if (!strstr(p, ".tga") && !strstr(p, ".png") && !strstr(p, ".jpg") && !strstr(p, ".pcx"))

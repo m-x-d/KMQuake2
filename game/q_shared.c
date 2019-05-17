@@ -1210,7 +1210,7 @@ void Info_RemoveKey(char *s, char *key)
 	char pkey[512];
 	char value[512];
 
-	if (strstr(key, "\\"))
+	if (strchr(key, '\\')) //mxd. strstr -> strchr
 		return;
 
 	while (true)
@@ -1255,7 +1255,7 @@ qboolean Info_Validate(char *s)
 
 void Info_SetValueForKey(char *s, char *key, char *value)
 {
-	if (strchr(key, '\\') || strchr(value, '\\'))
+	if (strchr(key, '\\') || (value && strchr(value, '\\')))
 	{
 		Com_Printf("Can't use keys or values with a '\\' character (key: '%s', value: '%s').\n", key, value);
 		return;
@@ -1267,13 +1267,13 @@ void Info_SetValueForKey(char *s, char *key, char *value)
 		return;
 	}
 
-	if (strchr(key, '\"') || strchr(value, '\"'))
+	if (strchr(key, '\"') || (value && strchr(value, '\"')))
 	{
 		Com_Printf("Can't use keys or values with a '\"' character (key: '%s', value: '%s').\n", key, value);
 		return;
 	}
 
-	if (strlen(key) > MAX_INFO_KEY - 1 || strlen(value) > MAX_INFO_KEY - 1)
+	if (strlen(key) > MAX_INFO_KEY - 1 || (value && strlen(value) > MAX_INFO_KEY - 1))
 	{
 		Com_Printf("Keys and values must be less than 64 characters long (key: '%s' [%i chars], value: '%s' [%i chars]).\n", key, strlen(key), value, strlen(value));
 		return;

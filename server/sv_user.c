@@ -408,7 +408,7 @@ void SV_BeginDownload_f(void)
 	if (!length || name[0] == 0 // empty name, maybe as result of ./ normalize
 		|| !IsValidChar(name[0])
 		|| strchr(name, '\\') // r1ch: \ is bad in general, client won't even write properly if we do sent it
-		|| (!strstr(name, "/") && strcmp(name + strlen(name) - 4, ".pk3")) // MUST be in a subdirectory, unless a pk3	
+		|| (!strchr(name, '/') && strcmp(name + strlen(name) - 4, ".pk3")) // MUST be in a subdirectory, unless a pk3	
 		|| !IsValidChar(name[length - 1])) // r1ch: another bug, maps/. will fopen(".") -> crash
 	{	
 		// don't allow anything with .. path

@@ -162,15 +162,15 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 	sv.attractloop = attractloop;
 
 	// Save name for levels that don't set message
-	Q_strncpyz(sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[CS_NAME]));
+	Q_strncpyz(sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[0]));
 	if (Cvar_VariableValue("deathmatch"))
 	{
-		Com_sprintf(sv.configstrings[CS_AIRACCEL], sizeof(sv.configstrings[CS_AIRACCEL]), "%g", sv_airaccelerate->value);
+		Com_sprintf(sv.configstrings[CS_AIRACCEL], sizeof(sv.configstrings[0]), "%g", sv_airaccelerate->value);
 		pm_airaccelerate = sv_airaccelerate->value;
 	}
 	else
 	{
-		Q_strncpyz(sv.configstrings[CS_AIRACCEL], "0", sizeof(sv.configstrings[CS_AIRACCEL]));
+		Q_strncpyz(sv.configstrings[CS_AIRACCEL], "0", sizeof(sv.configstrings[0]));
 		pm_airaccelerate = 0;
 	}
 
@@ -191,7 +191,7 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 	sv.time = 1000;
 	
 	Q_strncpyz(sv.name, server, sizeof(sv.name));
-	Q_strncpyz(sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[CS_NAME]));
+	Q_strncpyz(sv.configstrings[CS_NAME], server, sizeof(sv.configstrings[0]));
 
 	if (serverstate != ss_game)
 	{
@@ -199,17 +199,17 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 	}
 	else
 	{
-		Com_sprintf(sv.configstrings[CS_MODELS + 1],sizeof(sv.configstrings[CS_MODELS + 1]), "maps/%s.bsp", server);
+		Com_sprintf(sv.configstrings[CS_MODELS + 1], sizeof(sv.configstrings[0]), "maps/%s.bsp", server);
 	
 		// Resolve CS_PAKFILE, hack by Jay Dolan
 		FS_FOpenFile(sv.configstrings[CS_MODELS + 1], &f, FS_READ);
-		Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name[0] ? last_pk3_name : ""), sizeof(sv.configstrings[CS_PAKFILE])); //mxd. Address of array 'last_pk3_name' will always evaluate to 'true'
+		Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name[0] ? last_pk3_name : ""), sizeof(sv.configstrings[0])); //mxd. Address of array 'last_pk3_name' will always evaluate to 'true'
 		FS_FCloseFile(f);
 	
 		sv.models[1] = CM_LoadMap(sv.configstrings[CS_MODELS + 1], false, &checksum);
 	}
 
-	Com_sprintf(sv.configstrings[CS_MAPCHECKSUM], sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
+	Com_sprintf(sv.configstrings[CS_MAPCHECKSUM], sizeof(sv.configstrings[0]), "%i", checksum);
 
 	//
 	// Clear physics interaction links
@@ -218,7 +218,7 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 	
 	for (int i = 1; i < CM_NumInlineModels(); i++)
 	{
-		Com_sprintf(sv.configstrings[CS_MODELS + 1 + i], sizeof(sv.configstrings[CS_MODELS + 1 + i]), "*%i", i);
+		Com_sprintf(sv.configstrings[CS_MODELS + 1 + i], sizeof(sv.configstrings[0]), "*%i", i);
 		sv.models[i + 1] = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
 	}
 
@@ -351,7 +351,7 @@ void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 		Q_strncpyz(level, levelstring, sizeof(level));
 
 	// If there is a + in the map, set nextserver to the remainder
-	char *ch = strstr(level, "+");
+	char *ch = strchr(level, '+'); //mxd. strstr -> strchr
 	if (ch)
 	{
 		*ch = 0;
@@ -367,7 +367,7 @@ void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 		Cvar_Set("nextserver", "gamemap \"*base1\"");
 
 	// If there is a $, use the remainder as a spawnpoint
-	ch = strstr(level, "$");
+	ch = strchr(level, '$'); //mxd. strstr -> strchr
 	if (ch)
 	{
 		*ch = 0;

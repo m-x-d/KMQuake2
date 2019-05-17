@@ -622,6 +622,13 @@ char **FS_ListPak(char *find, int *num)
 				nfiles++;
 	}
 
+	//mxd. Paranoia check...
+	if(nfiles == 0)
+	{
+		Com_Printf(S_COLOR_YELLOW"No usable files found in PAK files!\n");
+		return NULL;
+	}
+
 	char **list = malloc(sizeof(char *) * nfiles);
 	memset(list, 0, sizeof(char *) * nfiles);
 
@@ -1274,8 +1281,11 @@ static void FS_Link_f(void)
 // TODO: close open files for game dir
 void FS_Startup(void)
 {
-	if (!fs_gamedirvar->string[0] || strstr(fs_gamedirvar->string, ".") || strstr(fs_gamedirvar->string, "/")
-		|| strstr(fs_gamedirvar->string, "\\") || strstr(fs_gamedirvar->string, ":"))
+	if (!fs_gamedirvar->string[0]
+		|| strchr(fs_gamedirvar->string, '.')
+		|| strchr(fs_gamedirvar->string, '/')
+		|| strchr(fs_gamedirvar->string, '\\')
+		|| strchr(fs_gamedirvar->string, ':')) //mxd. strstr -> strchr
 	{
 		Cvar_ForceSet("game", BASEDIRNAME);
 	}
@@ -1406,7 +1416,7 @@ void FS_SetGamedir(char *dir)
 {
 	qboolean basegame1_loaded = false;
 
-	if (strstr(dir, "..") || strstr(dir, "/") || strstr(dir, "\\") || strstr(dir, ":") )
+	if (strstr(dir, "..") || strchr(dir, '/') || strchr(dir, '\\') || strchr(dir, ':')) //mxd. strstr -> strchr
 	{
 		Com_Printf("Gamedir should be a single filename, not a path\n");
 		return;
@@ -1415,7 +1425,7 @@ void FS_SetGamedir(char *dir)
 	// Knightmare- check basegame var
 	if (fs_basegamedir->string[0])
 	{
-		if (strstr(fs_basegamedir->string, "..") || strstr(fs_basegamedir->string, "/") || strstr(fs_basegamedir->string, "\\") || strstr(fs_basegamedir->string, ":"))
+		if (strstr(fs_basegamedir->string, "..") || strchr(fs_basegamedir->string, '/') || strchr(fs_basegamedir->string, '\\') || strchr(fs_basegamedir->string, ':')) //mxd. strstr -> strchr
 		{
 			Cvar_Set("basegame", "");
 			Com_Printf("Basegame should be a single filename, not a path\n");
@@ -1431,7 +1441,7 @@ void FS_SetGamedir(char *dir)
 	// Knightmare- check basegame2 var
 	if (fs_basegamedir2->string[0])
 	{
-		if (strstr(fs_basegamedir2->string, "..") || strstr(fs_basegamedir2->string, "/") || strstr(fs_basegamedir2->string, "\\") || strstr(fs_basegamedir2->string, ":"))
+		if (strstr(fs_basegamedir2->string, "..") || strchr(fs_basegamedir2->string, '/') || strchr(fs_basegamedir2->string, '\\') || strchr(fs_basegamedir2->string, ':')) //mxd. strstr -> strchr
 		{
 			Cvar_Set("basegame2", "");
 			Com_Printf("Basegame2 should be a single filename, not a path\n");

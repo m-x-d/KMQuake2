@@ -27,7 +27,7 @@ qboolean cvar_allowCheats = true;
 
 static qboolean Cvar_InfoValidate(char *s)
 {
-	return (!strstr(s, "\\") && !strstr(s, "\"") && !strstr(s, ";"));
+	return (!strchr(s, '\\') && !strchr(s, '\"') && !strchr(s, ';')); //mxd. strstr -> strchr
 }
 
 cvar_t *Cvar_FindVar(char *var_name)
@@ -80,7 +80,7 @@ char *Cvar_DefaultString(char *var_name)
 
 void Cvar_CompleteVariable(const char *partial, void(*callback)(const char *found)) //mxd. +callback
 {
-	if (strlen(partial) == 0)
+	if (!*partial)
 		return;
 
 	//mxd. Check, whether cvar name contains target string
@@ -478,6 +478,13 @@ static void Cvar_List_f(void)
 	int numtotal = 0;
 	for (cvar_t *var = cvar_vars; var; var = var->next)
 		numtotal++;
+
+	//mxd. Paranoia check...
+	if(numtotal == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No cvars...\n");
+		return;
+	}
 
 	cvarinfo_t *infos = malloc(sizeof(cvarinfo_t) * numtotal);
 

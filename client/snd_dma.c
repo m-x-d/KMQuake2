@@ -1228,6 +1228,13 @@ static int S_SortSoundinfos(const soundinfo_t *first, const soundinfo_t *second)
 
 void S_SoundList(void)
 {
+	//mxd. Avoid memset(NULL);
+	if (num_sfx == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No sounds loaded.\n");
+		return;
+	}
+	
 	//mxd. Collect sound infos first...
 	const uint infossize = sizeof(soundinfo_t) * num_sfx;
 	soundinfo_t *infos = malloc(infossize);

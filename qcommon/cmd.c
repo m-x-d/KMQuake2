@@ -610,7 +610,7 @@ qboolean Cmd_Exists(char *cmd_name)
 //mxd. Added alias auto-completion
 void Cmd_CompleteAlias(const char *partial, void(*callback)(const char *found))
 {
-	if (strlen(partial) == 0)
+	if (!*partial)
 		return;
 
 	//mxd. Check, whether alias name contains target string
@@ -622,7 +622,7 @@ void Cmd_CompleteAlias(const char *partial, void(*callback)(const char *found))
 // Knightmare - added command auto-complete
 void Cmd_CompleteCommand(const char *partial, void(*callback)(const char *found)) //mxd. +callback
 {
-	if (strlen(partial) == 0)
+	if (!*partial)
 		return;
 
 	//mxd. Check, whether command name contains target string
@@ -708,6 +708,13 @@ void Cmd_List_f(void)
 	int numcommands = 0;
 	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
 		numcommands++;
+
+	//mxd. Paranoia check
+	if(numcommands == 0)
+	{
+		Com_Printf(S_COLOR_GREEN"No console comands...\n");
+		return;
+	}
 
 	cmdinfo_t *infos = malloc(sizeof(cmdinfo_t) * numcommands);
 
