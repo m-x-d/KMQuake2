@@ -29,9 +29,13 @@
 #include <stdlib.h>
 #include "r_local.h"
 
-// Don't need HDR stuff
+// Disable unneeded stuff
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
+#define STBI_NO_BMP
+#define STBI_NO_GIF
+#define STBI_NO_PSD
+#define STBI_NO_PNM
 
 // Make sure STB_image uses standard malloc(), as we'll use standard free() to deallocate
 /*#define STBI_MALLOC(sz)    malloc(sz)
