@@ -418,7 +418,7 @@ void CDAudio_Update(void)
 
 int CDAudio_Init(void)
 {
-	cd_nocd = Cvar_Get("cd_nocd", "0", CVAR_ARCHIVE );
+	cd_nocd = Cvar_Get("cd_nocd", "1", CVAR_ARCHIVE ); //mxd. Was 0. Changed so the new Music source selection logic works as expected.
 	cd_loopcount = Cvar_Get("cd_loopcount", "6", CVAR_ARCHIVE);	// Knightmare increased, was 4, added archive flag
 	cd_looptrack = Cvar_Get("cd_looptrack", "11", 0);
 	if (cd_nocd->value)

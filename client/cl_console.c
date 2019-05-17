@@ -307,7 +307,6 @@ void Con_Print(char *text)
 
 	// Add to con.text[], char by char
 	char colorchar = 0; //mxd. Last encountered COLOR_ char
-	int colorcharslen = 0; //mxd. Length of all encountered COLOR_ chars in current line
 	while (*text)
 	{
 		// Count word length
@@ -316,20 +315,13 @@ void Con_Print(char *text)
 			if (text[len] <= ' ')
 				break;
 
-		//mxd. Don't count colouring chars towards word length...
+		//mxd. Store current coloring char...
 		if (IsColoredString(text))
-		{
-			len -= 2;
-			colorcharslen += 2;
 			colorchar = text[1];
-		}
 
 		// Word wrap
-		if (len < con.linewidth && con.offsetx + len - colorcharslen > con.linewidth)
-		{
+		if (len < con.linewidth && con.offsetx + len > con.linewidth)
 			con.offsetx = 0;
-			colorcharslen = 0; //mxd. Reset on newline
-		}
 
 		// Clear current line without advancing to the next one?
 		if (carriage_return)
@@ -343,12 +335,11 @@ void Con_Print(char *text)
 			Con_Linefeed();
 
 			//mxd. Add last used color from previous line
-			if (colorchar)
+			if (colorchar && text[0] != Q_COLOR_ESCAPE && text[1] && text[1] != colorchar)
 			{
 				const int pos = (con.currentline % con.totallines) * con.linewidth;
-				con.text[pos + (con.offsetx++)] = Q_COLOR_ESCAPE;
-				con.text[pos + (con.offsetx++)] = colorchar;
-				colorcharslen += 2;
+				con.text[pos + (con.offsetx++)] = Q_COLOR_ESCAPE | mask | con.ormask;
+				con.text[pos + (con.offsetx++)] = colorchar | mask | con.ormask;
 			}
 			
 			// Mark time for transparent overlay
@@ -361,13 +352,11 @@ void Con_Print(char *text)
 			case '\n':
 				con.offsetx = 0;
 				colorchar = 0; //mxd
-				colorcharslen = 0; //mxd. Reset on newline
 				break;
 
 			case '\r':
 				con.offsetx = 0;
 				colorchar = 0; //mxd
-				colorcharslen = 0; //mxd. Reset on newline
 				carriage_return = true;
 				break;
 
@@ -375,11 +364,8 @@ void Con_Print(char *text)
 			{
 				const int pos = (con.currentline % con.totallines) * con.linewidth;
 				con.text[pos + (con.offsetx++)] = *text | mask | con.ormask;
-				if (con.offsetx - colorcharslen >= con.linewidth) // Triggered only when a single word is longer than con.linewidth
-				{
+				if (con.offsetx >= con.linewidth) //mxd. Triggered only when a single word is longer than con.linewidth?
 					con.offsetx = 0;
-					colorcharslen = 0; //mxd. Reset on newline
-				}
 				break;
 			}
 		}
