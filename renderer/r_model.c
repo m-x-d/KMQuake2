@@ -1179,6 +1179,19 @@ int R_GetRegistartionSequence(struct model_s *model)
 
 void Mod_Free(model_t *mod)
 {
+	//mxd. Free normalmap/shadowmap-related data
+	for (int i = 0; i < mod->numsurfaces; i++)
+	{
+		if (mod->surfaces[i].lightmap_points)
+			free(mod->surfaces[i].lightmap_points);
+		if (mod->surfaces[i].normalmap_normals)
+			free(mod->surfaces[i].normalmap_normals);
+	}
+
+	//mxd. Free more normalmap-related data
+	if (mod->texinfo && mod->texinfo->nmapvectors)
+		free(mod->texinfo->nmapvectors);
+	
 	ModChunk_Free(mod->extradata); //mxd
 	memset(mod, 0, sizeof(*mod));
 }

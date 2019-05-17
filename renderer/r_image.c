@@ -1124,7 +1124,7 @@ void R_LoadNormalmap(const char *texture, mtexinfo_t *tex)
 	// Try to load image...
 	char name[MAX_QPATH];
 	byte *pic = NULL; // Stores RGBA image data
-	int	width, height;
+	int width, height;
 
 	Com_sprintf(name, sizeof(name), "textures/%s_normal", texture);
 
@@ -1135,24 +1135,25 @@ void R_LoadNormalmap(const char *texture, mtexinfo_t *tex)
 		return; // No dice...
 	}
 
-	// Dimensions must match...
-	if(tex->image->width != width || tex->image->height != height)
+	// Texture and normalmap dimensions must match...
+	if (tex->image->width == width && tex->image->height == height)
 	{
-		VID_Printf(PRINT_ALL, "R_LoadNormalmap: '%s' normalmap dimensions (%i x %i) don't match '%s' texture dimensions (%i x %i)\n", name, texture, width, height, tex->image->width, tex->image->height);
-		return;
+		// Load nmap vectors...
+		const int numvectors = width * height;
+		tex->nmapvectors = malloc(sizeof(float) * 3 * numvectors);
+
+		int n = 0;
+		for (int i = 0; i < numvectors; i++)
+		{
+			for (int c = 0; c < 3; c++)
+				tex->nmapvectors[i * 3 + c] = roundf((pic[n++] * 0.0078125f - 1.0f) * 10) / 10; // Convert from [0..255] to [-1..1] range. 0.0078125f == 1 / 128
+
+			n++; // Skip alpha value...
+		}
 	}
-
-	// Load nmap vectors...
-	const int numvectors = width * height;
-	tex->nmapvectors = malloc(sizeof(float) * 3 * numvectors);
-
-	int n = 0;
-	for (int i = 0; i < numvectors; i++)
+	else
 	{
-		for (int c = 0; c < 3; c++)
-			tex->nmapvectors[i * 3 + c] = roundf((pic[n++] * 0.0078125f - 1.0f) * 10) / 10; // Convert from [0..255] to [-1..1] range. 0.0078125f == 1 / 128
-		
-		n++; // Skip alpha value...
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"R_LoadNormalmap: '%s' normalmap dimensions (%i x %i) don't match '%s' texture dimensions (%i x %i)\n", name, texture, width, height, tex->image->width, tex->image->height);
 	}
 
 	// Free the resource...
