@@ -1269,19 +1269,22 @@ void CL_BigTeleportParticles (vec3_t org)
 	for (int i = 0; i < (1024 / cl_particle_scale->value); i++) // was 4096
 	{
 		const int index = rand() & 3;
-		const float angle = M_PI * 2 * (rand() & 1023) / 1023.0;
-		const float dist = rand()&31;
+		const float angle = M_PI * 2 * (rand() & 1023) / 1023.0f;
+		const float dist = rand() & 31;
+
+		const float cosa = cosf(angle); //mxd
+		const float sina = sinf(angle); //mxd
 
 		CL_SetupParticle(
 			0, 0, 0,
-			org[0] + cos(angle) * dist, org[1] + sin(angle) * dist, org[2] + 8 + (rand() % 90),
-			cos(angle) * (70 + (rand() & 63)), sin(angle) * (70 + (rand() & 63)), -100 + (rand() & 31),
-			-cos(angle) * 100, -sin(angle) * 100, PARTICLE_GRAVITY * 4,
+			org[0] + cosa * dist, org[1] + sina * dist, org[2] + 8 + (rand() % 90),
+			cosa * (70 + (rand() & 63)), sina * (70 + (rand() & 63)), -100 + (rand() & 31),
+			-cosa * 100, -sina * 100, PARTICLE_GRAVITY * 4,
 			colortable0[index], colortable1[index], colortable2[index],
 			0, 0, 0,
-			1, -0.1 / (0.5 + frand() * 0.3),
+			1, -0.1f / (0.5f + frand() * 0.3f),
 			GL_SRC_ALPHA, GL_ONE,
-			5, 0.15 / (0.5 + frand() * 0.3),	 // was 2, 0.05	
+			5, 0.15f / (0.5f + frand() * 0.3f), // was 2, 0.05
 			particle_generic,
 			0,
 			NULL, false);

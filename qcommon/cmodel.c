@@ -483,7 +483,10 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	byte *buf;
 	const int length = FS_LoadFile(name, (void **)&buf);
 	if (!buf)
+	{
 		Com_Error(ERR_DROP, "Couldn't load %s", name);
+		return NULL; //mxd. Silence PVS warning.
+	}
 
 	last_checksum = Com_BlockChecksum(buf, length);
 	*checksum = last_checksum;

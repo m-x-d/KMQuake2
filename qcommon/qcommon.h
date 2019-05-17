@@ -582,10 +582,10 @@ void NET_Config(qboolean multiplayer);
 qboolean NET_GetPacket(netsrc_t sock, netadr_t *net_from, sizebuf_t *net_message);
 void NET_SendPacket(netsrc_t sock, int length, void *data, netadr_t to);
 
-qboolean NET_CompareAdr(netadr_t a, netadr_t b);
-qboolean NET_CompareBaseAdr(netadr_t a, netadr_t b);
-qboolean NET_IsLocalAddress(netadr_t adr);
-char *NET_AdrToString(netadr_t a);
+qboolean NET_CompareAdr(const netadr_t a, const netadr_t b);
+qboolean NET_CompareBaseAdr(const netadr_t a, const netadr_t b);
+qboolean NET_IsLocalAddress(const netadr_t adr);
+char *NET_AdrToString(const netadr_t a);
 qboolean NET_StringToAdr(char *s, netadr_t *a);
 void NET_Sleep(int msec);
 

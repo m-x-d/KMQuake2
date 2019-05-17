@@ -221,8 +221,8 @@ R_Bloom_InitTextures
 void R_Bloom_InitTextures (void)
 {
 	//find closer power of 2 to screen size 
-	for (screen_texture_width = 1; screen_texture_width < vid.width; screen_texture_width *= 2);
-	for (screen_texture_height = 1; screen_texture_height < vid.height; screen_texture_height *= 2);
+	for (screen_texture_width = 1; screen_texture_width < vid.width; screen_texture_width *= 2) { }
+	for (screen_texture_height = 1; screen_texture_height < vid.height; screen_texture_height *= 2) { }
 
 	//disable blooms if we can't handle a texture of that size
 /*	if( screen_texture_width > glConfig.maxTextureSize ||

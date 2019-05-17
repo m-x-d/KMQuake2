@@ -290,7 +290,7 @@ void S_PaintChannels(int endtime)
 		
 			while (ltime < end)
 			{
-				if (!ch->sfx || (!ch->leftvol && !ch->rightvol) )
+				if (!ch->sfx || (!ch->leftvol && !ch->rightvol))
 					break;
 
 				// max painting is to the end of the buffer

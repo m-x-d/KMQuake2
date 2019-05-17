@@ -175,7 +175,7 @@ void Com_Printf(char *fmt, ...)
 		}
 
 		//mxd. Add early messages?
-		if (earlymsgcount > 0)
+		if (logfile && earlymsgcount > 0)
 		{
 			for (int i = 0; i < earlymsgcount; i++)
 				fprintf(logfile, "%s\n", earlymsg[i]);
@@ -1466,7 +1466,10 @@ void *Z_TagMalloc(int size, int tag)
 	size += sizeof(zhead_t);
 	zhead_t *z = malloc(size);
 	if (!z)
+	{
 		Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes", size);
+		return NULL; //mxd. Silence PVS warning...
+	}
 
 	memset(z, 0, size);
 	z_count++;

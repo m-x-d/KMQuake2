@@ -540,7 +540,7 @@ void S_OGG_LoadFileList (void)
 		// Add valid Ogg Vorbis file to the list
 		for (int i = 0; i < numfiles && ogg_numfiles < MAX_OGGLIST; i++)
 		{
-			if (!list || !list[i])
+			if (!list[i])
 				continue;
 
 			char *p = list[i];

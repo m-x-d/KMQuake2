@@ -119,12 +119,9 @@ static size_t GetAllocSizeMD2(void *buffer)
 	{
 		remaparraysize = newremaparraysize;
 
-		if (md2IndRemap)
-			free(md2IndRemap);
-		if (md2TempIndex)
-			free(md2TempIndex);
-		if (md2TempStIndex)
-			free(md2TempStIndex);
+		free(md2IndRemap);
+		free(md2TempIndex);
+		free(md2TempStIndex);
 
 		md2IndRemap = malloc(remaparraysize);
 		md2TempIndex = malloc(remaparraysize);

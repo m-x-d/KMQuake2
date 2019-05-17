@@ -167,8 +167,7 @@ void R_ScaledScreenshot(char *filename)
 void R_GrabScreen(void) // Knightmare
 {
 	// Free saveshot buffer first
-	if (saveshotdata)
-		free(saveshotdata);
+	free(saveshotdata);
 
 	// Round down width to nearest multiple of 4
 	const int grab_width = vid.width & ~3;

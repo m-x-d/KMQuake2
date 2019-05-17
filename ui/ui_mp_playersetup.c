@@ -819,9 +819,7 @@ void PConfigAccept(void)
 	{
 		for (int j = 0; j < s_pmi[i].nskins; j++)
 		{
-			if (s_pmi[i].skindisplaynames[j])
-				free(s_pmi[i].skindisplaynames[j]);
-
+			free(s_pmi[i].skindisplaynames[j]);
 			s_pmi[i].skindisplaynames[j] = 0;
 		}
 

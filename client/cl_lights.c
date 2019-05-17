@@ -83,7 +83,7 @@ void CL_RunLightStyles(void)
 }
 
 
-void CL_SetLightstyle (int i)
+void CL_SetLightstyle(const int i)
 {
 	// Knightmare- BIG UGLY HACK for old connected to server using old protocol
 	// Changed config strings require different parsing
@@ -91,9 +91,6 @@ void CL_SetLightstyle (int i)
 	char *s = cl.configstrings[i + cs_lights];
 
 	const int len = strlen(s);
-	if (len >= MAX_QPATH) //mxd: never triggered, because cl.configstrings[][64]
-		Com_Error(ERR_DROP, "svc_lightstyle length=%i", len);
-
 	cl_lightstyle[i].length = len;
 
 	for (int k = 0; k < len; k++)

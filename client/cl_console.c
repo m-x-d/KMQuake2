@@ -515,7 +515,7 @@ void Con_DrawNotify(void)
 
 		char *text = con.text + (i % con.totallines) * con.linewidth;
 			
-		int alpha = (int)(255 * sqrtf((1.0f - time / (con_notifytime->value * 1000.0f + 1.0f)))); //mxd. Don't use yoffset / number of lines to modify alpha
+		int alpha = (int)(255 * sqrtf(1.0f - time / (con_notifytime->value * 1000.0f + 1.0f))); //mxd. Don't use yoffset / number of lines to modify alpha
 		alpha = clamp(alpha, 0, 255); //mxd
 
 		Com_sprintf(output, sizeof(output), "");

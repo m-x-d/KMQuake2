@@ -658,7 +658,7 @@ void CL_PlayBackgroundTrack(void); // Knightmare added
 void CL_ParseMuzzleFlash(void);
 void CL_ParseMuzzleFlash2(void);
 
-void CL_SetLightstyle(int i);
+void CL_SetLightstyle(const int i);
 
 void CL_RunDLights(void);
 void CL_RunLightStyles(void);

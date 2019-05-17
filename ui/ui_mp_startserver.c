@@ -294,7 +294,7 @@ static void UI_LoadArenas(void)
 	{
 		for (int i = 0; i < narenas && narenanames < MAX_ARENAS; i++)
 		{
-			if (!arenafiles || !arenafiles[i])
+			if (!arenafiles[i])
 				continue;
 
 			char *p = arenafiles[i];
@@ -334,14 +334,11 @@ static void UI_LoadArenas(void)
 							}
 						}
 
-						if (tok)
-							free(tok);
-
+						free(tok);
 						tok = strdup(COM_Parse(&s));
 					}
 
-					if (tok)
-						free(tok);
+					free(tok);
 
 					const size_t scratchlen = strlen(scratch) + 1; //mxd. V814 Decreased performance. The 'strlen' function was called multiple times inside the body of a loop.
 					for (int j = 0; j < NUM_MAPTYPES; j++)
@@ -433,8 +430,7 @@ void UI_LoadMapList(void)
 
 static void UI_BuildMapList(maptype_t maptype)
 {
-	if (ui_svr_mapnames)
-		free(ui_svr_mapnames);
+	free(ui_svr_mapnames);
 
 	ui_svr_nummaps = ui_svr_listfile_nummaps + ui_svr_arena_nummaps[maptype];
 	ui_svr_mapnames = malloc(sizeof(char *) * (ui_svr_nummaps + 1));
@@ -474,8 +470,7 @@ static void UI_RefreshMapList(maptype_t maptype)
 	s_startmap_list.numitemnames = numitemnames;
 
 	// Levelshot found table
-	if (ui_svr_mapshotvalid)
-		free(ui_svr_mapshotvalid);
+	free(ui_svr_mapshotvalid);
 
 	ui_svr_mapshotvalid = malloc(sizeof(byte) * (ui_svr_nummaps + 1));
 	memset(ui_svr_mapshotvalid, 0, sizeof(byte) * (ui_svr_nummaps + 1));
@@ -632,8 +627,7 @@ static void StartServer_MenuInit(void)
 	UI_BuildMapList(ui_svr_maptype); // was MAP_DM
 
 	// Levelshot found table
-	if (ui_svr_mapshotvalid)
-		free(ui_svr_mapshotvalid);
+	free(ui_svr_mapshotvalid);
 
 	ui_svr_mapshotvalid = malloc(sizeof(byte) * (ui_svr_nummaps + 1));
 	memset(ui_svr_mapshotvalid, 0, sizeof(byte) * (ui_svr_nummaps + 1));

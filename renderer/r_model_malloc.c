@@ -81,8 +81,7 @@ void ModChunk_Free(void *base)
 	if (chunkcount == 0)
 		Sys_Error("ModChunk_Free: no chunks to free");
 	
-	if (base)
-		free(base);
+	free(base);
 
 	chunkcount--;
 }

@@ -502,18 +502,15 @@ void CL_SendCmd(qboolean async)
 	int cmdindex = cls.netchan.outgoing_sequence & (CMD_BACKUP - 1);
 	cl.cmd_time[cmdindex] = cls.realtime; // For netgraph ping calculation
 
-	usercmd_t *cmd = NULL;
 	if (async) //mxd
 	{
-		cmd = &cl.cmds[cmdindex];
+		cl.cmd = cl.cmds[cmdindex];
 		CL_FinalizeCmd();
 	}
 	else
 	{
-		*cmd = CL_CreateCmd();
+		cl.cmd = CL_CreateCmd();
 	}
-
-	cl.cmd = *cmd;
 
 	if (cls.state == ca_disconnected || cls.state == ca_connecting)
 		return;
@@ -560,7 +557,7 @@ void CL_SendCmd(qboolean async)
 
 	// Send this and the previous cmds in the message, so if the last packet was dropped, it can be recovered
 	cmdindex = (cls.netchan.outgoing_sequence - 2) & (CMD_BACKUP - 1);
-	cmd = &cl.cmds[cmdindex];
+	usercmd_t *cmd = &cl.cmds[cmdindex];
 
 	usercmd_t nullcmd;
 	memset(&nullcmd, 0, sizeof(nullcmd));

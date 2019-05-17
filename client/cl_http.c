@@ -441,7 +441,7 @@ static void CL_CheckAndQueueDownload(char *path)
 		return;
 
 	const char *ext = COM_FileExtension(path);
-	if(strlen(ext) == 0)
+	if(!*ext)
 		return;
 
 	if (!Q_stricmp(ext, "pak") || !Q_stricmp(ext, "pk3"))
@@ -686,7 +686,10 @@ static void CL_FinishHTTPDownload(void)
 		}
 
 		if (dl == NULL)
+		{
 			Com_Error(ERR_DROP, "CL_FinishHTTPDownload: Handle not found");
+			return; //mxd. Silence PVS warning.
+		}
 
 		// We mark everything as done even if it errored to prevent multiple attempts.
 		dl->queueEntry->state = DLQ_STATE_DONE;

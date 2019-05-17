@@ -347,9 +347,7 @@ void R_DrawAliasMeshes(maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly,
 		{
 			tempVertexArrayUsage[meshnum] = arraysize;
 			
-			if (tempVertexArray[meshnum])
-				free(tempVertexArray[meshnum]);
-			
+			free(tempVertexArray[meshnum]);
 			tempVertexArray[meshnum] = malloc(arraysize);
 		}
 

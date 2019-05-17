@@ -1666,9 +1666,8 @@ void R_Shutdown(void)
 //	Cmd_RemoveCommand("resetvertexlights");
 
 	// Knightmare- Free saveshot buffer
-	if (saveshotdata)
-		free(saveshotdata);
-	saveshotdata = NULL;	// make sure this is null after a vid restart!
+	free(saveshotdata);
+	saveshotdata = NULL; // Make sure this is null after a vid restart!
 
 	Mod_FreeAll();
 

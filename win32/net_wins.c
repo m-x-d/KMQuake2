@@ -98,7 +98,7 @@ static void SockadrToNetadr(struct sockaddr *s, netadr_t *a)
 	}
 }
 
-qboolean NET_CompareAdr(netadr_t a, netadr_t b)
+qboolean NET_CompareAdr(const netadr_t a, const netadr_t b)
 {
 	if (a.type != b.type)
 		return false;
@@ -119,7 +119,7 @@ qboolean NET_CompareAdr(netadr_t a, netadr_t b)
 }
 
 // Compares without the port
-qboolean NET_CompareBaseAdr(netadr_t a, netadr_t b)
+qboolean NET_CompareBaseAdr(const netadr_t a, const netadr_t b)
 {
 	if (a.type != b.type)
 		return false;
@@ -139,7 +139,7 @@ qboolean NET_CompareBaseAdr(netadr_t a, netadr_t b)
 	return false;
 }
 
-char *NET_AdrToString(netadr_t a)
+char *NET_AdrToString(const netadr_t a)
 {
 	static char s[64];
 
@@ -247,7 +247,7 @@ qboolean NET_StringToAdr(char *s, netadr_t *a)
 	return true;
 }
 
-qboolean NET_IsLocalAddress(netadr_t adr)
+qboolean NET_IsLocalAddress(const netadr_t adr)
 {
 	return adr.type == NA_LOOPBACK;
 }
