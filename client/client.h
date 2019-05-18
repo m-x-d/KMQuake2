@@ -54,11 +54,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define CURL_ERROR(x)	curl_easy_strerror(x)
 #endif
 
-//Knightmare added
-#include "../game/game.h"
-trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passedict, int contentmask);
-//end Knightmare
-
 typedef int cinHandle_t; // ROQ support
 
 //=============================================================================
