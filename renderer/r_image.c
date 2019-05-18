@@ -956,6 +956,9 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 		image = NULL;
 	}
 
+	//mxd. Free memory
+	free(pic);
+
 	if (!image)
 	{
 		//mxd. We can only get here once per unique image name now, right?

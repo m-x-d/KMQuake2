@@ -361,8 +361,7 @@ static void UI_LoadArenas(void)
 	if (narenas)
 		FS_FreeFileList(arenafiles, narenas);
 
-	if (narenanames)
-		FS_FreeFileList(tmplist, narenanames);
+	FS_FreeFileList(tmplist, MAX_ARENAS); //mxd. Free unconditionally
 
 	for (int i = 0; i < NUM_MAPTYPES; i++)
 		UI_SortArenas(ui_svr_arena_mapnames[i], ui_svr_arena_nummaps[i]);

@@ -444,11 +444,7 @@ void S_OGG_Shutdown (void)
 	S_StopBackgroundTrack();
 
 	// Free the list of files
-	for (int i = 0; i < ogg_numfiles; i++)
-		free(ogg_filelist[i]);
-
-	if (ogg_numfiles > 0)
-		free(ogg_filelist);
+	FS_FreeFileList(ogg_filelist, MAX_OGGLIST); //mxd. Free unconditionally
 
 	// Remove console commands
 	Cmd_RemoveCommand("ogg");
@@ -465,7 +461,7 @@ Reinitialize the Ogg Vorbis subsystem
 Based on code by QuDos
 ==========
 */
-void S_OGG_Restart (void)
+void S_OGG_Restart(void)
 {
 	S_OGG_Shutdown();
 	S_OGG_Init();
@@ -480,13 +476,13 @@ Load list of Ogg Vorbis files in music/
 Based on code by QuDos
 ==========
 */
-void S_OGG_LoadFileList (void)
+void S_OGG_LoadFileList(void)
 {
-	char	*path = NULL;
-	char	**list;			// List of .ogg files
-	char	findname[MAX_OSPATH];
-	char	lastPath[MAX_OSPATH];	// Knightmare added
-	int		numfiles = 0;
+	char *path = NULL;
+	char **list; // List of .ogg files
+	char findname[MAX_OSPATH];
+	char lastPath[MAX_OSPATH];	// Knightmare added
+	int numfiles = 0;
 
 	ogg_filelist = malloc(sizeof(char *) * MAX_OGGLIST);
 	memset(ogg_filelist, 0, sizeof(char *) * MAX_OGGLIST);
@@ -510,7 +506,7 @@ void S_OGG_LoadFileList (void)
 		// Add valid Ogg Vorbis file to the list
 		for (int i = 0; i < numfiles && ogg_numfiles < MAX_OGGLIST; i++)
 		{
-			if (!list || !list[i])
+			if (!list[i])
 				continue;
 
 			char *p = list[i];
@@ -518,7 +514,7 @@ void S_OGG_LoadFileList (void)
 			if (!strstr(p, ".ogg"))
 				continue;
 
-			if (!FS_ItemInList(p, ogg_numfiles, ogg_filelist)) // check if already in list
+			if (!FS_ItemInList(p, ogg_numfiles, ogg_filelist)) // Check if already in list
 			{
 				ogg_filelist[ogg_numfiles] = malloc(strlen(p) + 1);
 				sprintf(ogg_filelist[ogg_numfiles], "%s", p);
@@ -529,11 +525,11 @@ void S_OGG_LoadFileList (void)
 		if (numfiles) // Free the file list
 			FS_FreeFileList(list, numfiles);
 
-		Q_strncpyz(lastPath, path, sizeof(lastPath));	// Knightmare- copy to lastPath
+		Q_strncpyz(lastPath, path, sizeof(lastPath)); // Knightmare- copy to lastPath
 		path = FS_NextPath(path);
 	}
 
-	// check pak after
+	// Check pak after
 	list = FS_ListPak("music/", &numfiles);
 	if (list)
 	{
@@ -548,7 +544,7 @@ void S_OGG_LoadFileList (void)
 			if (!strstr(p, ".ogg"))
 				continue;
 
-			if (!FS_ItemInList(p, ogg_numfiles, ogg_filelist)) // check if already in list
+			if (!FS_ItemInList(p, ogg_numfiles, ogg_filelist)) // Check if already in list
 			{
 				ogg_filelist[ogg_numfiles] = malloc(strlen(p) + 1);
 				sprintf(ogg_filelist[ogg_numfiles], "%s", p);
