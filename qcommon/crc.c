@@ -68,7 +68,7 @@ unsigned short CRC_Block(byte *start, int count)
 	unsigned short crc = CRC_INIT_VALUE;
 
 	while (count--)
-		crc = (crc << 8) ^ crctable[(crc >> 8) ^ *start++];
+		crc = ((crc << 8) ^ crctable[(crc >> 8) ^ *start++]) & CRC_INIT_VALUE; //mxd. Mask by max. ushort value to mark as intended action for the compiler
 
 	return crc;
 }
