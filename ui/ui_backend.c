@@ -711,46 +711,31 @@ void Menu_Draw(menuframework_s *menu)
 	}
 	else if (item && item->type != MTYPE_FIELD)
 	{
+		int x = menu->x + item->cursor_offset; //mxd
 		if (item->flags & QMF_LEFT_JUSTIFY)
-		{
-			SCR_DrawChar(menu->x + item->x + item->cursor_offset - 24, menu->y + item->y,
-				ALIGN_CENTER, 12 + ((int)(Sys_Milliseconds() / 250) & 1),
-				255, 255, 255, 255, false, true);
-		}
-		else
-		{
-			SCR_DrawChar(menu->x + item->cursor_offset, menu->y + item->y,
-				ALIGN_CENTER, 12 + ((int)(Sys_Milliseconds() / 250) & 1),
-				255, 255, 255, 255, false, true);
-		}
+			x += item->x - 24;
+
+		SCR_DrawChar(x, menu->y + item->y,
+			ALIGN_CENTER, 12 + ((int)(Sys_Milliseconds() / 250) & 1),
+			255, 255, 255, 255, false, true);
 	}
 
-	if (item)
-	{
-		if (item->statusbarfunc)
-			item->statusbarfunc((void *)item);
-		else if (item->statusbar)
-			Menu_DrawStatusBar(item->statusbar);
-		else
-			Menu_DrawStatusBar(menu->statusbar);
-	}
+	if (item && item->statusbarfunc)
+		item->statusbarfunc((void *)item);
+	else if (item && item->statusbar)
+		Menu_DrawStatusBar(item->statusbar);
 	else
-	{
 		Menu_DrawStatusBar(menu->statusbar);
-	}
 }
 
-void Menu_DrawStatusBar(const char *string)
+void Menu_DrawStatusBar(const char *string) //mxd. Similar logic used in DrawDemoMessage()
 {
+	SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 3), SCREEN_WIDTH, MENU_FONT_SIZE + 4, ALIGN_BOTTOM_STRETCH, 0, 0, 0, 255); // Black shade
+	
 	if (string)
 	{
-		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 2), SCREEN_WIDTH, MENU_FONT_SIZE + 2, ALIGN_BOTTOM_STRETCH, 60, 60, 60, 255);
-		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 3), SCREEN_WIDTH, 1, ALIGN_BOTTOM_STRETCH, 0, 0, 0, 255);
+		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 2), SCREEN_WIDTH, MENU_FONT_SIZE + 2, ALIGN_BOTTOM_STRETCH, 60, 60, 60, 255); // Gray shade
 		SCR_DrawString(SCREEN_WIDTH / 2 - (strlen(string) / 2) * MENU_FONT_SIZE, SCREEN_HEIGHT - (MENU_FONT_SIZE + 1), ALIGN_BOTTOM, string, 255);
-	}
-	else
-	{
-		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 3), SCREEN_WIDTH, MENU_FONT_SIZE + 3, ALIGN_BOTTOM_STRETCH, 0, 0, 0, 255);
 	}
 }
 

@@ -1604,8 +1604,6 @@ void SCR_DrawStats(void)
 	SCR_ExecuteLayoutString(cl.configstrings[CS_STATUSBAR], true);
 }
 
-#define STAT_LAYOUTS 13
-
 void SCR_DrawLayout(void)
 {
 	if (!cl.frame.playerstate.stats[STAT_LAYOUTS])
@@ -1618,17 +1616,16 @@ void SCR_DrawLayout(void)
 
 #pragma endregion
 
-void DrawDemoMessage(void)
+static void DrawDemoMessage(void) //mxd. Similar logic used in Menu_DrawStatusBar()
 {
 	// Running demo message
 	if (cl.attractloop && !(cl.cinematictime > 0 && cls.realtime - cl.cinematictime > 1000))
 	{
 		char *message = "Running Demo";
-		const int len = strlen(message);
 
-		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 2), SCREEN_WIDTH, MENU_FONT_SIZE + 2, ALIGN_BOTTOM_STRETCH, 60, 60, 60, 255);
-		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 3), SCREEN_WIDTH, 1, ALIGN_BOTTOM_STRETCH, 0, 0, 0, 255);
-		SCR_DrawString(SCREEN_WIDTH / 2 - (len / 2) * MENU_FONT_SIZE, SCREEN_HEIGHT - (MENU_FONT_SIZE + 1), ALIGN_BOTTOM, message, 255);
+		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 3), SCREEN_WIDTH, MENU_FONT_SIZE + 4, ALIGN_BOTTOM_STRETCH, 0, 0, 0, 255); //Black shade
+		SCR_DrawFill(0, SCREEN_HEIGHT - (MENU_FONT_SIZE + 2), SCREEN_WIDTH, MENU_FONT_SIZE + 2, ALIGN_BOTTOM_STRETCH, 60, 60, 60, 255); // Gray shade
+		SCR_DrawString(SCREEN_WIDTH / 2 - (strlen(message) / 2) * MENU_FONT_SIZE, SCREEN_HEIGHT - (MENU_FONT_SIZE + 1), ALIGN_BOTTOM, message, 255);
 	}
 }
 
