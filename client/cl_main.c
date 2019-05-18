@@ -1568,7 +1568,6 @@ void CL_Frame_Async(int msec)
 		// Advance local effects for next frame
 		CL_RunDLights();
 		CL_RunLightStyles();
-		SCR_RunCinematic();
 		SCR_RunConsole();
 		SCR_RunLetterbox();
 
@@ -1732,7 +1731,6 @@ void CL_Frame(int msec)
 	// Advance local effects for next frame
 	CL_RunDLights();
 	CL_RunLightStyles();
-	SCR_RunCinematic();
 	SCR_RunConsole();
 	SCR_RunLetterbox();
 

@@ -17,15 +17,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-
 // r_particle_setup.c - particle image loading
 
 #include "r_local.h"
 
+#define NULLTEX_SIZE	16
+#define RAWTEX_SIZE		256 //mxd
+
 image_t *R_CreateNullTexture(void)
 {
-	#define NULLTEX_SIZE 16
-
 	const static byte nulltexture[NULLTEX_SIZE][NULLTEX_SIZE] = //mxd. Color indices
 	{
 		{ 1,1,0,0,0,0,0,0,0,0,0,0,0,0,2,2 },
@@ -165,21 +165,16 @@ void R_ClearDisplayLists(void)
 
 void R_InitMedia(void)
 {
-	byte whitetex[NULLTEX_SIZE][NULLTEX_SIZE][4];
-#ifdef ROQ_SUPPORT
-	byte data2D[256 * 256 * 4]; // Raw texture
-#endif // ROQ_SUPPORT
-
 	R_InitParticleTexture(); //mxd
 	glMedia.notexture = R_CreateNullTexture(); // Generate null texture
 
+	byte whitetex[NULLTEX_SIZE * NULLTEX_SIZE * 4];
 	memset(whitetex, 255, sizeof(whitetex));
-	glMedia.whitetexture = R_LoadPic("***whitetexture***", (byte *)whitetex, NULLTEX_SIZE, NULLTEX_SIZE, it_wall, 32);
+	glMedia.whitetexture = R_LoadPic("***whitetexture***", whitetex, NULLTEX_SIZE, NULLTEX_SIZE, it_wall, 32);
 
-#ifdef ROQ_SUPPORT
-	memset(data2D, 255, 256 * 256 * 4);
-	glMedia.rawtexture = R_LoadPic("***rawtexture***", data2D, 256, 256, it_pic, 32);
-#endif // ROQ_SUPPORT
+	byte rawtex[RAWTEX_SIZE * RAWTEX_SIZE * 4]; // ROQ support
+	memset(rawtex, 255, sizeof(rawtex));
+	glMedia.rawtexture = R_LoadPic("***rawtexture***", rawtex, RAWTEX_SIZE, RAWTEX_SIZE, it_pic, 32);
 	
 	glMedia.envmappic =		  LoadPartImg("gfx/effects/envmap.tga", it_wall);
 	glMedia.spheremappic =	  LoadPartImg("gfx/effects/spheremap.tga", it_skin);

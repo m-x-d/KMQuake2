@@ -982,9 +982,7 @@ void R_FreeUnusedImages(void)
 	// Never free notexture or particle textures
 	glMedia.notexture->registration_sequence = registration_sequence;
 	glMedia.whitetexture->registration_sequence = registration_sequence;
-#ifdef ROQ_SUPPORT
-	glMedia.rawtexture->registration_sequence = registration_sequence;
-#endif // ROQ_SUPPORT
+	glMedia.rawtexture->registration_sequence = registration_sequence; // ROQ support
 	glMedia.envmappic->registration_sequence = registration_sequence;
 	glMedia.spheremappic->registration_sequence = registration_sequence;
 	glMedia.causticwaterpic->registration_sequence = registration_sequence;

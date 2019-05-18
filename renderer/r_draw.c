@@ -500,8 +500,6 @@ void R_DrawCameraEffect(void)
 
 #pragma region ======================= Cinematic streaming
 
-#ifdef ROQ_SUPPORT
-
 void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight)
 {
 	int width = 1;
@@ -572,120 +570,5 @@ void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth,
 
 	RB_RenderMeshGeneric(false);
 }
-
-#else // Old 8-bit, 256x256 version
-
-extern unsigned r_rawpalette[256];
-
-void R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data)
-{
-	unsigned		image32[256 * 256];
-	unsigned char	image8[256 * 256];
-	int				trows;
-	float			hscale;
-	vec2_t			texCoord[4], verts[4];
-
-	// Nicolas' fix for stray pixels at bottom and top
-	memset(image32, 0, sizeof(image32));
-
-	GL_Bind(0);
-
-	if (rows <= 256)
-	{
-		hscale = 1.0;
-		trows = rows;
-	}
-	else
-	{
-		hscale = rows / 256.0;
-		trows = 256;
-	}
-
-	const float t = rows * hscale / 256;
-
-	if (!qglColorTableEXT)
-	{
-		for (int i = 0; i < trows; i++)
-		{
-			const int row = (int)(i * hscale);
-			if (row > rows)
-				break;
-
-			byte *source = data + cols * row;
-			unsigned *dest = &image32[i * 256];
-			const int fracstep = cols * 0x10000 / 256;
-			int frac = fracstep >> 1;
-
-			for (int j = 0; j < 256; j++)
-			{
-				dest[j] = r_rawpalette[source[frac >> 16]];
-				frac += fracstep;
-			}
-		}
-
-		qglTexImage2D(GL_TEXTURE_2D, 0, gl_tex_solid_format, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32);
-	}
-	else
-	{
-		for (int i = 0; i < trows; i++)
-		{
-			const int row = (int)(i * hscale);
-			if (row > rows)
-				break;
-
-			byte *source = data + cols * row;
-			unsigned char *dest = &image8[i * 256];
-			const int fracstep = cols * 0x10000 / 256;
-			int frac = fracstep >> 1;
-
-			for (int j = 0; j < 256; j++)
-			{
-				dest[j] = source[frac >> 16];
-				frac += fracstep;
-			}
-		}
-
-		qglTexImage2D(GL_TEXTURE_2D, 0, GL_COLOR_INDEX8_EXT, 256, 256, 0, GL_COLOR_INDEX, GL_UNSIGNED_BYTE, image8);
-	}
-
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//if (glConfig.renderer == GLREND_MCD || glConfig.renderer & GLREND_RENDITION) //mxd. Err... Who cares?
-		//GL_Disable(GL_ALPHA_TEST);
-
-	// Draw it
-	Vector2Set(texCoord[0], 0, 0);
-	Vector2Set(texCoord[1], 1, 0);
-	Vector2Set(texCoord[2], 1, t);
-	Vector2Set(texCoord[3], 0, t);
-
-	Vector2Set(verts[0], x, y);
-	Vector2Set(verts[1], x + w, y);
-	Vector2Set(verts[2], x + w, y + h);
-	Vector2Set(verts[3], x, y + h);
-
-	rb_vertex = rb_index = 0;
-	indexArray[rb_index++] = rb_vertex;
-	indexArray[rb_index++] = rb_vertex + 1;
-	indexArray[rb_index++] = rb_vertex + 2;
-	indexArray[rb_index++] = rb_vertex;
-	indexArray[rb_index++] = rb_vertex + 2;
-	indexArray[rb_index++] = rb_vertex + 3;
-
-	for (int i = 0; i < 4; i++)
-	{
-		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
-		VA_SetElem3(vertexArray[rb_vertex], verts[i][0], verts[i][1], 0);
-		VA_SetElem4(colorArray[rb_vertex], 1, 1, 1, 1);
-		rb_vertex++;
-	}
-
-	RB_RenderMeshGeneric(false);
-
-	//if (glConfig.renderer == GLREND_MCD || glConfig.renderer & GLREND_RENDITION) //mxd. Err... Who cares? 
-		//GL_Enable(GL_ALPHA_TEST);
-}
-#endif // ROQ_SUPPORT
 
 #pragma endregion 

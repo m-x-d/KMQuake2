@@ -646,7 +646,7 @@ void COM_StripExtension(char *in, char *out)
 		*ext = 0;
 }
 
-// Returns file extension ("c:/dir/file.txt" -> "txt")
+// Returns file extension ("c:/dir/file.txt" -> "txt"; "c:/dir" -> "")
 const char *COM_FileExtension(const char *in)
 {
 	//mxd. YQ2 implementation

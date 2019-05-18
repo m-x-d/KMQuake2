@@ -20,18 +20,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-#define RoQ_INFO				0x1001
-#define RoQ_QUAD_CODEBOOK		0x1002
-#define RoQ_QUAD_VQ				0x1011
-#define RoQ_SOUND_MONO			0x1020
-#define RoQ_SOUND_STEREO		0x1021
+#define MAX_CINEMATICS		8
 
-#define RoQ_ID_MOT				0x0000
-#define RoQ_ID_FCC				0x0001
-#define RoQ_ID_SLD				0x0002
-#define RoQ_ID_CCC				0x0003
+#define CIN_SYSTEM			1	// A cinematic handled by the client system
+#define CIN_LOOPED			2	// Looped playback
+#define CIN_SILENT			4	// Don't play audio
 
-#ifdef	ROQ_SUPPORT
+#define RoQ_INFO			0x1001
+#define RoQ_QUAD_CODEBOOK	0x1002
+#define RoQ_QUAD_VQ			0x1011
+#define RoQ_SOUND_MONO		0x1020
+#define RoQ_SOUND_STEREO	0x1021
+
+#define RoQ_ID_MOT			0x0000
+#define RoQ_ID_FCC			0x0001
+#define RoQ_ID_SLD			0x0002
+#define RoQ_ID_CCC			0x0003
 
 typedef struct
 {
@@ -107,9 +111,8 @@ typedef struct
 
 static cinematic_t cinematics[MAX_CINEMATICS];
 
-
 // If path doesn't have a / or \\, append newPath (newPath should not include the /)
-void DefaultPath(char *path, int maxSize, const char *newPath)
+static void DefaultPath(char *path, int maxSize, const char *newPath)
 {
 	char oldPath[MAX_OSPATH];
 	char *s = path;
@@ -863,14 +866,7 @@ static cinematic_t *CIN_GetVideoByHandle(cinHandle_t handle)
 	return &cinematics[handle - 1];
 }
 
-//TODO: mxd. Remove
-void SCR_RunCinematic(void)
-{
-	// Do nothing
-	//CIN_RunCinematic(cls.cinematicHandle);
-}
-
-qboolean CIN_RunCinematic(cinHandle_t handle)
+static qboolean CIN_RunCinematic(cinHandle_t handle)
 {
 	cinematic_t *cin = CIN_GetVideoByHandle(handle);
 
@@ -920,7 +916,7 @@ qboolean CIN_RunCinematic(cinHandle_t handle)
 	return true;
 }
 
-void CIN_SetExtents(cinHandle_t handle, int x, int y, int w, int h)
+static void CIN_SetExtents(cinHandle_t handle, int x, int y, int w, int h)
 {
 	cinematic_t *cin = CIN_GetVideoByHandle(handle);
 
@@ -940,87 +936,7 @@ void CIN_SetExtents(cinHandle_t handle, int x, int y, int w, int h)
 	cin->h = (int)realh;
 }
 
-void SCR_PlayCinematic(char *name)
-{
-	char filename[MAX_QPATH];
-
-	// If currently playing another, stop it
-	SCR_StopCinematic();
-
-	Com_DPrintf("SCR_PlayCinematic( %s )\n", name);
-
-	cl.cinematicframe = 0;
-	if (!Q_stricmp(name + strlen(name) - 4, ".pcx"))
-	{
-		Q_strncpyz(filename, name, sizeof(filename));
-		DefaultPath(filename, sizeof(filename), "pics");
-		cl.cinematicframe = -1;
-		cl.cinematictime = 1;
-		SCR_EndLoadingPlaque();
-		cls.state = ca_active;
-	}
-	else
-	{
-		Q_strncpyz(filename, name, sizeof(filename));
-		DefaultPath(filename, sizeof(filename), "video");
-		COM_DefaultExtension(filename, ".cin");
-	}
-
-	cls.cinematicHandle = CIN_PlayCinematic(filename, 0, 0, 640, 480, CIN_SYSTEM);
-	if (!cls.cinematicHandle)
-	{
-		Com_Printf("Cinematic %s not found\n", filename);
-		cl.cinematictime = 0; // done
-		SCR_FinishCinematic();
-	}
-	else
-	{
-		SCR_EndLoadingPlaque();
-		cls.state = ca_active;
-		cl.cinematicframe = 0;
-		cl.cinematictime = Sys_Milliseconds();
-	}
-}
-
-void SCR_StopCinematic(void)
-{
-	if (!cls.cinematicHandle)
-		return;
-
-	Com_DPrintf("SCR_StopCinematic()\n");
-
-	CIN_StopCinematic(cls.cinematicHandle);
-	cls.cinematicHandle = 0;
-}
-
-// Called when either the cinematic completes, or it is aborted
-void SCR_FinishCinematic(void)
-{
-	// Tell the server to advance to the next map / cinematic
-	MSG_WriteByte(&cls.netchan.message, clc_stringcmd);
-	SZ_Print(&cls.netchan.message, va("nextserver %i\n", cl.servercount));
-}
-
-qboolean SCR_DrawCinematic(void)
-{
-	if (cl.cinematictime <= 0 || !cls.cinematicHandle)
-		return false;
-
-	if (!CIN_RunCinematic(cls.cinematicHandle))
-	{
-		SCR_StopCinematic();
-		SCR_FinishCinematic();
-
-		return false;
-	}
-
-	CIN_SetExtents(cls.cinematicHandle, 0, 0, 640, 480);
-	CIN_DrawCinematic(cls.cinematicHandle);
-
-	return true;
-}
-
-void CIN_DrawCinematic(cinHandle_t handle)
+static void CIN_DrawCinematic(cinHandle_t handle)
 {
 	cinematic_t *cin = CIN_GetVideoByHandle(handle);
 
@@ -1052,7 +968,7 @@ void CIN_DrawCinematic(cinHandle_t handle)
 	R_DrawStretchRaw(cin->x, cin->y, cin->w, cin->h, cin->vidBuffer, cin->vidWidth, cin->vidHeight);
 }
 
-cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int flags)
+static cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int flags)
 {
 	cinHandle_t	handle;
 
@@ -1184,7 +1100,7 @@ cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int 
 	return handle;
 }
 
-void CIN_StopCinematic(cinHandle_t handle)
+static void CIN_StopCinematic(cinHandle_t handle)
 {
 	if (!handle)
 		return;
@@ -1212,4 +1128,86 @@ void CIN_StopCinematic(cinHandle_t handle)
 	memset(cin, 0, sizeof(*cin));
 }
 
-#endif // ROQ_SUPPORT
+#pragma region ======================= Global playback functions 
+
+void SCR_PlayCinematic(char *name)
+{
+	char filename[MAX_QPATH];
+
+	// If currently playing another, stop it
+	SCR_StopCinematic();
+
+	Com_DPrintf("SCR_PlayCinematic( %s )\n", name);
+
+	cl.cinematicframe = 0;
+	if (!Q_stricmp(name + strlen(name) - 4, ".pcx"))
+	{
+		Q_strncpyz(filename, name, sizeof(filename));
+		DefaultPath(filename, sizeof(filename), "pics");
+		cl.cinematicframe = -1;
+		cl.cinematictime = 1;
+		SCR_EndLoadingPlaque();
+		cls.state = ca_active;
+	}
+	else
+	{
+		Q_strncpyz(filename, name, sizeof(filename));
+		DefaultPath(filename, sizeof(filename), "video");
+		COM_DefaultExtension(filename, ".cin");
+	}
+
+	cls.cinematicHandle = CIN_PlayCinematic(filename, 0, 0, 640, 480, CIN_SYSTEM);
+	if (!cls.cinematicHandle)
+	{
+		Com_Printf("Cinematic %s not found\n", filename);
+		cl.cinematictime = 0; // done
+		SCR_FinishCinematic();
+	}
+	else
+	{
+		SCR_EndLoadingPlaque();
+		cls.state = ca_active;
+		cl.cinematicframe = 0;
+		cl.cinematictime = Sys_Milliseconds();
+	}
+}
+
+void SCR_StopCinematic(void)
+{
+	if (!cls.cinematicHandle)
+		return;
+
+	Com_DPrintf("SCR_StopCinematic()\n");
+
+	CIN_StopCinematic(cls.cinematicHandle);
+	cls.cinematicHandle = 0;
+}
+
+// Called when either the cinematic completes, or it is aborted
+void SCR_FinishCinematic(void)
+{
+	// Tell the server to advance to the next map / cinematic
+	MSG_WriteByte(&cls.netchan.message, clc_stringcmd);
+	SZ_Print(&cls.netchan.message, va("nextserver %i\n", cl.servercount));
+}
+
+qboolean SCR_DrawCinematic(void)
+{
+	if (cl.cinematictime <= 0 || !cls.cinematicHandle)
+		return false;
+
+	if (!CIN_RunCinematic(cls.cinematicHandle))
+	{
+		SCR_StopCinematic();
+		SCR_FinishCinematic();
+
+		return false;
+	}
+
+	CIN_SetExtents(cls.cinematicHandle, 0, 0, 640, 480);
+	CIN_DrawCinematic(cls.cinematicHandle);
+
+	return true;
+}
+
+#pragma endregion

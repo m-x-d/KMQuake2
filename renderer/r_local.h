@@ -540,12 +540,6 @@ void R_DrawChar(float x, float y, int num, float scale, int red, int green, int 
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
 float R_CharMapScale();
 
-#ifdef ROQ_SUPPORT
-void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
-#else // old 8-bit, 256x256 version
-void R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data);
-#endif // ROQ_SUPPORT
-
 
 //
 // r_image.c

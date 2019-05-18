@@ -383,21 +383,17 @@ void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 
 	SV_BroadcastCommand("changing\n");
 
-	const int len = strlen(level);
+	const char *ext = COM_FileExtension(level); //mxd
 
-#ifdef ROQ_SUPPORT
-	if (len > 4 && (!strcmp(level + len - 4, ".cin") || !strcmp(level + len - 4, ".roq")))
-#else
-	if (len > 4 && !strcmp(level + len - 4, ".cin"))
-#endif // ROQ_SUPPORT
+	if (*ext && (!strcmp(ext, "cin") || !strcmp(ext, "roq")))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_cinematic, attractloop, loadgame);
 	}
-	else if (len > 4 && !strcmp(level + len - 4, ".dm2") )
+	else if (*ext && !strcmp(ext, "dm2"))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_demo, attractloop, loadgame);
 	}
-	else if (len > 4 && !strcmp(level + len - 4, ".pcx"))
+	else if (*ext && !strcmp(ext, "pcx"))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_pic, attractloop, loadgame);
 	}

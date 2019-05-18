@@ -40,28 +40,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "console.h"
 #include "cdaudio.h"
 
-#include "cinematic.h"
-
 // HTTP downloading from R1Q2
 #ifdef USE_CURL
-#ifdef _WIN32
-#define CURL_STATICLIB
-#define CURL_HIDDEN_SYMBOLS
-#define CURL_EXTERN_SYMBOL
-#define CURL_CALLING_CONVENTION __cdecl
+	#ifdef _WIN32
+		#define CURL_STATICLIB
+		#define CURL_HIDDEN_SYMBOLS
+		#define CURL_EXTERN_SYMBOL
+		#define CURL_CALLING_CONVENTION __cdecl
+	#endif
+
+	#define CURL_STATICLIB
+	#include "../include/curl/curl.h"
+	#define CURL_ERROR(x)	curl_easy_strerror(x)
 #endif
-
-#define CURL_STATICLIB
-#include "../include/curl/curl.h"
-#define CURL_ERROR(x)	curl_easy_strerror(x)
-
-#endif	// USE_CURL
-// end HTTP downloading from R1Q2
 
 //Knightmare added
 #include "../game/game.h"
 trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passedict, int contentmask);
 //end Knightmare
+
+typedef int cinHandle_t; // ROQ support
 
 //=============================================================================
 
@@ -318,10 +316,8 @@ typedef struct
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	FILE		*demofile;
 
-#ifdef	ROQ_SUPPORT
-	// Cinematic information
-	cinHandle_t		cinematicHandle;
-#endif // ROQ_SUPPORT
+	// Cinematic information (ROQ support)
+	cinHandle_t cinematicHandle;
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
 	dlqueue_t		downloadQueue;			//queue of paths we need
@@ -730,12 +726,8 @@ void R_SetFogVars(qboolean enable, int model, int density, int start, int end, i
 
 float R_CharMapScale(void); // Knightmare added char scaling from Quake2Max
 
-// Draw images for cinematic rendering (which can have a different palette). Note that calls
-#ifdef ROQ_SUPPORT
+// Draw images for cinematic rendering.
 void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
-#else
-void R_DrawStretchRaw(int x, int y, int w, int h, int cols, int rows, byte *data);
-#endif // ROQ_SUPPORT
 
 /*
 ** video mode and refresh state management entry points
