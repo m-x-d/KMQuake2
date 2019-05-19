@@ -336,9 +336,27 @@ void Cmd_Alias_f(void)
 	char *s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Com_Printf(S_COLOR_RED"Alias name is too long (%i / %i chars)!\n", strlen(s), MAX_ALIAS_NAME - 1);
+		Com_Printf(S_COLOR_RED"Alias name '%s' is too long (%i / %i chars)!\n", s, strlen(s), MAX_ALIAS_NAME - 1);
 		return;
 	}
+
+	const int c = Cmd_Argc();
+	if(c < 3) //mxd. Abort if no commands
+	{
+		Com_Printf(S_COLOR_RED"No commands defined for alias '%s'!\n", s);
+		return;
+	}
+
+	// Copy the rest of the command line
+	char cmd[1024] = { 0 }; // Start out with a null string
+	for (int i = 2; i < c; i++)
+	{
+		Q_strncatz(cmd, Cmd_Argv(i), sizeof(cmd));
+		if (i < c - 1)
+			Q_strncatz(cmd, " ", sizeof(cmd));
+	}
+
+	Q_strncatz(cmd, "\n", sizeof(cmd));
 
 	// If the alias already exists, reuse it
 	for (a = cmd_alias; a; a = a->next)
@@ -357,20 +375,10 @@ void Cmd_Alias_f(void)
 		cmd_alias = a;
 	}
 
+	// Set name
 	Q_strncpyz(a->name, s, sizeof(a->name));
-
-	// Copy the rest of the command line
-	char cmd[1024] = { 0 }; // Start out with a null string
-	const int c = Cmd_Argc();
-	for (int i = 2; i < c; i++)
-	{
-		Q_strncatz(cmd, Cmd_Argv(i), sizeof(cmd));
-		if (i != c - 1)
-			Q_strncatz(cmd, " ", sizeof(cmd));
-	}
-
-	Q_strncatz(cmd, "\n", sizeof(cmd));
 	
+	// Set value
 	a->value = CopyString(cmd);
 }
 
@@ -507,7 +515,7 @@ void Cmd_TokenizeString(char *text, qboolean macroexpand)
 		
 		if (*text == '\n')
 		{
-			// A newline seperates commands in the buffer
+			// A newline separates commands in the buffer
 			text++;
 			break;
 		}

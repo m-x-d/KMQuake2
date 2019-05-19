@@ -128,7 +128,7 @@ __inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list A
 
 #define MAX_STRING_CHARS	1024	// Max length of a string passed to Cmd_TokenizeString
 #define MAX_STRING_TOKENS	80		// Max tokens resulting from Cmd_TokenizeString
-#define MAX_TOKEN_CHARS		128		// Max length of an individual token
+#define MAX_TOKEN_CHARS		512		// Max length of an individual token //mxd. Was 128. Must be >= MAX_INFO_STRING
 
 #define MAX_QPATH			64		// Max length of a quake game pathname
 #define MAX_OSPATH			256		// Max length of a filesystem pathname
@@ -405,7 +405,7 @@ char *va(char *format, ...);
 //
 #define	MAX_INFO_KEY		64
 #define	MAX_INFO_VALUE		64
-#define	MAX_INFO_STRING		512
+#define	MAX_INFO_STRING		512 //mxd. Must be <= MAX_TOKEN_CHARS to be parsed correctly by SVC_DirectConnect()
 
 char *Info_ValueForKey(char *s, char *key);
 void Info_RemoveKey(char *s, char *key);

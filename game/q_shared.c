@@ -828,7 +828,12 @@ skipwhite:
 			if (c == '\"' || !c)
 			{
 				if (len == MAX_TOKEN_CHARS)	// Knightmare- discard if > MAX_TOKEN_CHARS-1
+				{
 					len = 0;
+
+					//mxd. Print warning...
+					Com_Printf(S_COLOR_YELLOW"%s: maximum token length exceeded (%i / %i chars) while parsing '%s'\n", __func__, strlen(*data_p), MAX_TOKEN_CHARS - 1, * data_p);
+				}
 				
 				com_token[len] = 0;
 				*data_p = data;
@@ -858,7 +863,12 @@ skipwhite:
 	} while (c > 32);
 
 	if (len == MAX_TOKEN_CHARS)
+	{
 		len = 0;
+
+		//mxd. Print warning...
+		Com_Printf(S_COLOR_YELLOW"%s: maximum token length exceeded (%i / %i chars) while parsing '%s'\n", __func__, strlen(*data_p), MAX_TOKEN_CHARS - 1, *data_p);
+	}
 
 	com_token[len] = 0;
 
@@ -936,7 +946,12 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 			if (c == '\"' || !c)
 			{
 				if (len == MAX_TOKEN_CHARS)
+				{
 					len = 0;
+
+					//mxd. Print warning...
+					Com_Printf(S_COLOR_YELLOW"%s: maximum token length exceeded (%i / %i chars) while parsing '%s'\n", __func__, strlen(*data_p), MAX_TOKEN_CHARS - 1, *data_p);
+				}
 
 				com_token[len] = 0;
 
@@ -960,7 +975,12 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 	} while (c > 32);
 
 	if (len == MAX_TOKEN_CHARS)
+	{
 		len = 0;
+
+		//mxd. Print warning...
+		Com_Printf(S_COLOR_YELLOW"%s: maximum token length exceeded (%i / %i chars) while parsing '%s'\n", __func__, strlen(*data_p), MAX_TOKEN_CHARS - 1, *data_p);
+	}
 
 	com_token[len] = 0;
 
