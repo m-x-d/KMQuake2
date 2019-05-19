@@ -35,9 +35,10 @@ static qboolean newconback_found = false; // Whether to draw Q3-style console
 
 static char key_lines[NUM_KEY_LINES][MAXCMDLINE]; // Manually entered console commands are stored here
 static int edit_line;
+static int history_line;
 static int key_linepos; // Current index into key_lines[]
 
-static void Key_ClearTyping(void)
+static void Con_ClearTyping(void)
 {
 	key_lines[edit_line][1] = 0; // Clear any typing
 	key_linepos = 1;
@@ -56,7 +57,7 @@ void Con_ToggleConsole_f(void)
 		return;
 	}
 
-	Key_ClearTyping();
+	Con_ClearTyping();
 	Con_ClearNotify();
 
 	// Knightmare changed
@@ -68,7 +69,7 @@ void Con_ToggleConsole_f(void)
 
 static void Con_ToggleChat_f(void)
 {
-	Key_ClearTyping();
+	Con_ClearTyping();
 
 	if (cls.consoleActive) // Knightmare added
 	{
@@ -179,6 +180,8 @@ static void Con_MessageMode2_f(void)
 
 #pragma endregion 
 
+#pragma region ======================= Printing / utility
+
 void Con_ClearNotify(void)
 {
 	for (int i = 0; i < NUM_CON_TIMES; i++)
@@ -234,48 +237,6 @@ void Con_CheckResize(void)
 
 	con.currentline = con.totallines - 1;
 	con.displayline = con.currentline;
-}
-
-void Con_Init(void)
-{
-	//mxd. Moved from Key_Init()
-	for (int i = 0; i < 32; i++)
-	{
-		key_lines[i][0] = ']';
-		key_lines[i][1] = 0;
-	}
-
-	key_linepos = 1;
-	//mxd. End
-	
-	con.linewidth = -1;
-	con.backedit = 0;
-	con.hintstartline = -1; //mxd
-	con.hintendline = -1; //mxd
-
-	Con_CheckResize();
-	Com_Printf("Console initialized.\n");
-
-	// Register our commands
-	con_font_size = Cvar_Get("con_font_size", "8", CVAR_ARCHIVE); //mxd. Moved from CL_InitLocal()
-	con_notifytime = Cvar_Get("con_notifytime", "4", 0); // Knightmare- increased for fade
-	con_alpha = Cvar_Get("con_alpha", "0.5", CVAR_ARCHIVE); // Knightmare- Psychospaz's transparent console
-	con_newconback = Cvar_Get("con_newconback", "0", CVAR_ARCHIVE);	// whether to use new console background
-	con_oldconbar = Cvar_Get("con_oldconbar", "1", CVAR_ARCHIVE);	// whether to draw bottom bar on old console
-
-	// Whether to use new-style console background
-	newconback_found = (FS_FileExists("gfx/ui/newconback.tga")
-					 || FS_FileExists("gfx/ui/newconback.png")
-					 || FS_FileExists("gfx/ui/newconback.jpg")); //mxd. FS_LoadFile -> FS_FileExists
-
-	Cmd_AddCommand("toggleconsole", Con_ToggleConsole_f);
-	Cmd_AddCommand("togglechat", Con_ToggleChat_f);
-	Cmd_AddCommand("messagemode", Con_MessageMode_f);
-	Cmd_AddCommand("messagemode2", Con_MessageMode2_f);
-	Cmd_AddCommand("clear", Con_Clear_f);
-	Cmd_AddCommand("condump", Con_Dump_f);
-
-	con.initialized = true;
 }
 
 static void Con_Linefeed(void)
@@ -410,7 +371,9 @@ static int Con_FirstLine() //mxd
 	return con.currentline; // We wrapped around / buffer is empty
 }
 
-#pragma region ======================= DRAWING
+#pragma endregion
+
+#pragma region ======================= Drawing
 
 void Con_DrawString(int x, int y, char *string, int alpha)
 {
@@ -690,7 +653,7 @@ void Con_DrawConsole(float heightratio, qboolean transparent)
 
 #pragma endregion
 
-#pragma region ======================= COMMAND AUTO-COMPLETION
+#pragma region ======================= Command auto-completion
 
 //mxd
 static void Con_ClearAutocompleteList()
@@ -918,13 +881,11 @@ static void Con_CompleteCommand()
 
 #pragma endregion 
 
-#pragma region ======================= KEY PROCESSING
+#pragma region ======================= Key processing
 
 // Interactive line editing and console scrollback
 void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 {
-	static int history_line = 0; //mxd. Made local
-
 	key = Key_ConvertNumPadKey(key); //mxd
 
 	// Command completion
@@ -1230,3 +1191,144 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 }
 
 #pragma endregion 
+
+#pragma region ======================= Persistent console history
+
+//mxd. Adapted from YQ2 (https://github.com/yquake2/yquake2/commit/1ce9bdba51c9921dc918d28a01868a4f821bd67c)
+#define HISTORY_FILEPATH "%s/"ENGINE_PREFIX"console_history.txt"
+
+static void Con_WriteConsoleHistory()
+{
+	char path[MAX_OSPATH];
+	Com_sprintf(path, sizeof(path), HISTORY_FILEPATH, FS_Gamedir());
+
+	FILE* f = fopen(path, "w");
+	if (f == NULL)
+	{
+		Com_Printf("Opening console history file '%s' for writing failed!\n", path);
+		return;
+	}
+
+	// Save the oldest lines first by starting at edit_line and going forward (and wrapping around)
+	const char* prevline = "";
+	for (int i = 0; i < NUM_KEY_LINES; ++i)
+	{
+		const int lineindex = (edit_line + i) & (NUM_KEY_LINES - 1);
+		const char* line = key_lines[lineindex];
+
+		if (line[1] != '\0' && strcmp(prevline, line) != 0)
+		{
+			// If the line actually contains something besides the ] prompt,
+			// and is not identical to the last written line, write it to the file
+			fputs(line, f);
+			fputc('\n', f);
+
+			prevline = line;
+		}
+	}
+
+	fclose(f);
+}
+
+// Initializes key_lines from history file, if available
+static void Con_ReadConsoleHistory()
+{
+	char path[MAX_OSPATH];
+	Com_sprintf(path, sizeof(path), HISTORY_FILEPATH, FS_Gamedir());
+
+	FILE* f = fopen(path, "r");
+	if (f == NULL)
+	{
+		Com_DPrintf("Opening console history file '%s' for reading failed!\n", path);
+		return;
+	}
+
+	for (int i = 0; i < NUM_KEY_LINES; i++)
+	{
+		if (fgets(key_lines[i], MAXCMDLINE, f) == NULL)
+		{
+			// Probably EOF.. adjust edit_line and history_line and we're done here
+			edit_line = i;
+			history_line = i;
+
+			break;
+		}
+
+		// Remove trailing newlines
+		int lastcharpos = strlen(key_lines[i]) - 1;
+		while ((key_lines[i][lastcharpos] == '\n' || key_lines[i][lastcharpos] == '\r') && lastcharpos >= 0)
+		{
+			key_lines[i][lastcharpos] = '\0';
+			--lastcharpos;
+		}
+	}
+
+	fclose(f);
+}
+
+#pragma endregion
+
+#pragma region ======================= Init / shutdown
+
+void Con_Init(void)
+{
+	//mxd. Moved from Key_Init()
+	for (int i = 0; i < NUM_KEY_LINES; i++)
+	{
+		key_lines[i][0] = ']';
+		key_lines[i][1] = 0;
+	}
+
+	key_linepos = 1;
+	//mxd. End
+
+	con.linewidth = -1;
+	con.backedit = 0;
+	con.hintstartline = -1; //mxd
+	con.hintendline = -1; //mxd
+
+	Con_CheckResize();
+	Com_Printf("Console initialized.\n");
+
+	// Register our commands
+	con_font_size = Cvar_Get("con_font_size", "8", CVAR_ARCHIVE); //mxd. Moved from CL_InitLocal()
+	con_notifytime = Cvar_Get("con_notifytime", "4", 0); // Knightmare- increased for fade
+	con_alpha = Cvar_Get("con_alpha", "0.5", CVAR_ARCHIVE); // Knightmare- Psychospaz's transparent console
+	con_newconback = Cvar_Get("con_newconback", "0", CVAR_ARCHIVE);	// whether to use new console background
+	con_oldconbar = Cvar_Get("con_oldconbar", "1", CVAR_ARCHIVE);	// whether to draw bottom bar on old console
+
+	// Whether to use new-style console background
+	newconback_found = (FS_FileExists("gfx/ui/newconback.tga")
+		|| FS_FileExists("gfx/ui/newconback.png")
+		|| FS_FileExists("gfx/ui/newconback.jpg")); //mxd. FS_LoadFile -> FS_FileExists
+
+	Cmd_AddCommand("toggleconsole", Con_ToggleConsole_f);
+	Cmd_AddCommand("togglechat", Con_ToggleChat_f);
+	Cmd_AddCommand("messagemode", Con_MessageMode_f);
+	Cmd_AddCommand("messagemode2", Con_MessageMode2_f);
+	Cmd_AddCommand("clear", Con_Clear_f);
+	Cmd_AddCommand("condump", Con_Dump_f);
+
+	Con_ReadConsoleHistory(); //mxd
+
+	con.initialized = true;
+}
+
+//mxd. From Q2E
+void Con_Shutdown(void)
+{
+	if (!con.initialized)
+		return;
+
+	Con_WriteConsoleHistory();
+	Con_ClearAutocompleteList();
+
+	Cmd_RemoveCommand("toggleconsole");
+	Cmd_RemoveCommand("togglechat");
+	Cmd_RemoveCommand("messagemode");
+	Cmd_RemoveCommand("messagemode2");
+	Cmd_RemoveCommand("clear");
+	Cmd_RemoveCommand("condump");
+
+	con.initialized = false;
+}

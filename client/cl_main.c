@@ -1818,7 +1818,7 @@ void CL_Shutdown(void)
 	CL_HTTP_Cleanup(true);
 #endif	// USE_CURL
 
-	CL_WriteConfiguration("kmq2config"); 
+	CL_WriteConfiguration("kmq2config");
 	CDAudio_Shutdown();
 
 	// Added delay
@@ -1837,4 +1837,5 @@ void CL_Shutdown(void)
 
 	IN_Shutdown();
 	VID_Shutdown();
+	Con_Shutdown(); //mxd
 }

@@ -75,6 +75,7 @@ extern console_t con;
 
 void Con_CheckResize(void);
 void Con_Init(void);
+void Con_Shutdown(void); //mxd. From Q2E
 void Con_DrawConsole(float heightratio, qboolean transparent); //Knightmare changed
 void Con_KeyDown(int key); //mxd
 //void Con_CenteredPrint(char *text); //mxd. Never used
