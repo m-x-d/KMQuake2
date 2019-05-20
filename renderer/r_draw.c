@@ -49,8 +49,6 @@ void RefreshFont(void)
 
 void R_DrawInitLocal(void)
 {
-	image_t	*R_DrawFindPic(char *name);
-
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -162,20 +160,15 @@ void R_DrawChar(float x, float y, int num, float scale, int red, int green, int 
 
 image_t	*R_DrawFindPic(char *name)
 {
-	image_t *gl;
-	char fullname[MAX_QPATH];
-
 	if (name[0] != '/' && name[0] != '\\')
 	{
+		char fullname[MAX_QPATH];
 		Com_sprintf(fullname, sizeof(fullname), "pics/%s.pcx", name);
-		gl = R_FindImage(fullname, it_pic, false);
-	}
-	else
-	{
-		gl = R_FindImage(name + 1, it_pic, false);
+
+		return R_FindImage(fullname, it_pic, false);
 	}
 
-	return gl;
+	return R_FindImage(name + 1, it_pic, false);
 }
 
 void R_DrawGetPicSize(int *w, int *h, char *pic)
