@@ -1129,6 +1129,9 @@ CL_Shadow_Decal (mxd)
 
 void CL_Shadow_Decal(vec3_t org, float size, float alpha)
 {
+	if(cl_paused->integer) // Don't draw when paused (messes up rendering of the first frame after unpausing)
+		return;
+	
 	vec3_t ang, angle, end, origin, dir;
 
 	VectorSet(dir, 0, 0, -1); // Straight down
