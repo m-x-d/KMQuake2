@@ -1210,23 +1210,29 @@ static void Con_WriteConsoleHistory()
 	}
 
 	// Save the oldest lines first by starting at edit_line and going forward (and wrapping around)
-	const char* prevline = "";
+	const int size = NUM_KEY_LINES * MAXCMDLINE * sizeof(char *);
+	char **addedlines = malloc(size);
+	memset(addedlines, 0, size);
+	int numadded = 0;
+
 	for (int i = 0; i < NUM_KEY_LINES; ++i)
 	{
 		const int lineindex = (edit_line + i) & (NUM_KEY_LINES - 1);
 		const char* line = key_lines[lineindex];
 
-		if (line[1] != '\0' && strcmp(prevline, line) != 0)
+		if (line[1] != '\0' && !FS_ItemInList(line, numadded, addedlines))
 		{
 			// If the line actually contains something besides the ] prompt,
-			// and is not identical to the last written line, write it to the file
+			// and wasn't already added, write it to the file
 			fputs(line, f);
 			fputc('\n', f);
 
-			prevline = line;
+			FS_InsertInList(addedlines, line, numadded + 1, numadded);
+			numadded++;
 		}
 	}
 
+	FS_FreeFileList(addedlines, NUM_KEY_LINES);
 	fclose(f);
 }
 
