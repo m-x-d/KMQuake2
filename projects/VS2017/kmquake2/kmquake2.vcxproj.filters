@@ -78,9 +78,6 @@
     <ClCompile Include="..\..\..\win32\snd_win.c">
       <Filter>Source Files\sound</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\client\cl_cin.c">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\client\cl_cinematic.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
