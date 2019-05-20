@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define MAX_SCREENSHOTS 1000
 #define SCREENSHOT_FORMAT_STRING "%s/screenshots/"ENGINE_PREFIX"%03i.%s"
 
-qboolean GetScreenshotFilename(char *filename, int size, const char *ext)
+static qboolean GetScreenshotFilename(char *filename, int size, const char *ext)
 {
 	for (int i = 0; i < MAX_SCREENSHOTS; i++)
 	{
@@ -42,7 +42,7 @@ qboolean GetScreenshotFilename(char *filename, int size, const char *ext)
 	return false;
 }
 
-void R_ScreenShot(qboolean silent)
+static void R_ScreenShot(qboolean silent)
 {
 	// Sanity check...
 	if (Q_strcasecmp(r_screenshot_format->string, "jpg") &&
@@ -119,25 +119,8 @@ void R_ScaledScreenshot(char *filename)
 	if (!saveshotdata)
 		return;
 
-	// Round down width to nearest multiple of 4
-	const int grab_width = vid.width & ~3;
-
-	// Optional hi-res saveshots
-	int saveshotwidth = 256;
-	int saveshotheight = saveshotwidth;
-
-	if (r_saveshotsize->value) //TODO: mxd. Always save HQ saveshots. Use screen resolution?
-	{
-		if (grab_width >= 1024)
-			saveshotwidth = 1024;
-		else if (grab_width >= 512)
-			saveshotwidth = 512;
-
-		if (vid.height >= 1024)
-			saveshotheight = 1024;
-		else if (vid.height >= 512)
-			saveshotheight = 512;
-	}
+	const int saveshotwidth = vid.width / 2;
+	const int saveshotheight = vid.height / 2;
 
 	// Allocate room for reduced screenshot
 	byte *jpgdata = malloc(saveshotwidth * saveshotheight * 3);
@@ -145,7 +128,7 @@ void R_ScaledScreenshot(char *filename)
 		return;
 
 	//mxd. Resize grabbed screen
-	STBResize(saveshotdata, grab_width, vid.height, jpgdata, saveshotwidth, saveshotheight, false);
+	STBResize(saveshotdata, vid.width, vid.height, jpgdata, saveshotwidth, saveshotheight, false);
 
 	// Check filename
 	FILE *file = fopen(filename, "wb");

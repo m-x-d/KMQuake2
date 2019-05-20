@@ -558,7 +558,7 @@ void SV_Loadgame_f(void)
 	{
 		static char sv_loadshotname[MAX_QPATH];
 		Com_sprintf(sv_loadshotname, sizeof(sv_loadshotname), "/save/%s/shot.jpg", Cmd_Argv(1));
-		R_FreePic(sv_loadshotname);
+		R_FreePic(sv_loadshotname + 1); //mxd. Gross hacks. Skip leading slash because R_DrawFindPic will also skip it before calling R_FindImage
 
 		load_saveshot = sv_loadshotname;
 	}

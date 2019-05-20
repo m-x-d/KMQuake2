@@ -38,20 +38,20 @@ static menuaction_s		s_savegame_back_action;
 
 #pragma region ======================= SAVESHOT HANDLING
 
-char		m_savestrings[MAX_SAVEGAMES][32];
-qboolean	m_savevalid[MAX_SAVEGAMES];
-time_t		m_savetimestamps[MAX_SAVEGAMES];
-qboolean	m_savechanged[MAX_SAVEGAMES];
-qboolean	m_saveshotvalid[MAX_SAVEGAMES + 1];
+static char		m_savestrings[MAX_SAVEGAMES][32];
+static qboolean	m_savevalid[MAX_SAVEGAMES];
+static time_t	m_savetimestamps[MAX_SAVEGAMES];
+static qboolean	m_savechanged[MAX_SAVEGAMES];
+static qboolean	m_saveshotvalid[MAX_SAVEGAMES + 1];
 
-char		m_mapname[MAX_QPATH];
+static char		m_mapname[MAX_QPATH];
 
-void Load_Savestrings(qboolean update)
+static void Load_Savestrings(qboolean update)
 {
 	fileHandle_t f;
-	char	name[MAX_OSPATH];
-	char	mapname[MAX_TOKEN_CHARS];
-	char	*ch;
+	char name[MAX_OSPATH];
+	char mapname[MAX_TOKEN_CHARS];
+	char *ch;
 	struct stat st;
 
 	for (int i = 0; i < MAX_SAVEGAMES; i++)
@@ -114,13 +114,13 @@ void Load_Savestrings(qboolean update)
 	}
 }
 
-void ValidateSaveshots(void)
+static void ValidateSaveshots(void)
 {
 	char shotname[MAX_QPATH];
 
 	for (int i = 0; i < MAX_SAVEGAMES; i++)
 	{
-		if (!m_savechanged[i])	// Doesn't need to be reloaded
+		if (!m_savechanged[i]) // Doesn't need to be reloaded
 			continue;
 
 		if (m_savevalid[i])
@@ -133,7 +133,7 @@ void ValidateSaveshots(void)
 			{
 				// Free previously loaded shots
 				Com_sprintf(shotname, sizeof(shotname), "/save/kmq2save%i/shot.jpg", i);
-				R_FreePic(shotname);
+				R_FreePic(shotname + 1); //mxd. Gross hacks. Skip leading slash because R_DrawFindPic will also skip it before calling R_FindImage
 			}
 
 			m_saveshotvalid[i] = (R_DrawFindPic(shotname) != NULL);
@@ -145,7 +145,7 @@ void ValidateSaveshots(void)
 	}
 }
 
-void UI_UpdateSavegameData (void)
+static void UI_UpdateSavegameData(void)
 {
 	Load_Savestrings(true);
 	ValidateSaveshots(); // Register saveshots
@@ -166,40 +166,54 @@ void UI_InitSavegameData(void)
 	m_saveshotvalid[MAX_SAVEGAMES] = (R_DrawFindPic("/gfx/ui/noscreen.pcx") != NULL);
 }
 
-
-void DrawSaveshot(qboolean loadmenu)
+static void DrawSaveshot(qboolean loadmenu)
 {
-	char shotname[MAX_QPATH];
-	char mapshotname[MAX_QPATH];
-	int i;
+	// Get save/load game slot index
+	int slotindex;
 
 	if (loadmenu)
-		i = s_loadgame_actions[s_loadgame_menu.cursor].generic.localdata[0];
+		slotindex = s_loadgame_actions[s_loadgame_menu.cursor].generic.localdata[0];
 	else
-		i = s_savegame_actions[s_savegame_menu.cursor].generic.localdata[0];
+		slotindex = s_savegame_actions[s_savegame_menu.cursor].generic.localdata[0];
+
+	//mxd. Get preview image path, if any
+	char shotname[MAX_QPATH];
+	if (loadmenu && slotindex == 0 && m_savevalid[slotindex] && m_saveshotvalid[slotindex]) // 1st item in the Load menu is "ENTERING map XXX", which can't have a saveshot
+		Com_sprintf(shotname, sizeof(shotname), "/levelshots/%s.pcx", m_mapname);
+	else if (m_savevalid[slotindex] && m_saveshotvalid[slotindex])
+		Com_sprintf(shotname, sizeof(shotname), "/save/kmq2save%i/shot.jpg", slotindex);
+	else if (m_saveshotvalid[MAX_SAVEGAMES])
+		Com_sprintf(shotname, sizeof(shotname), "/gfx/ui/noscreen.pcx");
+	else
+		shotname[0] = 0;
 
 	const int x = SCREEN_WIDTH / 2 + 44;
 	const int y = DEFAULT_MENU_Y + 2;
 
-	SCR_DrawFill(x, y, 244, 184, ALIGN_CENTER, 60, 60, 60, 255);
+	//mxd. Default to 4x3 preview
+	int preview_width = 240;
+	int preview_height = 180;
 
-	if (loadmenu && i == 0 && m_savevalid[i] && m_saveshotvalid[i])
+	//mxd. If we have an image, check aspect ratio...
+	if(shotname[0])
 	{
-		Com_sprintf(mapshotname, sizeof(mapshotname), "/levelshots/%s.pcx", m_mapname);
-		SCR_DrawPic(x + 2, y + 2, 240, 180, ALIGN_CENTER, mapshotname, 1.0f);
-	}
-	else if (m_savevalid[i] && m_saveshotvalid[i])
-	{
-		Com_sprintf(shotname, sizeof(shotname), "/save/kmq2save%i/shot.jpg", i);
-		SCR_DrawPic(x + 2, y + 2, 240, 180, ALIGN_CENTER, shotname, 1.0f);
-	}
-	else if (m_saveshotvalid[MAX_SAVEGAMES])
-	{
-		SCR_DrawPic(x + 2, y + 2, 240, 180, ALIGN_CENTER, "/gfx/ui/noscreen.pcx", 1.0f);
+		int w, h;
+		R_DrawGetPicSize(&w, &h, shotname);
+		if (w != h) // Draw KMQ's square levelshots using 4x3 aspect...
+		{
+			if((float)w / h > (float)viddef.width / viddef.height) // Widescreen image and 4x3 resolution
+				preview_height = preview_width * h / w;
+			else // 4x3 image or widescreen image and resolution
+				preview_width = preview_height * w / h;
+		}
+
+		SCR_DrawFill(x, y, preview_width + 4, preview_height + 4, ALIGN_CENTER, 60, 60, 60, 255); // Gray
+		SCR_DrawPic(x + 2, y + 2, preview_width, preview_height, ALIGN_CENTER, shotname, 1.0f);
 	}
 	else
 	{
-		SCR_DrawFill(x + 2, y + 2, 240, 180, ALIGN_CENTER, 0, 0, 0, 255);
+		SCR_DrawFill(x, y, preview_width + 4, preview_height + 4, ALIGN_CENTER, 60, 60, 60, 255); // Gray
+		SCR_DrawFill(x + 2, y + 2, preview_width, preview_height, ALIGN_CENTER, 0, 0, 0, 255); // Black
 	}
 }
 
@@ -208,9 +222,9 @@ void DrawSaveshot(qboolean loadmenu)
 #pragma region ======================= LOADGAME MENU
 
 extern char *load_saveshot;
-char loadshotname[MAX_QPATH];
+static char loadshotname[MAX_QPATH];
 
-void LoadGameCallback(void *self)
+static void LoadGameCallback(void *self)
 {
 	menuaction_s *a = (menuaction_s *)self;
 
@@ -231,7 +245,7 @@ void LoadGameCallback(void *self)
 	UI_ForceMenuOff();
 }
 
-void LoadGame_MenuInit(void)
+static void LoadGame_MenuInit(void)
 {
 	UI_UpdateSavegameData();
 
@@ -267,7 +281,7 @@ void LoadGame_MenuInit(void)
 	Menu_AddItem(&s_loadgame_menu, &s_loadgame_back_action);
 }
 
-void LoadGame_MenuDraw(void)
+static void LoadGame_MenuDraw(void)
 {
 	Menu_DrawBanner("m_banner_load_game");
 	Menu_Draw(&s_loadgame_menu);
@@ -276,7 +290,7 @@ void LoadGame_MenuDraw(void)
 		DrawSaveshot(true);
 }
 
-const char *LoadGame_MenuKey(int key)
+static const char *LoadGame_MenuKey(int key)
 {
 	if (key == K_ESCAPE || key == K_ENTER)
 		s_savegame_menu.cursor = max(s_loadgame_menu.cursor - 1, 0);
@@ -294,7 +308,7 @@ void M_Menu_LoadGame_f(void)
 
 #pragma region ======================= SAVEGAME MENU
 
-void SaveGameCallback(void *self)
+static void SaveGameCallback(void *self)
 {
 	menuaction_s *a = (menuaction_s *)self;
 
@@ -302,7 +316,7 @@ void SaveGameCallback(void *self)
 	UI_ForceMenuOff();
 }
 
-void SaveGame_MenuDraw(void)
+static void SaveGame_MenuDraw(void)
 {
 	Menu_DrawBanner("m_banner_save_game");
 	Menu_AdjustCursor(&s_savegame_menu, 1);
@@ -312,7 +326,7 @@ void SaveGame_MenuDraw(void)
 		DrawSaveshot(false);
 }
 
-void SaveGame_MenuInit(void)
+static void SaveGame_MenuInit(void)
 {
 	UI_UpdateSavegameData();
 
@@ -346,7 +360,7 @@ void SaveGame_MenuInit(void)
 	Menu_AddItem(&s_savegame_menu, &s_savegame_back_action);
 }
 
-const char *SaveGame_MenuKey(int key)
+static const char *SaveGame_MenuKey(int key)
 {
 	if (key == K_ENTER || key == K_ESCAPE)
 		s_loadgame_menu.cursor = max(s_savegame_menu.cursor - 1, 0);

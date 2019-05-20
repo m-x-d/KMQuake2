@@ -185,7 +185,6 @@ extern cvar_t *r_ignorehwgamma; // Knightmare- hardware gamma
 extern cvar_t *r_waterwave; // Knightmare- water waves
 extern cvar_t *r_caustics; // Barnes water caustics
 extern cvar_t *r_glows; // Texture glows
-extern cvar_t *r_saveshotsize; // Knightmare- save shot size option
 
 // Knightmare- lerped dlights on models
 extern cvar_t *r_model_shading;

@@ -93,7 +93,6 @@ cvar_t	*r_lefthand;
 cvar_t	*r_waterwave;	// water waves
 cvar_t  *r_caustics;	// Barnes water caustics
 cvar_t  *r_glows;		// texture glows
-cvar_t	*r_saveshotsize;//  save shot size option
 
 cvar_t	*r_dlights_normal; // lerped dlights on models
 cvar_t	*r_model_shading;
@@ -829,7 +828,6 @@ void R_Register(void)
 	r_waterwave = Cvar_Get("r_waterwave", "0", CVAR_ARCHIVE);
 	r_caustics = Cvar_Get("r_caustics", "1", CVAR_ARCHIVE);
 	r_glows = Cvar_Get("r_glows", "1", CVAR_ARCHIVE);
-	r_saveshotsize = Cvar_Get("r_saveshotsize", "1", CVAR_ARCHIVE);
 
 	// correct trasparent sorting
 	r_transrendersort = Cvar_Get("r_transrendersort", "1", CVAR_ARCHIVE);

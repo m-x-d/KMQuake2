@@ -51,7 +51,6 @@ static menulist_s		s_ent_shell_box;
 static menulist_s		s_glass_envmap_box;
 static menulist_s		s_screenshotformat_box;
 static menuslider_s		s_screenshotjpegquality_slider;
-static menulist_s		s_saveshotsize_box;
 static menuaction_s		s_back_action;
 
 
@@ -134,9 +133,6 @@ static void Video_Advanced_MenuSetValues(void)
 
 	Cvar_SetValue("r_screenshot_jpeg_quality", ClampCvar(50, 100, Cvar_VariableValue("r_screenshot_jpeg_quality")));
 	s_screenshotjpegquality_slider.curvalue = (Cvar_VariableValue("r_screenshot_jpeg_quality") - 50) / 5;
-
-	Cvar_SetValue("r_saveshotsize", ClampCvar(0, 1, Cvar_VariableValue("r_saveshotsize")));
-	s_saveshotsize_box.curvalue = Cvar_VariableValue("r_saveshotsize");
 }
 
 #pragma region ======================= Menu item callbacks
@@ -267,11 +263,6 @@ static void ScreenshotFormatCallback(void *unused)
 static void JPEGScreenshotQualityCallback(void *unused)
 {
 	Cvar_SetValue("r_screenshot_jpeg_quality", (s_screenshotjpegquality_slider.curvalue * 5 + 50));
-}
-
-static void SaveshotSizeCallback(void *unused)
-{
-	Cvar_SetValue("r_saveshotsize", s_saveshotsize_box.curvalue);
 }
 
 #pragma endregion
@@ -491,14 +482,6 @@ void Menu_Video_Advanced_Init(void)
 	s_screenshotjpegquality_slider.generic.statusbar	= "Quality of JPG screenshots, 50-100%";
 	s_screenshotjpegquality_slider.cvar					= Cvar_FindVar("r_screenshot_jpeg_quality"); //mxd
 
-	s_saveshotsize_box.generic.type				= MTYPE_SPINCONTROL; //TODO: mxd. Remove
-	s_saveshotsize_box.generic.x				= 0;
-	s_saveshotsize_box.generic.y				= y += MENU_LINE_SIZE;
-	s_saveshotsize_box.generic.name				= "Hi-res saveshots";
-	s_saveshotsize_box.generic.callback			= SaveshotSizeCallback;
-	s_saveshotsize_box.itemnames				= yesno_names;
-	s_saveshotsize_box.generic.statusbar		= "Hi-res saveshots when running at 800x600 or higher";
-
 	s_back_action.generic.type					= MTYPE_ACTION;
 	s_back_action.generic.flags					= QMF_LEFT_JUSTIFY; //mxd
 	s_back_action.generic.name					= (UI_MenuDepth() == 0 ? MENU_BACK_CLOSE : MENU_BACK_TO_VIDEO); //mxd
@@ -531,7 +514,6 @@ void Menu_Video_Advanced_Init(void)
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_ent_shell_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_screenshotformat_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_screenshotjpegquality_slider);
-	Menu_AddItem(&s_video_advanced_menu, (void *)&s_saveshotsize_box);
 
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_back_action);
 }

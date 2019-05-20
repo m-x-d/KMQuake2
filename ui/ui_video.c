@@ -94,6 +94,8 @@ static void AdvancedOptions(void *s)
 
 #pragma endregion 
 
+extern void Menu_Video_Init(void);
+
 static void ResetVideoDefaults(void *unused)
 {
 	Cvar_SetToDefault("vid_fullscreen");
@@ -125,9 +127,7 @@ static void ResetVideoDefaults(void *unused)
 	Cvar_SetToDefault("r_shelltype");
 	Cvar_SetToDefault("r_screenshot_format");
 	Cvar_SetToDefault("r_screenshot_jpeg_quality");
-	Cvar_SetToDefault("r_saveshotsize");
 
-	extern void Menu_Video_Init(void); //mxd
 	Menu_Video_Init();
 }
 
