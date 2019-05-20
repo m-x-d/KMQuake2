@@ -1081,7 +1081,8 @@ void R_BeginRegistration(char *model)
 	cvar_t *flushmap = Cvar_Get("flushmap", "0", 0);
 	if (strcmp(mod_known[0].name, fullname) || flushmap->integer)
 	{
-		Mod_Free(&mod_known[0]);
+		if(mod_known[0].type != mod_bad) //mxd. Don't free twice!
+			Mod_Free(&mod_known[0]);
 
 		// Clear this on map change (case of different server and autodownloading)
 		R_InitFailedImgList();
