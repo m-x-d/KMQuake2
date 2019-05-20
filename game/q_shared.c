@@ -1032,7 +1032,7 @@ char *Q_strcasestr(const char *haystack, const char *needle)
 #endif
 }
 
-int Q_strncasecmp(char *s1, char *s2, int n)
+int Q_strncasecmp(const char *s1, const char *s2, int n)
 {
 	int c1, c2;
 	
@@ -1042,7 +1042,7 @@ int Q_strncasecmp(char *s1, char *s2, int n)
 		c2 = *s2++;
 
 		if (!n--)
-			return 0;	// strings are equal until end point
+			return 0; // Strings are equal until end point
 		
 		if (c1 != c2)
 		{
@@ -1053,14 +1053,14 @@ int Q_strncasecmp(char *s1, char *s2, int n)
 				c2 -= ('a' - 'A');
 
 			if (c1 != c2)
-				return -1;	// strings not equal
+				return -1; // Strings not equal
 		}
 	} while (c1);
 	
-	return 0;		// strings are equal
+	return 0; // Strings are equal
 }
 
-int Q_strcasecmp(char *s1, char *s2)
+int Q_strcasecmp(const char *s1, const char *s2)
 {
 	return Q_strncasecmp(s1, s2, 99999);
 }

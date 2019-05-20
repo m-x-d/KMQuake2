@@ -1593,7 +1593,7 @@ void FS_FreeFileList(char **list, int n)
 	free(list);
 }
 
-qboolean FS_ItemInList(char *check, int num, char **list)
+qboolean FS_ItemInList(const char *check, int num, const char **list)
 {
 	for (int i = 0; i < num; i++)
 		if (!Q_strcasecmp(check, list[i]))
@@ -1602,7 +1602,7 @@ qboolean FS_ItemInList(char *check, int num, char **list)
 	return false;
 }
 
-void FS_InsertInList(char **list, char *insert, int len, int start)
+void FS_InsertInList(char **list, const char *insert, int len, int start)
 {
 	if (!list)
 		return;

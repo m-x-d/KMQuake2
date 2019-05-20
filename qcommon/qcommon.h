@@ -768,8 +768,8 @@ void FS_DeletePath(char *path);
 char *FS_NextPath(const char *prevPath);
 char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned canthave);
 void FS_FreeFileList(char **list, int n);
-qboolean FS_ItemInList(char *check, int num, char **list);
-void FS_InsertInList(char **list, char *insert, int len, int start);
+qboolean FS_ItemInList(const char *check, int num, const char **list);
+void FS_InsertInList(char **list, const char *insert, int len, int start);
 void FS_Dir_f(void);
 
 void FS_ExecAutoexec(void);

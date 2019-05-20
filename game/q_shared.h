@@ -381,8 +381,8 @@ long Com_HashFileName(const char *fname, int hashSize, qboolean sized);
 
 // Portable case insensitive compare
 int Q_stricmp(const char *s1, const char *s2);
-int Q_strcasecmp(char *s1, char *s2);
-int Q_strncasecmp(char *s1, char *s2, int n);
+int Q_strcasecmp(const char *s1, const char *s2);
+int Q_strncasecmp(const char *s1, const char *s2, int n);
 
 //mxd. Portable case insensitive strstr
 char *Q_strcasestr(const char *haystack, const char *needle);
