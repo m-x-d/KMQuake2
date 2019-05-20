@@ -511,6 +511,9 @@ void TextColor(int colornum, int *red, int *green, int *blue);
 qboolean StringSetParams(char modifier, int *red, int *green, int *blue, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *reset);
 qboolean StringCheckParams(char modifier); //mxd
 qboolean IsColoredString(char *s); //mxd
+int CL_UnformattedStringLength(const char *string); //mxd
+char *CL_UnformattedString(const char *string); //mxd
+int CL_StringLengthExtra(const char *string); //mxd
 void Con_DrawString(int x, int y, char *string, int alpha);
 void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit);
 
@@ -1026,10 +1029,6 @@ int color8green(int color8);
 int color8blue(int color8);
 void color8_to_vec3(int color8, vec3_t v); //mxd
 void vectoangles(vec3_t vec, vec3_t angles);
-int CL_UnformattedStringLength(const char *string); //mxd
-char *CL_UnformattedString(const char *string); //mxd
-int CL_StringLengthExtra(const char *string); //mxd
-
 
 #ifdef LOC_SUPPORT	// Xile/NiceAss LOC
 //

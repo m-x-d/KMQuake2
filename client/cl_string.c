@@ -177,6 +177,66 @@ qboolean IsColoredString(char *s)
 	}
 }
 
+// Returns the length of formatting sequences (like ^1) in given string. Was named stringLengthExtra in KMQ2.
+int CL_StringLengthExtra(const char *string)
+{
+	const uint len = strlen(string);
+	int ulen = 0;
+
+	for (uint i = 0; i < len; i++)
+		if (string[i] == '^' && i < len - 1)
+			ulen += 2;
+
+	return ulen;
+}
+
+//mxd. Returns string length without formatting sequences (like ^1). Was named stringLen in KMQ2.
+int CL_UnformattedStringLength(const char *string)
+{
+	return strlen(string) - CL_StringLengthExtra(string);
+}
+
+//mxd. Strips color markers (like '^1'), replaces special q2 font elements (like menu borders) with printable chars. Was named unformattedString in KMQ2.
+char *CL_UnformattedString(const char *string)
+{
+	char *newstring = "";
+	const uint len = strlen(string);
+
+	for (uint i = 0; i < len; i++)
+	{
+		char c = (string[i] & ~128);
+
+		if (c == '^' && i < len - 1) // Skip color markers
+		{
+			i++;
+			continue;
+		}
+
+		//mxd. Replace unprintable chars (adapted from YQ2)
+		if (c < ' ' && (c < '\t' || c > '\r'))
+		{
+			switch (c)
+			{
+				// No idea if the following two are ever sent here, but in conchars.pcx they look like this, so do the replacements
+				case 0x10: c = '['; break;
+				case 0x11: c = ']'; break;
+
+				// Horizontal line chars
+				case 0x1D: c = '<'; break; // start
+				case 0x1E: c = '='; break; // mid
+				case 0x1F: c = '>'; break; // end
+
+				// Just replace all other unprintable chars with space, should be good enough
+				default: c = ' '; break;
+			}
+		}
+
+		newstring = va("%s%c", newstring, c);
+	}
+
+	return newstring;
+}
+
 void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletype_t scaleType, qboolean altBit)
 {
 	// Defaults
@@ -187,9 +247,9 @@ void DrawStringGeneric(int x, int y, const char *string, int alpha, textscaletyp
 	qboolean shadow = false;
 	qboolean bold = false;
 
-	unsigned charnum = 0;
-	const unsigned len = strlen(string);
-	for (unsigned i = 0; i < len; i++)
+	uint charnum = 0;
+	const uint len = strlen(string);
+	for (uint i = 0; i < len; i++)
 	{
 		char modifier = string[i];
 		if (modifier & 128)
