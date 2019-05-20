@@ -1138,7 +1138,7 @@ static void FS_AddGameDirectory(const char *dir)
 		int numfiles;
 		char **filenames = FS_ListFiles(findname, &numfiles, 0, 0);
 		if (filenames == NULL)
-			return;
+			continue;
 
 		// Add the ones, which don't match pakX naming sceme
 		for (int i = 0; i < numfiles; i++)
@@ -1183,18 +1183,15 @@ static void FS_AddGameDirectory(const char *dir)
 }
 
 // Allows enumerating all of the directories in the search path
-char *FS_NextPath(const char *prevPath)
+char *FS_NextPath(const char *prevpath)
 {
-	if (!prevPath)
-		return fs_gamedir;
-
-	char *prev = fs_gamedir;
+	char *prev = NULL;
 	for (fsSearchPath_t *search = fs_searchPaths; search; search = search->next)
 	{
 		if (search->pack)
 			continue;
 
-		if (prevPath == prev)
+		if (prevpath == prev)
 			return search->path;
 
 		prev = search->path;
