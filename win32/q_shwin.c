@@ -64,6 +64,12 @@ char *Sys_GetCurrentDirectory(void)
 	return dir;
 }
 
+//mxd. Just a wrapper around _access (https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess)
+qboolean Sys_Access(char *path, enum accessmode_t mode)
+{
+	return (_access(path, mode) != -1);
+}
+
 //============================================
 
 static qboolean CompareAttributes(unsigned found, unsigned musthave, unsigned canthave)

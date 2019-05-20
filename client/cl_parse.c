@@ -277,7 +277,11 @@ void CL_ParseClientinfo(int player)
 // This assumes that the standard Q2 CD was ripped as track02-track11, and the Rogue CD as track12-track21.
 static int CL_MissionPackCDTrack(int tracknum)
 {
-	if (modType("rogue") || cl_rogue_music->value)
+	// 1 is illegal (=> data track on CD), 0 means "no track"
+	if (tracknum < 2)
+		return 0;
+	
+	if (modType("rogue") || cl_rogue_music->integer)
 	{
 		if (tracknum >= 2 && tracknum <= 11)
 			return tracknum + 10;
@@ -286,7 +290,7 @@ static int CL_MissionPackCDTrack(int tracknum)
 	}
 
 	// An out-of-order mix from Q2 and Rogue CDs
-	if (modType("xatrix") || cl_xatrix_music->value)
+	if (modType("xatrix") || cl_xatrix_music->integer)
 	{
 		switch(tracknum)
 		{
@@ -322,7 +326,7 @@ void CL_PlayBackgroundTrack(void)
 	if (strlen(cl.configstrings[CS_CDTRACK]) > 2)
 	{
 		Com_sprintf(name, sizeof(name), "music/%s.ogg", cl.configstrings[CS_CDTRACK]);
-		if (FS_FileExists(name)) //mxd. FS_LoadFile -> FS_FileExists
+		if (FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
 		{
 			CDAudio_Stop();
 			S_StartBackgroundTrack(name, name);
@@ -344,7 +348,7 @@ void CL_PlayBackgroundTrack(void)
 
 	// If an OGG file exists play it, otherwise fall back to CD audio
 	Com_sprintf(name, sizeof(name), "music/track%02i.ogg", CL_MissionPackCDTrack(track));
-	if (FS_FileExists(name) && cl_ogg_music->value) //mxd. FS_LoadFile -> FS_FileExists
+	if ((FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) && cl_ogg_music->value) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
 		S_StartBackgroundTrack(name, name);
 	else
 		CDAudio_Play(track, true);

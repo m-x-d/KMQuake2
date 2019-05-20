@@ -60,11 +60,8 @@ typedef struct
 	char ambientName[MAX_QPATH];
 	qboolean looping;
 	qboolean ambient_looping;
-#ifdef OGG_DIRECT_FILE
-	FILE *file;
-#else
-	fileHandle_t file;
-#endif
+	FILE *file; //mxd. For playing GOG music tracks in Quake2/music (i.e. outside of Q2 filesystem...)
+	fileHandle_t filehandle;
 	int	start;
 	int	rate;
 	int	width;
@@ -171,7 +168,6 @@ extern cvar_t *s_primary;
 extern cvar_t *s_musicvolume; // Q2E
 #endif
 
-wavinfo_t GetWavinfo(char *name, byte *wav, int wavlength);
 void S_InitScaletable(void);
 sfxcache_t *S_LoadSound(sfx_t *s);
 void S_IssuePlaysound(playsound_t *ps);

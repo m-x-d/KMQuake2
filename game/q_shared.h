@@ -418,11 +418,21 @@ qboolean Info_Validate(char *s);
 ==============================================================
 */
 
+enum accessmode_t //mxd
+{
+	ACC_EXISTS = 0,
+	ACC_WRITEONLY = 2,
+	ACC_READONLY = 4,
+	ACC_READWRITE = 6
+};
+
 extern int curtime; // Time returned by last Sys_Milliseconds
 
 int Sys_Milliseconds(void);
 void Sys_Mkdir(char *path);
 void Sys_Rmdir(char *path);
+
+qboolean Sys_Access(char *path, enum accessmode_t mode); //mxd
 
 // Directory searching
 #define SFF_ARCH    0x01

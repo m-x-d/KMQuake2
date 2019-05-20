@@ -22,9 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-// Bypass filesystem for streaming audio to get around FS_Read 0 bytes error
-//#define OGG_DIRECT_FILE
-
 typedef enum
 {
 	PLAY,
