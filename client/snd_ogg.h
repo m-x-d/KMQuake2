@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-
 // snd_ogg.h -- Ogg Vorbis streaming functions
 
 #pragma once
@@ -28,15 +27,6 @@ typedef enum
 	PAUSE,
 	STOP
 } ogg_status_t;
-
-typedef enum
-{
-	ABS,
-	REL
-} ogg_seek_t;
-
-// snd_stream.c
-extern int sound_started;
 
 void S_UpdateBackgroundTrack(void);
 void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack);

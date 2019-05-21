@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // cl_parse.c  -- parse a message received from the server
 
 #include "client.h"
+#include "snd_ogg.h"
 
 char *svc_strings[256] =
 {
@@ -311,10 +312,6 @@ static int CL_MissionPackCDTrack(int tracknum)
 	return tracknum;
 }
 
-#ifdef OGG_SUPPORT
-
-#include "snd_ogg.h"
-
 void CL_PlayBackgroundTrack(void)
 {
 	char name[MAX_QPATH];
@@ -353,15 +350,6 @@ void CL_PlayBackgroundTrack(void)
 	else
 		CDAudio_Play(track, true);
 }
-
-#else
-
-void CL_PlayBackgroundTrack(void)
-{
-	CDAudio_Play(atoi(cl.configstrings[CS_CDTRACK]), true);
-}
-
-#endif // OGG_SUPPORT
 
 void CL_ParseConfigString(void)
 {

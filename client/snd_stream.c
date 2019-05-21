@@ -21,10 +21,23 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 #include "snd_loc.h"
+#include "snd_ogg.h"
 
-#ifdef OGG_SUPPORT
+#define STB_VORBIS_NO_PUSHDATA_API
+#define STB_VORBIS_NO_STDIO
+#include "../include/stb_vorbis/stb_vorbis.h"
 
-#define BUFFER_SIZE		16384
+// Added from Q2E
+typedef struct
+{
+	char introName[MAX_QPATH];
+	char loopName[MAX_QPATH];
+	char ambientName[MAX_QPATH];
+	qboolean looping;
+	qboolean ambient_looping;
+	stb_vorbis *ogg_file; //mxd
+} bgTrack_t;
+
 #define MAX_OGGLIST		512
 
 static bgTrack_t s_bgTrack;
@@ -40,186 +53,118 @@ static int ogg_loopcounter;
 static cvar_t *ogg_loopcount;
 static cvar_t *ogg_ambient_track;
 
-#pragma region ======================= Ogg vorbis streaming
-
-static size_t ovc_read(void *ptr, size_t size, size_t nmemb, void *datasource)
-{
-	bgTrack_t *track = (bgTrack_t *)datasource;
-
-	if (!size || !nmemb)
-		return 0;
-
-	if (track->filehandle)
-		return FS_Read(ptr, size * nmemb, track->filehandle) / size;
-
-	//mxd. GOG music tracks support...
-	return fread(ptr, 1, size * nmemb, track->file) / size;
-}
-
-static int ovc_seek(void *datasource, ogg_int64_t offset, int whence)
-{
-	bgTrack_t *track = (bgTrack_t *)datasource;
-	
-	int fs_whence;
-	switch (whence)
-	{
-		case SEEK_SET: fs_whence = FS_SEEK_SET; break;
-		case SEEK_CUR: fs_whence = FS_SEEK_CUR; break;
-		case SEEK_END: fs_whence = FS_SEEK_END; break;
-		default: return -1;
-	}
-
-	if (track->filehandle) 
-		FS_Seek(track->filehandle, (int)offset, fs_whence);
-	else //mxd. GOG music tracks support...
-		fseek(track->file, (int)offset, whence);
-
-	return 0;
-}
-
-static int ovc_close(void *datasource)
-{
-	return 0;
-}
-
-static long ovc_tell(void *datasource)
-{
-	bgTrack_t *track = (bgTrack_t *)datasource;
-	return (track->filehandle ? FS_Tell(track->filehandle) : ftell(track->file)); //mxd. GOG music tracks support...
-}
-
-#pragma endregion
-
 #pragma region ======================= Ogg vorbis playback
 
 static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 {
-	const ov_callbacks vorbiscallbacks = { ovc_read, ovc_seek, ovc_close, ovc_tell };
+	byte *data;
 
-	FS_FOpenFile(name, &track->filehandle, FS_READ);
-	if(!track->filehandle) //mxd. GOG music tracks support...
-		track->file = fopen(name, "rb");
+	fileHandle_t fh;
+	int datalength = FS_FOpenFile(name, &fh, FS_READ);
 
-	if (!track->filehandle && !track->file)
+	if(datalength > 0)
 	{
-		Com_Printf(S_COLOR_YELLOW"S_OpenBackgroundTrack: couldn't find '%s'\n", name);
+		data = malloc(datalength);
+		FS_Read(data, datalength, fh);
+		FS_FCloseFile(fh);
+	}
+	else
+	{
+		//mxd. Music tracks in Q2 GOG are outside of Q2 filesystem, so try loading those directly...
+		FILE *f = fopen(name, "rb");
+		fseek(f, 0, SEEK_END);
+		datalength = ftell(f);
+		fseek(f, 0, SEEK_SET);
+
+		data = malloc(datalength);
+		fread(data, 1, datalength, f);
+		fclose(f);
+	}
+
+	if (datalength == 0)
+	{
+		Com_Printf(S_COLOR_YELLOW"%s: couldn't find '%s'\n", __func__, name);
 		return false;
 	}
 
-	track->vorbisFile = Z_Malloc(sizeof(OggVorbis_File));
+	int stb_err = 0;
+	track->ogg_file = stb_vorbis_open_memory(data, datalength, &stb_err, NULL);
 
-	// Bombs out here- ovc_read, FS_Read 0 bytes error
-	if (ov_open_callbacks(track, track->vorbisFile, NULL, 0, vorbiscallbacks) < 0)
+	if (stb_err != 0)
 	{
-		Com_Printf(S_COLOR_YELLOW"S_OpenBackgroundTrack: couldn't open OGG stream (%s)\n", name);
+		Com_Printf(S_COLOR_YELLOW"%s: '%s' is not a valid Ogg Vorbis file (error %i).\n", __func__, name, stb_err);
 		return false;
 	}
 
-	vorbis_info *vorbisInfo = ov_info(track->vorbisFile, -1);
-	if (vorbisInfo->channels != 1 && vorbisInfo->channels != 2)
+	if (track->ogg_file->channels != 1 && track->ogg_file->channels != 2)
 	{
 		Com_Printf(S_COLOR_YELLOW"S_OpenBackgroundTrack: only mono and stereo OGG files supported (%s)\n", name);
 		return false;
 	}
-
-	track->start = ov_raw_tell(track->vorbisFile);
-	track->rate = vorbisInfo->rate;
-	track->width = 2;
-	track->channels = vorbisInfo->channels; // Knightmare added
 
 	return true;
 }
 
 static void S_CloseBackgroundTrack(bgTrack_t *track)
 {
-	if (track->vorbisFile)
-	{
-		ov_clear(track->vorbisFile);
-		Z_Free(track->vorbisFile);
-		track->vorbisFile = NULL;
-	}
-
-	if (track->filehandle)
-	{
-		FS_FCloseFile(track->filehandle);
-		track->filehandle = 0;
-	}
-	else if(track->file) //mxd. GOG music tracks support...
-	{
-		fclose(track->file);
-		track->file = NULL;
-	}
+	stb_vorbis_close(track->ogg_file);
+	track->ogg_file = NULL;
 }
 
 static void S_StreamBackgroundTrack(void)
 {
-	int dummy;
-	byte data[MAX_RAW_SAMPLES * 4];
-
-	if ((!s_bgTrack.filehandle && !s_bgTrack.file) || !s_musicvolume->value || !s_streamingChannel) //mxd. GOG music tracks support...
+	if (!s_bgTrack.ogg_file || !s_musicvolume->value || !s_streamingChannel)
 		return;
 
-	s_rawend = max(paintedtime, s_rawend);
+	short samples[4096] = { 0 };
+	stb_vorbis *file = s_bgTrack.ogg_file;
 
-	const float scale = (float)s_bgTrack.rate / dma.speed;
-	const int maxSamples = sizeof(data) / s_bgTrack.channels / s_bgTrack.width;
-
-	while (true)
+	while (paintedtime + MAX_RAW_SAMPLES - 2048 > s_rawend)
 	{
-		int samples = (paintedtime + MAX_RAW_SAMPLES - s_rawend) * scale;
-		if (samples <= 0)
-			return;
+		const int read_samples = stb_vorbis_get_samples_short_interleaved(file, file->channels, samples, sizeof(samples) / file->channels);
 
-		samples = min(maxSamples, samples);
-		const int maxRead = samples * s_bgTrack.channels * s_bgTrack.width;
-
-		int total = 0;
-		while (total < maxRead)
+		if (read_samples > 0)
 		{
-			const int read = ov_read(s_bgTrack.vorbisFile, (char *)data + total, maxRead - total, 0, 2, 1, &dummy);
-			if (!read)
+			S_RawSamples(read_samples, file->sample_rate, file->channels, file->channels, (byte *)samples, true);
+		}
+		else
+		{
+			// End of file
+			if (!s_bgTrack.looping)
 			{
-				// End of file
-				if (!s_bgTrack.looping)
+				// Close the intro track
+				S_CloseBackgroundTrack(&s_bgTrack);
+
+				// Open the loop track
+				if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
 				{
-					// Close the intro track
+					S_StopBackgroundTrack();
+					return;
+				}
+
+				s_bgTrack.looping = true;
+			}
+			else
+			{
+				// Check if it's time to switch to the ambient track //mxd. Also check that ambientName contains data
+				if (s_bgTrack.ambientName[0] && ++ogg_loopcounter >= ogg_loopcount->integer && (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1")))
+				{
+					// Close the loop track
 					S_CloseBackgroundTrack(&s_bgTrack);
 
-					// Open the loop track
-					if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
+					if (!S_OpenBackgroundTrack(s_bgTrack.ambientName, &s_bgTrack) && !S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
 					{
 						S_StopBackgroundTrack();
 						return;
 					}
 
-					s_bgTrack.looping = true;
+					s_bgTrack.ambient_looping = true;
 				}
-				else
-				{
-					// Check if it's time to switch to the ambient track //mxd. Also check that ambientName contains data
-					if (s_bgTrack.ambientName[0] && ++ogg_loopcounter >= ogg_loopcount->integer && (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1")))
-					{
-						// Close the loop track
-						S_CloseBackgroundTrack(&s_bgTrack);
-
-						if (!S_OpenBackgroundTrack(s_bgTrack.ambientName, &s_bgTrack) && !S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
-						{
-							S_StopBackgroundTrack();
-							return;
-						}
-
-						s_bgTrack.ambient_looping = true;
-					}
-				}
-
-				// Restart the track, skipping over the header
-				ov_raw_seek(s_bgTrack.vorbisFile, (ogg_int64_t)s_bgTrack.start);
 			}
 
-			total += read;
+			// Restart the track
+			stb_vorbis_seek_start(file);
 		}
-
-		S_RawSamples(samples, s_bgTrack.rate, s_bgTrack.width, s_bgTrack.channels, data, true);
 	}
 }
 
@@ -358,8 +303,16 @@ void S_OGG_Shutdown(void)
 // Based on code by QuDos
 void S_OGG_Restart(void)
 {
+	char introname[MAX_QPATH]; //mxd
+	Q_strncpyz(introname, s_bgTrack.introName, sizeof(introname));
+	char loopname[MAX_QPATH];
+	Q_strncpyz(loopname, s_bgTrack.loopName, sizeof(loopname));
+
 	S_OGG_Shutdown();
 	S_OGG_Init();
+
+	if (introname[0] || loopname[0]) //mxd
+		S_StartBackgroundTrack(introname, loopname);
 }
 
 //mxd
@@ -472,12 +425,18 @@ static void S_OGG_StatusCmd(void)
 	switch (ogg_status)
 	{
 		case PLAY:
-			Com_Printf("Playing file %s at %0.2f seconds.\n", trackName, ov_time_tell(s_bgTrack.vorbisFile));
-			break;
+		{
+			const float curtime = stb_vorbis_get_sample_offset(s_bgTrack.ogg_file) / (float)s_bgTrack.ogg_file->sample_rate;
+			const float totaltime = stb_vorbis_stream_length_in_samples(s_bgTrack.ogg_file) / (float)s_bgTrack.ogg_file->sample_rate;
+			Com_Printf("Playing file '%s' (%0.2f / %0.2f seconds).\n", trackName, curtime, totaltime);
+		} break;
 
 		case PAUSE:
-			Com_Printf("Paused file %s at %0.2f seconds.\n", trackName, ov_time_tell(s_bgTrack.vorbisFile));
-			break;
+		{
+			const float curtime = stb_vorbis_get_sample_offset(s_bgTrack.ogg_file) / (float)s_bgTrack.ogg_file->sample_rate;
+			const float totaltime = stb_vorbis_stream_length_in_samples(s_bgTrack.ogg_file) / (float)s_bgTrack.ogg_file->sample_rate;
+			Com_Printf("Paused file '%s' (%0.2f / %0.2f seconds).\n", trackName, curtime, totaltime);
+		} break;
 
 		case STOP:
 			Com_Printf("Stopped.\n");
@@ -496,9 +455,9 @@ static void S_OGG_ListCmd(void)
 	}
 
 	for (int i = 0; i < ogg_numfiles; i++)
-		Com_Printf("%d: %s\n", i + 1, ogg_filelist[i]);
+		Com_Printf("%3i: %s\n", i + 1, ogg_filelist[i]);
 
-	Com_Printf(S_COLOR_GREEN"%d Ogg Vorbis files.\n", ogg_numfiles);
+	Com_Printf(S_COLOR_GREEN"Total: %i Ogg Vorbis files.\n", ogg_numfiles);
 }
 
 // Parses OGG commands
@@ -546,5 +505,3 @@ void S_OGG_ParseCmd(void)
 }
 
 #pragma endregion
-
-#endif // OGG_SUPPORT

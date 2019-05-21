@@ -21,12 +21,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 #include "snd_loc.h"
+#include "snd_ogg.h"
 
 void S_Play(void);
 void S_SoundList(void);
 void S_Update_();
-//void S_StopAllSounds(void); //mxd. Redundant declaration
-
 
 // =======================================================================
 // Internal sound data & structures
@@ -76,12 +75,9 @@ cvar_t		*s_khz;
 cvar_t		*s_show;
 cvar_t		*s_mixahead;
 cvar_t		*s_primary;
-#ifdef OGG_SUPPORT
 cvar_t		*s_musicvolume;
-#endif
 
-
-int		s_rawend;
+int			s_rawend;
 portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
 
 
@@ -132,17 +128,13 @@ void S_Init (void)
 		s_show = Cvar_Get("s_show", "0", 0);
 		s_testsound = Cvar_Get("s_testsound", "0", 0);
 		s_primary = Cvar_Get("s_primary", "0", CVAR_ARCHIVE);	// win32 specific
-	#ifdef OGG_SUPPORT
 		s_musicvolume = Cvar_Get("s_musicvolume", "1.0", CVAR_ARCHIVE); // Q2E
-	#endif
 
 		Cmd_AddCommand("play", S_Play);
 		Cmd_AddCommand("stopsound", S_StopAllSounds);
 		Cmd_AddCommand("soundlist", S_SoundList);
 		Cmd_AddCommand("soundinfo", S_SoundInfo_f);
-	#ifdef OGG_SUPPORT
 		Cmd_AddCommand("ogg_restart", S_OGG_Restart);
-	#endif
 
 		if (!SNDDMA_Init())
 			return;
@@ -160,9 +152,7 @@ void S_Init (void)
 		S_StopAllSounds();
 	}
 
-#ifdef OGG_SUPPORT
 	S_OGG_Init();
-#endif
 
 	Com_Printf("------------------------------------\n");
 }
@@ -172,18 +162,12 @@ void S_Init (void)
 // Shutdown sound engine
 // =======================================================================
 
-void S_Shutdown (void)
+void S_Shutdown(void)
 {
-	int		i;
-	sfx_t	*sfx;
-
 	if (!sound_started)
 		return;
 
-#ifdef OGG_SUPPORT
 	S_OGG_Shutdown();
-#endif
-
 	SNDDMA_Shutdown();
 
 	sound_started = 0;
@@ -192,12 +176,11 @@ void S_Shutdown (void)
 	Cmd_RemoveCommand("stopsound");
 	Cmd_RemoveCommand("soundlist");
 	Cmd_RemoveCommand("soundinfo");
-#ifdef OGG_SUPPORT
 	Cmd_RemoveCommand("ogg_restart");
-#endif
 
-	// free all sounds
-	for (i = 0, sfx = known_sfx; i < num_sfx; i++, sfx++)
+	// Free all sounds
+	sfx_t *sfx = known_sfx;
+	for (int i = 0; i < num_sfx; i++, sfx++)
 	{
 		if (!sfx->name[0])
 			continue;
@@ -388,11 +371,9 @@ channel_t *S_PickChannel(int entnum, int entchannel)
 
 	for (int ch_idx = 0; ch_idx < MAX_CHANNELS; ch_idx++)
 	{
-	#ifdef OGG_SUPPORT
 		// Don't let game sounds override streaming sounds
-		if (channels[ch_idx].streaming)  // Q2E
+		if (channels[ch_idx].streaming) // Q2E
 			continue;
-	#endif
 
 		if (entchannel != 0 && channels[ch_idx].entnum == entnum && channels[ch_idx].entchannel == entchannel) // channel 0 never overrides
 		{
@@ -781,7 +762,7 @@ void S_StopAllSounds(void)
 	if (!sound_started)
 		return;
 
-	// clear all the playsounds
+	// Clear all the playsounds
 	memset(s_playsounds, 0, sizeof(s_playsounds));
 	s_freeplays.next = s_freeplays.prev = &s_freeplays;
 	s_pendingplays.next = s_pendingplays.prev = &s_pendingplays;
@@ -794,13 +775,11 @@ void S_StopAllSounds(void)
 		s_playsounds[i].next->prev = &s_playsounds[i];
 	}
 
-	// clear all the channels
+	// Clear all the channels
 	memset(channels, 0, sizeof(channels));
 
-#ifdef OGG_SUPPORT
 	// Stop background track
-	S_StopBackgroundTrack (); // Q2E
-#endif
+	S_StopBackgroundTrack(); // Q2E
 
 	S_ClearBuffer();
 }
@@ -942,24 +921,16 @@ S_RawSamples
 Cinematic streaming and voice over network
 ============
 */
-void S_RawSamples (int samples, int rate, int width, int channels, byte *data, qboolean music)
+void S_RawSamples(int samples, int rate, int width, int channels, byte *data, qboolean music)
 {
-	int snd_vol;
-
 	if (!sound_started)
 		return;
 
-#ifdef OGG_SUPPORT
-	if (music)
-		snd_vol = (int)(s_musicvolume->value * 256);
-	else
-#endif
-		snd_vol = (int)(s_volume->value * 256);
+	const int snd_vol = (int)((music ? s_musicvolume : s_volume)->value * 256);
 
 	s_rawend = max(paintedtime, s_rawend);
 	const float scale = (float)rate / dma.speed;
 
-	//Com_Printf("%i < %i < %i\n", soundtime, paintedtime, s_rawend);
 	if (channels == 2 && width == 2)
 	{
 		if (scale == 1.0f)
@@ -1106,12 +1077,9 @@ void S_Update (vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		Com_Printf("----(%i)---- painted: %i\n", total, paintedtime);
 	}
 
-
-#ifdef OGG_SUPPORT
 	S_UpdateBackgroundTrack();
-#endif
 
-	// mix some sound
+	// Mix some sound
 	S_Update_();
 }
 

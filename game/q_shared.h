@@ -107,8 +107,6 @@ __inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list A
 	#define LOOP_SOUND_ATTENUATION
 #endif
 
-#define OGG_SUPPORT // whether to use Ogg Vorbis soundtrack
-
 #define USE_CURL	// whether to include HTTP downloading
 
 #define LOC_SUPPORT	// whether to include loc file support
