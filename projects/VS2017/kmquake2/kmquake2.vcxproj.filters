@@ -72,9 +72,6 @@
     <ClCompile Include="..\..\..\client\snd_mix.c">
       <Filter>Source Files\sound</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\client\snd_stream.c">
-      <Filter>Source Files\sound</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\win32\snd_win.c">
       <Filter>Source Files\sound</Filter>
     </ClCompile>
@@ -389,6 +386,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\renderer\r_model_malloc.c">
       <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\client\snd_ogg.c">
+      <Filter>Source Files\sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

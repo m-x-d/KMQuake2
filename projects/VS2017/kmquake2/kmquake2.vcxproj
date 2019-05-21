@@ -190,7 +190,7 @@
     <ClCompile Include="..\..\..\client\snd_dma.c" />
     <ClCompile Include="..\..\..\client\snd_mem.c" />
     <ClCompile Include="..\..\..\client\snd_mix.c" />
-    <ClCompile Include="..\..\..\client\snd_stream.c" />
+    <ClCompile Include="..\..\..\client\snd_ogg.c" />
     <ClCompile Include="..\..\..\game\m_flash.c" />
     <ClCompile Include="..\..\..\game\q_shared.c" />
     <ClCompile Include="..\..\..\qcommon\cmd.c" />
