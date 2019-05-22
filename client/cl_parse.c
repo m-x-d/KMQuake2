@@ -70,6 +70,12 @@ void CL_RegisterSounds(void)
 
 	//end Knightmare
 	S_EndRegistration();
+
+	// Knightmare added
+	// CL_RegisterSounds is only called while the refresh is prepped
+	// during a sound resart, so we can use this to restart the music track
+	if (cls.state == ca_active && cl.refresh_prepped && !CDAudio_Active())
+		CL_PlayBackgroundTrack();
 }
 
 #pragma region ======================= SERVER CONNECTING MESSAGES

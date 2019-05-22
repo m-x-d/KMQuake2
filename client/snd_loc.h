@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-// !!! if this is changed, the asm code must change !!!
 typedef struct
 {
 	int left;
@@ -73,7 +72,6 @@ typedef struct
 	byte *buffer;
 } dma_t;
 
-// !!! if this is changed, the asm code must change !!!
 typedef struct
 {
 	sfx_t *sfx;		// sfx number
@@ -122,10 +120,6 @@ extern channel_t channels[MAX_CHANNELS];
 
 extern int paintedtime;
 extern int s_rawend;
-extern vec3_t listener_origin;
-extern vec3_t listener_forward;
-extern vec3_t listener_right;
-extern vec3_t listener_up;
 extern dma_t dma;
 extern playsound_t s_pendingplays;
 
