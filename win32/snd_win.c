@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-//#include <float.h>
 
+#include <dsound.h>
 #include "../client/client.h"
 #include "../client/snd_loc.h"
 #include "winquake.h"
@@ -33,24 +33,29 @@ HRESULT (WINAPI *pDirectSoundCreate)(GUID FAR *lpGUID, LPDIRECTSOUND FAR *lplpDS
 #define	WAV_BUFFER_SIZE			0x0800	//<-CDawg changed, was 0x0400
 #define SECONDARY_BUFFER_SIZE	0x10000
 
-typedef enum {SIS_SUCCESS, SIS_FAILURE, SIS_NOTAVAIL} sndinitstat;
+typedef enum
+{
+	SIS_SUCCESS, 
+	SIS_FAILURE, 
+	SIS_NOTAVAIL
+} sndinitstat;
 
-cvar_t	*s_wavonly;
+cvar_t *s_wavonly;
 
 static qboolean	dsound_init;
 static qboolean	wav_init;
-static qboolean	snd_firsttime = true, snd_isdirect, snd_iswave;
+static qboolean	snd_firsttime = true;
+static qboolean	snd_isdirect;
+static qboolean	snd_iswave;
 static qboolean	primary_format_set;
 
-// starts at 0 for disabled
-static int	snd_buffer_count = 0;
-static int	sample16;
-static int	snd_sent, snd_completed;
+// Starts at 0 for disabled
+static int snd_buffer_count = 0;
+static int sample16;
+static int snd_sent;
+static int snd_completed;
 
-/* 
- * Global variables. Must be visible to window-procedure function so it can unlock and free the data block after it has been played. 
- */ 
-
+// Global variables. Must be visible to window-procedure function so it can unlock and free the data block after it has been played. 
 
 HANDLE		hData;
 HPSTR		lpData, lpData2;
@@ -58,7 +63,7 @@ HPSTR		lpData, lpData2;
 HGLOBAL		hWaveHdr;
 LPWAVEHDR	lpWaveHdr;
 
-HWAVEOUT    hWaveOut; 
+HWAVEOUT	hWaveOut; 
 
 WAVEOUTCAPS	wavecaps;
 
@@ -71,32 +76,26 @@ LPDIRECTSOUNDBUFFER pDSBuf, pDSPBuf;
 
 HINSTANCE hInstDS;
 
-sndinitstat SNDDMA_InitDirect (void); //mxd. qboolean -> sndinitstat
-qboolean SNDDMA_InitWav (void);
+void FreeSound(void);
 
-void FreeSound (void);
-
-static const char *DSoundError (int error)
+static const char *DSoundError(int error)
 {
 	switch (error)
 	{
-	case DSERR_BUFFERLOST:
-		return "DSERR_BUFFERLOST";
-	case DSERR_INVALIDCALL:
-		return "DSERR_INVALIDCALLS";
-	case DSERR_INVALIDPARAM:
-		return "DSERR_INVALIDPARAM";
-	case DSERR_PRIOLEVELNEEDED:
-		return "DSERR_PRIOLEVELNEEDED";
+		case DSERR_BUFFERLOST:
+			return "DSERR_BUFFERLOST";
+		case DSERR_INVALIDCALL:
+			return "DSERR_INVALIDCALLS";
+		case DSERR_INVALIDPARAM:
+			return "DSERR_INVALIDPARAM";
+		case DSERR_PRIOLEVELNEEDED:
+			return "DSERR_PRIOLEVELNEEDED";
+		default:
+			return "unknown";
 	}
-
-	return "unknown";
 }
 
-/*
-** DS_CreateBuffers
-*/
-static qboolean DS_CreateBuffers (void)
+static qboolean DS_CreateBuffers(void)
 {
 	DSBUFFERDESC	dsbuf;
 	DSBCAPS			dsbcaps;
@@ -124,7 +123,7 @@ static qboolean DS_CreateBuffers (void)
 
 	Com_DPrintf("ok\n");
 
-	// get access to the primary buffer, if possible, so we can set the sound hardware format
+	// Get access to the primary buffer, if possible, so we can set the sound hardware format
 	memset(&dsbuf, 0, sizeof(dsbuf));
 	dsbuf.dwSize = sizeof(DSBUFFERDESC);
 	dsbuf.dwFlags = DSBCAPS_PRIMARYBUFFER;
@@ -161,7 +160,7 @@ static qboolean DS_CreateBuffers (void)
 
 	if (!primary_format_set || !s_primary->value)
 	{
-		// create the secondary buffer we'll actually work with
+		// Create the secondary buffer we'll actually work with
 		memset(&dsbuf, 0, sizeof(dsbuf));
 		dsbuf.dwSize = sizeof(DSBUFFERDESC);
 		dsbuf.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_LOCSOFTWARE;
@@ -225,7 +224,7 @@ static qboolean DS_CreateBuffers (void)
 	
 	gSndBufSize = dsbcaps.dwBufferBytes;
 
-	// we don't want anyone to access the buffer directly w/o locking it first.
+	// We don't want anyone to access the buffer directly w/o locking it first.
 	lpData = NULL; 
 
 	pDSBuf->lpVtbl->Stop(pDSBuf);
@@ -235,16 +234,13 @@ static qboolean DS_CreateBuffers (void)
 	dma.samples = gSndBufSize / (dma.samplebits / 8);
 	dma.samplepos = 0;
 	dma.submission_chunk = 1;
-	dma.buffer = (unsigned char *) lpData;
+	dma.buffer = (byte *)lpData;
 	sample16 = (dma.samplebits / 8) - 1;
 
 	return true;
 }
 
-/*
-** DS_DestroyBuffers
-*/
-static void DS_DestroyBuffers( void )
+static void DS_DestroyBuffers(void)
 {
 	Com_DPrintf("Destroying DS buffers\n");
 	if (pDS)
@@ -260,7 +256,7 @@ static void DS_DestroyBuffers( void )
 		pDSBuf->lpVtbl->Release(pDSBuf);
 	}
 
-	// only release primary buffer if it's not also the mixing buffer we just released
+	// Only release primary buffer if it's not also the mixing buffer we just released
 	if (pDSPBuf && pDSBuf != pDSPBuf)
 	{
 		Com_DPrintf("...releasing primary buffer\n");
@@ -273,12 +269,7 @@ static void DS_DestroyBuffers( void )
 	dma.buffer = NULL;
 }
 
-/*
-==================
-FreeSound
-==================
-*/
-void FreeSound (void)
+static void FreeSound(void)
 {
 	Com_DPrintf("Shutting down sound system\n");
 
@@ -340,14 +331,8 @@ void FreeSound (void)
 	wav_init = false;
 }
 
-/*
-==================
-SNDDMA_InitDirect
-
-Direct-Sound support
-==================
-*/
-sndinitstat SNDDMA_InitDirect (void)
+// Direct-Sound support
+sndinitstat SNDDMA_InitDirect(void)
 {
 	DSCAPS	dscaps;
 	HRESULT	hresult;
@@ -357,12 +342,12 @@ sndinitstat SNDDMA_InitDirect (void)
 
 	// Knightmare- added DMP's 44/48 KHz sound support
 	// ** DMP change how sampling rate is set
-	switch ((int)s_khz->value)
+	switch (s_khz->integer)
 	{
-		case 48:  dma.speed = 48000;  break;	//** DMP why add 48? Because we can! :-)
-		case 44:  dma.speed = 44100;  break;	//** DMP fixed bug - old code set 11KHz if user specified this rate
-		case 22:  dma.speed = 22050;  break;
-		default:  dma.speed = 11025;  break;
+		case 48: dma.speed = 48000; break; //** DMP why add 48? Because we can! :-)
+		case 44: dma.speed = 44100; break; //** DMP fixed bug - old code set 11KHz if user specified this rate
+		case 22: dma.speed = 22050; break;
+		default: dma.speed = 11025; break;
 	}
 
 	Com_Printf("Initializing DirectSound\n");
@@ -435,15 +420,8 @@ sndinitstat SNDDMA_InitDirect (void)
 	return SIS_SUCCESS;
 }
 
-
-/*
-==================
-SNDDM_InitWav
-
-Crappy windows multimedia base
-==================
-*/
-qboolean SNDDMA_InitWav (void)
+// Crappy windows multimedia base
+qboolean SNDDMA_InitWav(void)
 {
 	WAVEFORMATEX format;
 	HRESULT		 hr;
@@ -458,7 +436,7 @@ qboolean SNDDMA_InitWav (void)
 
 	// Knightmare- added DMP's 44/48 KHz sound support
 	// ** DMP change how sampling rate is set
-	switch ((int)s_khz->value)
+	switch (s_khz->integer)
 	{
 		case 48:  dma.speed = 48000;  break;
 		case 44:  dma.speed = 44100;  break;
@@ -579,14 +557,8 @@ qboolean SNDDMA_InitWav (void)
 	return true;
 }
 
-/*
-==================
-SNDDMA_Init
-
-Try to find a sound device to mix for.
-Returns false if nothing is found.
-==================
-*/
+// Try to find a sound device to mix for.
+// Returns false if nothing is found.
 int SNDDMA_Init(void)
 {
 	memset((void *)&dma, 0, sizeof(dma));
@@ -596,9 +568,9 @@ int SNDDMA_Init(void)
 	dsound_init = 0;
 	wav_init = 0;
 
-	sndinitstat stat = SIS_FAILURE; // assume DirectSound won't initialize
+	sndinitstat stat = SIS_FAILURE; // Assume DirectSound won't initialize
 
-	/* Init DirectSound */
+	// Init DirectSound
 	if (!s_wavonly->value)
 	{
 		if (snd_firsttime || snd_isdirect)
@@ -620,7 +592,7 @@ int SNDDMA_Init(void)
 		}
 	}
 
-	// if DirectSound didn't succeed in initializing, try to initialize waveOut sound, unless DirectSound failed because the hardware is
+	// If DirectSound didn't succeed in initializing, try to initialize waveOut sound, unless DirectSound failed because the hardware is
 	// already allocated (in which case the user has already chosen not to have sound)
 	if (!dsound_init && stat != SIS_NOTAVAIL)
 	{
@@ -649,22 +621,16 @@ int SNDDMA_Init(void)
 	return 1;
 }
 
-/*
-==============
-SNDDMA_GetDMAPos
-
-return the current sample position (in mono samples read) inside the recirculating dma buffer, 
-so the mixing code will know how many sample are required to fill it up.
-===============
-*/
+// Return the current sample position (in mono samples read) inside the recirculating dma buffer, 
+// so the mixing code will know how many sample are required to fill it up.
 int SNDDMA_GetDMAPos(void)
 {
-	MMTIME	mmtime;
-	int		s;
-	DWORD	dwWrite;
+	int s = 0;
 
 	if (dsound_init)
 	{
+		MMTIME mmtime;
+		DWORD dwWrite;
 		pDSBuf->lpVtbl->GetCurrentPosition(pDSBuf, &mmtime.u.sample, &dwWrite);
 		s = mmtime.u.sample - mmstarttime.u.sample;
 	}
@@ -673,23 +639,16 @@ int SNDDMA_GetDMAPos(void)
 		s = snd_sent * WAV_BUFFER_SIZE;
 	}
 
-
 	s >>= sample16;
-
 	s &= (dma.samples - 1);
 
 	return s;
 }
 
-/*
-==============
-SNDDMA_BeginPainting
+// Makes sure dma.buffer is valid
+static DWORD locksize;
 
-Makes sure dma.buffer is valid
-===============
-*/
-DWORD	locksize;
-void SNDDMA_BeginPainting (void)
+void SNDDMA_BeginPainting(void)
 {
 	DWORD	dwSize2;
 	DWORD	*pbuf, *pbuf2;
@@ -699,8 +658,8 @@ void SNDDMA_BeginPainting (void)
 	if (!pDSBuf)
 		return;
 
-	// if the buffer was lost or stopped, restore it and/or restart it
-	if (pDSBuf->lpVtbl->GetStatus (pDSBuf, &dwStatus) != DS_OK)
+	// If the buffer was lost or stopped, restore it and/or restart it
+	if (pDSBuf->lpVtbl->GetStatus(pDSBuf, &dwStatus) != DS_OK)
 		Com_Printf("Couldn't get sound buffer status\n");
 	
 	if (dwStatus & DSBSTATUS_BUFFERLOST)
@@ -709,7 +668,7 @@ void SNDDMA_BeginPainting (void)
 	if (!(dwStatus & DSBSTATUS_PLAYING))
 		pDSBuf->lpVtbl->Play(pDSBuf, 0, 0, DSBPLAY_LOOPING);
 
-	// lock the dsound buffer
+	// Lock the dsound buffer
 	int reps = 0;
 	dma.buffer = NULL;
 
@@ -728,32 +687,24 @@ void SNDDMA_BeginPainting (void)
 			return;
 	}
 
-	dma.buffer = (unsigned char *)pbuf;
+	dma.buffer = (byte *)pbuf;
 }
 
-/*
-==============
-SNDDMA_Submit
-
-Send sound to device if buffer isn't really the dma buffer
-Also unlocks the dsound buffer
-===============
-*/
+// Send sound to device if buffer isn't really the dma buffer.
+// Also unlocks the dsound buffer.
 void SNDDMA_Submit(void)
 {
 	if (!dma.buffer)
 		return;
 
-	// unlock the dsound buffer
+	// Unlock the dsound buffer
 	if (pDSBuf)
 		pDSBuf->lpVtbl->Unlock(pDSBuf, dma.buffer, locksize, NULL, 0);
 
 	if (!wav_init)
 		return;
 
-	//
-	// find which sound blocks have completed
-	//
+	// Find which sound blocks have completed
 	while (true)
 	{
 		if (snd_completed == snd_sent)
@@ -765,12 +716,10 @@ void SNDDMA_Submit(void)
 		if (!(lpWaveHdr[snd_completed & WAV_MASK].dwFlags & WHDR_DONE))
 			break;
 
-		snd_completed++;	// this buffer has been played
+		snd_completed++; // This buffer has been played
 	}
 
-	//
-	// submit a few new sound blocks
-	//
+	// Submit a few new sound blocks
 	while (((snd_sent - snd_completed) >> sample16) < 8)
 	{
 		LPWAVEHDR h = lpWaveHdr + (snd_sent & WAV_MASK);
@@ -792,28 +741,15 @@ void SNDDMA_Submit(void)
 	}
 }
 
-/*
-==============
-SNDDMA_Shutdown
-
-Reset the sound device for exiting
-===============
-*/
+// Reset the sound device for exiting
 void SNDDMA_Shutdown(void)
 {
 	FreeSound();
 }
 
-
-/*
-===========
-S_Activate
-
-Called when the main window gains or loses focus.
-The window have been destroyed and recreated between a deactivate and an activate.
-===========
-*/
-void S_Activate (qboolean active)
+// Called when the main window gains or loses focus.
+// The window have been destroyed and recreated between a deactivate and an activate.
+void S_Activate(qboolean active)
 {
 	if (active)
 	{
