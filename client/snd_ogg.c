@@ -36,6 +36,7 @@ typedef struct
 	qboolean looping;
 	qboolean ambient_looping;
 	stb_vorbis *ogg_file; //mxd
+	byte *ogg_data; //mxd. Pointer to loaded data, so it can be freed
 } bgTrack_t;
 
 #define MAX_OGGLIST		512
@@ -89,6 +90,7 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 
 	int stb_err = 0;
 	track->ogg_file = stb_vorbis_open_memory(data, datalength, &stb_err, NULL);
+	track->ogg_data = data;
 
 	if (stb_err != 0)
 	{
@@ -107,8 +109,14 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 
 static void S_CloseBackgroundTrack(bgTrack_t *track)
 {
-	stb_vorbis_close(track->ogg_file);
-	track->ogg_file = NULL;
+	if(track->ogg_file)
+	{
+		stb_vorbis_close(track->ogg_file);
+		track->ogg_file = NULL;
+
+		free(track->ogg_data);
+		track->ogg_data = NULL;
+	}
 }
 
 static void S_StreamBackgroundTrack(void)
@@ -116,11 +124,10 @@ static void S_StreamBackgroundTrack(void)
 	if (!s_bgTrack.ogg_file || !s_musicvolume->value || !s_streamingChannel)
 		return;
 
-	short samples[4096] = { 0 };
-	stb_vorbis *file = s_bgTrack.ogg_file;
-
 	while (paintedtime + MAX_RAW_SAMPLES - 2048 > s_rawend)
 	{
+		short samples[4096] = { 0 };
+		struct stb_vorbis *file = s_bgTrack.ogg_file;
 		const int read_samples = stb_vorbis_get_samples_short_interleaved(file, file->channels, samples, sizeof(samples) / file->channels);
 
 		if (read_samples > 0)
@@ -138,32 +145,35 @@ static void S_StreamBackgroundTrack(void)
 				// Open the loop track
 				if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
 				{
+					Com_Printf(S_COLOR_YELLOW"%s: failed to switch to loop track '%s'.\n", __func__, s_bgTrack.loopName); //mxd
 					S_StopBackgroundTrack();
+
 					return;
 				}
 
 				s_bgTrack.looping = true;
 			}
+			// Check if it's time to switch to the ambient track //mxd. Also check that ambientName contains data
+			else if (s_bgTrack.ambientName[0] && ++ogg_loopcounter >= ogg_loopcount->integer && (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1")))
+			{
+				// Close the loop track
+				S_CloseBackgroundTrack(&s_bgTrack);
+
+				if (!S_OpenBackgroundTrack(s_bgTrack.ambientName, &s_bgTrack) && !S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
+				{
+					Com_Printf(S_COLOR_YELLOW"%s: failed to switch to amblient track '%s' or loop track '%s'.\n", __func__, s_bgTrack.ambientName, s_bgTrack.loopName); //mxd
+					S_StopBackgroundTrack();
+
+					return;
+				}
+
+				s_bgTrack.ambient_looping = true;
+			}
 			else
 			{
-				// Check if it's time to switch to the ambient track //mxd. Also check that ambientName contains data
-				if (s_bgTrack.ambientName[0] && ++ogg_loopcounter >= ogg_loopcount->integer && (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1")))
-				{
-					// Close the loop track
-					S_CloseBackgroundTrack(&s_bgTrack);
-
-					if (!S_OpenBackgroundTrack(s_bgTrack.ambientName, &s_bgTrack) && !S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack))
-					{
-						S_StopBackgroundTrack();
-						return;
-					}
-
-					s_bgTrack.ambient_looping = true;
-				}
+				// Restart the track
+				stb_vorbis_seek_start(file);
 			}
-
-			// Restart the track
-			stb_vorbis_seek_start(file);
 		}
 	}
 }
@@ -196,6 +206,9 @@ void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack)
 
 	// Set a loop counter so that this track will change to the ambient track later
 	ogg_loopcounter = 0;
+
+	//mxd. Don't try to switch to loop track if both are the same
+	s_bgTrack.looping = !Q_strcasecmp(introTrack, loopTrack);
 
 	S_StartStreaming();
 
