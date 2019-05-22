@@ -80,7 +80,7 @@ typedef struct fsLink_s
 typedef struct
 {
 	char name[MAX_QPATH];
-	long hash;	// To speed up searching
+	uint hash; // To speed up searching
 	int size;
 	int offset;	// This is ignored in PK3 files
 	qboolean ignore; // Whether this file should be ignored
@@ -288,7 +288,7 @@ static fsHandle_t *FS_HandleForFile(const char *path, fileHandle_t *f)
 #ifdef BINARY_PACK_SEARCH
 
 // Performs a binary search by hashed filename to find pack items in a sorted pack
-static int FS_FindPackItem(fsPack_t *pack, char *itemName, long itemHash)
+static int FS_FindPackItem(fsPack_t *pack, char *itemName, uint itemHash)
 {
 	// Catch null pointers
 	if (!pack || !itemName)
@@ -375,7 +375,7 @@ static int FS_FOpenFileRead(fsHandle_t *handle)
 	file_from_pak = false;
 
 	Com_sprintf(last_pk3_name, sizeof(last_pk3_name), "\0");
-	const long hash = Com_HashFileName(handle->name, 0, false);
+	const uint hash = Com_HashFileName(handle->name);
 	const unsigned int typeFlag = FS_TypeFlagForPakItem(handle->name);
 
 	// Search through the path, one element at a time
@@ -853,14 +853,20 @@ static qboolean FS_FileInPakBlacklist(char *filename, qboolean isPk3)
 #ifdef BINARY_PACK_SEARCH
 
 // Used for sorting pak entries by hash 
-static long *nameHashes = NULL;
+static uint *nameHashes = NULL;
 
-static int FS_PakFileCompare(const void *f1, const void *f2)
+static int FS_PakFileCompare(const int *f1, const int *f2)
 {
 	if (!nameHashes)
+		Com_Error(ERR_FATAL, "FS_PakFileCompare: no name hashes!"); //mxd
+
+	if (nameHashes[*f1] > nameHashes[*f2])
 		return 1;
 
-	return (nameHashes[*((int *)f1)] - nameHashes[*((int *)f2)]);
+	if (nameHashes[*f1] < nameHashes[*f2])
+		return -1;
+
+	return 0;
 }
 
 #endif
@@ -901,16 +907,16 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 
 	// Create sort table
 	int *sortIndices = Z_Malloc(numFiles * sizeof(int));
-	long *sortHashes = Z_Malloc(numFiles * sizeof(long)); //mxd. sizeof(unsigned) -> sizeof(long)
+	uint *sortHashes = Z_Malloc(numFiles * sizeof(uint));
 	nameHashes = sortHashes;
 
 	for (int i = 0; i < numFiles; i++)
 	{
 		sortIndices[i] = i;
-		sortHashes[i] = Com_HashFileName(info[i].name, 0, false);
+		sortHashes[i] = Com_HashFileName(info[i].name);
 	}
 
-	qsort((void *)sortIndices, numFiles, sizeof(int), FS_PakFileCompare);
+	qsort((void *)sortIndices, numFiles, sizeof(int), (int(*)(const void *, const void *))FS_PakFileCompare);
 
 	// Parse the directory
 	for (int i = 0; i < numFiles; i++)
@@ -1003,7 +1009,7 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 	// Create sort table
 	fsPackFile_t *tmpFiles = Z_Malloc(numFiles * sizeof(fsPackFile_t));
 	int *sortIndices = Z_Malloc(numFiles * sizeof(int));
-	long *sortHashes = Z_Malloc(numFiles * sizeof(unsigned));
+	uint *sortHashes = Z_Malloc(numFiles * sizeof(uint));
 	nameHashes = sortHashes;
 
 	// Parse the directory
@@ -1016,7 +1022,7 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 		sortIndices[index] = index;
 		Q_strncpyz(tmpFiles[index].name, fileName, sizeof(tmpFiles[index].name));
 
-		tmpFiles[index].hash = sortHashes[index] = Com_HashFileName(fileName, 0, false); // Added to speed up seaching
+		tmpFiles[index].hash = sortHashes[index] = Com_HashFileName(fileName); // Added to speed up seaching
 		tmpFiles[index].offset = -1; // Not used in ZIP files
 		tmpFiles[index].size = info.uncompressed_size;
 		tmpFiles[index].ignore = FS_FileInPakBlacklist(fileName, true); // Check against pak loading blacklist
@@ -1029,7 +1035,7 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 	}
 
 	// Sort by hash and copy to final file table
-	qsort((void *)sortIndices, numFiles, sizeof(int), FS_PakFileCompare);
+	qsort((void *)sortIndices, numFiles, sizeof(int), (int(*)(const void *, const void *))FS_PakFileCompare);
 	for (int i = 0; i < numFiles; i++)
 	{
 		Q_strncpyz(files[i].name, tmpFiles[sortIndices[i]].name, sizeof(files[i].name));

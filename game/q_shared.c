@@ -1151,10 +1151,15 @@ void Com_sprintf(char *dest, int size, char *fmt, ...)
 	dest[size - 1] = 0;
 }
 
-long Com_HashFileName(const char *fname, int hashSize, qboolean sized)
+#pragma endregion
+
+#pragma region ======================= Hashing
+
+uint Com_HashFileName(const char *fname)
 {
 	int i = 0;
-	long hash = 0;
+	char tohash[MAX_QPATH];
+	int len = 0;
 
 	if (fname[0] == '/' || fname[0] == '\\')
 		i++; // Skip leading slash
@@ -1166,16 +1171,13 @@ long Com_HashFileName(const char *fname, int hashSize, qboolean sized)
 		if (letter == '\\')
 			letter = '/'; // Fix filepaths
 
-		hash += (long)letter * (i + 119);
+		tohash[len++] = letter;
 		i++;
 	}
 
-	hash = (hash ^ (hash >> 10) ^ (hash >> 20));
+	tohash[len] = '\0';
 
-	if (sized)
-		hash &= (hashSize - 1);
-
-	return hash;
+	return XXH32(tohash, len, 42);
 }
 
 #pragma endregion

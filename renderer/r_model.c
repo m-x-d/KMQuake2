@@ -196,9 +196,9 @@ void Mod_Modellist_f(void)
 // Store the names and sizes of .wal files
 typedef struct walsize_s
 {
-	long	hash;
-	int		width;
-	int		height;
+	uint hash;
+	int width;
+	int height;
 } walsize_t;
 
 #define NUM_WALSIZES 1024 //mxd. Was 256
@@ -229,7 +229,7 @@ static qboolean Mod_CheckWalSizeList(const char *name, int *width, int *height)
 		return true;
 	}
 
-	const long hash = Com_HashFileName(name, 0, false); //mxd. Rewritten to use hash only
+	const uint hash = Com_HashFileName(name); //mxd. Rewritten to use hash only
 	for (int i = 0; i < NUM_WALSIZES; i++)
 	{
 		if (hash == walSizeList[i].hash)
@@ -249,7 +249,7 @@ static qboolean Mod_CheckWalSizeList(const char *name, int *width, int *height)
 
 static void Mod_AddToWalSizeList(const char *name, int width, int height)
 {
-	walSizeList[walSizeListIndex].hash = Com_HashFileName(name, 0, false);
+	walSizeList[walSizeListIndex].hash = Com_HashFileName(name);
 	walSizeList[walSizeListIndex].width = width;
 	walSizeList[walSizeListIndex].height = height;
 	walSizeListIndex++;

@@ -62,7 +62,7 @@ typedef enum
 typedef struct image_s
 {
 	char name[MAX_QPATH]; // Game path, including extension.
-	long hash; // Used to speed up searching. //mxd. Changed: stores hash of name without extension!
+	uint hash; // Used to speed up searching. //mxd. Changed: stores hash of name without extension!
 	imagetype_t type;
 
 	int width; // Source image size.

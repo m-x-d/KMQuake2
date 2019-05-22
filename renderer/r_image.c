@@ -752,7 +752,7 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 	char namewe[MAX_QPATH];
 	COM_StripExtension(name, namewe);
 
-	image->hash = Com_HashFileName(namewe, 0, false); // Knightmare added
+	image->hash = Com_HashFileName(namewe); // Knightmare added
 	image->width = width;
 	image->height = height;
 	image->type = type;
@@ -828,16 +828,16 @@ nonscrap:
 
 // Store the names of last images that failed to load
 #define NUM_FAIL_IMAGES 1024 //mxd. Was 256
-static long failedImageHashes[NUM_FAIL_IMAGES];
-static unsigned failedImgListIndex;
+static uint failedImageHashes[NUM_FAIL_IMAGES];
+static uint failedImgListIndex;
 
 void R_InitFailedImgList(void)
 {
-	memset(failedImageHashes, 0, sizeof(long) * NUM_FAIL_IMAGES); //mxd
+	memset(failedImageHashes, 0, sizeof(uint) * NUM_FAIL_IMAGES); //mxd
 	failedImgListIndex = 0;
 }
 
-qboolean R_CheckImgFailed(long namehash) //mxd. Check hash instead of name
+qboolean R_CheckImgFailed(uint namehash) //mxd. Check hash instead of name
 {
 	for (int i = 0; i < NUM_FAIL_IMAGES; i++)
 		if (namehash == failedImageHashes[i])
@@ -851,7 +851,7 @@ void R_AddToFailedImgList(char *name)
 	if (!strncmp(name, "save/", 5)) // Don't add saveshots
 		return;
 
-	failedImageHashes[failedImgListIndex] = Com_HashFileName(name, 0, false);
+	failedImageHashes[failedImgListIndex] = Com_HashFileName(name);
 	failedImgListIndex++;
 
 	// Wrap around to start of list
@@ -894,7 +894,7 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 	COM_StripExtension(name, namewe);
 	
 	//mxd. Hash it
-	const long namehash = Com_HashFileName(namewe, 0, false);
+	const uint namehash = Com_HashFileName(namewe);
 
 	// Look for it. mxd: Compare hashes instead of strings, use name without extension to avoid R_FindImage recursion.
 	image_t *image = gltextures;
@@ -1090,7 +1090,7 @@ void R_FreePic(char *name)
 	//mxd. Compare hash instead of name
 	char namewe[MAX_QPATH];
 	COM_StripExtension(name, namewe);
-	const long hash = Com_HashFileName(namewe, 0, false);
+	const uint hash = Com_HashFileName(namewe);
 
 	image_t *image = gltextures;
 	for (int i = 0; i < numgltextures; i++, image++)
