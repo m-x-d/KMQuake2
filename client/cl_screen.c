@@ -868,7 +868,7 @@ static void SCR_DrawLoading(void)
 		SCR_DrawPic(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, load_saveshot, 1.0f);
 		haveMapPic = true;
 	}
-	else if(isMap && R_DrawFindPic(picName)) // Try levelshot
+	else if(picName[0] && R_DrawFindPic(picName)) // Try levelshot
 	{
 		int w, h;
 		R_DrawGetPicSize(&w, &h, picName);
