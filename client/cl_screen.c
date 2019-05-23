@@ -75,9 +75,6 @@ cvar_t		*cl_drawfps; //Knightmare 12/28/2001- BramBo's FPS counter
 cvar_t		*cl_demomessage;
 cvar_t		*cl_loadpercent;
 
-void SCR_TimeRefresh_f(void);
-void SCR_Loading_f(void);
-
 #define LOADSCREEN_NAME "/gfx/ui/unknownmap.pcx"
 
 #define	ICON_WIDTH	24
@@ -242,7 +239,7 @@ void Hud_DrawString(int x, int y, const char *string, int alpha, qboolean isStat
 	DrawStringGeneric(x, y, string, alpha, (isStatusBar) ? SCALETYPE_HUD : SCALETYPE_MENU, false);
 }
 
-void Hud_DrawStringAlt(int x, int y, const char *string, int alpha, qboolean isStatusBar)
+static void Hud_DrawStringAlt(int x, int y, const char *string, int alpha, qboolean isStatusBar)
 {
 	DrawStringGeneric(x, y, string, alpha, (isStatusBar) ? SCALETYPE_HUD : SCALETYPE_MENU, true);
 }
@@ -334,7 +331,7 @@ void SCR_DebugGraph(float value, int color)
 	current++;
 }
 
-void SCR_DrawDebugGraph(void)
+static void SCR_DrawDebugGraph(void)
 {
 	int x, y;
 	static float lasttime = 0;
@@ -398,12 +395,12 @@ void SCR_DrawDebugGraph(void)
 
 #pragma region ======================= CENTER PRINTING
 
-char	scr_centerstring[1024];
-float	scr_centertime_start;	// for slow victory printing
-float	scr_centertime_off;
-float	scr_centertime_end;
-int		scr_center_lines;
-int		scr_erase_center;
+static char		scr_centerstring[1024];
+static float	scr_centertime_start; // For slow victory printing
+static float	scr_centertime_off;
+static float	scr_centertime_end;
+static int		scr_center_lines;
+static int		scr_erase_center;
 
 // Called for important messages that should stay in the center of the screen for a few moments
 void SCR_CenterPrint(char *str)
@@ -461,7 +458,7 @@ void SCR_CenterPrint(char *str)
 	Con_ClearNotify();
 }
 
-void SCR_DrawCenterString(void)
+static void SCR_DrawCenterString(void)
 {
 	char line[512];
 	int len, y;
@@ -514,7 +511,7 @@ void SCR_DrawCenterString(void)
 	} while (true);
 }
 
-void SCR_CheckDrawCenterString(void)
+static void SCR_CheckDrawCenterString(void)
 {
 	scr_centertime_off -= cls.renderFrameTime;
 	
@@ -524,16 +521,16 @@ void SCR_CheckDrawCenterString(void)
 
 #pragma endregion
 
-//=============================================================================
+#pragma region ======================= Console commands
 
-void SCR_SizeUp_f(void)
+static void SCR_SizeUp_f(void)
 {	
 	// Handle HUD scale
 	const int hudscale = min(Cvar_VariableValue("hud_scale") + 1, 6); //mxd. +min
 	Cvar_SetValue("hud_scale", hudscale);
 }
 
-void SCR_SizeDown_f(void)
+static void SCR_SizeDown_f(void)
 {
 	// Handle HUD scale
 	const int hudscale = max(Cvar_VariableValue("hud_scale") - 1, 1); //mxd. +max
@@ -541,7 +538,7 @@ void SCR_SizeDown_f(void)
 }
 
 // Set a specific sky and rotation speed
-void SCR_Sky_f(void)
+static void SCR_Sky_f(void)
 {
 	float rotate;
 	vec3_t axis;
@@ -573,7 +570,50 @@ void SCR_Sky_f(void)
 	R_SetSky(Cmd_Argv(1), rotate, axis);
 }
 
-//============================================================================
+static void SCR_Loading_f(void)
+{
+	SCR_BeginLoadingPlaque();
+}
+
+static void SCR_TimeRefresh_f(void)
+{
+	if (cls.state != ca_active)
+	{
+		Com_Printf("This command requires a map to be loaded!\n");
+		return;
+	}
+
+	const int start = Sys_Milliseconds();
+
+	if (Cmd_Argc() == 2)
+	{
+		// Run without page flipping
+		R_BeginFrame(0);
+		for (int i = 0; i < 128; i++)
+		{
+			cl.refdef.viewangles[1] = i / 128.0f * 360.0f;
+			R_RenderFrame(&cl.refdef);
+		}
+		GLimp_EndFrame();
+	}
+	else
+	{
+		for (int i = 0; i < 128; i++)
+		{
+			cl.refdef.viewangles[1] = i / 128.0f * 360.0f;
+
+			R_BeginFrame(0);
+			R_RenderFrame(&cl.refdef);
+			GLimp_EndFrame();
+		}
+	}
+
+	const int stop = Sys_Milliseconds();
+	const float time = (stop - start) / 1000.0f;
+	Com_Printf("%f seconds (%f fps)\n", time, 128 / time);
+}
+
+#pragma endregion
 
 void SCR_Init(void)
 {
@@ -682,7 +722,7 @@ void SCR_DrawCrosshair(void)
 				scaledsize, scaledsize, ALIGN_CENTER, crosshair_pic, alpha);
 }
 
-void SCR_DrawNet(void)
+static void SCR_DrawNet(void)
 {
 	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged > CMD_BACKUP - 2)
 	{
@@ -695,7 +735,7 @@ void SCR_DrawNet(void)
 	}
 }
 
-void SCR_DrawAlertMessagePicture(char *name, qboolean center, int yOffset)
+static void SCR_DrawAlertMessagePicture(char *name, qboolean center, int yOffset)
 {
 	int w, h;
 	R_DrawGetPicSize(&w, &h, name);
@@ -712,7 +752,7 @@ void SCR_DrawAlertMessagePicture(char *name, qboolean center, int yOffset)
 	}
 }
 
-void SCR_DrawPause(void)
+static void SCR_DrawPause(void)
 {
 	// Turn off for screenshots || not paused || Knightmare- no need to draw when in menu
 	if (!scr_showpause->value || !cl_paused->value || cls.key_dest == key_menu)
@@ -723,10 +763,12 @@ void SCR_DrawPause(void)
 	SCR_DrawPic((SCREEN_WIDTH - w) * 0.5f, (SCREEN_HEIGHT - h) * 0.5f, w, h, ALIGN_CENTER, "pause", 1.0f);
 }
 
+#pragma region ======================= Load screen drawing
+
 #define LOADBAR_TIC_SIZE_X 4
 #define LOADBAR_TIC_SIZE_Y 4
 
-void SCR_DrawLoadingTagProgress(char *picName, int yOffset, int percent)
+static void SCR_DrawLoadingTagProgress(char *picName, int yOffset, int percent)
 {
 	const int w = 160; // Size of loading_bar.tga = 320x80
 	const int h = 40;
@@ -740,7 +782,7 @@ void SCR_DrawLoadingTagProgress(char *picName, int yOffset, int percent)
 		SCR_DrawPic(x + 33 + (i * LOADBAR_TIC_SIZE_X), y + 28 + yOffset, LOADBAR_TIC_SIZE_X, LOADBAR_TIC_SIZE_Y, ALIGN_CENTER, "loading_led1", 1.0f);
 }
 
-void SCR_DrawLoadingBar(float x, float y, float w, float h, int percent, float sizeRatio)
+static void SCR_DrawLoadingBar(float x, float y, float w, float h, int percent, float sizeRatio)
 {	
 	int red, green, blue;
 
@@ -756,7 +798,7 @@ void SCR_DrawLoadingBar(float x, float y, float w, float h, int percent, float s
 }
 
 // Gets virtual 640x480 x-pos and width for a fullscreen pic of any aspect ratio.
-void SCR_GetPicPosWidth(char *pic, int *x, int *w)
+static void SCR_GetPicPosWidth(char *pic, int *x, int *w)
 {
 	if (!pic || !x || !w) // Catch null pointers
 		return;
@@ -773,7 +815,7 @@ void SCR_GetPicPosWidth(char *pic, int *x, int *w)
 
 char *load_saveshot;
 
-void SCR_DrawLoading(void)
+static void SCR_DrawLoading(void)
 {
 	if (!scr_draw_loading)
 	{
@@ -791,7 +833,7 @@ void SCR_DrawLoading(void)
 	const qboolean simplePlaque = (scr_simple_loadscreen->integer != 0);
 
 	//mxd. Find background image to display during loading
-	const qboolean haveSaveshot = (load_saveshot && strlen(load_saveshot) && R_DrawFindPic(load_saveshot));
+	const qboolean haveSaveshot = (load_saveshot && load_saveshot[0] && R_DrawFindPic(load_saveshot));
 	const qboolean isMap = cl.configstrings[CS_MODELS + 1][0];
 
 	//mxd. Get levelshot filename
@@ -799,7 +841,7 @@ void SCR_DrawLoading(void)
 	{
 		char mapfile[64];
 		Q_strncpyz(mapfile, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapfile)); // Skip "maps/"
-		mapfile[strlen(mapfile) - 4] = 0; // cut off ".bsp"
+		mapfile[strlen(mapfile) - 4] = 0; // Cut off ".bsp"
 
 		Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", mapfile);
 	}
@@ -934,7 +976,39 @@ void SCR_DrawLoading(void)
 	}
 }
 
-//=============================================================================
+void SCR_BeginLoadingPlaque()
+{
+	S_StopAllSounds();
+	cl.sound_prepped = false; // Don't play ambients
+	CDAudio_Stop();
+
+	if (developer->value)
+		return;
+
+	cls.consoleActive = false; // Knightmare added
+
+	if (cl.cinematictime > 0)
+		scr_draw_loading = 2; // Clear to black first
+	else
+		scr_draw_loading = 1;
+
+	SCR_UpdateScreen();
+	cls.disable_screen = Sys_Milliseconds();
+	cls.disable_servercount = cl.servercount;
+}
+
+void SCR_EndLoadingPlaque(void)
+{
+	// Make loading saveshot null here
+	load_saveshot = NULL;
+	cls.disable_screen = 0;
+	scr_draw_loading = 0; // Knightmare added
+	Con_ClearNotify();
+}
+
+#pragma endregion
+
+#pragma region ======================= Letterbox / camera effect drawing
 
 #define LETTERBOX_RATIO 0.5625 // 16:9 aspect ratio (inverse)
 //#define LETTERBOX_RATIO 0.625f // 16:10 aspect ratio
@@ -972,13 +1046,13 @@ void SCR_RunLetterbox(void)
 	}
 }
 
-void SCR_DrawCameraEffect(void)
+static void SCR_DrawCameraEffect(void)
 {
 	if (cl.refdef.rdflags & RDF_CAMERAEFFECT)
 		R_DrawCameraEffect();
 }
 
-void SCR_DrawLetterbox(void)
+static void SCR_DrawLetterbox(void)
 {
 	if (!scr_letterbox_active)
 		return;
@@ -989,7 +1063,9 @@ void SCR_DrawLetterbox(void)
 	R_DrawFill(0, viddef.height - boxheight, viddef.width, boxheight, 0, 0, 0, boxalpha);
 }
 
-//=============================================================================
+#pragma endregion
+
+#pragma region ======================= Console drawing
 
 // Scrolls console up or down
 void SCR_RunConsole(void)
@@ -1031,77 +1107,7 @@ void SCR_DrawConsole(void)
 		Con_DrawNotify(); // Only draw notify in game
 }
 
-//=============================================================================
-
-void SCR_BeginLoadingPlaque(void)
-{
-	S_StopAllSounds();
-	cl.sound_prepped = false; // don't play ambients
-	CDAudio_Stop();
-
-	if (developer->value)
-		return;
-
-	cls.consoleActive = false; // Knightmare added
-
-	if (cl.cinematictime > 0)
-		scr_draw_loading = 2;	// clear to black first
-	else
-		scr_draw_loading = 1;
-
-	SCR_UpdateScreen();
-	cls.disable_screen = Sys_Milliseconds();
-	cls.disable_servercount = cl.servercount;
-}
-
-void SCR_EndLoadingPlaque(void)
-{
-	// Make loading saveshot null here
-	load_saveshot = NULL;
-	cls.disable_screen = 0;
-	scr_draw_loading = 0; // Knightmare added
-	Con_ClearNotify();
-}
-
-void SCR_Loading_f(void)
-{
-	SCR_BeginLoadingPlaque();
-}
-
-void SCR_TimeRefresh_f(void)
-{
-	if (cls.state != ca_active)
-		return;
-
-	const int start = Sys_Milliseconds();
-
-	if (Cmd_Argc() == 2)
-	{
-		// Run without page flipping
-		R_BeginFrame(0);
-		for (int i = 0; i < 128; i++)
-		{
-			cl.refdef.viewangles[1] = i / 128.0f * 360.0f;
-			R_RenderFrame(&cl.refdef);
-		}
-		GLimp_EndFrame();
-	}
-	else
-	{
-		for (int i = 0; i < 128; i++)
-		{
-			cl.refdef.viewangles[1] = i / 128.0f * 360.0f;
-
-			R_BeginFrame(0);
-			R_RenderFrame(&cl.refdef);
-			GLimp_EndFrame();
-		}
-	}
-
-	const int stop = Sys_Milliseconds();
-	const float time = (stop - start) / 1000.0f;
-	Com_Printf("%f seconds (%f fps)\n", time, 128 / time);
-}
+#pragma endregion
 
 #pragma region ======================= HUD CODE
 

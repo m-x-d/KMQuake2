@@ -864,7 +864,7 @@ image_t *R_FindImage(char *name, imagetype_t type, qboolean silent)
 {
 	if (!name)
 	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: empty filename\n", __func__, name); //mxd
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: empty filename\n", __func__); //mxd
 		return NULL;
 	}
 
