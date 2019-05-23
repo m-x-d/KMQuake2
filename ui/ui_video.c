@@ -37,8 +37,8 @@ static menulist_s		s_texqual_box;
 static menulist_s		s_texfilter_box;
 static menulist_s		s_aniso_box;
 static menulist_s		s_npot_mipmap_box;
-static menulist_s  		s_vsync_box;
-static menulist_s  		s_adjust_fov_box;
+static menulist_s		s_vsync_box;
+static menulist_s		s_adjust_fov_box;
 static menuaction_s		s_advanced_action;
 static menuaction_s		s_defaults_action;
 static menuaction_s		s_apply_action;
@@ -295,7 +295,7 @@ void Menu_Video_Init(void)
 	s_fs_box.generic.y				= y += 3.5f * MENU_LINE_SIZE;
 	s_fs_box.generic.name			= "Fullscreen";
 	s_fs_box.itemnames				= yesno_names;
-	s_fs_box.curvalue				= Cvar_VariableInteger("vid_fullscreen");
+	s_fs_box.curvalue				= ClampCvar(0, 1, Cvar_VariableInteger("vid_fullscreen"));
 	s_fs_box.generic.statusbar		= "Changes bettween fullscreen and windowed display mode";
 
 	s_brightness_slider.generic.type		= MTYPE_SLIDER;
@@ -341,7 +341,7 @@ void Menu_Video_Init(void)
 	s_npot_mipmap_box.generic.y			= y += MENU_LINE_SIZE;
 	s_npot_mipmap_box.generic.name		= "Non-power-of-2 mipmaps";
 	s_npot_mipmap_box.itemnames			= yesno_names;
-	s_npot_mipmap_box.curvalue			= Cvar_VariableValue("r_nonpoweroftwo_mipmaps");
+	s_npot_mipmap_box.curvalue			= ClampCvar(0, 1, Cvar_VariableInteger("r_nonpoweroftwo_mipmaps"));
 	s_npot_mipmap_box.generic.statusbar	= "Enables non-power-of-2 mipmapped textures (requires driver support)";
 
 	s_vsync_box.generic.type			= MTYPE_SPINCONTROL;
@@ -349,7 +349,7 @@ void Menu_Video_Init(void)
 	s_vsync_box.generic.y				= y += 2 * MENU_LINE_SIZE;
 	s_vsync_box.generic.name			= "Vertical sync";
 	s_vsync_box.generic.callback		= VsyncCallback;
-	s_vsync_box.curvalue				= Cvar_VariableValue("r_swapinterval");
+	s_vsync_box.curvalue				= ClampCvar(0, 1, Cvar_VariableInteger("r_swapinterval"));
 	s_vsync_box.itemnames				= yesno_names;
 	s_vsync_box.generic.statusbar		= "Sync framerate with monitor refresh";
 
@@ -358,7 +358,7 @@ void Menu_Video_Init(void)
 	s_adjust_fov_box.generic.y			= y += MENU_LINE_SIZE;
 	s_adjust_fov_box.generic.name		= "FOV autoscaling";
 	s_adjust_fov_box.generic.callback	= AdjustFOVCallback;
-	s_adjust_fov_box.curvalue			= Cvar_VariableValue("cl_widescreen_fov");
+	s_adjust_fov_box.curvalue			= ClampCvar(0, 1, Cvar_VariableInteger("cl_widescreen_fov"));
 	s_adjust_fov_box.itemnames			= yesno_names;
 	s_adjust_fov_box.generic.statusbar	= "Automatic scaling of fov for widescreen modes";
 
