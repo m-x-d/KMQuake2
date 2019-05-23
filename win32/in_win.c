@@ -786,11 +786,11 @@ void IN_Frame(void)
 		return;
 	}
 
-	//Knightmare- added Psychospaz's mouse menu support
-	if ((!cl.refresh_prepped && cls.key_dest != key_menu) || cls.consoleActive) // mouse used in menus...
+	//Knightmare- added Psychospaz's mouse menu support //mxd. Don't show cursor during map loading
+	if ((!cl.refresh_prepped && cls.key_dest != key_menu && !cls.disable_screen) || cls.consoleActive) // Mouse used in menus...
 	{
-		// Temporarily deactivate if in fullscreen
-		if (Cvar_VariableValue("vid_fullscreen") == 0)
+		// Temporarily deactivate if not in fullscreen
+		if (Cvar_VariableInteger("vid_fullscreen") == 0)
 		{
 			IN_DeactivateMouse();
 			return;
