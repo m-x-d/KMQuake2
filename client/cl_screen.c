@@ -572,7 +572,7 @@ static void SCR_Sky_f(void)
 
 static void SCR_Loading_f(void)
 {
-	SCR_BeginLoadingPlaque();
+	SCR_BeginLoadingPlaque(NULL);
 }
 
 static void SCR_TimeRefresh_f(void)
@@ -814,6 +814,7 @@ static void SCR_GetPicPosWidth(char *pic, int *x, int *w)
 }
 
 char *load_saveshot;
+static char newmapname[MAX_QPATH]; //mxd. Filename of the map being loaded, passed locally from server side. Added so proper levelshot can be drawn even before CL_PrepRefresh is called
 
 static void SCR_DrawLoading(void)
 {
@@ -834,16 +835,27 @@ static void SCR_DrawLoading(void)
 
 	//mxd. Find background image to display during loading
 	const qboolean haveSaveshot = (load_saveshot && load_saveshot[0] && R_DrawFindPic(load_saveshot));
-	const qboolean isMap = cl.configstrings[CS_MODELS + 1][0];
+	const qboolean isMap = (loadingMessages[0] && cl.configstrings[CS_MODELS + 1][0]); // loadingMessages is updated in CL_PrepRefresh. Before that, cl.configstrings may hold previous map name
 
 	//mxd. Get levelshot filename
-	if(!haveSaveshot && isMap)
+	if(!haveSaveshot)
 	{
-		char mapfile[64];
-		Q_strncpyz(mapfile, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapfile)); // Skip "maps/"
-		mapfile[strlen(mapfile) - 4] = 0; // Cut off ".bsp"
+		if(newmapname[0])
+		{
+			Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", newmapname);
+		}
+		else if(cl.configstrings[CS_MODELS + 1][0])
+		{
+			char mapfile[64];
+			Q_strncpyz(mapfile, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapfile)); // Skip "maps/"
+			mapfile[strlen(mapfile) - 4] = 0; // Cut off ".bsp"
 
-		Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", mapfile);
+			Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", mapfile);
+		}
+		else
+		{
+			picName[0] = 0;
+		}
 	}
 
 	//mxd. Draw bg fill...
@@ -858,17 +870,26 @@ static void SCR_DrawLoading(void)
 	}
 	else if(isMap && R_DrawFindPic(picName)) // Try levelshot
 	{
-		int x, w, h;
+		int w, h;
 		R_DrawGetPicSize(&w, &h, picName);
 
-		if (w == h) // Draw KMQ2 square levelshots at 4:3 aspect
+		if (w == h) //mxd. Scale KMQ2 square levelshots to fill screen
 		{
-			SCR_DrawPic(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_CENTER, picName, 1.0f);
+			const int height = viddef.width / 4 * 3;
+			const int y = -(height - viddef.height) / 2;
+			R_DrawStretchPic(0, y, viddef.width, height, picName, 1.0f);
 		}
-		else // Draw at native aspect
+		else if((float)w / h > (float)viddef.width / viddef.height) //mxd. Image aspect ratio is more widescreen than the screen
 		{
-			SCR_GetPicPosWidth(picName, &x, &w);
-			SCR_DrawPic(x, 0, w, SCREEN_HEIGHT, ALIGN_CENTER, picName, 1.0f);
+			const int width = w * ((float)viddef.height / h);
+			const int x = -(width - viddef.width) / 2;
+			R_DrawStretchPic(x, 0, width, viddef.height, picName, 1.0f);
+		}
+		else //mxd. Image aspect ratio is less widescreen than the screen
+		{
+			const int height = h * ((float)viddef.width / w);
+			const int y = -(height - viddef.height) / 2;
+			R_DrawStretchPic(0, y, viddef.width, height, picName, 1.0f);
 		}
 
 		haveMapPic = true;
@@ -969,14 +990,14 @@ static void SCR_DrawLoading(void)
 	else
 	{
 		// Just a plain old loading plaque
-		if (simplePlaque)
+		if (simplePlaque && loadingPercent > 0)
 			SCR_DrawLoadingTagProgress("loading_bar", 0, (int)loadingPercent);
 		else
 			SCR_DrawAlertMessagePicture("loading", true, 0);
 	}
 }
 
-void SCR_BeginLoadingPlaque()
+void SCR_BeginLoadingPlaque(const char *mapname) //mxd. +mapname
 {
 	S_StopAllSounds();
 	cl.sound_prepped = false; // Don't play ambients
@@ -992,6 +1013,10 @@ void SCR_BeginLoadingPlaque()
 	else
 		scr_draw_loading = 1;
 
+	//mxd. Store level name...
+	if (mapname)
+		strcpy(newmapname, mapname);
+
 	SCR_UpdateScreen();
 	cls.disable_screen = Sys_Milliseconds();
 	cls.disable_servercount = cl.servercount;
@@ -1003,6 +1028,7 @@ void SCR_EndLoadingPlaque(void)
 	load_saveshot = NULL;
 	cls.disable_screen = 0;
 	scr_draw_loading = 0; // Knightmare added
+	newmapname[0] = 0; //mxd
 	Con_ClearNotify();
 }
 

@@ -889,7 +889,7 @@ void CL_Drop(void);
 void CL_Shutdown(void);
 void CL_Frame(int msec);
 void Con_Print(char *text);
-void SCR_BeginLoadingPlaque(void);
+void SCR_BeginLoadingPlaque(const char *mapname); //mxd. +mapname
 
 void SV_Init(void);
 void SV_Shutdown(char *finalmsg, qboolean reconnect);

@@ -282,7 +282,7 @@ void CL_PrepRefresh(void)
 
 	// Use new loading plaque?
 	if (!cls.disable_screen || !scr_draw_loading)
-		SCR_BeginLoadingPlaque();
+		SCR_BeginLoadingPlaque(NULL);
 
 	// Knightmare- for Psychospaz's map loading screen
 	Com_sprintf(loadingMessages, sizeof(loadingMessages), S_COLOR_ALT"Loading %s", cl.configstrings[CS_MODELS + 1]);
@@ -451,6 +451,8 @@ void CL_PrepRefresh(void)
 	// Start the cd track
 	CL_PlayBackgroundTrack();
 
+	// Knightmare- for Psychospaz's map loading screen
+	loadingMessages[0] = 0;
 	// Knightmare- close loading screen as soon as done
 	cls.disable_screen = false;
 

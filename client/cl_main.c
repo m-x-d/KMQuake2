@@ -684,7 +684,7 @@ void CL_Disconnect_f(void)
 void CL_Changing_f(void)
 {
 	// ZOID. If we are downloading, we don't change! This so we don't suddenly stop downloading a map
-	SCR_BeginLoadingPlaque(); // Knightmare moved here
+	SCR_BeginLoadingPlaque(NULL); // Knightmare moved here
 
 	if (cls.download)
 		return;
