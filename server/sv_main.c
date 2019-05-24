@@ -65,6 +65,8 @@ cvar_t	*sv_reconnect_limit;	// minimum seconds between connect messages
 
 cvar_t	*sv_entfile;			// whether to use .ent file
 
+cvar_t	*musictrackframe;		//mxd. Ogg music track frame. Set when saving game, used when loading game
+
 void Master_Shutdown(void);
 
 
@@ -1068,6 +1070,8 @@ void SV_Init (void)
 	sv_reconnect_limit = Cvar_Get("sv_reconnect_limit", "3", CVAR_ARCHIVE);
 
 	sv_entfile = Cvar_Get("sv_entfile", "1", CVAR_ARCHIVE); // whether to use .ent file
+
+	musictrackframe = Cvar_Get("musictrackframe", "-1", CVAR_LATCH); //mxd
 
 	SZ_Init(&net_message, net_message_buffer, sizeof(net_message_buffer));
 }

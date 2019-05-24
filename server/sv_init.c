@@ -344,6 +344,10 @@ void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 	if (sv.state == ss_dead && !sv.loadgame)
 		SV_InitGame(); // The game is just starting
 
+	//mxd. Reset soundtrack position when changing maps...
+	if(!sv.loadgame)
+		Cvar_FullSet("musictrackframe", "-1", CVAR_LATCH);
+
 	// r1ch fix: buffer overflow
 	if (levelstring[0] == '*')
 		Q_strncpyz(level, levelstring + 1, sizeof(level));

@@ -289,7 +289,7 @@ void SV_WriteServerFile(qboolean autosave)
 	Com_DPrintf("SV_WriteServerFile(%s)\n", autosave ? "true" : "false");
 
 	Com_sprintf(fileName, sizeof(fileName), "%s/save/current/server.ssv", FS_Gamedir());
-	FILE *f = fopen (fileName, "wb");
+	FILE *f = fopen(fileName, "wb");
 	if (!f)
 	{
 		Com_Printf("Couldn't write %s\n", fileName);
@@ -540,7 +540,10 @@ void SV_Loadgame_f(void)
 
 	char *dir = Cmd_Argv(1);
 	if (strstr(dir, "..") || strchr(dir, '/') || strchr(dir, '\\')) //mxd. strstr -> strchr
+	{
 		Com_Printf("Invalid savedir path: '%s'.\n", dir);
+		return; //mxd
+	}
 
 	// Make sure the server.ssv file exists
 	char name[MAX_OSPATH];
@@ -572,6 +575,7 @@ void SV_Loadgame_f(void)
 }
 
 extern char fs_gamedir[MAX_OSPATH];
+extern int S_GetBackgroundTrackFrame(); //mxd
 
 void SV_Savegame_f(void)
 {
@@ -604,19 +608,25 @@ void SV_Savegame_f(void)
 		return;
 	}
 
-	// Knightmare- grab screen for quicksave
-	if (!dedicated->value && (!strcmp(Cmd_Argv(1), "quick") || !strcmp(Cmd_Argv(1), "quik")))
-		R_GrabScreen();
-
 	if (maxclients->value == 1 && svs.clients[0].edict->client->ps.stats[STAT_HEALTH] <= 0)
 	{
-		Com_Printf("\nCan't save game while dead!\n");
+		Com_Printf("Can't save game while dead!\n");
 		return;
 	}
 
 	char *dir = Cmd_Argv(1);
 	if (strstr(dir, "..") || strchr(dir, '/') || strchr(dir, '\\')) //mxd. strstr -> strchr
+	{
 		Com_Printf("Invalid savedir path: '%s'.\n", dir);
+		return; //mxd
+	}
+
+	// Knightmare- grab screen for quicksave
+	if (!dedicated->value && (!strcmp(Cmd_Argv(1), "quick") || !strcmp(Cmd_Argv(1), "quik")))
+		R_GrabScreen();
+
+	//mxd. Store soundtrack position...
+	Cvar_FullSet("musictrackframe", va("%i", S_GetBackgroundTrackFrame()), CVAR_LATCH);
 
 	Com_Printf(S_COLOR_CYAN"Saving game \"%s\"...\n", dir);
 

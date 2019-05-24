@@ -829,6 +829,9 @@ extern	cvar_t *sv_engine;
 extern	cvar_t *sv_engine_version;
 extern	cvar_t *sv_entfile;			// whether to use .ent file
 
+//mxd. Used to store current ogg track frame in savegame
+extern cvar_t *musictrackframe;
+
 // Knightmare added
 extern	cvar_t *fs_gamedirvar;
 extern	cvar_t *fs_basedir;

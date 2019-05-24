@@ -332,7 +332,7 @@ void CL_PlayBackgroundTrack(void)
 		if (FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
 		{
 			CDAudio_Stop();
-			S_StartBackgroundTrack(name, name);
+			S_StartBackgroundTrack(name, name, musictrackframe->integer); //mxd. +musictrackframe
 
 			return;
 		}
@@ -352,7 +352,7 @@ void CL_PlayBackgroundTrack(void)
 	// If an OGG file exists play it, otherwise fall back to CD audio
 	Com_sprintf(name, sizeof(name), "music/track%02i.ogg", CL_MissionPackCDTrack(track));
 	if ((FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) && cl_ogg_music->value) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
-		S_StartBackgroundTrack(name, name);
+		S_StartBackgroundTrack(name, name, musictrackframe->integer); //mxd. +musictrackframe
 	else
 		CDAudio_Play(track, true);
 }

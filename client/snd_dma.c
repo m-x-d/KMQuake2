@@ -910,13 +910,13 @@ static void S_AddLoopSounds(void)
 
 #pragma region ======================= Cinematic streaming
 
-// Cinematic streaming and voice over network
-void S_RawSamples(int samples, int rate, int width, int channels, byte *data, qboolean music)
+// Cinematic streaming and voice over network //mxd. -music, +volume [0.0 .. 1.0]
+void S_RawSamples(int samples, int rate, int width, int channels, byte *data, float volume)
 {
 	if (!sound_started)
 		return;
 
-	const int snd_vol = (int)((music ? s_musicvolume : s_volume)->value * 256);
+	const int snd_vol = (int)(clamp(volume, 0.0f, 1.0f) * 256);
 
 	s_rawend = max(paintedtime, s_rawend);
 	const float scale = (float)rate / dma.speed;

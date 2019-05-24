@@ -29,10 +29,11 @@ typedef enum
 } ogg_status_t;
 
 void S_UpdateBackgroundTrack(void);
-void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack);
+void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack, int startframe);
 void S_StopBackgroundTrack(void);
 void S_StartStreaming(void);
 void S_StopStreaming(void);
+int S_GetBackgroundTrackFrame(); //mxd
 void S_OGG_Init(void);
 void S_OGG_Shutdown(void);
 void S_OGG_Restart(void);

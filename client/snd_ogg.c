@@ -37,6 +37,7 @@ typedef struct
 	qboolean ambient_looping;
 	stb_vorbis *ogg_file; //mxd
 	byte *ogg_data; //mxd. Pointer to loaded data, so it can be freed
+	int startframe; //mxd. For resuming tracks after game load
 } bgTrack_t;
 
 #define MAX_OGGLIST		512
@@ -50,6 +51,9 @@ static ogg_status_t ogg_status;		// Status indicator
 static char **ogg_filelist;	// List of Ogg Vorbis files
 static int ogg_numfiles;	// Number of Ogg Vorbis files
 static int ogg_loopcounter;
+
+//mxd. Fade-in effect after setting music track frame
+static float ogg_fadeinvolume = 1.0f;
 
 static cvar_t *ogg_loopcount;
 static cvar_t *ogg_ambient_track;
@@ -104,6 +108,14 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 		return false;
 	}
 
+	//mxd. Seek to target frame? Info: doing this during playback results in a bit of sound crackle right after calling stb_vorbis_seek...
+	if(track->startframe > 0)
+	{
+		stb_vorbis_seek(s_bgTrack.ogg_file, (uint)track->startframe);
+		ogg_fadeinvolume = 0.0f;
+		track->startframe = 0;
+	}
+
 	return true;
 }
 
@@ -116,6 +128,8 @@ static void S_CloseBackgroundTrack(bgTrack_t *track)
 
 		free(track->ogg_data);
 		track->ogg_data = NULL;
+
+		track->startframe = 0; //mxd
 	}
 }
 
@@ -123,6 +137,11 @@ static void S_StreamBackgroundTrack(void)
 {
 	if (!s_bgTrack.ogg_file || !s_musicvolume->value || !s_streamingChannel)
 		return;
+
+	//mxd. Get music volume, add fade-in effect
+	const float volume = s_musicvolume->value * ogg_fadeinvolume;
+	if (ogg_fadeinvolume < 1.0f)
+		ogg_fadeinvolume += 0.02f;
 
 	while (paintedtime + MAX_RAW_SAMPLES - 2048 > s_rawend)
 	{
@@ -132,7 +151,7 @@ static void S_StreamBackgroundTrack(void)
 
 		if (read_samples > 0)
 		{
-			S_RawSamples(read_samples, file->sample_rate, file->channels, file->channels, (byte *)samples, true);
+			S_RawSamples(read_samples, file->sample_rate, file->channels, file->channels, (byte *)samples, volume);
 		}
 		else
 		{
@@ -186,7 +205,7 @@ void S_UpdateBackgroundTrack(void)
 		S_StreamBackgroundTrack();
 }
 
-void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack)
+void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack, int startframe) //mxd. +frame
 {
 	if (!ogg_started) // Was sound_started
 		return;
@@ -197,6 +216,7 @@ void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack)
 	// Start it up
 	Q_strncpyz(s_bgTrack.introName, introTrack, sizeof(s_bgTrack.introName));
 	Q_strncpyz(s_bgTrack.loopName, loopTrack, sizeof(s_bgTrack.loopName));
+	s_bgTrack.startframe = startframe; //mxd
 
 	//mxd. No, we don't want to play "music/.ogg"
 	if (ogg_ambient_track->string[0])
@@ -256,6 +276,15 @@ void S_StopStreaming(void)
 
 	s_streamingChannel->streaming = false;
 	s_streamingChannel = NULL;
+}
+
+//mxd
+int S_GetBackgroundTrackFrame()
+{
+	if (!ogg_started || s_bgTrack.ogg_file == NULL)
+		return -1;
+
+	return stb_vorbis_get_sample_offset(s_bgTrack.ogg_file);
 }
 
 #pragma endregion
@@ -325,7 +354,7 @@ void S_OGG_Restart(void)
 	S_OGG_Init();
 
 	if (introname[0] || loopname[0]) //mxd
-		S_StartBackgroundTrack(introname, loopname);
+		S_StartBackgroundTrack(introname, loopname, 0);
 }
 
 //mxd
@@ -420,7 +449,7 @@ static void S_OGG_PlayCmd(void)
 
 	char name[MAX_QPATH];
 	Com_sprintf(name, sizeof(name), "music/%s.ogg", Cmd_Argv(2));
-	S_StartBackgroundTrack(name, name);
+	S_StartBackgroundTrack(name, name, 0);
 }
 
 // Based on code by QuDos

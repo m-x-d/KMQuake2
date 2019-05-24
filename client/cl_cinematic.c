@@ -672,7 +672,7 @@ static void CIN_ReadAudioFrame(cinematic_t *cin)
 	}
 
 	// Send sound to mixer
-	S_RawSamples(samples, cin->sndRate, cin->sndWidth, cin->sndChannels, data, false);
+	S_RawSamples(samples, cin->sndRate, cin->sndWidth, cin->sndChannels, data, Cvar_VariableValue("s_volume"));
 }
 
 static qboolean CIN_ReadNextFrame(cinematic_t *cin)
