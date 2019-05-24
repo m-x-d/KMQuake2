@@ -111,7 +111,7 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 	//mxd. Seek to target frame? Info: doing this during playback results in a bit of sound crackle right after calling stb_vorbis_seek...
 	if(track->startframe > 0)
 	{
-		stb_vorbis_seek(s_bgTrack.ogg_file, (uint)track->startframe);
+		stb_vorbis_seek(track->ogg_file, (uint)track->startframe);
 		ogg_fadeinvolume = 0.0f;
 		track->startframe = 0;
 	}
