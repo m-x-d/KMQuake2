@@ -314,6 +314,10 @@ void Key_SetBinding(int keynum, char *binding)
 		keybindings[keynum] = NULL;
 	}
 
+	//mxd. Don't bind to empty string
+	if (!binding[0])
+		return;
+
 	// Allocate memory for new binding
 	const int len = strlen(binding);
 	char *new = Z_Malloc(len + 1);
