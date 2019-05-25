@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "qcommon.h"
-#include "../include/zlib/unzip.h"
+#include "../include/minizip/unzip.h" //mxd. Use minizip + miniz combo instead of zlib
 
 // Enables faster binary pak searck, still experimental
 #define BINARY_PACK_SEARCH

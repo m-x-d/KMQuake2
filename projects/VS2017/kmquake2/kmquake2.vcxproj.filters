@@ -58,6 +58,15 @@
     <Filter Include="Header Files\ui">
       <UniqueIdentifier>{ab9c8e0e-e750-4957-aea6-c212f3d81a0b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Include files">
+      <UniqueIdentifier>{395b409b-84a4-48a7-a975-fcf3c121f915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include files\minizip">
+      <UniqueIdentifier>{3b5b63a1-8429-4f5c-9152-44b603f864d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include files\minizip\miniz">
+      <UniqueIdentifier>{e916d94e-2193-46f3-b5dd-9cf0ff8af155}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\win32\cd_win.c">
@@ -389,6 +398,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\client\snd_ogg.c">
       <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\minizip\ioapi.c">
+      <Filter>Include files\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\minizip\unzip.c">
+      <Filter>Include files\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\minizip\miniz\miniz.c">
+      <Filter>Include files\minizip\miniz</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
