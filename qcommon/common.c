@@ -153,12 +153,20 @@ void Com_Printf(char *fmt, ...)
 	if (text[0] == 1 || text[0] == 2) 
 		text++;
 
+	//mxd. If logfile isn't initialized yet, store in temporary buffer...
+	if (earlymsgcount != -1 && logfile_active == NULL)
+	{
+		const int textsize = strlen(text) * sizeof(char);
+		earlymsg[earlymsgcount] = malloc(textsize);
+		Q_strncpyz(earlymsg[earlymsgcount], text, textsize);
+		earlymsgcount++;
+	}
+
 	// Remove color escapes and special font chars
 	text = CL_UnformattedString(text);
-	const unsigned len = strlen(text);
 
 	// Echo to debugging console
-	if (text[len - 1] != '\r') // Skip overwritten outputs
+	if (text[strlen(text) - 1] != '\r') // Skip overwritten outputs
 		Sys_ConsoleOutput(text);
 
 	// Save to logfile?
@@ -178,7 +186,7 @@ void Com_Printf(char *fmt, ...)
 		if (logfile && earlymsgcount > 0)
 		{
 			for (int i = 0; i < earlymsgcount; i++)
-				fprintf(logfile, "%s\n", earlymsg[i]);
+				fprintf(logfile, "%s\n", CL_UnformattedString(earlymsg[i]));
 
 			FreeEarlyMessages(); // Also sets earlymsgcount to -1
 		}
@@ -188,13 +196,6 @@ void Com_Printf(char *fmt, ...)
 
 		if (logfile_active->integer > 1)
 			fflush(logfile); // Force it to save every time
-	}
-	else if(earlymsgcount != -1) //mxd. Store in temporary buffer...
-	{
-		const int textsize = len * sizeof(char);
-		earlymsg[earlymsgcount] = malloc(textsize);
-		Q_strncpyz(earlymsg[earlymsgcount], text, textsize);
-		earlymsgcount++;
 	}
 }
 
