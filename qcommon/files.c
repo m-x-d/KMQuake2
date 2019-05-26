@@ -676,26 +676,25 @@ void FS_Seek(fileHandle_t f, int offset, fsOrigin_t origin)
 		
 		switch (origin)
 		{
-		case FS_SEEK_SET:
-			remaining = offset;
-			break;
+			case FS_SEEK_SET:
+				remaining = offset;
+				break;
 
-		case FS_SEEK_CUR:
-			remaining = offset + unztell(handle->zip);
-			break;
+			case FS_SEEK_CUR:
+				remaining = offset + unztell(handle->zip);
+				break;
 
-		case FS_SEEK_END:
-		{
-			unz_file_info info;
-			unzGetCurrentFileInfo(handle->zip, &info, NULL, 0, NULL, 0, NULL, 0);
-			remaining = offset + info.uncompressed_size;
-		}
-			break;
+			case FS_SEEK_END:
+			{
+				unz_file_info info;
+				unzGetCurrentFileInfo(handle->zip, &info, NULL, 0, NULL, 0, NULL, 0);
+				remaining = offset + info.uncompressed_size;
+			} break;
 
-		default:
-			Com_Error(ERR_FATAL, "FS_Seek: bad origin (%i)", origin);
-			remaining = 0;
-			break;
+			default:
+				Com_Error(ERR_FATAL, "FS_Seek: bad origin (%i)", origin);
+				remaining = 0;
+				break;
 		}
 
 		// Reopen the file
@@ -875,30 +874,32 @@ static int FS_PakFileCompare(const int *f1, const int *f2)
 // Loads the header and directory, adding the files at the beginning of the list so they override previous pack files.
 static fsPack_t *FS_LoadPAK(const char *packPath)
 {
-	dpackheader_t header;
-	dpackfile_t info[MAX_FILES_IN_PACK];
-	unsigned contentFlags = 0;
-
 	FILE *handle = fopen(packPath, "rb");
 	if (!handle)
 		return NULL;
 
+	dpackheader_t header;
 	fread(&header, 1, sizeof(dpackheader_t), handle);
 	
 	if (header.ident != IDPAKHEADER)
 	{
 		fclose(handle);
-		Com_Error(ERR_FATAL, "FS_LoadPAK: %s is not a pack file", packPath);
+		Com_Printf(S_COLOR_YELLOW"%s: '%s' is not a valid pack file.\n", __func__, packPath);
+
+		return NULL; //mxd. Handle gracefully instead of throwing an error
 	}
 
 	const int numFiles = header.dirlen / sizeof(dpackfile_t);
-	if (numFiles > MAX_FILES_IN_PACK || numFiles == 0)
+	if (numFiles == 0)
 	{
 		fclose(handle);
-		Com_Error(ERR_FATAL, "FS_LoadPAK: %s has %i files", packPath, numFiles);
+		Com_Printf(S_COLOR_YELLOW"%s: '%s' has no files.\n", __func__, packPath);
+
+		return NULL; //mxd. Handle gracefully instead of throwing an error
 	}
 
 	fsPackFile_t *files = Z_Malloc(numFiles * sizeof(fsPackFile_t));
+	dpackfile_t *info = Z_Malloc(numFiles * sizeof(dpackfile_t)); //mxd
 
 	fseek(handle, header.dirofs, SEEK_SET);
 	fread(info, 1, header.dirlen, handle);
@@ -919,6 +920,7 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 	qsort((void *)sortIndices, numFiles, sizeof(int), (int(*)(const void *, const void *))FS_PakFileCompare);
 
 	// Parse the directory
+	uint contentFlags = 0;
 	for (int i = 0; i < numFiles; i++)
 	{
 		Q_strncpyz(files[i].name, info[sortIndices[i]].name, sizeof(files[i].name));
@@ -952,6 +954,9 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 
 #endif	// BINARY_PACK_SEARCH
 
+	//mxd. Free info
+	Z_Free(info);
+
 	fsPack_t *pack = Z_Malloc(sizeof(fsPack_t));
 	Q_strncpyz(pack->name, packPath, sizeof(pack->name));
 	pack->pak = handle;
@@ -982,7 +987,6 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 {
 	unz_global_info global;
 	unz_file_info info;
-	unsigned contentFlags = 0;
 	char fileName[MAX_QPATH];
 
 	unzFile *handle = unzOpen(packPath);
@@ -992,14 +996,18 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 	if (unzGetGlobalInfo(handle, &global) != UNZ_OK)
 	{
 		unzClose(handle);
-		Com_Error(ERR_FATAL, "FS_LoadPK3: %s is not a pack file", packPath);
+		Com_Printf(S_COLOR_YELLOW"%s: '%s' is not a valid pk3 file.\n", __func__, packPath);
+
+		return NULL; //mxd. Handle gracefully instead of throwing an error
 	}
 
 	const int numFiles = global.number_entry;
-	if (numFiles > MAX_FILES_IN_PACK || numFiles == 0)
+	if (numFiles == 0)
 	{
 		unzClose(handle);
-		Com_Error(ERR_FATAL, "FS_LoadPK3: %s has too many files or no files at all (%i / %i)", packPath, numFiles, MAX_FILES_IN_PACK);
+		Com_Printf(S_COLOR_YELLOW"%s: '%s' has no files.\n", __func__, packPath);
+
+		return NULL; //mxd. Handle gracefully instead of throwing an error
 	}
 
 	fsPackFile_t *files = Z_Malloc(numFiles * sizeof(fsPackFile_t));
@@ -1014,6 +1022,7 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 
 	// Parse the directory
 	int index = 0;
+	uint contentFlags = 0;
 	int status = unzGoToFirstFile(handle);
 	while (status == UNZ_OK)
 	{
