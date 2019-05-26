@@ -817,7 +817,7 @@ void FS_FreeFile(void *buffer)
 }
 
 // Checks against a blacklist to see if a file should not be loaded from a pak.
-static qboolean FS_FileInPakBlacklist(char *filename, qboolean isPk3)
+static qboolean FS_FileInPakBlacklist(char *filename)
 {
 	// Some incompetently packaged mods have these files in their paks!
 	static char *pakfile_ignore_names[] =
@@ -830,23 +830,15 @@ static qboolean FS_FileInPakBlacklist(char *filename, qboolean isPk3)
 		0
 	};
 
-	qboolean ignore = false;
-
 	char *compare = filename;
-	if (compare[0] == '/')	// remove leading slash
+	if (compare[0] == '/') // Remove leading slash
 		compare++;
 
 	for (int i = 0; pakfile_ignore_names[i]; i++)
-	{
 		if (!Q_strncasecmp(compare, pakfile_ignore_names[i], strlen(pakfile_ignore_names[i])))
-			ignore = true;
+			return true;
 
-		// Ogg files can't load from .paks
-		if (!isPk3 && !Q_stricmp(COM_FileExtension(compare), "ogg"))
-			ignore = true;
-	}
-
-	return ignore;
+	return false;
 }
 
 #ifdef BINARY_PACK_SEARCH
@@ -927,7 +919,7 @@ static fsPack_t *FS_LoadPAK(const char *packPath)
 		files[i].hash = sortHashes[sortIndices[i]];
 		files[i].offset = info[sortIndices[i]].filepos;
 		files[i].size = info[sortIndices[i]].filelen;
-		files[i].ignore = FS_FileInPakBlacklist(files[i].name, false); // Check against pak loading blacklist
+		files[i].ignore = FS_FileInPakBlacklist(files[i].name); // Check against pak loading blacklist
 
 		if (!files[i].ignore) // Add type flag for this file
 			contentFlags |= FS_TypeFlagForPakItem(files[i].name);
@@ -1034,7 +1026,7 @@ static fsPack_t *FS_LoadPK3(const char *packPath)
 		tmpFiles[index].hash = sortHashes[index] = Com_HashFileName(fileName); // Added to speed up seaching
 		tmpFiles[index].offset = -1; // Not used in ZIP files
 		tmpFiles[index].size = info.uncompressed_size;
-		tmpFiles[index].ignore = FS_FileInPakBlacklist(fileName, true); // Check against pak loading blacklist
+		tmpFiles[index].ignore = FS_FileInPakBlacklist(fileName); // Check against pak loading blacklist
 
 		if (!tmpFiles[index].ignore) // Add type flag for this file
 			contentFlags |= FS_TypeFlagForPakItem(tmpFiles[index].name);
