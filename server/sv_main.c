@@ -773,7 +773,7 @@ void SV_CheckTimeouts (void)
 			continue;
 		}
 
-		if ((cl->state == cs_connected || cl->state == cs_spawned) && cl->lastmessage < droppoint)
+		if ((cl->state == cs_connected || cl->state == cs_spawned) && cl->lastmessage < droppoint && cl->netchan.remote_address.type != NA_LOOPBACK) //mxd. Local client should never timeout
 		{
 			// r1ch fix: only message if they spawned (less spam plz)
 			if (cl->state == cs_spawned && cl->name[0])
