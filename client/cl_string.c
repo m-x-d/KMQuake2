@@ -22,6 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
+#ifdef _WIN32
+	#include "../win32/winquake.h" //mxd
+#endif
+
 // This sets the actual text color, can be called from anywhere
 void TextColor(int colornum, int *red, int *green, int *blue)
 {
@@ -199,9 +203,16 @@ int CL_UnformattedStringLength(const char *string)
 //mxd. Strips color markers (like '^1'), replaces special q2 font elements (like menu borders) with printable chars. Was named unformattedString in KMQ2.
 char *CL_UnformattedString(const char *string)
 {
-	char *newstring = "";
+	static char newstring[MAXPRINTMSG];
 	const uint len = strlen(string);
 
+	if(len > MAXPRINTMSG)
+	{
+		Com_Error(ERR_DROP, "%s: len > MAXPRINTMSG", __func__);
+		return NULL;
+	}
+
+	int charindex = 0;
 	for (uint i = 0; i < len; i++)
 	{
 		char c = (string[i] & ~128);
@@ -231,8 +242,11 @@ char *CL_UnformattedString(const char *string)
 			}
 		}
 
-		newstring = va("%s%c", newstring, c);
+		newstring[charindex++] = c;
 	}
+
+	// Null-terminate
+	newstring[charindex] = 0;
 
 	return newstring;
 }
