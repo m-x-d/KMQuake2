@@ -1279,25 +1279,25 @@ void Info_SetValueForKey(char *s, char *key, char *value)
 {
 	if (strchr(key, '\\') || (value && strchr(value, '\\')))
 	{
-		Com_Printf("Can't use keys or values with a '\\' character (key: '%s', value: '%s').\n", key, value);
+		Com_Printf(S_COLOR_YELLOW"Can't use keys or values with a '\\' character (key: '%s', value: '%s').\n", key, value);
 		return;
 	}
 
 	if (strchr(key, ';'))
 	{
-		Com_Printf("Can't use keys with a semicolon (key: '%s').\n", key);
+		Com_Printf(S_COLOR_YELLOW"Can't use keys with a semicolon (key: '%s').\n", key);
 		return;
 	}
 
 	if (strchr(key, '\"') || (value && strchr(value, '\"')))
 	{
-		Com_Printf("Can't use keys or values with a '\"' character (key: '%s', value: '%s').\n", key, value);
+		Com_Printf(S_COLOR_YELLOW"Can't use keys or values with a '\"' character (key: '%s', value: '%s').\n", key, value);
 		return;
 	}
 
 	if (strlen(key) > MAX_INFO_KEY - 1 || (value && strlen(value) > MAX_INFO_KEY - 1))
 	{
-		Com_Printf("Keys and values must be less than 64 characters long (key: '%s' [%i chars], value: '%s' [%i chars]).\n", key, strlen(key), value, strlen(value));
+		Com_Printf(S_COLOR_YELLOW"Keys and values must be less than %i characters long (key: '%s' [%i chars], value: '%s' [%i chars]).\n", MAX_INFO_KEY, key, strlen(key), value, strlen(value));
 		return;
 	}
 
@@ -1310,7 +1310,7 @@ void Info_SetValueForKey(char *s, char *key, char *value)
 
 	if (strlen(newi) + strlen(s) > MAX_INFO_STRING)
 	{
-		Com_Printf("Info string length exceeded (%i / %i chars).\n", strlen(newi) + strlen(s), MAX_INFO_STRING);
+		Com_Printf(S_COLOR_YELLOW"Info string length exceeded (%i / %i chars).\n", strlen(newi) + strlen(s), MAX_INFO_STRING);
 		return;
 	}
 

@@ -522,14 +522,15 @@ here starts modified code by Heffo/changes by Nexus
 ===============
 */
 
-static int		upload_width, upload_height; //** DMP made local to module
+static int upload_width; //** DMP made local to module
+static int upload_height;
 
 static int nearest_power_of_2(int size)
 {
 	int i = 2;
 
 	// NeVo - infinite loop bug-fix
-	if (size == 1)
+	if (size < 2)
 		return size; 
 
 	while (true) 

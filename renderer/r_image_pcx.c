@@ -33,10 +33,7 @@ void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height
 	byte *raw;
 	const int len = FS_LoadFile(filename, (void **)&raw);
 	if (!raw)
-	{
-		VID_Printf(PRINT_DEVELOPER, S_COLOR_YELLOW"%s: bad pcx file: '%s'\n", __func__, filename);
 		return;
-	}
 
 	// Parse the PCX file
 	pcx_t *pcx = (pcx_t *)raw;
@@ -49,7 +46,7 @@ void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height
 		|| pcx->xmax >= 640
 		|| pcx->ymax >= 480)
 	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: bad pcx file: '%s'\n", __func__, filename);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: pcx file '%s' is unsupported.\n", __func__, filename);
 		return;
 	}
 
@@ -92,7 +89,7 @@ void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height
 
 	if (raw - (byte *)pcx > len)
 	{
-		VID_Printf(PRINT_DEVELOPER, S_COLOR_YELLOW"%s: PCX file '%s' was malformed\n", __func__, filename);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: pcx file '%s' is malformed.\n", __func__, filename);
 		free(*pic);
 		*pic = NULL;
 	}
