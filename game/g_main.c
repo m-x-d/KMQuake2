@@ -512,6 +512,9 @@ void ExitLevel (void)
 			ent->health = ent->client->pers.max_health;
 	}
 
+	// mxd added
+	gibsthisframe = 0;
+	lastgibframe = 0;
 }
 
 /*

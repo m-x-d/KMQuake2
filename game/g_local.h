@@ -648,6 +648,10 @@ extern	int	homing_index;
 extern	int	rl_index;
 extern	int	hml_index;
 
+// mxd added
+extern int gibsthisframe;
+extern int lastgibframe;
+
 // means of death
 #define MOD_UNKNOWN			0
 #define MOD_BLASTER			1
@@ -692,10 +696,10 @@ extern int meansOfDeath;
 
 extern edict_t *g_edicts;
 
-#define	FOFS(x) (int)&(((edict_t *)0)->x)
-#define	STOFS(x) (int)&(((spawn_temp_t *)0)->x)
-#define	LLOFS(x) (int)&(((level_locals_t *)0)->x)
-#define	CLOFS(x) (int)&(((gclient_t *)0)->x)
+#define	FOFS(x) (size_t)&(((edict_t *)0)->x)	// Knightmare- was int
+#define	STOFS(x) (size_t)&(((spawn_temp_t *)0)->x)	// Knightmare- was int
+#define	LLOFS(x) (size_t)&(((level_locals_t *)0)->x)	// Knightmare- was int
+#define	CLOFS(x) (size_t)&(((gclient_t *)0)->x)	// Knightmare- was int
 
 extern	cvar_t	*maxentities;
 extern	cvar_t	*deathmatch;
@@ -841,7 +845,7 @@ typedef enum {
 typedef struct
 {
 	char	*name;
-	int		ofs;
+	size_t ofs; // Knightmare- was int
 	fieldtype_t	type;
 	int		flags;
 } field_t;
@@ -1140,7 +1144,7 @@ int trigger_transition_ents (edict_t *changelevel, edict_t *self);
 //
 qboolean	KillBox (edict_t *ent);
 void	G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
-edict_t *G_Find (edict_t *from, int fieldofs, char *match);
+edict_t *G_Find (edict_t *from, size_t fieldofs, char *match);	// Knightmare- changed fieldofs from int
 edict_t *findradius (edict_t *from, vec3_t org, float rad);
 edict_t *G_PickTarget (char *targetname);
 void	G_UseTargets (edict_t *ent, edict_t *activator);
@@ -1162,7 +1166,7 @@ float SnapToEights(float x);
 // Lazarus
 float AtLeast(float x, float dx);
 edict_t	*LookingAt(edict_t *ent, int filter, vec3_t endpos, float *range);
-void	GameDirRelativePath(char *filename, char *output);
+void	GameDirRelativePath(char *filename, char *output, size_t outputSize);
 void	G_UseTarget (edict_t *ent, edict_t *activator, edict_t *target);
 qboolean IsIdMap (void); //Knightmare added
 void my_bprintf (int printlevel, char *fmt, ...);

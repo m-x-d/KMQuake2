@@ -754,10 +754,10 @@ void ACEND_SaveNodes()
 	safe_bprintf(PRINT_MEDIUM,"Saving node table...");
 
 	// Knightmare- rewote this
-	GameDirRelativePath ("nav", filename); // create nav dir if needed
-	_mkdir (filename);
-	Com_sprintf (tempname, sizeof(tempname), "nav/%s.nod", level.mapname);
-	GameDirRelativePath (tempname, filename);
+	GameDirRelativePath("nav", filename, sizeof(filename)); // create nav dir if needed
+	_mkdir(filename);
+	Com_sprintf(tempname, sizeof(tempname), "nav/%s.nod", level.mapname);
+	GameDirRelativePath(tempname, filename, sizeof(filename));
 	//Q_strncpyz(filename, "ace\\nav\\", sizeof(filename));
 	//Q_strncatz(filename, level.mapname, sizeof(filename));
 	//Q_strncatz(filename, ".nod", sizeof(filename));
@@ -796,7 +796,7 @@ void ACEND_LoadNodes(void)
 
 	// Knightmare- rewote this
 	Com_sprintf (tempname, sizeof(tempname), "nav/%s.nod", level.mapname);
-	GameDirRelativePath (tempname, filename);
+	GameDirRelativePath(tempname, filename, sizeof(filename));
 	//Q_strncpyz(filename, "ace\\nav\\", sizeof(filename));
 	//Q_strncatz(filename, level.mapname, sizeof(filename));
 	//Q_strncatz(filename, ".nod", sizeof(filename));

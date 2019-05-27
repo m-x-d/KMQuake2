@@ -2282,7 +2282,7 @@ void ClientCommand (edict_t *ent)
 			e = LookingAt(ent,0,NULL,NULL);
 			if(!e) return;
 	
-			GameDirRelativePath(parm,filename);
+			GameDirRelativePath(parm, filename, sizeof(filename));
 		//	strncat(filename, ".txt");
 			Q_strncatz(filename, ".txt", sizeof(filename));
 			f = fopen(filename, "w");

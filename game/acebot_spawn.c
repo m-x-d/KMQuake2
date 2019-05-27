@@ -427,7 +427,7 @@ void ACESP_LoadBotInfo()
 	if (num_botinfo > 0) // already loaded
 		return;
 	// Knightmare- rewote this
-	GameDirRelativePath ("bots.cfg", filename);
+	GameDirRelativePath ("bots.cfg", filename, sizeof(filename));
 	if((pIn = fopen(filename, "rb" )) == NULL)
 	{
 		safe_bprintf(PRINT_MEDIUM,"ACE: No bots.cfg file found, using default bots.\n");

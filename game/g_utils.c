@@ -50,7 +50,7 @@ NULL will be returned if the end of the list is reached.
 
 =============
 */
-edict_t *G_Find (edict_t *from, int fieldofs, char *match)
+edict_t *G_Find (edict_t *from, size_t fieldofs, char *match) // Knightmare- changed fieldofs from int
 {
 	char	*s;
 
@@ -865,16 +865,16 @@ edict_t	*LookingAt(edict_t *ent, int filter, vec3_t endpos, float *range)
 	return tr.ent;
 }
 
-void GameDirRelativePath(char *filename, char *output)
+void GameDirRelativePath(char *filename, char *output, size_t outputSize)
 {
 	cvar_t	*basedir, *gamedir;
 
 	basedir = gi.cvar("basedir", "", 0);
 	gamedir = gi.cvar("gamedir", "", 0);
 	if (strlen(gamedir->string))
-		sprintf(output, "%s/%s/%s", basedir->string, gamedir->string, filename);
+		Com_sprintf(output, outputSize, "%s/%s/%s", basedir->string, gamedir->string, filename);
 	else
-		sprintf(output, "%s/%s", basedir->string, filename);
+		Com_sprintf(output, outputSize, "%s/%s", basedir->string, filename);
 }
 
 /* Lazarus: G_UseTarget is similar to G_UseTargets, but only triggers

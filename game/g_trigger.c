@@ -269,7 +269,12 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		self->touch_debounce_time = level.time + 5.0;
 		if(!(self->spawnflags & 4))
 		{
-			safe_centerprintf (activator, "You need the %s", self->item->pickup_name);
+			// Knightmare- implement key_message
+			if (self->key_message && strlen(self->key_message))
+				safe_centerprintf(activator, "%s", self->key_message);
+			else
+				safe_centerprintf(activator, "You need the %s", self->item->pickup_name);
+			
 			gi.sound (activator, CHAN_AUTO, gi.soundindex ("misc/keytry.wav"), 1, ATTN_NORM, 0);
 		}
 		return;
@@ -1563,9 +1568,9 @@ entlist_t DoNotMove[] = {
 	{"turret_driver"},
 	{NULL}};
 
-void trans_ent_filename (char *filename)
+void trans_ent_filename(char *filename, size_t filenameSize)
 {
-	GameDirRelativePath("save/trans.ent",filename);
+	GameDirRelativePath("save/trans.ent", filename, filenameSize);
 }
 
 int trigger_transition_ents (edict_t *changelevel, edict_t *self)
@@ -1578,7 +1583,7 @@ int trigger_transition_ents (edict_t *changelevel, edict_t *self)
 	entlist_t	*p;
 	FILE		*f;
 
-	trans_ent_filename(t_file);
+	trans_ent_filename(t_file, sizeof(t_file));
 	f = fopen(t_file,"wb");
 	if(!f)
 	{

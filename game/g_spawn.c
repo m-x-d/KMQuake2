@@ -667,7 +667,7 @@ qboolean LoadAliasFile (char *name)
 
 	alias_from_pak = false;
 
-	GameDirRelativePath (name, aliasfilename);
+	GameDirRelativePath (name, aliasfilename, sizeof(aliasfilename));
     alias_data = ReadTextFile(aliasfilename, &alias_data_size);
 
 	// If file doesn't exist on hard disk, it must be in a pak file
@@ -1021,7 +1021,7 @@ void G_FindTeams (void)
 		gi.dprintf ("%i teams with %i entities\n", c, c2);
 }
 
-void trans_ent_filename (char *);
+void trans_ent_filename(char *filename, size_t filenameSize);
 void ReadEdict (FILE *f, edict_t *ent);
 void LoadTransitionEnts (void)
 {
@@ -1050,7 +1050,7 @@ void LoadTransitionEnts (void)
 				spawn = G_Find(spawn,FOFS(targetname),game.spawnpoint);
 			}
 		}
-		trans_ent_filename (t_file);
+		trans_ent_filename (t_file, sizeof(t_file));
 		f = fopen(t_file,"rb");
 		if (!f)
 			gi.error("LoadTransitionEnts: Cannot open %s\n",t_file);
