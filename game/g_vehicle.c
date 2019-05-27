@@ -177,7 +177,7 @@ void vehicle_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *
 	if(vspeed <= 0.) return;
 	// for speed < 200, don't do damage but move monster
 	if(vspeed < 200) {
-		if(other->mass > self->mass) vspeed *= self->mass/other->mass;
+		if(other->mass > self->mass) vspeed *= (float)self->mass/other->mass;
 		VectorMA(other->velocity,vspeed,dir,new_velocity);
 		VectorMA(other->s.origin,FRAMETIME,new_velocity,new_origin);
 		new_origin[2] += 2;
@@ -201,14 +201,14 @@ void vehicle_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *
 	}
 	if (other->damage_debounce_time > level.time) return;
 	other->damage_debounce_time = level.time + 0.2;
-	points = 100. * (self->mass/2000 * vspeed*vspeed/160000);
+	points = 100. * (self->mass/2000.0f * vspeed*vspeed/160000.0f);
 	// knockback takes too long to take effect. If we can move him w/o throwing him
 	// into a solid, do so NOW
 	dir[2] = 0.2; // make knockback slightly upward
 	VectorMA(other->velocity,vspeed,dir,new_velocity);
 	VectorMA(other->s.origin,FRAMETIME,new_velocity,new_origin);
 	if(gi.pointcontents(new_origin) & CONTENTS_SOLID)
-		knockback = (160./500.) * 200. * (self->mass/2000 * vspeed*vspeed/160000);
+		knockback = (160.0f/500.0f) * 200.0f * (self->mass/2000.0f * vspeed*vspeed/160000.0f);
 	else {
 		knockback = 0;
 		VectorCopy(new_velocity,other->velocity);
