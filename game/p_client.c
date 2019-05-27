@@ -595,7 +595,7 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 				else
 				{
 					message = "was shredded by the";
-					message = "'s chain-cannons";
+					message2 = "'s chain-cannons";
 				}
 			}
 			// Makron
@@ -604,7 +604,7 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 				if (mod == MOD_BLASTER)
 				{
 					message = "was melted by the";
-					message = "'s hyperblaster";
+					message2 = "'s hyperblaster";
 				}
 				else if (mod == MOD_RAILGUN)
 					message = "was railed by the";
@@ -812,7 +812,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		if (ctf->value)
 		{
 			// if at start and same team, clear
-			if (ctf->value && meansOfDeath == MOD_TELEFRAG &&
+			if (meansOfDeath == MOD_TELEFRAG &&
 				self->client->resp.ctf_state < 2 &&
 				self->client->resp.ctf_team == attacker->client->resp.ctf_team) {
 				attacker->client->resp.score--;
@@ -1474,8 +1474,11 @@ void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles, int *style, i
 		}
 	}
 
-	*style = spot->style;
-	*health = spot->health;
+	if (style)
+		*style = spot->style;
+	if (health)
+		*health = spot->health;
+
 	VectorCopy (spot->s.origin, origin);
 	origin[2] += 9;
 	VectorCopy (spot->s.angles, angles);
@@ -2186,7 +2189,8 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	// check for malformed or illegal info strings
 	if (!Info_Validate(userinfo))
 	{
-		strcpy (userinfo, "\\name\\badinfo\\skin\\male/grunt");
+		//strcpy (userinfo, "\\name\\badinfo\\skin\\male/grunt");
+		Q_strncpyz(userinfo, "\\name\\badinfo\\skin\\male/grunt", MAX_INFO_STRING * sizeof(char));	// userinfo length is always MAX_INFO_STRING
 	}
 
 	// set name
