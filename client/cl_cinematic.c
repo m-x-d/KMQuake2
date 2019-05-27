@@ -1153,7 +1153,7 @@ void SCR_PlayCinematic(char *name)
 	{
 		Q_strncpyz(filename, name, sizeof(filename));
 		DefaultPath(filename, sizeof(filename), "video");
-		COM_DefaultExtension(filename, ".cin");
+		COM_DefaultExtension(filename, sizeof(filename), ".cin");
 	}
 
 	cls.cinematicHandle = CIN_PlayCinematic(filename, 0, 0, 640, 480, CIN_SYSTEM);

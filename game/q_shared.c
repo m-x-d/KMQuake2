@@ -690,20 +690,20 @@ void COM_FilePath(char *in, char *out)
 	out[s - in] = 0;
 }
 
-void COM_DefaultExtension(char *path, char *extension)
+void COM_DefaultExtension(char *path, size_t pathSize, char *extension)
 {
-	// if path doesn't have a .EXT, append extension (extension should include the .)
+	// If path doesn't have a .EXT, append extension (extension should include the .)
 	char *src = path + strlen(path) - 1;
 
 	while (*src != '/' && src != path)
 	{
 		if (*src == '.')
-			return; // it has an extension
+			return; // It has an extension
 
 		src--;
 	}
 
-	strcat(path, extension);
+	Q_strncatz(path, extension, pathSize);
 }
 
 #pragma endregion 
@@ -1066,7 +1066,7 @@ int Q_strcasecmp(const char *s1, const char *s2)
 }
 
 // Safe strncpy that ensures a trailing zero
-void Q_strncpyz(char *dst, const char *src, int dstSize)
+void Q_strncpyz(char *dst, const char *src, size_t dstSize)
 {
 	if (!src || !dst || dstSize < 1) 
 		return;
@@ -1076,7 +1076,7 @@ void Q_strncpyz(char *dst, const char *src, int dstSize)
 }
 
 // Safe strncat that ensures a trailing zero
-void Q_strncatz(char *dst, const char *src, int dstSize)
+void Q_strncatz(char *dst, const char *src, size_t dstSize)
 {
 	if (!src || !dst || dstSize < 1) 
 		return;
@@ -1094,7 +1094,7 @@ void Q_strncatz(char *dst, const char *src, int dstSize)
 }
 
 // Safe snprintf that ensures a trailing zero
-void Q_snprintfz(char *dst, int dstSize, const char *fmt, ...)
+void Q_snprintfz(char *dst, size_t dstSize, const char *fmt, ...)
 {
 	if (!dst || dstSize < 1) 
 		return;
@@ -1133,7 +1133,7 @@ char *Q_strupr(char *string)
 	return string;
 }
 
-void Com_sprintf(char *dest, int size, char *fmt, ...)
+void Com_sprintf(char *dest, size_t size, char *fmt, ...)
 {
 	static char bigbuffer[0x10000]; //mxd. +static
 	va_list argptr;

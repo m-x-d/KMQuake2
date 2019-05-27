@@ -336,13 +336,13 @@ void COM_StripExtension(char *in, char *out);
 void COM_FileBase(char *in, char *out);
 void COM_FilePath(char *in, char *out);
 const char *COM_FileExtension(const char *in);
-void COM_DefaultExtension(char *path, char *extension);
+void COM_DefaultExtension(char *path, size_t pathSize, char *extension);
 
 char *COM_Parse(char **data_p);
 // Data is an in/out parm, returns a parsed out token
 char *COM_ParseExt(char **data_p, qboolean allowNewLines);
 
-void Com_sprintf(char *dest, int size, char *fmt, ...);
+void Com_sprintf(char *dest, size_t size, char *fmt, ...);
 uint Com_HashFileName(const char *fname);
 
 //=============================================
@@ -391,9 +391,9 @@ int Q_strncasecmp(const char *s1, const char *s2, int n);
 //mxd. Portable case insensitive strstr
 char *Q_strcasestr(const char *haystack, const char *needle);
 
-void Q_strncpyz(char *dst, const char *src, int dstSize);
-void Q_strncatz(char *dst, const char *src, int dstSize);
-void Q_snprintfz(char *dst, int dstSize, const char *fmt, ...);
+void Q_strncpyz(char *dst, const char *src, size_t dstSize);
+void Q_strncatz(char *dst, const char *src, size_t dstSize);
+void Q_snprintfz(char *dst, size_t dstSize, const char *fmt, ...);
 char *Q_strlwr(char *string);
 char *Q_strupr(char *string);
 
