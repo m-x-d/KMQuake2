@@ -922,10 +922,10 @@ void WriteGame (char *filename, qboolean autosave)
 		gi.dprintf ("==== WriteGame ====\n");
 
 	if (!autosave)
+	{
 		game.transition_ents = 0;
-
-	if (!autosave)
-		SaveClientData ();
+		SaveClientData();
+	}	
 
 	f = fopen (filename, "wb");
 	if (!f)
