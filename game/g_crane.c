@@ -737,6 +737,9 @@ void G_FindCraneParts()
 			cable->model = "models/cable/tris.md2";
 			gi.setmodel(cable,cable->model);
 			cable->s.skinnum = 0;
+#ifdef KMQUAKE2_ENGINE_MOD
+			cable->s.renderfx |= RF_NOSHADOW;	// Knightmare- no shadow for crane cable
+#endif
 			length = hoist->absmax[2]-1 - hook->absmax[2];
 			frame = (int)(length/CABLE_SEGMENT);
 			if((frame+1)*CABLE_SEGMENT < length) frame++;
