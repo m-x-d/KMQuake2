@@ -2609,7 +2609,7 @@ void target_attractor_think_single (edict_t *self)
 	int		i;
 	int		num_targets = 0;
 	
-	if(!self->spawnflags & ATTRACTOR_ON) return;
+	if(!(self->spawnflags & ATTRACTOR_ON)) return;
 
 	previous_target = self->target_ent;
 	target      = NULL;
@@ -2800,7 +2800,7 @@ void target_attractor_think(edict_t *self)
 	int		ent_start;
 	int		num_targets = 0;
 
-	if(!self->spawnflags & ATTRACTOR_ON) return;
+	if(!(self->spawnflags & ATTRACTOR_ON)) return;
 
 	if(self->moveinfo.speed != self->speed) {
 		if(self->speed > 0)
@@ -2813,7 +2813,7 @@ void target_attractor_think(edict_t *self)
 	ent_start = 1;
 	while(true)
 	{
-		if(self->spawnflags & (ATTRACTOR_PLAYER || ATTRACTOR_MONSTER))
+		if(self->spawnflags & (ATTRACTOR_PLAYER | ATTRACTOR_MONSTER))
 		{
 			target = NULL;
 			for(i=ent_start, ent=&g_edicts[ent_start];i<globals.num_edicts && !target; i++, ent++)
@@ -3479,11 +3479,17 @@ void target_animation_use (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_target_animation (edict_t *self)
 {
+#if 1
+	gi.dprintf("Target_animation is currently not implemented.\n",vtos(self->s.origin));
+	G_FreeEdict(self);
+	return;
+#else
 	mmove_t	*move;
 	if(!self->target && !(self->spawnflags & 1))
 	{
 		gi.dprintf("target_animation w/o a target at %s\n",vtos(self->s.origin));
 		G_FreeEdict(self);
+		return;	// Knightmare- exit function after this!
 	}
 	switch(self->sounds)
 	{
@@ -3524,6 +3530,7 @@ void SP_target_animation (edict_t *self)
 	self->use = target_animation_use;
 	move = gi.TagMalloc(sizeof(mmove_t), TAG_LEVEL);
 	self->monsterinfo.currentmove = move;
+#endif
 }
 
 /*===================================================================================
