@@ -1074,115 +1074,115 @@ int PatchMonsterModel (char *modelname)
 			return 0;
 		}
 		*p = 0;
-		if(is_soldier)
+		if (is_soldier)
 		{
 			switch (j) {
 			case 0:
-				strcat (skins[j], "skin_lt.pcx"); break;
+				Q_strncatz (skins[j], "skin_lt.pcx", sizeof(skins[j])); break;
 			case 1:
-				strcat (skins[j], "skin_ltp.pcx"); break;
+				Q_strncatz (skins[j], "skin_ltp.pcx", sizeof(skins[j])); break;
 			case 2:
-				strcat (skins[j], "skin.pcx"); break;
+				Q_strncatz (skins[j], "skin.pcx", sizeof(skins[j])); break;
 			case 3:
-				strcat (skins[j], "pain.pcx"); break;
+				Q_strncatz (skins[j], "pain.pcx", sizeof(skins[j])); break;
 			case 4:
-				strcat (skins[j], "skin_ss.pcx"); break;
+				Q_strncatz (skins[j], "skin_ss.pcx", sizeof(skins[j])); break;
 			case 5:
-				strcat (skins[j], "skin_ssp.pcx"); break;
+				Q_strncatz (skins[j], "skin_ssp.pcx", sizeof(skins[j])); break;
 			case 6:
-				strcat (skins[j], "custom1_lt.pcx"); break;
+				Q_strncatz (skins[j], "custom1_lt.pcx", sizeof(skins[j])); break;
 			case 7:
-				strcat (skins[j], "custompain1_lt.pcx"); break;
+				Q_strncatz (skins[j], "custompain1_lt.pcx", sizeof(skins[j])); break;
 			case 8:
-				strcat (skins[j], "custom1.pcx"); break;
+				Q_strncatz (skins[j], "custom1.pcx", sizeof(skins[j])); break;
 			case 9:
-				strcat (skins[j], "custompain1.pcx"); break;
+				Q_strncatz (skins[j], "custompain1.pcx", sizeof(skins[j])); break;
 			case 10:
-				strcat (skins[j], "custom1_ss.pcx"); break;
+				Q_strncatz (skins[j], "custom1_ss.pcx", sizeof(skins[j])); break;
 			case 11:
-				strcat (skins[j], "custompain1_ss.pcx"); break;
+				Q_strncatz (skins[j], "custompain1_ss.pcx", sizeof(skins[j])); break;
 			case 12:
-				strcat (skins[j], "custom2_lt.pcx"); break;
+				Q_strncatz (skins[j], "custom2_lt.pcx", sizeof(skins[j])); break;
 			case 13:
-				strcat (skins[j], "custompain2_lt.pcx"); break;
+				Q_strncatz (skins[j], "custompain2_lt.pcx", sizeof(skins[j])); break;
 			case 14:
-				strcat (skins[j], "custom2.pcx"); break;
+				Q_strncatz (skins[j], "custom2.pcx", sizeof(skins[j])); break;
 			case 15:
-				strcat (skins[j], "custompain2.pcx"); break;
+				Q_strncatz (skins[j], "custompain2.pcx", sizeof(skins[j])); break;
 			case 16:
-				strcat (skins[j], "custom2_ss.pcx"); break;
+				Q_strncatz (skins[j], "custom2_ss.pcx", sizeof(skins[j])); break;
 			case 17:
-				strcat (skins[j], "custompain2_ss.pcx"); break;
+				Q_strncatz (skins[j], "custompain2_ss.pcx", sizeof(skins[j])); break;
 			case 18:
-				strcat (skins[j], "custom3_lt.pcx"); break;
+				Q_strncatz (skins[j], "custom3_lt.pcx", sizeof(skins[j])); break;
 			case 19:
-				strcat (skins[j], "custompain3_lt.pcx"); break;
+				Q_strncatz (skins[j], "custompain3_lt.pcx", sizeof(skins[j])); break;
 			case 20:
-				strcat (skins[j], "custom3.pcx"); break;
+				Q_strncatz (skins[j], "custom3.pcx", sizeof(skins[j])); break;
 			case 21:
-				strcat (skins[j], "custompain3.pcx"); break;
+				Q_strncatz (skins[j], "custompain3.pcx", sizeof(skins[j])); break;
 			case 22:
-				strcat (skins[j], "custom3_ss.pcx"); break;
+				Q_strncatz (skins[j], "custom3_ss.pcx", sizeof(skins[j])); break;
 			case 23:
-				strcat (skins[j], "custompain3_ss.pcx"); break;
+				Q_strncatz (skins[j], "custompain3_ss.pcx", sizeof(skins[j])); break;
 			}
 		}
-		else if(is_tank)
+		else if (is_tank)
 		{
 			switch (j) {
 			case 0:
-				strcat (skins[j], "skin.pcx"); break;
+				Q_strncatz (skins[j], "skin.pcx", sizeof(skins[j])); break;
 			case 1:
-				strcat (skins[j], "pain.pcx"); break;
+				Q_strncatz (skins[j], "pain.pcx", sizeof(skins[j])); break;
 			case 2:
-				strcat (skins[j], "../ctank/skin.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/skin.pcx", sizeof(skins[j])); break;
 			case 3:
-				strcat (skins[j], "../ctank/pain.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/pain.pcx", sizeof(skins[j])); break;
 			case 4:
-				strcat (skins[j], "custom1.pcx"); break;
+				Q_strncatz (skins[j], "custom1.pcx", sizeof(skins[j])); break;
 			case 5:
-				strcat (skins[j], "custompain1.pcx"); break;
+				Q_strncatz (skins[j], "custompain1.pcx", sizeof(skins[j])); break;
 			case 6:
-				strcat (skins[j], "../ctank/custom1.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/custom1.pcx", sizeof(skins[j])); break;
 			case 7:
-				strcat (skins[j], "../ctank/custompain1.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/custompain1.pcx", sizeof(skins[j])); break;
 			case 8:
-				strcat (skins[j], "custom2.pcx"); break;
+				Q_strncatz (skins[j], "custom2.pcx", sizeof(skins[j])); break;
 			case 9:
-				strcat (skins[j], "custompain2.pcx"); break;
+				Q_strncatz (skins[j], "custompain2.pcx", sizeof(skins[j])); break;
 			case 10:
-				strcat (skins[j], "../ctank/custom2.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/custom2.pcx", sizeof(skins[j])); break;
 			case 11:
-				strcat (skins[j], "../ctank/custompain2.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/custompain2.pcx", sizeof(skins[j])); break;
 			case 12:
-				strcat (skins[j], "custom3.pcx"); break;
+				Q_strncatz (skins[j], "custom3.pcx", sizeof(skins[j])); break;
 			case 13:
-				strcat (skins[j], "custompain3.pcx"); break;
+				Q_strncatz (skins[j], "custompain3.pcx", sizeof(skins[j])); break;
 			case 14:
-				strcat (skins[j], "../ctank/custom3.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/custom3.pcx", sizeof(skins[j])); break;
 			case 15:
-				strcat (skins[j], "../ctank/custompain3.pcx"); break;
+				Q_strncatz (skins[j], "../ctank/custompain3.pcx", sizeof(skins[j])); break;
 			}
 		}
 		else
 		{
 			switch (j) {
 			case 0:
-				strcat (skins[j], "skin.pcx"); break;
+				Q_strncatz (skins[j], "skin.pcx", sizeof(skins[j])); break;
 			case 1:
-				strcat (skins[j], "pain.pcx"); break;
+				Q_strncatz (skins[j], "pain.pcx", sizeof(skins[j])); break;
 			case 2:
-				strcat (skins[j], "custom1.pcx"); break;
+				Q_strncatz (skins[j], "custom1.pcx", sizeof(skins[j])); break;
 			case 3:
-				strcat (skins[j], "custompain1.pcx"); break;
+				Q_strncatz (skins[j], "custompain1.pcx", sizeof(skins[j])); break;
 			case 4:
-				strcat (skins[j], "custom2.pcx"); break;
+				Q_strncatz (skins[j], "custom2.pcx", sizeof(skins[j])); break;
 			case 5:
-				strcat (skins[j], "custompain2.pcx"); break;
+				Q_strncatz (skins[j], "custompain2.pcx", sizeof(skins[j])); break;
 			case 6:
-				strcat (skins[j], "custom3.pcx"); break;
+				Q_strncatz (skins[j], "custom3.pcx", sizeof(skins[j])); break;
 			case 7:
-				strcat (skins[j], "custompain3.pcx"); break;
+				Q_strncatz (skins[j], "custompain3.pcx", sizeof(skins[j])); break;
 			}
 		}
 	}
@@ -1270,7 +1270,7 @@ int PatchMonsterModel (char *modelname)
 	// save new model
 	Com_sprintf (outfilename, sizeof(outfilename), "%s/models", gamedir->string);	// make some dirs if needed
 	_mkdir (outfilename);
-	strcat (outfilename,"/monsters");
+	Q_strncatz(outfilename, "/monsters", sizeof(outfilename));
 	_mkdir (outfilename);
 	Com_sprintf (outfilename, sizeof(outfilename), "%s/%s", gamedir->string, modelname);
 	p = strstr(outfilename,"/tris.md2");
