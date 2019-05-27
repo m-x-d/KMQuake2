@@ -201,11 +201,11 @@ typedef struct
 	int		(*LoadFile) (char *name, void **buf);
 	void	(*FreeFile) (void *buf);
 	void	(*FreeFileList) (char **list, int n);
-	int		(*OpenFile) (const char *name, fileHandle_t *f, fsMode_t mode);
+	/*int		(*OpenFile) (const char *name, fileHandle_t *f, fsMode_t mode);
 	int		(*OpenCompressedFile) (const char *zipName, const char *fileName, fileHandle_t *f, fsMode_t mode);
 	void	(*CloseFile) (fileHandle_t f);
 	int		(*FRead) (void *buffer, int size, fileHandle_t f);
-	int		(*FWrite) (const void *buffer, int size, fileHandle_t f);
+	int		(*FWrite) (const void *buffer, int size, fileHandle_t f);*/
 #endif
 
 } game_import_t;
