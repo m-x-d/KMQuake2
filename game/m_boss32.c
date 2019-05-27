@@ -554,55 +554,51 @@ void MakronHyperblaster (edict_t *self)
 }	
 
 
-void makron_pain (edict_t *self, edict_t *other, float kick, int damage)
+void makron_pain(edict_t *self, edict_t *other, float kick, int damage)
 {
 
 	if (self->health < (self->max_health / 2))
 	{
 		self->s.skinnum |= 1;
-		if (!(self->fogclip & 2)) //custom bloodtype flag check
-			self->blood_type = 3; //sparks and blood
+		if (!(self->fogclip & 2)) // Custom bloodtype flag check
+			self->blood_type = 3; // Sparks and blood
 	}
 
 	if (level.time < self->pain_debounce_time)
 		return;
 
 	// Lessen the chance of him going into his pain frames
-	if (damage <=25)
-		if (random()<0.2)
-			return;
+	if (damage <= 25 && random() < 0.2f)
+		return;
 
 	self->pain_debounce_time = level.time + 3;
 	if (skill->value == 3)
-		return;		// no pain anims in nightmare
-
+		return; // No pain anims in nightmare
 
 	if (damage <= 40)
 	{
-		gi.sound (self, CHAN_VOICE, sound_pain4, 1, ATTN_NONE,0);
+		gi.sound(self, CHAN_VOICE, sound_pain4, 1, ATTN_NONE, 0);
 		self->monsterinfo.currentmove = &makron_move_pain4;
 	}
 	else if (damage <= 110)
 	{
-		gi.sound (self, CHAN_VOICE, sound_pain5, 1, ATTN_NONE,0);
+		gi.sound(self, CHAN_VOICE, sound_pain5, 1, ATTN_NONE, 0);
 		self->monsterinfo.currentmove = &makron_move_pain5;
 	}
-	else
+	else if (damage <= 150)
 	{
-		if (damage <= 150)
-			if (random() <= 0.45)
-			{
-				gi.sound (self, CHAN_VOICE, sound_pain6, 1, ATTN_NONE,0);
-				self->monsterinfo.currentmove = &makron_move_pain6;
-			}
-		else
-			if (random() <= 0.35)
-			{
-				gi.sound (self, CHAN_VOICE, sound_pain6, 1, ATTN_NONE,0);
-				self->monsterinfo.currentmove = &makron_move_pain6;
-			}
+		if (random() <= 0.45f)
+		{
+			gi.sound(self, CHAN_VOICE, sound_pain6, 1, ATTN_NONE, 0);
+			self->monsterinfo.currentmove = &makron_move_pain6;
+		}
 	}
-};
+	else if (random() <= 0.35f)
+	{
+		gi.sound(self, CHAN_VOICE, sound_pain6, 1, ATTN_NONE, 0);
+		self->monsterinfo.currentmove = &makron_move_pain6;
+	}
+}
 
 void makron_sight(edict_t *self, edict_t *other)
 {
