@@ -157,7 +157,7 @@ void ChasecamTrack (edict_t *ent)
 	vec3_t		 spot1, spot2, dir;
 	vec3_t		 forward, right, up,angles;
 	int 		 distance;
-	int 		 tot;		 
+	double		 tot; //mxd. int -> double
 	ent->nextthink = level.time + 0.100;
 	/* if our owner is under water, run the remove routine to repeatedly
 	* check for emergment from water */
