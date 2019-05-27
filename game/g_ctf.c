@@ -914,7 +914,7 @@ void CTFFragBonuses (edict_t *targ, edict_t *inflictor, edict_t *attacker)
 	else if (targ->client->resp.ctf_team == CTF_TEAM2) {
 		flag_item = flag2_item;
 		enemy_flag_item = flag1_item;
-		enemy_flag_item = flag3_item;
+		enemy_flag_item2 = flag3_item;
 	}
 	else {
 		flag_item = flag3_item;
