@@ -1307,8 +1307,8 @@ void SV_Physics_Pusher (edict_t *ent)
 			}
 		}
 	}
-	if (pushed_p > &pushed[MAX_EDICTS])
-		gi.error (ERR_FATAL, "pushed_p > &pushed[MAX_EDICTS], memory corrupted");
+	if (pushed_p > &pushed[MAX_EDICTS - 1])
+		gi.error (ERR_FATAL, "pushed_p > &pushed[MAX_EDICTS - 1], memory corrupted");
 
 	if (part && !part->attracted)
 	{
@@ -1699,7 +1699,7 @@ void SV_Physics_Step (edict_t *ent)
 			// caused monster_flipper to sink
 
 			ent->bob      = min(2.0,300.0/ent->mass);
-			ent->duration = max(2.0,1.0 + ent->mass/100);
+			ent->duration = max(2.0,1.0 + ent->mass / 100.0f);
 			
 			// Figure out neutral bouyancy line for this entity
 			// This isn't entirely realistic, but helps gameplay:
@@ -1714,7 +1714,7 @@ void SV_Physics_Step (edict_t *ent)
 	}
 	// If not a monster, then determine whether we're in water.
 	// (monsters take care of this in g_monster.c)
-	if (!(ent->svflags & SVF_MONSTER) && (ent->flags && FL_SWIM) ) {
+	if (!(ent->svflags & SVF_MONSTER) && (ent->flags & FL_SWIM) ) {
 		point[0] = (ent->absmax[0] + ent->absmin[0])/2;
 		point[1] = (ent->absmax[1] + ent->absmin[1])/2;
 		point[2] = ent->absmin[2] + 1;
@@ -1790,7 +1790,7 @@ void SV_Physics_Step (edict_t *ent)
 
 
 	// Lazarus: Floating stuff
-	if ((ent->movetype == MOVETYPE_PUSHABLE) && (ent->flags && FL_SWIM) && (ent->waterlevel)) {
+	if ((ent->movetype == MOVETYPE_PUSHABLE) && (ent->flags & FL_SWIM) && (ent->waterlevel)) {
 		float	waterlevel;
 		float	rider_mass, total_mass;
 		trace_t tr;
