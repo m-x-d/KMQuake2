@@ -4291,7 +4291,8 @@ int PatchDeadSoldier ()
 	model.num_skins = NUM_SKINS;
 	
 	// Already had 1 skin, so new offset doesn't include that one
-	newoffset = (model.num_skins-1) * MAX_SKINNAME;
+	//newoffset = (model.num_skins-1) * MAX_SKINNAME;
+	newoffset = model.num_skins * MAX_SKINNAME;
 	model.ofs_st     += newoffset;
 	model.ofs_tris   += newoffset;
 	model.ofs_frames += newoffset;
@@ -4302,9 +4303,9 @@ int PatchDeadSoldier ()
 //	sprintf (outfilename, "%s/models", gamedir->string);	// make some dirs if needed
 	Com_sprintf (outfilename, sizeof(outfilename), "%s/models", gamedir->string);	// make some dirs if needed
 	_mkdir (outfilename);
-	strcat (outfilename,"/deadbods");
+	Q_strncatz(outfilename, "/deadbods", sizeof(outfilename));
 	_mkdir (outfilename);
-	strcat (outfilename,"/dude");
+	Q_strncatz(outfilename, "/dude", sizeof(outfilename));
 	_mkdir (outfilename);
 //	sprintf (outfilename, "%s/%s", gamedir->string, DEADSOLDIER_MODEL);
 	Com_sprintf (outfilename, sizeof(outfilename), "%s/%s", gamedir->string, DEADSOLDIER_MODEL);
@@ -4324,8 +4325,9 @@ int PatchDeadSoldier ()
 	}
 	
 	fwrite (&model, sizeof (dmdl_t), 1, outfile);
-	fwrite (skins, sizeof (char), model.num_skins*MAX_SKINNAME, outfile);
-	data += MAX_SKINNAME;
+	//fwrite (skins, sizeof (char), model.num_skins*MAX_SKINNAME, outfile);
+	fwrite(skins, sizeof(char), newoffset, outfile);
+	//data += MAX_SKINNAME;
 	fwrite (data, sizeof (byte), datasize, outfile);
 	
 	fclose (outfile);
