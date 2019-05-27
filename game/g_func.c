@@ -332,7 +332,7 @@ void train_spline (edict_t *self)
 	if ((!train->from) || (!train->from->inuse) || (!train->to) || (!train->to->inuse))
 		return;
 	//Knightmare- check for removed spline flag- get da hell outta here
-	if (!train->spawnflags & TRAIN_SPLINE)
+	if (!(train->spawnflags & TRAIN_SPLINE))
 	{
 		self->think = train_children_think;
 		return;
@@ -786,7 +786,8 @@ void Think_AccelMove (edict_t *ent)
 {
 	ent->moveinfo.remaining_distance -= ent->moveinfo.current_speed;
 
-	if (ent->moveinfo.current_speed == 0)		// starting or blocked
+	// Knightmare- fix plats with high accel and decel getting stuck just before top and bottom
+	//if (ent->moveinfo.current_speed == 0)		// starting or blocked
 		plat_CalcAcceleratedMove(&ent->moveinfo);
 
 	plat_Accelerate (&ent->moveinfo);
@@ -817,10 +818,11 @@ void plat_hit_top (edict_t *ent)
 	{
 		if (ent->s.sound && ent->moveinfo.sound_end)
 			gi.sound (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_end, 1, ent->attenuation, 0); // was ATTN_STATIC
-		ent->s.sound = 0;
+		//ent->s.sound = 0;
 	}
+	
+	ent->s.sound = 0;	// Knightmare- make sure this is always set to 0, lead mover or not!
 	ent->moveinfo.state = STATE_TOP;
-
 	ent->think = plat_go_down;
 	ent->nextthink = level.time + 3;
 }
@@ -831,8 +833,10 @@ void plat_hit_bottom (edict_t *ent)
 	{
 		if (ent->s.sound && ent->moveinfo.sound_end)
 			gi.sound (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_end, 1, ent->attenuation, 0); // was ATTN_STATIC
-		ent->s.sound = 0;
+		//ent->s.sound = 0;
 	}
+	
+	ent->s.sound = 0;	// Knightmare- make sure this is always set to 0, lead mover or not!
 	ent->moveinfo.state = STATE_BOTTOM;
 }
 
@@ -938,7 +942,8 @@ void plat_spawn_inside_trigger (edict_t *ent)
 	tmax[1] = ent->maxs[1] - 25;
 	tmax[2] = ent->maxs[2] + 8;
 
-	tmin[2] = tmax[2] - (ent->pos1[2] - ent->pos2[2] + st.lip);
+	tmin[2] = tmax[2] - (ent->pos1[2] - ent->pos2[2]); //mxd. Lip is already taken into account in SP_func_plat!
+	//tmin[2] = tmax[2] - (ent->pos1[2] - ent->pos2[2] + st.lip);
 
 	if (ent->spawnflags & PLAT_LOW_TRIGGER)
 		tmax[2] = tmin[2] + 8;
@@ -1045,6 +1050,7 @@ void SP_func_plat (edict_t *ent)
 	VectorCopy (ent->s.angles, ent->moveinfo.start_angles);
 	VectorCopy (ent->pos2, ent->moveinfo.end_origin);
 	VectorCopy (ent->s.angles, ent->moveinfo.end_angles);
+	ent->moveinfo.distance = ent->pos1[2] - ent->pos2[2];	// Knightmare- store distance
 
 	if (ent->sounds > 1 && ent->sounds < 100) // custom sounds
 	{
@@ -1643,8 +1649,9 @@ void door_hit_top (edict_t *self)
 	{
 		if (self->s.sound && self->moveinfo.sound_end)
 			gi.sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, self->attenuation, 0); // was ATTN_STATIC
-		self->s.sound = 0;
+		//self->s.sound = 0;
 	}
+	self->s.sound = 0;	// Knightmare- make sure this is always set to 0, lead mover or not!
 	self->moveinfo.state = STATE_TOP;
 	if(self->flags & FL_REVOLVING)
 	{
@@ -1683,8 +1690,9 @@ void door_hit_bottom (edict_t *self)
 	{
 		if (self->s.sound && self->moveinfo.sound_end)
 			gi.sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, self->attenuation, 0); // was ATTN_STATIC
-		self->s.sound = 0;
+		//self->s.sound = 0;
 	}
+	self->s.sound = 0;	// Knightmare- make sure this is always set to 0, lead mover or not!
 	self->moveinfo.state = STATE_BOTTOM;
 	door_use_areaportals (self, false);
 
@@ -2524,7 +2532,7 @@ void train_wait (edict_t *self)
 			train_next (self);
 			self->spawnflags &= ~TRAIN_START_ON;
 			VectorClear (self->velocity);
-			if (!self->spawnflags & TRAIN_ROTATE_CONSTANT)
+			if (!(self->spawnflags & TRAIN_ROTATE_CONSTANT))
 				VectorClear (self->avelocity); //Knightmare added
 			// Lazarus: turn off animation for stationary trains
 			if (!strcmp(self->classname, "func_train"))
@@ -2552,7 +2560,7 @@ void train_yaw (edict_t *self);
 void train_spline (edict_t *self);
 void train_children_think(edict_t *self)
 {
-	if (!self || self->enemy) return;
+	if (!self || !self->enemy) return;
 
 	if(self->enemy->spawnflags & TRAIN_ROTATE)
 	{
