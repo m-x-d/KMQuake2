@@ -289,6 +289,47 @@ void *Sys_GetGameAPI(void *parms)
 
 #pragma endregion
 
+#pragma region ======================= Set High-DPI mode
+
+//mxd. Adapted from Yamagi Quake2
+typedef enum PROCESS_DPI_AWARENESS
+{
+	DPI_UNAWARE,
+	SYSTEM_DPI_AWARE,
+	PER_MONITOR_DPI_AWARE
+} PROCESS_DPI_AWARENESS;
+
+static void Sys_SetHighDPIMode(void)
+{
+	// Win8.1 and later
+	HINSTANCE shcoreDLL = LoadLibrary("SHCORE.DLL");
+	if (shcoreDLL)
+	{
+		HRESULT (WINAPI *SetProcessDpiAwareness)(PROCESS_DPI_AWARENESS da) = (HRESULT(WINAPI *)(PROCESS_DPI_AWARENESS))GetProcAddress(shcoreDLL, "SetProcessDpiAwareness");
+		if (SetProcessDpiAwareness)
+		{
+			SetProcessDpiAwareness(PER_MONITOR_DPI_AWARE);
+			return;
+		}
+	}
+
+	// Vista, Win7 and Win8
+	HINSTANCE userDLL = LoadLibrary("USER32.DLL");
+	if (userDLL)
+	{
+		BOOL (WINAPI *SetProcessDPIAware)(void) = (BOOL(WINAPI *)(void))GetProcAddress(userDLL, "SetProcessDPIAware");
+		if (SetProcessDPIAware)
+		{
+			SetProcessDPIAware();
+			return;
+		}
+	}
+
+	// Unknown OSes of the future!
+	Com_Printf(S_COLOR_YELLOW"Failed to set High-DPI awareness mode!");
+}
+
+#pragma endregion
 
 void ParseCommandLine(LPSTR lpCmdLine)
 {
@@ -327,6 +368,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	global_hInstance = hInstance;
 
 	ParseCommandLine(lpCmdLine);
+
+	// Setup DPI awareness
+	Sys_SetHighDPIMode();
 
 	// Init console window
 	Sys_InitDedConsole();
