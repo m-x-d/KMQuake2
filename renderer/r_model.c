@@ -1121,17 +1121,7 @@ struct model_s *R_RegisterModel(char *name)
 			for (int i = 0; i < sprout->numframes; i++)
 				mod->skins[0][i] = R_FindImage(sprout->frames[i].name, it_sprite, false);
 		}
-		else if (mod->type == mod_md2)
-		{
-			dmdl_t *pheader = (dmdl_t *)mod->extradata;
-
-			for (int i = 0; i < pheader->num_skins; i++)
-				mod->skins[0][i] = R_FindImage((char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME, it_skin, false);
-
-			mod->numframes = pheader->num_frames;
-		}
-		// Harven++ MD3
-		else if (mod->type == mod_alias)
+		else if (mod->type == mod_md3) // Harven MD3
 		{
 			maliasmodel_t *pheader3 = (maliasmodel_t *)mod->extradata;
 
@@ -1148,7 +1138,6 @@ struct model_s *R_RegisterModel(char *name)
 
 			mod->numframes = pheader3->num_frames;
 		}
-		// Harven-- MD3
 		else if (mod->type == mod_brush)
 		{
 			for (int i = 0; i < mod->numtexinfo; i++)

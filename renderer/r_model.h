@@ -174,7 +174,13 @@ typedef struct mleaf_s
 //===================================================================
 
 // Whole model
-typedef enum { mod_bad, mod_brush, mod_sprite, mod_alias, mod_md2 } modtype_t;
+typedef enum
+{
+	mod_bad,
+	mod_brush,
+	mod_sprite,
+	mod_md3 //mxd. Renamed from mod_alias
+} modtype_t;
 
 typedef struct model_s
 {

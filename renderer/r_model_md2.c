@@ -317,5 +317,5 @@ void Mod_LoadAliasMD2Model(model_t *mod, void *buffer)
 	mod->hasAlpha = false;
 	Mod_LoadModelScript(mod, poutmodel); // MD3 skin scripting
 
-	mod->type = mod_alias;
+	mod->type = mod_md3;
 }

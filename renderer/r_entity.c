@@ -190,7 +190,7 @@ static void ParseRenderEntity(entity_t *ent)
 
 		switch (currentmodel->type)
 		{
-			case mod_alias:  R_DrawAliasModel(currententity); break; //Harven MD3
+			case mod_md3:	 R_DrawAliasModel(currententity); break; //Harven MD3
 			case mod_brush:  R_DrawBrushModel(currententity); break;
 			case mod_sprite: R_DrawSpriteModel(currententity); break;
 			default:
@@ -220,7 +220,7 @@ static qboolean EntityHasAlpha(entity_t *e)
 		return true;
 
 	// Check for md3 mesh transparency
-	if (!(e->flags & RF_BEAM) && e->model && e->model->type == mod_alias && e->model->hasAlpha)
+	if (!(e->flags & RF_BEAM) && e->model && e->model->type == mod_md3 && e->model->hasAlpha)
 		return true;
 
 	return false;
