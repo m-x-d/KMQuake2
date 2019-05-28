@@ -104,7 +104,8 @@ static void ResetVideoDefaults(void *unused)
 	Cvar_SetToDefault("r_texturemode");
 	Cvar_SetToDefault("r_anisotropic");
 	Cvar_SetToDefault("r_picmip");
-	Cvar_SetToDefault("r_ext_texture_compression");
+	Cvar_SetToDefault("r_nonpoweroftwo_mipmaps");
+	Cvar_SetToDefault("r_ext_texture_compression"); //TODO: mxd. This doesn't have a menu item!
 	Cvar_SetToDefault("r_swapinterval");
 	Cvar_SetToDefault("cl_widescreen_fov");
 
