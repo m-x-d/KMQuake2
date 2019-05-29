@@ -840,21 +840,31 @@ static void SCR_DrawLoading(void)
 	//mxd. Get levelshot filename
 	if(!haveSaveshot)
 	{
+		picName[0] = 0;
+		
+		//mxd. If present, newmapname will hold either a map name without extension or .dm2 / .cin / .roq / .pcx filename.
 		if(newmapname[0])
 		{
-			Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", newmapname);
+			// Skip drawing when loading .cin / .roq / .pcx
+			const char *ext = COM_FileExtension(newmapname);
+			if (ext && (!Q_stricmp(ext, "pcx") || !Q_stricmp(ext, "cin") || !Q_stricmp(ext, "roq")))
+			{
+				SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
+				return;
+			}
+			
+			if(!ext) // Store map name
+				Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", newmapname);
 		}
-		else if(cl.configstrings[CS_MODELS + 1][0])
+		
+		// We will get here when loading a .dm2 demo
+		if(!picName[0] && cl.configstrings[CS_MODELS + 1][0])
 		{
 			char mapfile[64];
 			Q_strncpyz(mapfile, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapfile)); // Skip "maps/"
 			mapfile[strlen(mapfile) - 4] = 0; // Cut off ".bsp"
 
 			Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", mapfile);
-		}
-		else
-		{
-			picName[0] = 0;
 		}
 	}
 
@@ -1013,9 +1023,9 @@ void SCR_BeginLoadingPlaque(const char *mapname) //mxd. +mapname
 	else
 		scr_draw_loading = 1;
 
-	//mxd. Store level name...
+	//mxd. Store level name... This can also be a .dm2, .cin, .roq or .pcx filename. 
 	if (mapname)
-		strcpy(newmapname, mapname);
+		Q_strncpyz(newmapname, mapname, sizeof(newmapname));
 
 	SCR_UpdateScreen();
 	cls.disable_screen = Sys_Milliseconds();
