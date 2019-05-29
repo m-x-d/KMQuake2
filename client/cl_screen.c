@@ -845,16 +845,17 @@ static void SCR_DrawLoading(void)
 		//mxd. If present, newmapname will hold either a map name without extension or .dm2 / .cin / .roq / .pcx filename.
 		if(newmapname[0])
 		{
-			// Skip drawing when loading .cin / .roq / .pcx
 			const char *ext = COM_FileExtension(newmapname);
-			if (ext && (!Q_stricmp(ext, "pcx") || !Q_stricmp(ext, "cin") || !Q_stricmp(ext, "roq")))
+			
+			if (!ext[0]) // Store map name
+			{
+				Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", newmapname);
+			}
+			else if (!Q_stricmp(ext, "pcx") || !Q_stricmp(ext, "cin") || !Q_stricmp(ext, "roq")) // Skip drawing when loading .cin / .roq / .pcx
 			{
 				SCR_DrawFill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, ALIGN_STRETCH, 0, 0, 0, 255);
 				return;
 			}
-			
-			if(!ext) // Store map name
-				Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", newmapname);
 		}
 		
 		// We will get here when loading a .dm2 demo
