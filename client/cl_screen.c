@@ -847,7 +847,7 @@ static void SCR_DrawLoading(void)
 		{
 			const char *ext = COM_FileExtension(newmapname);
 			
-			if (!ext[0]) // Store map name
+			if (!*ext) // Store map name
 			{
 				Com_sprintf(picName, sizeof(picName), "/levelshots/%s.pcx", newmapname);
 			}

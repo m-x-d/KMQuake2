@@ -140,7 +140,6 @@ void SV_CheckForSavegame(void)
 void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	unsigned checksum;
-	fileHandle_t f;
 
 	if (attractloop)
 		Cvar_Set("paused", "0");
@@ -202,9 +201,13 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 		Com_sprintf(sv.configstrings[CS_MODELS + 1], sizeof(sv.configstrings[0]), "maps/%s.bsp", server);
 	
 		// Resolve CS_PAKFILE, hack by Jay Dolan
-		FS_FOpenFile(sv.configstrings[CS_MODELS + 1], &f, FS_READ);
-		Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name[0] ? last_pk3_name : ""), sizeof(sv.configstrings[0])); //mxd. Address of array 'last_pk3_name' will always evaluate to 'true'
-		FS_FCloseFile(f);
+		if(FS_FileExists(sv.configstrings[CS_MODELS + 1])) //mxd. If the file doesn't exist, trigger "Couldn't load [map]" message in CM_LoadMap, instead of "FS_GetFileByHandle: out of range" in FS_GetFileByHandle...
+		{
+			fileHandle_t f;
+			FS_FOpenFile(sv.configstrings[CS_MODELS + 1], &f, FS_READ);
+			Q_strncpyz(sv.configstrings[CS_PAKFILE], (last_pk3_name[0] ? last_pk3_name : ""), sizeof(sv.configstrings[0])); //mxd. Address of array 'last_pk3_name' will always evaluate to 'true'
+			FS_FCloseFile(f);
+		}
 	
 		sv.models[1] = CM_LoadMap(sv.configstrings[CS_MODELS + 1], false, &checksum);
 	}
@@ -330,7 +333,7 @@ void SV_InitGame(void)
 // The full syntax is:
 //		map [*]<map>$<startspot>+<nextserver>
 // command from the console or progs.
-// Map can also be a.cin, .pcx, or .dm2 file
+// Map can also be a .cin, .pcx, or .dm2 file
 // Nextserver is used to allow a cinematic to play, then proceed to another level:
 //		map tram.cin+jail_e3
 void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
@@ -389,15 +392,15 @@ void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 
 	const char *ext = COM_FileExtension(level); //mxd
 
-	if (*ext && (!strcmp(ext, "cin") || !strcmp(ext, "roq")))
+	if (!strcmp(ext, "cin") || !strcmp(ext, "roq"))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_cinematic, attractloop, loadgame);
 	}
-	else if (*ext && !strcmp(ext, "dm2"))
+	else if (!strcmp(ext, "dm2"))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_demo, attractloop, loadgame);
 	}
-	else if (*ext && !strcmp(ext, "pcx"))
+	else if (!strcmp(ext, "pcx"))
 	{
 		SV_SpawnServer(level, spawnpoint, ss_pic, attractloop, loadgame);
 	}
