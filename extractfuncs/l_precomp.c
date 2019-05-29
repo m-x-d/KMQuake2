@@ -266,7 +266,7 @@ void QDECL SourceError( source_t *source, char *str, ... ) {
 #ifdef BOTLIB
 	botimport.Print( PRT_ERROR, "file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text );
 #endif  //BOTLIB
-#ifdef MEQCC
+#if defined(MEQCC) || defined(_CONSOLE) //mxd. Print errors to console
 	printf( "error: file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text );
 #endif //MEQCC
 #ifdef BSPC
@@ -290,7 +290,7 @@ void QDECL SourceWarning( source_t *source, char *str, ... ) {
 #ifdef BOTLIB
 	botimport.Print( PRT_WARNING, "file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text );
 #endif //BOTLIB
-#ifdef MEQCC
+#if defined(MEQCC) || (defined(_CONSOLE) && defined(_DEBUG)) //mxd. Print warnings to console
 	printf( "warning: file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text );
 #endif //MEQCC
 #ifdef BSPC
@@ -2830,7 +2830,7 @@ int PC_ReadToken( source_t *source, token_t *token ) {
 				//read the precompiler directive
 				if ( !PC_ReadDirective( source ) ) {
 					// Knightmare- debug output
-					printf("PC_ReadToken: PC_ReadDirective failed on directive %s on line %i in file %s\n", token->string, token->line, source->filename);
+					//printf("PC_ReadToken: PC_ReadDirective failed on directive %s on line %i in file %s\n", token->string, token->line, source->filename);
 					return qfalse;
 				}
 				continue;
@@ -2844,7 +2844,7 @@ int PC_ReadToken( source_t *source, token_t *token ) {
 				//read the precompiler directive
 				if ( !PC_ReadDollarDirective( source ) ) {
 					// Knightmare- debug output
-					printf("PC_ReadToken: PC_ReadDollarDirective failed on directive %s on line %i in file %s\n", token->string, token->line, source->filename);
+					//printf("PC_ReadToken: PC_ReadDollarDirective failed on directive %s on line %i in file %s\n", token->string, token->line, source->filename);
 					return qfalse;
 				}
 				continue;
