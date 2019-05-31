@@ -83,7 +83,7 @@ CL_ParseDelta
 Can go from either a baseline or a previous packet_entity
 ==================
 */
-void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bits)
+void CL_ParseDelta(entity_state_t *from, entity_state_t *to, int number, uint bits)
 {
 	// set everything to the state we are delta'ing from
 	*to = *from;
@@ -264,7 +264,7 @@ CL_DeltaEntity
 Parses deltas from the given base and adds the resulting entity to the current frame
 ==================
 */
-void CL_DeltaEntity (frame_t *frame, int newnum, entity_state_t *old, int bits)
+static void CL_DeltaEntity(frame_t *frame, int newnum, entity_state_t *old, uint bits)
 {
 	centity_t *ent = &cl_entities[newnum];
 	entity_state_t *state = &cl_parse_entities[cl.parse_entities & (MAX_PARSE_ENTITIES - 1)];
@@ -331,7 +331,7 @@ An svc_packetentities has just been parsed, deal with the rest of the data strea
 */
 void CL_ParsePacketEntities (frame_t *oldframe, frame_t *newframe)
 {
-	int	bits;
+	uint bits;
 	entity_state_t *oldstate;
 
 	newframe->parse_entities = cl.parse_entities;
