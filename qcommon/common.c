@@ -1492,8 +1492,7 @@ void *Z_Malloc(int size)
 	return Z_TagMalloc(size, 0);
 }
 
-
-//============================================================================
+#pragma region ======================= Hashing
 
 static byte chktbl[1024] =
 {
@@ -1594,7 +1593,33 @@ byte COM_BlockSequenceCRCByte(byte *base, int length, int sequence)
 	return crc;
 }
 
-//========================================================
+//mxd. Moved from q_shared.c (unused by game.dll, xxhash.h greatly confuses extractfuncs.exe...)
+uint Com_HashFileName(const char *fname)
+{
+	int i = 0;
+	char tohash[MAX_QPATH];
+	int len = 0;
+
+	if (fname[0] == '/' || fname[0] == '\\')
+		i++; // Skip leading slash
+
+	while (fname[i] != '\0')
+	{
+		char letter = tolower(fname[i]);
+
+		if (letter == '\\')
+			letter = '/'; // Fix filepaths
+
+		tohash[len++] = letter;
+		i++;
+	}
+
+	tohash[len] = '\0';
+
+	return XXH32(tohash, len, 42);
+}
+
+#pragma endregion
 
 float frand(void)
 {

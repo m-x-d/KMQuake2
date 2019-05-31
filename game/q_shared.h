@@ -37,12 +37,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdlib.h>
 #include <time.h>
 
-//mxd. https://github.com/Cyan4973/xxHash
-#define XXH_NO_LONG_LONG 1
-#define XXH_INLINE_ALL 1
-#define XXH_CPU_LITTLE_ENDIAN 1
-#include "../include/xxhash/xxhash.h"
-
 #if defined _M_IX86
 	#define id386	1 //TODO: (mxd) remove 
 #else
@@ -343,7 +337,6 @@ char *COM_Parse(char **data_p);
 char *COM_ParseExt(char **data_p, qboolean allowNewLines);
 
 void Com_sprintf(char *dest, size_t size, char *fmt, ...);
-uint Com_HashFileName(const char *fname);
 
 //=============================================
 

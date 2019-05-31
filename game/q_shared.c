@@ -646,7 +646,7 @@ void COM_StripExtension(char *in, char *out)
 		*ext = 0;
 }
 
-// Returns file extension ("c:/dir/file.txt" -> "txt"; "c:/dir" -> "")
+// Returns file extension. Never returns NULL. ("c:/dir/file.txt" -> "txt"; "c:/dir" -> "")
 const char *COM_FileExtension(const char *in)
 {
 	//mxd. YQ2 implementation
@@ -1149,35 +1149,6 @@ void Com_sprintf(char *dest, size_t size, char *fmt, ...)
 
 	strncpy(dest, bigbuffer, size - 1);
 	dest[size - 1] = 0;
-}
-
-#pragma endregion
-
-#pragma region ======================= Hashing
-
-uint Com_HashFileName(const char *fname)
-{
-	int i = 0;
-	char tohash[MAX_QPATH];
-	int len = 0;
-
-	if (fname[0] == '/' || fname[0] == '\\')
-		i++; // Skip leading slash
-
-	while (fname[i] != '\0')
-	{
-		char letter = tolower(fname[i]);
-
-		if (letter == '\\')
-			letter = '/'; // Fix filepaths
-
-		tohash[len++] = letter;
-		i++;
-	}
-
-	tohash[len] = '\0';
-
-	return XXH32(tohash, len, 42);
 }
 
 #pragma endregion

@@ -22,6 +22,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __QCOMMON_H
 #define __QCOMMON_H
 
+//mxd. https://github.com/Cyan4973/xxHash
+#define XXH_NO_LONG_LONG 1
+#define XXH_INLINE_ALL 1
+#define XXH_CPU_LITTLE_ENDIAN 1
+#include "../include/xxhash/xxhash.h"
+
 #include "../game/q_shared.h"
 
 #define	VERSION			0.20 //was 3.21
@@ -332,7 +338,7 @@ enum clc_ops_e
 #define	U_SOLID		(1<<27)
 
 // Knightmare- 1/18/2002- bits for extra model indices
-#define	U_VELOCITY	(1<<28)	// for R1Q2 protocol
+//#define	U_VELOCITY	(1<<28)	// for R1Q2 protocol //mxd. Never used
 #define	U_MODEL5	(1<<28)
 #define	U_MODEL6	(1<<29)
 #define	U_ATTENUAT	(1<<30)	// sound attenuation
@@ -815,6 +821,7 @@ void Com_SetServerState(int state);
 
 unsigned Com_BlockChecksum(void *buffer, int length);
 byte COM_BlockSequenceCRCByte(byte *base, int length, int sequence);
+uint Com_HashFileName(const char *fname); //mxd. Moved from q_shared.h
 
 float frand(void);	// 0 to 1
 float crand(void);	// -1 to 1
