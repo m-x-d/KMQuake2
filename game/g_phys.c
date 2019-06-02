@@ -1513,38 +1513,33 @@ void SV_Physics_Toss (edict_t *ent)
 		return;
 
 	//isinwater = ent->watertype & MASK_WATER;
-	if (trace.fraction < 1 )
+	if (trace.fraction < 1)
 	{
-		if (ent->movetype == MOVETYPE_BOUNCE) {
-		//	backoff = 1.5;
-			backoff = 1.0 + bounce_bounce->value;
-			//if (mega_gibs->value && !strcmp(ent->classname, "gib") && !isinwater)
-			//	gi.sound (ent, CHAN_VOICE, gi.soundindex ("misc/fhit3.wav"), 1, ATTN_NORM, 0);
-		}
-		else if((ent->movetype == MOVETYPE_RAIN) && (trace.plane.normal[2] <= 0.7))
+		if (ent->movetype == MOVETYPE_BOUNCE)
+			backoff = 1 + bounce_bounce->value;
+		else if((ent->movetype == MOVETYPE_RAIN) && trace.plane.normal[2] <= 0.7f)
 			backoff = 2;
-		else if(trace.plane.normal[2] <= 0.7)	// Lazarus - don't stop on steep incline
-			backoff = 1.5;
+		else if(trace.plane.normal[2] <= 0.7f) // Lazarus - don't stop on steep incline
+			backoff = 1.5f;
 		else
 			backoff = 1;
 
-		ClipVelocity (ent->velocity, trace.plane.normal, ent->velocity, backoff);
+		ClipVelocity(ent->velocity, trace.plane.normal, ent->velocity, backoff);
 
-	// stop if on ground
-		if (trace.plane.normal[2] > 0.7)
-		{		
-//			if (ent->velocity[2] < 60 || ent->movetype != MOVETYPE_BOUNCE )
-			if (ent->velocity[2] < bounce_minv->value || (ent->movetype != MOVETYPE_BOUNCE) )
+		// Stop if on ground
+		if (trace.plane.normal[2] > 0.7f)
+		{
+			if (ent->velocity[2] < bounce_minv->value || ent->movetype != MOVETYPE_BOUNCE)
 			{
 				ent->groundentity = trace.ent;
 				ent->groundentity_linkcount = trace.ent->linkcount;
-				VectorCopy (vec3_origin, ent->velocity);
-				VectorCopy (vec3_origin, ent->avelocity);
+				VectorCopy(vec3_origin, ent->velocity);
+				VectorCopy(vec3_origin, ent->avelocity);
 			}
 		}
 
-//		if (ent->touch)
-//			ent->touch (ent, trace.ent, &trace.plane, trace.surface);
+		if (ent->touch) //mxd. Re-enabled
+			ent->touch(ent, trace.ent, &trace.plane, trace.surface);
 	}
 
 	// Lazarus: MOVETYPE_RAIN doesn't cause splash noises when touching water

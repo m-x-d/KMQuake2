@@ -128,38 +128,52 @@ gibs
 =================
 */
 
+//mxd
+void SetGibAlpha(edict_t *self, edict_t *gib)
+{
+#ifdef KMQUAKE2_ENGINE_MOD
+	//Knightmare- transparent entities throw transparent gibs
+	if (self->s.alpha > 0.0f)
+	{
+		gib->s.alpha = self->s.alpha;
+		return;
+	}
+#endif
+
+	if (gib->s.renderfx & RF_TRANSLUCENT)
+		gib->s.alpha = 0.7f;
+	else if (gib->s.effects & EF_SPHERETRANS)
+		gib->s.alpha = 0.3f;
+	else
+		gib->s.alpha = 1.0f;
+}
+
 //Knightmare- gib fade
 #ifdef KMQUAKE2_ENGINE_MOD
-void gib_fade2 (edict_t *self);
+void gib_fade2(edict_t *self)
+{
+	self->s.alpha -= 0.05f;
 
-void gib_fade (edict_t *self)
+	if (self->s.alpha < 0.05f) //mxd. Was <= 1 / 255
+	{
+		G_FreeEdict(self);
+		return;
+	}
+
+	self->nextthink = level.time + FRAMETIME; //mxd. Was +0.2
+	gi.linkentity(self);
+}
+
+void gib_fade(edict_t *self)
 {
 	if (self->s.effects & EF_BLASTER) //Remove glow from gekk gibs
 	{
 		self->s.effects &= ~EF_BLASTER;
 		self->s.renderfx &= ~RF_NOSHADOW;
 	}
-	if (self->s.renderfx & RF_TRANSLUCENT)
-		self->s.alpha = 0.70F;
-	else if (self->s.effects & EF_SPHERETRANS)
-		self->s.alpha = 0.30F;
-	else if (!(self->s.alpha) || self->s.alpha <= 0.0F || self->s.alpha > 1.0F)
-		self->s.alpha = 1.00F;
-	gib_fade2 (self);
-}
 
-void gib_fade2 (edict_t *self)
-{
-	self->s.alpha -= 0.05F;
-	self->s.alpha = max(self->s.alpha, 1/255);
-	if (self->s.alpha <= 1/255)
-	{
-		G_FreeEdict (self);
-		return;
-	}
-	self->nextthink = level.time + 0.2;
-	self->think = gib_fade2;
-	gi.linkentity (self);
+	self->think = gib_fade2; //mxd. Moved from gib_fade2()
+	gib_fade2(self);
 }
 
 #else
@@ -197,28 +211,65 @@ void gib_think (edict_t *self)
 	}
 }
 
-void gib_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
+void gib_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
-	vec3_t	normal_angles, right;
-
 	if (!self->groundentity)
 		return;
 
-	self->touch = NULL;
+	//mxd
+	vec3_t relvel;
+	VectorSubtract(self->groundentity->velocity, self->velocity, relvel); // Factor in groundentity movement...
+	const float maxlen = 300.0f;
+	const float len = min(VectorLength(relvel), maxlen);
+
+	if(len < 1) //mxd
+		self->touch = NULL;
 
 	if (plane)
 	{
-		gi.sound (self, CHAN_VOICE, gi.soundindex ("misc/fhit3.wav"), 1, ATTN_NORM, 0);
-
-		vectoangles (plane->normal, normal_angles);
-		AngleVectors (normal_angles, NULL, right, NULL);
-		vectoangles (right, self->s.angles);
-
-		if (self->s.modelindex == sm_meat_index)
+		if(rand() & 1)
 		{
-			self->s.frame++;
-			self->think = gib_think;
-			self->nextthink = level.time + FRAMETIME;
+			//mxd. Added sound for GIB_METALLIC
+			int soundindex;
+			switch (self->style)
+			{
+				case GIB_ORGANIC:  soundindex = gi.soundindex("misc/fhit3.wav"); break;
+				case GIB_METALLIC: soundindex = gi.soundindex("chick/Chkfall1.wav"); break;
+				default: soundindex = 0; break;
+			}
+
+			//mxd. Change sound volume based on velocity...
+			if (soundindex > 0)
+			{
+				const float volume = 0.2f + (len > 0 ? 0.4f * (len / maxlen) : 0);
+				gi.sound(self, CHAN_BODY, soundindex, volume, ATTN_NORM, 0);
+			}
+		}
+
+		// Align to touched surface when stopped
+		if(len < 1)
+		{
+			if(plane->type == 2) // PLANE_Z - horizontal plane
+			{
+				self->s.angles[PITCH] = 0;
+				self->s.angles[ROLL] = 0;
+			}
+			else if(plane->type == 5) // PLANE_ANYZ - nearly horizontal plane
+			{
+				vec3_t normal_angles, up;
+
+				//TODO: mxd. find a better solution. Currently all gibs are oriented the same way...
+				vectoangles(plane->normal, normal_angles);
+				AngleVectors(normal_angles, NULL, NULL, up);
+				vectoangles(up, self->s.angles);
+			}
+
+			if (self->s.modelindex == sm_meat_index)
+			{
+				self->s.frame++;
+				self->think = gib_think;
+				self->nextthink = level.time + FRAMETIME;
+			}
 		}
 	}
 }
@@ -228,37 +279,28 @@ void gib_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, 
 	G_FreeEdict (self);
 }
 
-void ThrowGib (edict_t *self, char *gibname, int damage, int type)
+void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 {
-	edict_t *gib;
-	vec3_t	vd;
-	vec3_t	origin;
-	vec3_t	size;
-	float	vscale;
-	char	modelname[256];
-	char	*p;
-
-	// Lazarus: Prevent gib showers (generally due to firing BFG in a crowd) from
-	// causing SZ_GetSpace: overflow
+	// Lazarus: Prevent gib showers (generally due to firing BFG in a crowd) from causing SZ_GetSpace: overflow
 	if (level.framenum > lastgibframe)
 	{
 		gibsthisframe = 0;
 		lastgibframe = level.framenum;
 	}
+
 	gibsthisframe++;
-	if (gibsthisframe > sv_maxgibs->value)
+	if (gibsthisframe > sv_maxgibs->integer)
 		return;
 
-	gib = G_Spawn();
+	edict_t *gib = G_Spawn();
 
 	gib->classname = "gib";
-	//gib->classname = gi.TagMalloc (4,TAG_LEVEL);
-	//strcpy(gib->classname,"gib");
+	gib->class_id = ENTITY_GIB; //mxd
 
 	// Lazarus: mapper-definable gib class
-//	strncpy(modelname, gibname);
+	char modelname[MAX_OSPATH];
 	Q_strncpyz(modelname, gibname, sizeof(modelname));
-	p = strstr(modelname,"models/objects/gibs/");
+	char *p = strstr(modelname,"models/objects/gibs/");
 	if (p && self->gib_type)
 	{
 		p += 18;
@@ -266,65 +308,60 @@ void ThrowGib (edict_t *self, char *gibname, int damage, int type)
 	}
 
 	// Save gibname and type for level transition gibs
-	gib->key_message = gi.TagMalloc (strlen(modelname)+1,TAG_LEVEL);
-	strcpy(gib->key_message, modelname);
+	const int msgsize = strlen(modelname) + 1; //mxd
+	gib->key_message = gi.TagMalloc(msgsize, TAG_LEVEL);
+	Q_strncpyz(gib->key_message, modelname, msgsize); //mxd. strcpy -> Q_strncpyz
 	gib->style = type;
 
-	VectorScale (self->size, 0.5, size);
-	VectorAdd (self->absmin, size, origin);
+	vec3_t size, origin;
+	VectorScale(self->size, 0.5f, size);
+	VectorAdd(self->absmin, size, origin);
 	gib->s.origin[0] = origin[0] + crandom() * size[0];
 	gib->s.origin[1] = origin[1] + crandom() * size[1];
 	gib->s.origin[2] = origin[2] + crandom() * size[2];
 
-	gi.setmodel (gib, modelname);
+	gi.setmodel(gib, modelname);
 	gib->solid = SOLID_NOT;
+
 	if (self->blood_type == 1)
 	{
-		gib->s.effects |= EF_GREENGIB|EF_BLASTER;
+		gib->s.effects |= EF_GREENGIB | EF_BLASTER;
 		gib->s.renderfx |= RF_NOSHADOW;
 	}
-	else if(self->blood_type == 2)
+	else if (self->blood_type == 2)
+	{
 		gib->s.effects |= EF_GRENADE;
+	}
 	else
+	{
 		gib->s.effects |= EF_GIB;
-#ifdef KMQUAKE2_ENGINE_MOD
-	//Knightmare- transparent monsters throw transparent gibs
-	if ((self->s.alpha) && self->s.alpha > 0.0F)
-		gib->s.alpha = self->s.alpha;
-#endif
+	}
+
+	SetGibAlpha(self, gib); //mxd
+
 	gib->flags |= FL_NO_KNOCKBACK;
 	gib->svflags |= SVF_GIB; //Knightmare- gib flag
 	gib->takedamage = DAMAGE_YES;
 	gib->die = gib_die;
+	gib->touch = gib_touch; //mxd
+	gib->movetype = MOVETYPE_BOUNCE; //mxd. Let all gibs bounce (was MOVETYPE_TOSS for GIB_ORGANIC, unless (deathmatch->value && mega_gibs->value))
 
-	if (type == GIB_ORGANIC)
-	{
-		if (deathmatch->value && mega_gibs->value)
-			gib->movetype = MOVETYPE_BOUNCE;
-		else
-			gib->movetype = MOVETYPE_TOSS;
-		gib->touch = gib_touch;
-		vscale = 0.5;
-	}
-	else
-	{
-		gib->movetype = MOVETYPE_BOUNCE;
-		vscale = 1.0;
-	}
+	vec3_t vd;
+	VelocityForDamage(damage, vd);
+	const float vscale = (type == GIB_ORGANIC ? 0.5f : 1.0f); //mxd
+	VectorMA(self->velocity, vscale, vd, gib->velocity);
+	ClipGibVelocity(gib);
 
-	VelocityForDamage (damage, vd);
-	VectorMA (self->velocity, vscale, vd, gib->velocity);
-	ClipGibVelocity (gib);
-	gib->avelocity[0] = random()*600;
-	gib->avelocity[1] = random()*600;
-	gib->avelocity[2] = random()*600;
+	gib->avelocity[0] = crandom() * 600; //mxd. random -> crandom
+	gib->avelocity[1] = crandom() * 600;
+	gib->avelocity[2] = crandom() * 600;
 
 	gib->think = gib_fade; //Knightmare- gib fade, was G_FreeEdict
-	gib->nextthink = level.time + 10 + random()*10;
+	gib->nextthink = level.time + 10 + random() * 10;
 
 	gib->s.renderfx |= RF_IR_VISIBLE;
 
-	gi.linkentity (gib);
+	gi.linkentity(gib);
 }
 
 // NOTE: SP_gib is ONLY intended to be used for gibs that change maps
@@ -351,37 +388,33 @@ void gib_delayed_start (edict_t *gib)
 	}
 }
 
-void SP_gib (edict_t *gib)
+void SP_gib(edict_t *gib)
 {
 	if(gib->key_message)
-		gi.setmodel (gib, gib->key_message);
+		gi.setmodel(gib, gib->key_message);
 	else
-		gi.setmodel (gib, "models/objects/gibs/sm_meat/tris.md2");
+		gi.setmodel(gib, "models/objects/gibs/sm_meat/tris.md2");
+
 	gib->die = gib_die;
-	if (gib->style == GIB_ORGANIC)
-		gib->touch = gib_touch;
+	gib->touch = gib_touch;
 	gib->think = gib_delayed_start;
 	gib->nextthink = level.time + FRAMETIME;
-	gi.linkentity (gib);
+
+	gi.linkentity(gib);
 }
 
-void ThrowHead (edict_t *self, char *gibname, int damage, int type)
+void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 {
-	vec3_t	vd;
-	float	vscale;
-	char	modelname[256];
-	char	*p;
-
 	self->s.skinnum = 0;
 	self->s.frame = 0;
-	VectorClear (self->mins);
-	VectorClear (self->maxs);
+	VectorClear(self->mins);
+	VectorClear(self->maxs);
 
-	DeleteReflection(self,-1);
+	DeleteReflection(self, -1);
 
-//	strncpy(modelname, gibname);
+	char modelname[MAX_OSPATH];
 	Q_strncpyz(modelname, gibname, sizeof(modelname));
-	p = strstr(modelname,"models/objects/gibs/");
+	char *p = strstr(modelname,"models/objects/gibs/");
 	if(p && self->gib_type)
 	{
 		p += 18;
@@ -389,102 +422,99 @@ void ThrowHead (edict_t *self, char *gibname, int damage, int type)
 	}
 
 	// Save gibname and type for level transition gibs
-	self->key_message = gi.TagMalloc (strlen(modelname)+1,TAG_LEVEL);
-	strcpy(self->key_message, modelname);
+	const int msgsize = strlen(modelname) + 1; //mxd
+	self->key_message = gi.TagMalloc(msgsize, TAG_LEVEL);
+	Q_strncpyz(self->key_message, modelname, msgsize); //mxd. strcpy -> Q_strncpyz
 
 	self->style = type;
 	self->s.modelindex2 = 0;
-	gi.setmodel (self, modelname);
+	gi.setmodel(self, modelname);
 
 	self->solid = SOLID_NOT;
+
 	if(self->blood_type == 1)
 	{
-		self->s.effects |= EF_GREENGIB|EF_BLASTER;
+		self->s.effects |= EF_GREENGIB | EF_BLASTER;
 		self->s.renderfx |= RF_NOSHADOW;
 	}
-	else if(self->blood_type == 2)
+	else if (self->blood_type == 2)
+	{
 		self->s.effects |= EF_GRENADE;
+	}
 	else
+	{
 		self->s.effects |= EF_GIB;
+	}
+
 	self->s.effects &= ~EF_FLIES;
 	self->s.sound = 0;
 	self->flags |= FL_NO_KNOCKBACK;
 	self->svflags &= ~SVF_MONSTER;
 	self->svflags |= SVF_GIB; //Knightmare- gib flag
 	self->takedamage = DAMAGE_YES;
+
 	// Lazarus: Disassociate this head with its monster
 	self->targetname = NULL;
 	self->die = gib_die;
+	self->touch = gib_touch; //mxd. Let all gibs run touch logic
 	self->dmgteam = NULL; // Prevent gibs from becoming angry if their buddies are hurt
 	self->postthink = NULL;	// Knightmare- stop lava check
+	self->movetype = MOVETYPE_BOUNCE; //mxd. Let all gibs bounce (was MOVETYPE_TOSS for GIB_ORGANIC)
 
-	if (type == GIB_ORGANIC)
-	{
-		self->movetype = MOVETYPE_TOSS;
-		self->touch = gib_touch;
-		vscale = 0.5;
-	}
-	else
-	{
-		self->movetype = MOVETYPE_BOUNCE;
-		vscale = 1.0;
-	}
+	vec3_t vd;
+	VelocityForDamage(damage, vd);
+	const float vscale = (type == GIB_ORGANIC ? 0.5f : 1.0f); //mxd
+	VectorMA(self->velocity, vscale, vd, self->velocity);
+	ClipGibVelocity(self);
 
-	VelocityForDamage (damage, vd);
-	VectorMA (self->velocity, vscale, vd, self->velocity);
-	ClipGibVelocity (self);
-
-	self->avelocity[YAW] = crandom()*600;
+	self->avelocity[YAW] = crandom() * 600;
 
 	self->think = gib_fade; //Knightmare- gib fade, was G_FreeEdict
-	self->nextthink = level.time + 10 + random()*10;
+	self->nextthink = level.time + 10 + random() * 10;
 
-	// Lazarus: If head owner was part of a movewith chain,
-	//          remove from the chain and repair the chain
-	//          if necessary
+	// Lazarus: If head owner was part of a movewith chain, remove from the chain and repair the chain if necessary
 	if (self->movewith)
 	{
-		edict_t	*e;
-		edict_t	*parent=NULL;
-		int		i;
-		for(i=1; i<globals.num_edicts && !parent; i++)
+		edict_t *parent = NULL;
+
+		for(int i = 1; i < globals.num_edicts && !parent; i++)
 		{
-			e = g_edicts + i;
-			if(e->movewith_next == self) parent=e;
+			edict_t *e = g_edicts + i;
+			if(e->movewith_next == self) 
+				parent = e;
 		}
-		if(parent) parent->movewith_next = self->movewith_next;
+
+		if(parent)
+			parent->movewith_next = self->movewith_next;
 	}
 
 	self->s.renderfx |= RF_IR_VISIBLE;
 
-	gi.linkentity (self);
+	gi.linkentity(self);
 }
 
-void SP_gibhead (edict_t *gib)
+void SP_gibhead(edict_t *gib)
 {
 	if (gib->key_message)
-		gi.setmodel (gib, gib->key_message);
+		gi.setmodel(gib, gib->key_message);
 	else
-		gi.setmodel (gib, "models/objects/gibs/head2/tris.md2");
+		gi.setmodel(gib, "models/objects/gibs/head2/tris.md2");
 
-	if (gib->style == GIB_ORGANIC)
-		gib->touch = gib_touch;
-
+	gib->touch = gib_touch;
 	gib->think = gib_delayed_start;
 	gib->nextthink = level.time + FRAMETIME;
-	gi.linkentity (gib);
 
+	gi.linkentity(gib);
 }
 
-void ThrowClientHead (edict_t *self, int damage)
+void ThrowClientHead(edict_t *self, int damage)
 {
-	vec3_t	vd;
-	char	*gibname;
+	char *gibname;
 
-	if (rand()&1)
+	if (rand() & 1)
 	{
 		gibname = "models/objects/gibs/head2/tris.md2";
-		self->s.skinnum = 1;		// second skin is player
+		self->s.skinnum = 1; // Second skin is player
 	}
 	else
 	{
@@ -494,10 +524,10 @@ void ThrowClientHead (edict_t *self, int damage)
 
 	self->s.origin[2] += 32;
 	self->s.frame = 0;
-	gi.setmodel (self, gibname);
+	gi.setmodel(self, gibname);
 
-	VectorSet (self->mins, -16, -16, 0);
-	VectorSet (self->maxs, 16, 16, 16);
+	VectorSet(self->mins, -16, -16, 0);
+	VectorSet(self->maxs, 16, 16, 16);
 
 	self->takedamage = DAMAGE_NO;
 	self->solid = SOLID_NOT;
@@ -506,10 +536,13 @@ void ThrowClientHead (edict_t *self, int damage)
 	self->flags |= FL_NO_KNOCKBACK;
 	self->svflags |= SVF_GIB; //Knightmare- gib flag
 	self->movetype = MOVETYPE_BOUNCE;
-	VelocityForDamage (damage, vd);
-	VectorAdd (self->velocity, vd, self->velocity);
+	self->touch = gib_touch; //mxd. Added
 
-	if (self->client)	// bodies in the queue don't have a client anymore
+	vec3_t vd;
+	VelocityForDamage(damage, vd);
+	VectorAdd(self->velocity, vd, self->velocity);
+
+	if (self->client) // Bodies in the queue don't have a client anymore
 	{
 		self->client->anim_priority = ANIM_DEATH;
 		self->client->anim_end = self->s.frame;
@@ -520,7 +553,7 @@ void ThrowClientHead (edict_t *self, int damage)
 		self->nextthink = 0;
 	}
 
-	gi.linkentity (self);
+	gi.linkentity(self);
 }
 
 
@@ -534,10 +567,9 @@ void debris_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	G_FreeEdict (self);
 }
 
-void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin, int skin, int effects)
+void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int skin, int effects)
 {
-	edict_t	*chunk;
-	vec3_t	v;
+	vec3_t v;
 
 	// Lazarus: Prevent gib showers (generally due to firing BFG in a crowd) from
 	// causing SZ_GetSpace: overflow
@@ -547,33 +579,35 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin, in
 		lastgibframe = level.framenum;
 	}
 	gibsthisframe++;
-	if (gibsthisframe > sv_maxgibs->value)
+	if (gibsthisframe > sv_maxgibs->integer)
 		return;
 
-	chunk = G_Spawn();
-	VectorCopy (origin, chunk->s.origin);
-	gi.setmodel (chunk, modelname);
-#ifdef KMQUAKE2_ENGINE_MOD
-	//Knightmare- transparent entities throw transparent debris
-	if ((self->s.alpha) && self->s.alpha > 0.0F && self->s.alpha < 1.0F)
-		chunk->s.alpha = self->s.alpha;
-#endif
+	edict_t *chunk = G_Spawn();
+	VectorCopy(origin, chunk->s.origin);
+	gi.setmodel(chunk, modelname);
+
+	SetGibAlpha(self, chunk); //mxd
+
 	v[0] = 100 * crandom();
 	v[1] = 100 * crandom();
 	v[2] = 100 + 100 * crandom();
-	VectorMA (self->velocity, speed, v, chunk->velocity);
+	VectorMA(self->velocity, speed, v, chunk->velocity);
 	chunk->movetype = MOVETYPE_BOUNCE;
 	chunk->solid = SOLID_NOT;
-	chunk->avelocity[0] = random()*600;
-	chunk->avelocity[1] = random()*600;
-	chunk->avelocity[2] = random()*600;
+
+	chunk->avelocity[0] = crandom() * 600; //mxd. random -> crandom
+	chunk->avelocity[1] = crandom() * 600;
+	chunk->avelocity[2] = crandom() * 600;
+
 	chunk->think = gib_fade; //Knightmare- gib fade, was G_FreeEdict
-	chunk->nextthink = level.time + 8 + random()*10;
+	chunk->nextthink = level.time + 8 + random() * 10;
 	chunk->s.frame = 0;
 	chunk->flags = 0;
 	chunk->classname = "debris";
 	chunk->takedamage = DAMAGE_YES;
 	chunk->die = debris_die;
+	chunk->touch = gib_touch; //mxd. Added
+	chunk->style = GIB_METALLIC; //mxd
 
 	// Lazarus: Preserve model name for level changes:
 	//chunk->message = gi.TagMalloc (strlen(modelname)+1,TAG_LEVEL);
@@ -583,7 +617,7 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin, in
 	chunk->s.skinnum = skin;
 	chunk->s.effects |= effects;
 
-	gi.linkentity (chunk);
+	gi.linkentity(chunk);
 }
 
 // NOTE: SP_debris is ONLY intended to be used for debris chunks that change maps

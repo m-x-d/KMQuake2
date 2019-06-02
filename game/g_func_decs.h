@@ -1225,8 +1225,9 @@ extern void ThrowGib ( edict_t * self , char * gibname , int damage , int type )
 extern void gib_die ( edict_t * self , edict_t * inflictor , edict_t * attacker , int damage , vec3_t point ) ;
 extern void gib_touch ( edict_t * self , edict_t * other , cplane_t * plane , csurface_t * surf ) ;
 extern void gib_think ( edict_t * self ) ;
-extern void gib_fade2 ( edict_t * self ) ;
 extern void gib_fade ( edict_t * self ) ;
+extern void gib_fade2 ( edict_t * self ) ;
+extern void SetGibAlpha ( edict_t * self , edict_t * gib ) ;
 extern void ClipGibVelocity ( edict_t * ent ) ;
 extern void VelocityForDamage ( int damage , vec3_t v ) ;
 extern void SP_func_areaportal ( edict_t * ent ) ;
