@@ -631,8 +631,6 @@ For gibs:
 	will just be dropped
 */
 
-void ED_CallSpawn (edict_t *ent);
-
 void use_target_spawner (edict_t *self, edict_t *other, edict_t *activator)
 {
 	edict_t	*ent;
@@ -1995,37 +1993,43 @@ void directed_debris_die (edict_t *self, edict_t *inflictor, edict_t *attacker, 
 {
 	G_FreeEdict (self);
 }
-//void FadeDieThink(edict_t *ent);
-void gib_fade (edict_t *self);
-void ThrowRock (edict_t *self, char *modelname, float speed, vec3_t origin, vec3_t size, int mass)
-{
-	edict_t	*chunk;
-	vec_t	var = speed/5;
 
-	chunk = G_Spawn();
-	VectorCopy (origin, chunk->s.origin);
-	gi.setmodel (chunk, modelname);
-	VectorCopy(size,chunk->maxs);
-	VectorScale(chunk->maxs,0.5,chunk->maxs);
-	VectorNegate(chunk->maxs,chunk->mins);
+extern void gib_fade(edict_t *self);
+
+//TODO: mxd. add rock impact sounds, set style to GIB_ROCK_BIG/SMALL, use gib_touch to play impact sounds?
+void ThrowRock(edict_t *self, char *modelname, float speed, vec3_t origin, vec3_t size, int mass)
+{
+	const float var = speed / 5;
+
+	edict_t *chunk = G_Spawn();
+	VectorCopy(origin, chunk->s.origin);
+	gi.setmodel(chunk, modelname);
+
+	VectorCopy(size, chunk->maxs);
+	VectorScale(chunk->maxs, 0.5f, chunk->maxs);
+	VectorNegate(chunk->maxs, chunk->mins);
+
 	chunk->velocity[0] = speed * self->movedir[0] + var * crandom();
 	chunk->velocity[1] = speed * self->movedir[1] + var * crandom();
 	chunk->velocity[2] = speed * self->movedir[2] + var * crandom();
+
+	chunk->avelocity[0] = crandom() * 600; //mxd. random -> crandom
+	chunk->avelocity[1] = crandom() * 600;
+	chunk->avelocity[2] = crandom() * 600;
+
 	chunk->movetype = MOVETYPE_DEBRIS;
-	chunk->attenuation = 0.5;
+	chunk->attenuation = 0.5f;
 	chunk->solid = SOLID_NOT;
-	chunk->avelocity[0] = random()*600;
-	chunk->avelocity[1] = random()*600;
-	chunk->avelocity[2] = random()*600;
-	chunk->think = gib_fade;		// was FadeDieThink
-	chunk->nextthink = level.time + 15 + random()*5;
+	chunk->think = gib_fade; // was FadeDieThink
+	chunk->nextthink = level.time + 15 + random() * 5;
 	chunk->s.frame = 0;
 	chunk->flags = 0;
 	chunk->classname = "debris";
 	chunk->takedamage = DAMAGE_YES;
 	chunk->die = directed_debris_die;
 	chunk->mass = mass;
-	gi.linkentity (chunk);
+
+	gi.linkentity(chunk);
 }
 
 void use_target_rocks (edict_t *self, edict_t *other, edict_t *activator)
