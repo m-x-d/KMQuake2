@@ -163,7 +163,7 @@ typedef struct
 
 	int			parse_entities;		// index (not anded off) into cl_parse_entities[]
 
-	usercmd_t	cmd;
+	//usercmd_t	cmd; //mxd. Never used
 	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmd_time[CMD_BACKUP];	// time sent, for calculating pings
 

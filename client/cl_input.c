@@ -503,14 +503,9 @@ void CL_SendCmd(qboolean async)
 	cl.cmd_time[cmdindex] = cls.realtime; // For netgraph ping calculation
 
 	if (async) //mxd
-	{
-		cl.cmd = cl.cmds[cmdindex];
 		CL_FinalizeCmd();
-	}
 	else
-	{
-		cl.cmd = CL_CreateCmd();
-	}
+		cl.cmds[cmdindex] = CL_CreateCmd();
 
 	if (cls.state == ca_disconnected || cls.state == ca_connecting)
 		return;
