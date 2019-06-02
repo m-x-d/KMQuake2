@@ -981,8 +981,8 @@ void R_DrawAliasModel(entity_t *e)
 				maxlight = max(shadecolor[i], maxlight);
 			maxlight = min(1.0f, maxlight * 2); // Model shading is very dim...
 
-			// Scale by distance fading part of aliasShadowAlpha...
-			maxlight *= (aliasShadowAlpha / r_shadowalpha->value);
+			// Scale by distance fading part of aliasShadowAlpha and entity alpha...
+			maxlight *= (aliasShadowAlpha / r_shadowalpha->value) * e->alpha;
 
 			if(maxlight > 0.25f)
 			{
