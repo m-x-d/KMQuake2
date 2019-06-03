@@ -343,6 +343,7 @@ void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 	gib->svflags |= SVF_GIB; //Knightmare- gib flag
 	gib->takedamage = DAMAGE_YES;
 	gib->die = gib_die;
+	gib->health = 250; //mxd. Because of SOLID_TRIGGER, gibs will actually take damage, so give them some health
 	gib->touch = gib_touch; //mxd
 	gib->movetype = MOVETYPE_BOUNCE; //mxd. Let all gibs bounce (was MOVETYPE_TOSS for GIB_ORGANIC, unless (deathmatch->value && mega_gibs->value))
 
@@ -609,6 +610,7 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	chunk->classname = "debris";
 	chunk->takedamage = DAMAGE_YES;
 	chunk->die = debris_die;
+	chunk->health = 250; //mxd. Because of SOLID_TRIGGER, chunks will actually take damage, so give them some health
 	chunk->touch = gib_touch; //mxd. Added
 	chunk->style = GIB_METALLIC; //mxd
 
