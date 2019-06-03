@@ -35,9 +35,9 @@ extern void Matrix3Multiply ( const float m [ 9 ] , const float v [ 3 ] , float 
 extern void Matrix4Multiply ( const float m [ 16 ] , const float v [ 4 ] , float result [ 4 ] ) ;
 extern void Matrix4Invert ( float m [ 16 ] ) ;
 extern void VectorRotate ( const vec3_t v , const vec3_t matrix [ 3 ] , vec3_t out ) ;
-extern void VectorScale ( vec3_t in , vec_t scale , vec3_t out ) ;
+extern void VectorScale ( const vec3_t in , const vec_t scale , vec3_t out ) ;
 extern void VectorInverse ( vec3_t v ) ;
-extern vec_t VectorLength ( vec3_t v ) ;
+extern vec_t VectorLength ( const vec3_t v ) ;
 extern void CrossProduct ( vec3_t v1 , vec3_t v2 , vec3_t cross ) ;
 extern void _VectorCopy ( vec3_t in , vec3_t out ) ;
 extern void _VectorAdd ( vec3_t veca , vec3_t vecb , vec3_t out ) ;
@@ -1027,7 +1027,6 @@ extern trace_t SV_PushEntity ( edict_t * ent , vec3_t push ) ;
 extern void SV_AddGravity ( edict_t * ent ) ;
 extern int SV_PushableMove ( edict_t * ent , float time , int mask ) ;
 extern int SV_FlyMove ( edict_t * ent , float time , int mask ) ;
-extern int ClipVelocity ( vec3_t in , vec3_t normal , vec3_t out , float overbounce ) ;
 extern void SV_Impact ( edict_t * e1 , trace_t * trace ) ;
 extern qboolean SV_RunThink ( edict_t * ent ) ;
 extern void SV_CheckVelocity ( edict_t * ent ) ;
@@ -1227,7 +1226,6 @@ extern void gib_touch ( edict_t * self , edict_t * other , cplane_t * plane , cs
 extern void gib_think ( edict_t * self ) ;
 extern void gib_fade ( edict_t * self ) ;
 extern void gib_fade2 ( edict_t * self ) ;
-extern void SetGibAlpha ( edict_t * self , edict_t * gib ) ;
 extern void ClipGibVelocity ( edict_t * ent ) ;
 extern void VelocityForDamage ( int damage , vec3_t v ) ;
 extern void SP_func_areaportal ( edict_t * ent ) ;

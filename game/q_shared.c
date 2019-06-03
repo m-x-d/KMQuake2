@@ -430,7 +430,7 @@ void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross)
 	cross[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-vec_t VectorLength(vec3_t v)
+vec_t VectorLength(const vec3_t v)
 {
 	float length = 0;
 	for (int i = 0; i < 3; i++)
@@ -445,7 +445,7 @@ void VectorInverse(vec3_t v)
 		v[c] = -v[c];
 }
 
-void VectorScale(vec3_t in, vec_t scale, vec3_t out)
+void VectorScale(const vec3_t in, const vec_t scale, vec3_t out)
 {
 	for (int c = 0; c < 3; c++)
 		out[c] = in[c] * scale;
