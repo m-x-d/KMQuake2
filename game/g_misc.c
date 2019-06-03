@@ -129,7 +129,7 @@ gibs
 */
 
 //mxd
-void SetGibAlpha(edict_t *self, edict_t *gib)
+static void SetGibAlpha(edict_t *self, edict_t *gib)
 {
 #ifdef KMQUAKE2_ENGINE_MOD
 	//Knightmare- transparent entities throw transparent gibs
@@ -321,7 +321,7 @@ void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 	gib->s.origin[2] = origin[2] + crandom() * size[2];
 
 	gi.setmodel(gib, modelname);
-	gib->solid = SOLID_NOT;
+	gib->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
 
 	if (self->blood_type == 1)
 	{
@@ -430,7 +430,7 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 	self->s.modelindex2 = 0;
 	gi.setmodel(self, modelname);
 
-	self->solid = SOLID_NOT;
+	self->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
 
 	if(self->blood_type == 1)
 	{
@@ -530,7 +530,7 @@ void ThrowClientHead(edict_t *self, int damage)
 	VectorSet(self->maxs, 16, 16, 16);
 
 	self->takedamage = DAMAGE_NO;
-	self->solid = SOLID_NOT;
+	self->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
 	self->s.effects = EF_GIB;
 	self->s.sound = 0;
 	self->flags |= FL_NO_KNOCKBACK;
@@ -593,7 +593,10 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	v[2] = 100 + 100 * crandom();
 	VectorMA(self->velocity, speed, v, chunk->velocity);
 	chunk->movetype = MOVETYPE_BOUNCE;
-	chunk->solid = SOLID_NOT;
+
+	// Info: apparently, changing this to SOLID_TRIGGER is not a good idea (https://github.com/yquake2/yquake2/commit/5d440bbb00daf7d99f00e9ed6fcb1d18f294b7ec)
+	// mxd: but I never managed to get that rock in mine4 stuck, so...
+	chunk->solid = SOLID_TRIGGER;
 
 	chunk->avelocity[0] = crandom() * 600; //mxd. random -> crandom
 	chunk->avelocity[1] = crandom() * 600;
@@ -1849,7 +1852,7 @@ void barrel_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *s
 	M_walkmove (self, vectoyaw(v), 20 * ratio * FRAMETIME);
 }
 
-void barrel_explode (edict_t *self)
+void barrel_explode(edict_t *self)
 {
 	vec3_t	org;
 	float	spd;
@@ -2826,64 +2829,70 @@ void SP_light_mine2 (edict_t *ent)
 /*QUAKED misc_gib_arm (1 0 0) (-8 -8 -8) (8 8 8)
 Intended for use with the target_spawner
 */
-void SP_misc_gib_arm (edict_t *ent)
+void SP_misc_gib_arm(edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/gibs/arm/tris.md2");
-	ent->solid = SOLID_NOT;
+	gi.setmodel(ent, "models/objects/gibs/arm/tris.md2");
+	
+	ent->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
 	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svflags |= SVF_MONSTER;
 	ent->deadflag = DEAD_DEAD;
-	ent->avelocity[0] = random()*200;
-	ent->avelocity[1] = random()*200;
-	ent->avelocity[2] = random()*200;
+	ent->avelocity[0] = crandom() * 200;
+	ent->avelocity[1] = crandom() * 200;
+	ent->avelocity[2] = crandom() * 200;
 	ent->think = G_FreeEdict;
 	ent->nextthink = level.time + 30;
-	gi.linkentity (ent);
+
+	gi.linkentity(ent);
 }
 
 /*QUAKED misc_gib_leg (1 0 0) (-8 -8 -8) (8 8 8)
 Intended for use with the target_spawner
 */
-void SP_misc_gib_leg (edict_t *ent)
+void SP_misc_gib_leg(edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/gibs/leg/tris.md2");
-	ent->solid = SOLID_NOT;
+	gi.setmodel(ent, "models/objects/gibs/leg/tris.md2");
+
+	ent->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
 	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svflags |= SVF_MONSTER;
 	ent->deadflag = DEAD_DEAD;
-	ent->avelocity[0] = random()*200;
-	ent->avelocity[1] = random()*200;
-	ent->avelocity[2] = random()*200;
+	ent->avelocity[0] = crandom() * 200;
+	ent->avelocity[1] = crandom() * 200;
+	ent->avelocity[2] = crandom() * 200;
 	ent->think = G_FreeEdict;
 	ent->nextthink = level.time + 30;
-	gi.linkentity (ent);
+
+	gi.linkentity(ent);
 }
 
 /*QUAKED misc_gib_head (1 0 0) (-8 -8 -8) (8 8 8)
 Intended for use with the target_spawner
 */
-void SP_misc_gib_head (edict_t *ent)
+void SP_misc_gib_head(edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/gibs/head/tris.md2");
-	ent->solid = SOLID_NOT;
+	gi.setmodel(ent, "models/objects/gibs/head/tris.md2");
+
+	ent->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
 	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svflags |= SVF_MONSTER;
 	ent->deadflag = DEAD_DEAD;
-	ent->avelocity[0] = random()*200;
-	ent->avelocity[1] = random()*200;
-	ent->avelocity[2] = random()*200;
+	ent->avelocity[0] = crandom() * 200;
+	ent->avelocity[1] = crandom() * 200;
+	ent->avelocity[2] = crandom() * 200;
 	ent->think = G_FreeEdict;
 	ent->nextthink = level.time + 30;
-	gi.linkentity (ent);
+
+	gi.linkentity(ent);
 }
 
 //=====================================================
@@ -2893,14 +2902,15 @@ used with target_string (must be on same "team")
 "count" is position in the string (starts at 1)
 */
 
-void SP_target_character (edict_t *self)
+void SP_target_character(edict_t *self)
 {
+	gi.setmodel(self, self->model);
+
 	self->movetype = MOVETYPE_PUSH;
-	gi.setmodel (self, self->model);
 	self->solid = SOLID_BSP;
 	self->s.frame = 12;
-	gi.linkentity (self);
-	return;
+
+	gi.linkentity(self);
 }
 
 
