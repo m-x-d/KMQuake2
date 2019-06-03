@@ -242,7 +242,7 @@ returns the blocked flags (1 = floor, 2 = step / wall)
 */
 #define	STOP_EPSILON	0.1
 
-int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+static int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 {
 	float	backoff;
 	float	change;
@@ -265,6 +265,42 @@ int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 	}
 
 	return blocked;
+}
+
+//mxd. Reflect velocity vector off plane normal
+static void ReflectVelocity(const vec3_t in, const vec3_t normal, vec3_t out, const float velocityscale)
+{
+	const float len = VectorLength(in);
+
+	// Regular reflect most likely won't cut it. Try to bounce away from steep incline...
+	if (len < 5 && normal[2] <= 0.7f)
+	{
+		vec3_t n;
+		VectorCopy(normal, n);
+
+		for (int i = 0; i < 3; i++)
+			n[i] += crandom() * STOP_EPSILON;
+
+		VectorScale(n, 5 + random() * 2.5f, out);
+
+		return;
+	}
+
+	// https://stackoverflow.com/questions/35006037/reflect-vector-in-3d-space
+	vec3_t vnormal = { -in[0], -in[1], -in[2] }; // Velocity vector 
+	VectorNormalizeFast(vnormal);
+
+	vec3_t snormal; // Scaled normal
+	const float dot = DotProduct(vnormal, normal);
+	VectorScale(normal, 2 * dot, snormal);
+
+	vec3_t reflected;
+	VectorSubtract(snormal, vnormal, reflected);
+	VectorScale(reflected, len * velocityscale, out);
+
+	for (int i = 0; i < 3; i++)
+		if (out[i] > -STOP_EPSILON && out[i] < STOP_EPSILON)
+			out[i] = 0;
 }
 
 /*
@@ -736,8 +772,8 @@ retry:
 	}
 	// Harven fix end
 
-	VectorCopy (trace.endpos, ent->s.origin);
-	gi.linkentity (ent);
+	VectorCopy(trace.endpos, ent->s.origin);
+	gi.linkentity(ent);
 
 	if (trace.fraction != 1.0)
 	{
@@ -1515,16 +1551,20 @@ void SV_Physics_Toss (edict_t *ent)
 	//isinwater = ent->watertype & MASK_WATER;
 	if (trace.fraction < 1)
 	{
-		if (ent->movetype == MOVETYPE_BOUNCE)
-			backoff = 1 + bounce_bounce->value;
-		else if((ent->movetype == MOVETYPE_RAIN) && trace.plane.normal[2] <= 0.7f)
-			backoff = 2;
-		else if(trace.plane.normal[2] <= 0.7f) // Lazarus - don't stop on steep incline
-			backoff = 1.5f;
+		//mxd. Reflect off steep inclines
+		if(trace.plane.normal[2] <= 0.7f)
+		{
+			ReflectVelocity(ent->velocity, trace.plane.normal, ent->velocity, 0.9f);
+		}
 		else
-			backoff = 1;
+		{
+			if (ent->movetype == MOVETYPE_BOUNCE)
+				backoff = 1 + bounce_bounce->value;
+			else
+				backoff = 1;
 
-		ClipVelocity(ent->velocity, trace.plane.normal, ent->velocity, backoff);
+			ClipVelocity(ent->velocity, trace.plane.normal, ent->velocity, backoff);
+		}
 
 		// Stop if on ground
 		if (trace.plane.normal[2] > 0.7f)
