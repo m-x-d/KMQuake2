@@ -1854,155 +1854,123 @@ void barrel_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *s
 
 void barrel_explode(edict_t *self)
 {
-	vec3_t	org;
-	float	spd;
-	vec3_t	save;
-	vec3_t	size;
-	int		i;
+	vec3_t org, size;
 
-	/*if(self->gib_type == GIB_BARREL)
-	{	//Knightmare- cap mass at 399 to avoid large explosion
-		if (self->mass >= 400)
-			self->mass = 399;
+	VectorMA(self->absmin, 0.5f, self->size, self->s.origin);
 
-		func_explosive_explode (self);
-		return;
-	}*/
-
-	VectorCopy (self->s.origin, save);
-	VectorMA (self->absmin, 0.5, self->size, self->s.origin);
-
-	T_RadiusDamage (self, self->activator, self->dmg, NULL, self->dmg+40, MOD_BARREL, -0.5);
+	T_RadiusDamage(self, self->activator, self->dmg, NULL, self->dmg + 40, MOD_BARREL, -0.5);
 
 	// Lazarus: Nice catch by Argh! For years now, explobox chunks have
 	//          gone through the floor. This is very noticeable if the floor
 	//          is transparent. Like func_explosive, shrink size box so that
 	//          debris has an initial standoff from the floor.
-	VectorScale(self->size,0.5,size);
+	VectorScale(self->size, 0.5f, size);
 
 	// Knightmare- new gib code
-	if (self->gib_type && self->gib_type == GIB_BARREL)
+	if (self->gib_type == GIB_BARREL)
 	{
-		// top
-		spd = 1.5 * (float)self->dmg / 200.0;
-		VectorCopy (self->s.origin, org);
+		// Top
+		float spd = 1.5f * self->dmg / 200.0f;
+		VectorCopy(self->s.origin, org);
 		org[2] = self->absmax[2];
-		ThrowDebris (self, "models/objects/barrel_gibs/gib2.md2", spd, org, 0, 0);
-		
-		// side pieces
-		for (i = 0; i < 8; i++)
+		ThrowDebris(self, "models/objects/barrel_gibs/gib2.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
+
+		// Side pieces
+		for (int i = 0; i < 8; i++)
 		{
 			org[0] = self->s.origin[0] + crandom() * size[0];
 			org[1] = self->s.origin[1] + crandom() * size[1];
 			org[2] = self->s.origin[2] + crandom() * size[2];
-			ThrowDebris (self, "models/objects/barrel_gibs/gib4.md2",  spd, org, 0, 0);
+			ThrowDebris(self, "models/objects/barrel_gibs/gib4.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 		}
 
-		// bottom corners
-		spd = 1.75 * (float)self->dmg / 200.0;
-		VectorCopy (self->absmin, org);
+		// Bottom corners
+		spd = 1.75f * self->dmg / 200.0f;
+		VectorCopy(self->absmin, org);
 		org[1] += self->size[1];
-		ThrowDebris (self, "models/objects/barrel_gibs/gib1.md2",  spd, org, 0, 0);
+		ThrowDebris(self, "models/objects/barrel_gibs/gib1.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 		org[0] += self->size[0] * 2;
-		ThrowDebris (self, "models/objects/barrel_gibs/gib1.md2",  spd, org, 0, 0);
+		ThrowDebris(self, "models/objects/barrel_gibs/gib1.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 
-		// top corners
-		VectorCopy (self->absmax, org);
+		// Top corners
+		VectorCopy(self->absmax, org);
 		org[1] += self->size[1];
-		ThrowDebris (self, "models/objects/barrel_gibs/gib3.md2",  spd, org, 0, 0);
+		ThrowDebris(self, "models/objects/barrel_gibs/gib3.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 		org[0] += self->size[0] * 2;
-		ThrowDebris (self, "models/objects/barrel_gibs/gib3.md2",  spd, org, 0, 0);
+		ThrowDebris(self, "models/objects/barrel_gibs/gib3.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 
-		// a bunch of little chunks
-		spd = 2 * self->dmg / 200;
-		for (i = 0; i < 8; i++)
+		// A bunch of little chunks
+		spd = 2.0f * self->dmg / 200.0f;
+		for (int i = 0; i < 8; i++)
 		{
 			org[0] = self->s.origin[0] + crandom() * size[0];
 			org[1] = self->s.origin[1] + crandom() * size[1];
 			org[2] = self->s.origin[2] + crandom() * size[2];
-			ThrowDebris (self, "models/objects/barrel_gibs/gib5.md2",  spd, org, 0, 0);
+			ThrowDebris(self, "models/objects/barrel_gibs/gib5.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 		}
 	}
 	else
 	{
-		// a few big chunks
-		spd = 1.5 * (float)self->dmg / 200.0;
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris1/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris1/tris.md2", spd, org, 0, 0);
+		// A few big chunks
+		float spd = 1.5f * self->dmg / 200.0f;
+		for (int i = 0; i < 2; i++)
+		{
+			org[0] = self->s.origin[0] + crandom() * size[0];
+			org[1] = self->s.origin[1] + crandom() * size[1];
+			org[2] = self->s.origin[2] + crandom() * size[2];
+			ThrowDebris(self, "models/objects/debris1/tris.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
+		}
 
-		// bottom corners
-		spd = 1.75 * (float)self->dmg / 200.0;
-		VectorCopy (self->absmin, org);
+		// Bottom corners
+		spd = 1.75f * self->dmg / 200.0f;
+		VectorCopy(self->absmin, org);
 		org[2] += 2;
-		ThrowDebris (self, "models/objects/debris3/tris.md2", spd, org, 0, 0);
-		VectorCopy (self->absmin, org);
+		ThrowDebris(self, "models/objects/debris3/tris.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
+		VectorCopy(self->absmin, org);
 		org[0] += self->size[0];
 		org[2] += 2;
-		ThrowDebris (self, "models/objects/debris3/tris.md2", spd, org, 0, 0);
-		VectorCopy (self->absmin, org);
+		ThrowDebris(self, "models/objects/debris3/tris.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
+		VectorCopy(self->absmin, org);
 		org[1] += self->size[1];
 		org[2] += 2;
-		ThrowDebris (self, "models/objects/debris3/tris.md2", spd, org, 0, 0);
-		VectorCopy (self->absmin, org);
+		ThrowDebris(self, "models/objects/debris3/tris.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
+		VectorCopy(self->absmin, org);
 		org[0] += self->size[0];
 		org[1] += self->size[1];
 		org[2] += 2;
-		ThrowDebris (self, "models/objects/debris3/tris.md2", spd, org, 0, 0);
+		ThrowDebris(self, "models/objects/debris3/tris.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
 
-		// a bunch of little chunks
-		spd = 2 * self->dmg / 200;
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
-		org[0] = self->s.origin[0] + crandom() * size[0];
-		org[1] = self->s.origin[1] + crandom() * size[1];
-		org[2] = self->s.origin[2] + crandom() * size[2];
-		ThrowDebris (self, "models/objects/debris2/tris.md2", spd, org, 0, 0);
+		// A bunch of little chunks
+		spd = 2.0f * self->dmg / 200.0f;
+		for (int i = 0; i < 8; i++)
+		{
+			org[0] = self->s.origin[0] + crandom() * size[0];
+			org[1] = self->s.origin[1] + crandom() * size[1];
+			org[2] = self->s.origin[2] + crandom() * size[2];
+			ThrowDebris(self, "models/objects/debris2/tris.md2", spd, org, 0, EF_GRENADE); //mxd. Added smoke effect
+		}
 	}
+
 	// Lazarus: use targets
-	G_UseTargets (self, self->activator);
+	G_UseTargets(self, self->activator);
 
 	// Lazarus: added case for no damage
-	if(self->dmg) {
-		if (self->groundentity) {
+	if (self->dmg)
+	{
+		if (self->groundentity)
+		{
 			self->s.origin[2] = self->absmin[2] + 2;
-			BecomeExplosion2 (self);
-		} else
-			BecomeExplosion1 (self);
-	} else {
-		gi.sound (self, CHAN_VOICE, gi.soundindex ("tank/thud.wav"), 1, ATTN_NORM, 0);
-		G_FreeEdict (self);
+			BecomeExplosion2(self);
+		}
+		else
+		{
+			BecomeExplosion1(self);
+		}
+	}
+	else
+	{
+		gi.sound(self, CHAN_VOICE, gi.soundindex("tank/thud.wav"), 1, ATTN_NORM, 0);
+		G_FreeEdict(self);
 	}
 }
 
