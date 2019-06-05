@@ -295,7 +295,7 @@ qboolean AxisCompare(const vec3_t axis1[3], const vec3_t axis2[3]);
 void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3]);
 void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4]);
 
-void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
+void AngleVectors(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
 void VecToAngleRolled(vec3_t value1, float angleyaw, vec3_t angles);
 int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *plane);
@@ -320,7 +320,7 @@ float LerpAngle(float a1, float a2, float frac);
 
 void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal);
 void PerpendicularVector(vec3_t dst, const vec3_t src);
-void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees);
+void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, const float degrees);
 
 
 //=============================================
@@ -596,8 +596,21 @@ void Com_Printf(char *msg, ...);
 // gi.BoxEdicts() can return a list of either solid or trigger entities
 // FIXME: eliminate AREA_ distinction?
 #define AREA_SOLID		1
-#define	AREA_TRIGGERS	2
+#define AREA_TRIGGERS	2
 
+//mxd. cplane_t / dplane_t plane types. Moved from qfiles.h
+
+// 0-2 are axial planes
+#define PLANE_X			0
+#define PLANE_Y			1
+#define PLANE_Z			2
+
+// 3-5 are non-axial planes snapped to the nearest
+#define PLANE_ANYX		3
+#define PLANE_ANYY		4
+#define PLANE_ANYZ		5
+
+// Planes (x&~1) and (x&~1)+1 are always opposites
 
 // plane_t structure
 typedef struct cplane_s

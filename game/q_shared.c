@@ -31,7 +31,7 @@ vec4_t vec4_origin = { 0, 0, 0, 0 };
 
 #pragma region ======================= Math functions
 
-void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
+void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, const float degrees)
 {
 	float	m[3][3];
 	float	im[3][3];
@@ -83,7 +83,7 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, f
 		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 }
 
-void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
+void AngleVectors(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
 	if (!angles)
 		return;
