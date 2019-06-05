@@ -60,6 +60,7 @@
 {"ProjectPointOnPlane", (byte *)ProjectPointOnPlane},
 {"VecToAngleRolled", (byte *)VecToAngleRolled},
 {"MakeNormalVectors", (byte *)MakeNormalVectors},
+{"VectorsToAngles", (byte *)VectorsToAngles},
 {"AngleVectors", (byte *)AngleVectors},
 {"RotatePointAroundVector", (byte *)RotatePointAroundVector},
 {"kick_attack", (byte *)kick_attack},

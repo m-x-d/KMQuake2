@@ -249,19 +249,24 @@ void gib_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 		// Align to touched surface when stopped
 		if(len < 1)
 		{
-			if(plane->type == 2) // PLANE_Z - horizontal plane
+			if(plane->type == PLANE_Z) // Horizontal plane
 			{
 				self->s.angles[PITCH] = 0;
 				self->s.angles[ROLL] = 0;
 			}
-			else if(plane->type == 5) // PLANE_ANYZ - nearly horizontal plane
+			else if(plane->type == PLANE_ANYZ) // Nearly horizontal plane
 			{
-				vec3_t normal_angles, up;
-
-				//TODO: mxd. find a better solution. Currently all gibs are oriented the same way...
+				vec3_t normal_angles;
 				vectoangles(plane->normal, normal_angles);
-				AngleVectors(normal_angles, NULL, NULL, up);
-				vectoangles(up, self->s.angles);
+
+				vec3_t forward, right, up;
+				AngleVectors(normal_angles, forward, right, up); // For a plane, forward is pointing away from the plane
+
+				vec3_t right_r, up_r;
+				RotatePointAroundVector(right_r, forward, right, self->s.angles[YAW]);
+				RotatePointAroundVector(up_r, forward, up, self->s.angles[YAW]);
+
+				VectorsToAngles(up_r, right_r, forward, self->s.angles);
 			}
 
 			if (self->s.modelindex == sm_meat_index)

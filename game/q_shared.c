@@ -122,6 +122,31 @@ void AngleVectors(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 	}
 }
 
+//mxd
+void VectorsToAngles(const vec3_t forward, const vec3_t right, const vec3_t up, vec3_t ang)
+{
+	double sp = forward[2];
+
+	// Cap off our sin value so that we don't get any NANs
+	sp = clamp(sp, -1.0, 1.0);
+
+	const double theta = -asin(sp);
+	const double cp = cos(theta);
+
+	ang[0] = theta * 180 / M_PI;
+
+	if (cp > 0.000977) // 0.000977 = 8192 * FLT_EPSILON
+	{
+		ang[1] = atan2(forward[1], forward[0]) * 180 / M_PI;
+		ang[2] = atan2(-right[2], up[2]) * 180 / M_PI;
+	}
+	else
+	{
+		ang[1] = -atan2(right[0], right[1]) * 180 / M_PI;
+		ang[2] = 0;
+	}
+}
+
 void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 {
 	// This rotate and negate guarantees a vector not colinear with the original
