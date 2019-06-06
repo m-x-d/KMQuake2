@@ -788,11 +788,11 @@ edict_t	*LookingAt(edict_t *ent, int filter, vec3_t endpos, float *range)
 		ignore = ent;
 	}
 
-	VectorMA(start, 8192, forward, end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 	
 	/* First check for looking directly at a pickup item */
-	VectorSet(mins,-4096,-4096,-4096);
-	VectorSet(maxs, 4096, 4096, 4096);
+	VectorSet(mins, MIN_WORLD_COORD, MIN_WORLD_COORD, MIN_WORLD_COORD); // Was -4096, -4096, -4096
+	VectorSet(maxs, MAX_WORLD_COORD, MAX_WORLD_COORD, MAX_WORLD_COORD); // Was 4096, 4096, 4096
 	num = gi.BoxEdicts (mins, maxs, trigger, MAX_EDICTS, AREA_TRIGGERS);
 	for (i=0 ; i<num ; i++)
 	{

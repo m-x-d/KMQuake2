@@ -56,7 +56,7 @@ edict_t	*TurretTarget(edict_t *self)
 	VectorMA(self->s.origin, self->move_origin[0], forward, start);
 	VectorMA(start,          self->move_origin[1], right,   start);
 	VectorMA(start,          self->move_origin[2], up,      start);
-	VectorMA(start, 8192, forward, end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 
 	/* Check for aiming directly at a damageable entity */
 	tr = gi.trace(start, NULL, NULL, end, self, MASK_SHOT);
@@ -844,7 +844,7 @@ void turret_breach_think (edict_t *self)
 		float	reaction_time;
 		vec3_t	f, forward, right, up, start, t_start;
 		edict_t	*gomer;
-		float	best_dist = 8192;
+		float	best_dist = WORLD_SIZE; // Was 8192
 		float	dist;
 
 		if(self->viewer && level.time < self->touch_debounce_time)
@@ -904,7 +904,7 @@ void turret_breach_think (edict_t *self)
 		// reset best_dist so that bad monsters will be selected if found, regardless of distance.
 		if( (self->enemy) && (self->sounds >= 0) && (self->spawnflags & SF_TURRET_GOODGUY)) {
 			if((self->enemy->client) || (self->enemy->monsterinfo.aiflags & AI_GOOD_GUY))
-				best_dist = 8192;
+				best_dist = WORLD_SIZE; // Was 8192
 		}
 			
 		// hunt for monster
@@ -953,7 +953,7 @@ void turret_breach_think (edict_t *self)
 		// for non-GOODGUY weapon-firing turrets, reset best_dist so that players will
 		// ALWAYS be selected if found
 		if( (self->sounds >= 0) && !(self->spawnflags & SF_TURRET_GOODGUY))
-			best_dist = 8192;
+			best_dist = WORLD_SIZE; // Was 8192
 
 		// hunt for closest player - hunt ALL entities since
 		// we want to view fake players using camera

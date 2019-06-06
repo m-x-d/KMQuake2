@@ -273,7 +273,7 @@ void CL_LocPlace(void)
 
 	const int index1 = CL_LocIndex(point);
 
-	VectorMA(cl.predicted_origin, 8192, cl.v_forward, end);
+	VectorMA(cl.predicted_origin, WORLD_SIZE, cl.v_forward, end); // Was 8192
 	const trace_t tr = CM_BoxTrace(cl.predicted_origin, end, vec3_origin, vec3_origin, 0, MASK_PLAYERSOLID);
 	const int index2 = CL_LocIndex(tr.endpos);
 

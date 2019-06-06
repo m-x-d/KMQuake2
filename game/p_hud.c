@@ -434,7 +434,7 @@ void WhatIsIt (edict_t *ent)
 	VectorCopy(ent->s.origin, start);
 	start[2] += ent->viewheight;
 	AngleVectors(ent->client->v_angle, forward, NULL, NULL);
-	VectorMA(start, 8192, forward, end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 	tr = gi.trace(start, NULL, NULL, end, ent, MASK_SHOT|CONTENTS_SLIME|CONTENTS_LAVA);
 	if (tr.ent > world)
 	{
@@ -449,8 +449,8 @@ void WhatIsIt (edict_t *ent)
 	VectorCopy(ent->s.origin,viewp);
 	viewp[2] += ent->viewheight;
 	AngleVectors(ent->client->v_angle, forward, NULL, NULL);
-	VectorSet(mins,-4096,-4096,-4096);
-	VectorSet(maxs, 4096, 4096, 4096);
+	VectorSet(mins, MIN_WORLD_COORD, MIN_WORLD_COORD, MIN_WORLD_COORD); // Was -4096, -4096, -4096
+	VectorSet(maxs, MAX_WORLD_COORD, MAX_WORLD_COORD, MAX_WORLD_COORD); // Was 4096, 4096, 4096
 	num = gi.BoxEdicts (mins, maxs, touch, MAX_EDICTS, AREA_TRIGGERS);
 	best = NULL;
 	for (i=0 ; i<num ; i++)

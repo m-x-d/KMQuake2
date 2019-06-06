@@ -2616,8 +2616,8 @@ void target_attractor_think_single (edict_t *self)
 	if(!(self->spawnflags & ATTRACTOR_ON)) return;
 
 	previous_target = self->target_ent;
-	target      = NULL;
-	best_dist   = 8192;
+	target = NULL;
+	best_dist = WORLD_SIZE; // Was 8192
 
 	if(self->spawnflags & ATTRACTOR_PLAYER) {
 		for(i=1, ent=&g_edicts[i]; i<=game.maxclients; i++, ent++) {
@@ -2975,7 +2975,7 @@ void SP_target_attractor(edict_t *self)
 	if(st.distance)
 		self->moveinfo.distance = st.distance;
 	else
-		self->moveinfo.distance = 8192;
+		self->moveinfo.distance = WORLD_SIZE; // Was 8192
 
 	self->solid = SOLID_NOT;
 	if(self->movewith)

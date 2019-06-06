@@ -162,6 +162,17 @@ __inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list A
 #define MAX_ITEMS			256
 #define MAX_GENERAL			(MAX_CLIENTS * 2) // General config strings
 
+// Knightmare- world size
+#ifdef KMQUAKE2_ENGINE_MOD
+	#define MAX_WORLD_COORD		16384
+	#define MIN_WORLD_COORD		-16384
+#else
+	#define MAX_WORLD_COORD		4096
+	#define MIN_WORLD_COORD		-4096
+#endif
+#define WORLD_SIZE			(MAX_WORLD_COORD - MIN_WORLD_COORD)
+#define WORLD_SIZE_SCALER	(WORLD_SIZE / 8192.0f) //mxd
+// end Knightmare
 
 // Game print flags
 #define PRINT_LOW			0	// Pickup messages
@@ -685,7 +696,7 @@ typedef struct
 {
 	pmtype_t pm_type;
 
-#ifdef LARGE_MAP_SIZE	// Knightmare- larger coordinate range
+#ifdef KMQUAKE2_ENGINE_MOD // Knightmare- larger coordinate range
 	int origin[3];		// 20.3
 #else
 	short origin[3];	// 12.3

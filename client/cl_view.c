@@ -680,7 +680,7 @@ static void V_Texture_f(void)
 
 	VectorCopy(cl.refdef.vieworg, start);
 	AngleVectors(cl.refdef.viewangles, forward, NULL, NULL);
-	VectorMA(start, 8192, forward, end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_SOLID | MASK_WATER); //mxd. Was MASK_ALL
 
 	Con_ClearNotify(); //mxd
@@ -755,7 +755,7 @@ static void V_Surf_f(void)
 
 	VectorCopy(cl.refdef.vieworg, start);
 	AngleVectors(cl.refdef.viewangles, forward, NULL, NULL);
-	VectorMA(start, 8192, forward, end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 	const trace_t tr = CL_PMSurfaceTrace(cl.playernum + 1, start, NULL, NULL, end, MASK_SOLID | MASK_WATER); //mxd. Was MASK_ALL
 
 	if (!tr.ent)

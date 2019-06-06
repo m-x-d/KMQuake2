@@ -44,7 +44,7 @@ monster's dodge function should be called.
 		if (random() > 0.25)
 			return;
 	}
-	VectorMA (start, 8192, dir, end);
+	VectorMA (start, WORLD_SIZE, dir, end); // Was 8192
 	tr = gi.trace (start, NULL, NULL, end, self, MASK_SHOT);
 	if ((tr.ent) && (tr.ent->svflags & SVF_MONSTER) && (tr.ent->health > 0) && (tr.ent->monsterinfo.dodge) && infront(tr.ent, self))
 	{
@@ -155,9 +155,10 @@ This is an internal support routine used for bullet/pellet based weapons.
 		vectoangles (aimdir, dir);
 		AngleVectors (dir, forward, right, up);
 
-		r = crandom()*hspread;
-		u = crandom()*vspread;
-		VectorMA (start, 8192, forward, end);
+		r = crandom() * hspread * WORLD_SIZE_SCALER; //mxd. Adjust spread for expanded world size
+		u = crandom() * vspread * WORLD_SIZE_SCALER; //mxd
+
+		VectorMA (start, WORLD_SIZE, forward, end); // Was 8192
 		VectorMA (end, r, right, end);
 		VectorMA (end, u, up, end);
 
@@ -211,9 +212,10 @@ This is an internal support routine used for bullet/pellet based weapons.
 				VectorSubtract (end, start, dir);
 				vectoangles (dir, dir);
 				AngleVectors (dir, forward, right, up);
-				r = crandom()*hspread*2;
-				u = crandom()*vspread*2;
-				VectorMA (water_start, 8192, forward, end);
+
+				r = crandom() * hspread * 2 * WORLD_SIZE_SCALER; //mxd. Adjust spread for expanded world size
+				u = crandom() * vspread * 2 * WORLD_SIZE_SCALER; //mxd
+				VectorMA (water_start, WORLD_SIZE, forward, end); // Was 8192
 				VectorMA (end, r, right, end);
 				VectorMA (end, u, up, end);
 			}
@@ -954,7 +956,7 @@ void Rocket_Evade (edict_t *rocket, vec3_t	dir, float speed)
 	vec3_t	rocket_vec, vec;
 
 	// Find out what rocket will hit, assuming everything remains static
-	VectorMA(rocket->s.origin,8192,dir,rocket_vec);
+	VectorMA(rocket->s.origin, WORLD_SIZE, dir, rocket_vec); // Was 8192
 	tr = gi.trace(rocket->s.origin,rocket->mins,rocket->maxs,rocket_vec,rocket,MASK_SHOT);
 	VectorCopy(tr.endpos,hitpoint);
 	VectorSubtract(hitpoint,rocket->s.origin,vec);
@@ -1264,25 +1266,24 @@ void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick
 #endif
 		tempevent = TE_RAILTRAIL;
 
-	VectorMA (start, 8192, aimdir, end);
-	VectorCopy (start, from);
+	VectorMA(start, WORLD_SIZE, aimdir, end); // Was 8192
+	VectorCopy(start, from);
 	ignore = self;
 	water = false;
-	mask = MASK_SHOT|CONTENTS_SLIME|CONTENTS_LAVA;
+	mask = MASK_SHOT | CONTENTS_SLIME | CONTENTS_LAVA;
 	while (ignore && i<256)
 	{
 		tr = gi.trace (from, NULL, NULL, end, ignore, mask);
 
-		if (tr.contents & (CONTENTS_SLIME|CONTENTS_LAVA))
+		if (tr.contents & (CONTENTS_SLIME | CONTENTS_LAVA))
 		{
-			mask &= ~(CONTENTS_SLIME|CONTENTS_LAVA);
+			mask &= ~(CONTENTS_SLIME | CONTENTS_LAVA);
 			water = true;
 		}
 		else
 		{
 			//ZOID--added so rail goes through SOLID_BBOX entities (gibs, etc)
-			if ((tr.ent->svflags & SVF_MONSTER) || (tr.ent->client) ||
-				(tr.ent->solid == SOLID_BBOX))
+			if ((tr.ent->svflags & SVF_MONSTER) || tr.ent->client || tr.ent->solid == SOLID_BBOX)
 				ignore = tr.ent;
 			else
 				ignore = NULL;

@@ -196,7 +196,7 @@ void SetSpotlightLength(edict_t *hook)
 	start[2] = hook->absmin[2] + 1;
 	end[0] = start[0];
 	end[1] = start[1];
-	end[2] = start[2] - 8192;
+	end[2] = start[2] - WORLD_SIZE; // Was 8192
 	tr = gi.trace(start,NULL,NULL,end,hook,MASK_SOLID);
 	hook->crane_light->s.origin[2] = tr.endpos[2] + 1;
 }
@@ -324,7 +324,7 @@ qboolean Crane_Hook_Bonk(edict_t *hook, int axis, int dir, vec3_t bonk)
 	maxs[axis] =  0;
 	maxs[i1]   =  hook->size[i1]/2;
 	maxs[i2]   =  hook->size[i2]/2;
-	VectorMA(start,8192,forward,end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 	tr = gi.trace(start,mins,maxs,end,cargo,MASK_PLAYERSOLID);
 	if(tr.fraction < fraction && tr.ent != hook->crane_beam &&
 		tr.ent != hook->crane_hoist && tr.ent != cargo )
@@ -351,8 +351,8 @@ qboolean Crane_Hook_Bonk(edict_t *hook, int axis, int dir, vec3_t bonk)
 		maxs[axis] =  0;
 		maxs[i1]   =  cargo->size[i1]/2-1;
 		maxs[i2]   =  cargo->size[i2]/2-1;
-		VectorMA(start, 8192, forward, end);
-		tr=gi.trace(start, mins, maxs, end, cargo, MASK_PLAYERSOLID );
+		VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
+		tr=gi.trace(start, mins, maxs, end, cargo, MASK_PLAYERSOLID);
 		if(tr.fraction < cargo_fraction && tr.ent != hook->crane_beam &&
 			tr.ent != hook->crane_hoist && tr.ent != hook )
 		{
@@ -1254,7 +1254,7 @@ void crane_control_action(edict_t *control, edict_t *activator, vec3_t point)
 			VectorAdd(hook->absmin,hook->absmax,start);
 			VectorScale(start,0.5,start);
 			VectorSet(forward,0.,0.,-1.);
-			VectorMA(start, 8192, forward, end);
+			VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 			VectorSubtract(hook->absmin,start,mins);
 			VectorSubtract(hook->absmax,start,maxs);
 			// 06/03/00 change: Use 1/3 the bounding box to force a better hit

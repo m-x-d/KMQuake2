@@ -552,9 +552,9 @@ void M_ReactToDamage (edict_t *targ, edict_t *attacker)
 				{
 					dir[2] = 0.1*i;
 					VectorNormalize(dir);
-					VectorMA(targ->s.origin,8192,dir,end);
+					VectorMA(targ->s.origin, WORLD_SIZE, dir, end); // Was 8192
 					trace1 = gi.trace(targ->s.origin,mins,maxs,end,targ,MASK_MONSTERSOLID);
-					dist = trace1.fraction * 8192;
+					dist = trace1.fraction * WORLD_SIZE; // Was 8192
 					if (dist > best_dist) {
 						best_dist = dist;
 						VectorCopy(dir,best_dir);
@@ -609,11 +609,11 @@ void M_ReactToDamage (edict_t *targ, edict_t *attacker)
 						dir[2] = 0;
 					}
 					VectorNormalize(dir);
-					VectorMA(targ->s.origin,8192,dir,end);
+					VectorMA(targ->s.origin, WORLD_SIZE, dir, end); // Was 8192
 					trace1 = gi.trace(targ->s.origin,mins,maxs,end,targ,MASK_MONSTERSOLID);
 					trace2 = gi.trace(trace1.endpos,NULL,NULL,atk,targ,MASK_SOLID);
 					if(trace2.fraction == 1.0) continue;
-					dist = trace1.fraction * 8192;
+					dist = trace1.fraction * WORLD_SIZE; // Was 8192
 					if(dist > best_dist) {
 						best_dist = dist;
 						VectorCopy(dir,best_dir);
@@ -628,7 +628,7 @@ void M_ReactToDamage (edict_t *targ, edict_t *attacker)
 				(!Q_stricmp(attacker->classname,"func_pushable"))   )
 				run = 256;
 			else
-				run = 8192;
+				run = WORLD_SIZE; // Was 8192
 			VectorMA(targ->s.origin,run,best_dir,end);
 			trace1 = gi.trace(targ->s.origin,mins,maxs,end,targ,MASK_MONSTERSOLID);
 			dist = trace1.fraction * run;

@@ -1835,7 +1835,7 @@ void SpawnForcewall(edict_t	*player)
 	VectorCopy(player->s.origin,start);
 	start[2] += player->viewheight;
 	AngleVectors(player->client->v_angle,forward,NULL,NULL);
-	VectorMA(start,8192,forward,point);
+	VectorMA(start, WORLD_SIZE, forward, point); // Was 8192
 	tr = gi.trace(start,NULL,NULL,point,player,MASK_SOLID);
 	VectorCopy(tr.endpos,wall->s.origin);
 	
@@ -1846,12 +1846,12 @@ void SpawnForcewall(edict_t	*player)
 		wall->maxs[0] =   1;
 		
 		VectorCopy(wall->s.origin,point);
-		point[1] -= 8192;
+		point[1] -= WORLD_SIZE; // Was 8192
 		tr = gi.trace(wall->s.origin,NULL,NULL,point,NULL,MASK_SOLID);
 		wall->pos1[1] = tr.endpos[1];
 		wall->mins[1] = wall->pos1[1] - wall->s.origin[1];
 		
-		point[1] = wall->s.origin[1] + 8192;
+		point[1] = wall->s.origin[1] + WORLD_SIZE; // Was 8192
 		tr = gi.trace(wall->s.origin,NULL,NULL,point,NULL,MASK_SOLID);
 		wall->pos2[1] = tr.endpos[1];
 		wall->maxs[1] = wall->pos2[1] - wall->s.origin[1];
@@ -1859,12 +1859,12 @@ void SpawnForcewall(edict_t	*player)
 	else
 	{
 		VectorCopy(wall->s.origin,point);
-		point[0] -= 8192;
+		point[0] -= WORLD_SIZE; // Was 8192
 		tr = gi.trace(wall->s.origin,NULL,NULL,point,NULL,MASK_SOLID);
 		wall->pos1[0] = tr.endpos[0];
 		wall->mins[0] = wall->pos1[0] - wall->s.origin[0];
 		
-		point[0] = wall->s.origin[0] + 8192;
+		point[0] = wall->s.origin[0] + WORLD_SIZE; // Was 8192
 		tr = gi.trace(wall->s.origin,NULL,NULL,point,NULL,MASK_SOLID);
 		wall->pos2[0] = tr.endpos[0];
 		wall->maxs[0] = wall->pos2[0] - wall->s.origin[0];
@@ -1876,7 +1876,7 @@ void SpawnForcewall(edict_t	*player)
 	wall->mins[2] = 0;
 	
 	VectorCopy(wall->s.origin,point);
-	point[2] = wall->s.origin[2] + 8192;
+	point[2] = wall->s.origin[2] + WORLD_SIZE; // Was 8192
 	tr = gi.trace(wall->s.origin,NULL,NULL,point,NULL,MASK_SOLID);
 	wall->maxs[2] = tr.endpos[2] - wall->s.origin[2];
 	wall->pos1[2] = wall->pos2[2] = tr.endpos[2];
@@ -1902,7 +1902,7 @@ void ForcewallOff(edict_t *player)
 	VectorCopy(player->s.origin,start);
 	start[2] += player->viewheight;
 	AngleVectors(player->client->v_angle,forward,NULL,NULL);
-	VectorMA(start,8192,forward,point);
+	VectorMA(start, WORLD_SIZE, forward, point); // Was 8192
 	tr = gi.trace(start,NULL,NULL,point,player,MASK_SHOT);
 	if(Q_stricmp(tr.ent->classname,"forcewall"))
 	{
@@ -2530,7 +2530,7 @@ void ClientCommand (edict_t *ent)
 
 			start[2] += ent->viewheight;
 			AngleVectors(ent->client->v_angle,forward,NULL,NULL);
-			VectorMA(start,8192,forward,point);
+			VectorMA(start, WORLD_SIZE, forward, point); // Was 8192
 			tr = gi.trace(start,NULL,NULL,point,ent,MASK_SOLID);
 			VectorSubtract(tr.endpos,start,point);
 			gi.dprintf("range=%g\n",VectorLength(point));

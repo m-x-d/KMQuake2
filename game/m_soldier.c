@@ -507,11 +507,11 @@ void soldier_fire (edict_t *self, int flash_number)
 			vectoangles (aim, dir);
 			AngleVectors (dir, forward, right, up);
 
-			r = crandom()*(1000 - 333*skill->value);
-			u = crandom()*(500 - 167*skill->value);
-			VectorMA (start, 8192, forward, end);
-			VectorMA (end, r, right, end);
-			VectorMA (end, u, up, end);
+			r = crandom() * (1000 - 333 * skill->value) * WORLD_SIZE_SCALER; //mxd. Adjust spread for expanded world size
+			u = crandom() * (500 - 167 * skill->value) * WORLD_SIZE_SCALER; //mxd
+			VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
+			VectorMA(end, r, right, end);
+			VectorMA(end, u, up, end);
 
 			VectorSubtract (end, start, aim);
 		}

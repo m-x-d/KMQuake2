@@ -950,7 +950,7 @@ edict_t	*rocket_target(edict_t *self, vec3_t start, vec3_t forward)
 	trace_t     tr;
 	vec3_t      dir, end;
 
-	VectorMA(start, 8192, forward, end);
+	VectorMA(start, WORLD_SIZE, forward, end); // Was 8192
 
 	/* Check for aiming directly at a damageable entity */
 	tr = gi.trace(start, NULL, NULL, end, self, MASK_SHOT);

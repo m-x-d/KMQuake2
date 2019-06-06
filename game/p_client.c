@@ -2579,12 +2579,12 @@ void ClientSpycam(edict_t *ent)
 
 			thing  = camera->vehicle;
 			
-			VectorMA(camera->s.origin,8192,forward,end);
+			VectorMA(camera->s.origin, WORLD_SIZE, forward, end); // Was 8192
 			tr = gi.trace(camera->s.origin,camera->mins,camera->maxs,end,camera,MASK_SOLID);
 			if(client->ucmd.forwardmove < 0)
 			{
 				trace_t	back;
-				VectorMA(camera->s.origin,-8192,forward,end);
+				VectorMA(camera->s.origin, -WORLD_SIZE, forward, end); // Was -8192
 				back = gi.trace(camera->s.origin,camera->mins,camera->maxs,end,camera,MASK_SOLID);
 				VectorSubtract(back.endpos,camera->s.origin,end);
 				dist = VectorLength(end);
@@ -2738,7 +2738,7 @@ void ClientSpycam(edict_t *ent)
 						vec3_t	end, f;
 						VectorSet(angles,0,camera->ideal_yaw,0);
 						AngleVectors(angles,f,NULL,NULL);
-						VectorMA(camera->s.origin,8192,f,end);
+						VectorMA(camera->s.origin, WORLD_SIZE, f, end); // Was 8192
 						tr = gi.trace(camera->s.origin,camera->mins,camera->maxs,end,camera,MASK_SOLID);
 						VectorCopy(tr.endpos,camera->vehicle->s.origin);
 						camera->vehicle->touch_debounce_time = level.time + 5.0;
