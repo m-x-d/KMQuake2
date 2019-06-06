@@ -327,6 +327,11 @@ void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 
 	gi.setmodel(gib, modelname);
 	gib->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
+	gib->clipmask = MASK_SHOT; // Knightmare added
+
+	//mxd. Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
+	VectorSet(gib->mins, -4, -4, -4);
+	VectorSet(gib->maxs, 4, 4, 4);
 
 	if (self->blood_type == 1)
 	{
@@ -420,7 +425,7 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 
 	char modelname[MAX_OSPATH];
 	Q_strncpyz(modelname, gibname, sizeof(modelname));
-	char *p = strstr(modelname,"models/objects/gibs/");
+	char *p = strstr(modelname, "models/objects/gibs/");
 	if(p && self->gib_type)
 	{
 		p += 18;
@@ -437,6 +442,11 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 	gi.setmodel(self, modelname);
 
 	self->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
+	self->clipmask = MASK_SHOT; // Knightmare added
+
+	//mxd. Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
+	VectorSet(self->mins, -4, -4, -4);
+	VectorSet(self->maxs, 4, 4, 4);
 
 	if(self->blood_type == 1)
 	{
@@ -532,8 +542,9 @@ void ThrowClientHead(edict_t *self, int damage)
 	self->s.frame = 0;
 	gi.setmodel(self, gibname);
 
-	VectorSet(self->mins, -16, -16, 0);
-	VectorSet(self->maxs, 16, 16, 16);
+	// Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
+	VectorSet(self->mins, -4, -4, -4);
+	VectorSet(self->maxs, 4, 4, 4);
 
 	self->takedamage = DAMAGE_NO;
 	self->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
@@ -603,6 +614,10 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	// Info: apparently, changing this to SOLID_TRIGGER is not a good idea (https://github.com/yquake2/yquake2/commit/5d440bbb00daf7d99f00e9ed6fcb1d18f294b7ec)
 	// mxd: but I never managed to get that rock in mine4 stuck, so...
 	chunk->solid = SOLID_TRIGGER;
+
+	//mxd. Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
+	VectorSet(chunk->mins, -1, -1, -1);
+	VectorSet(chunk->maxs, 1, 1, 1);
 
 	chunk->avelocity[0] = crandom() * 600; //mxd. random -> crandom
 	chunk->avelocity[1] = crandom() * 600;

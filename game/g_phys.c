@@ -773,14 +773,9 @@ retry:
 	// Harven fix end
 
 	VectorCopy(trace.endpos, ent->s.origin);
-
-	//mxd. Push slightly away from non-horizontal planes (fixes gib/debris models resting on sloped surfaces rendered black).
-	if (trace.plane.type != 2) // 2 == PLANE_Z - horizontal plane
-		VectorAdd(ent->s.origin, trace.plane.normal, ent->s.origin);
-
 	gi.linkentity(ent);
 
-	if (trace.fraction != 1.0)
+	if (trace.fraction != 1.0f)
 	{
 		SV_Impact (ent, &trace);
 
@@ -793,8 +788,7 @@ retry:
 			goto retry;
 		}
 
-		// Lazarus: If the pushed entity is a conveyor, raise us up and
-		// try again
+		// Lazarus: If the pushed entity is a conveyor, raise us up and try again
 		if (!num_retries && wasonground)
 		{
 			if ((trace.ent->movetype == MOVETYPE_CONVEYOR) && (trace.plane.normal[2] > 0.7) && !trace.startsolid)
