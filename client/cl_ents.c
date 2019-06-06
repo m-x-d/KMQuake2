@@ -1020,7 +1020,8 @@ void CL_AddPacketEntities(frame_t *frame)
 
 //============
 //PGM
-				if (renderfx & RF_USE_DISGUISE)
+				// Knightmare- catch NULL player skin
+				if (renderfx & RF_USE_DISGUISE && ent.skin != NULL && ((char *)ent.skin)[0])
 				{
 					if(!strncmp((char *)ent.skin, "players/male", 12))
 					{
