@@ -351,9 +351,8 @@ void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 
 	gib->flags |= FL_NO_KNOCKBACK;
 	gib->svflags |= SVF_GIB; //Knightmare- gib flag
-	gib->takedamage = DAMAGE_YES;
+	gib->takedamage = DAMAGE_NO; // Was DAMAGE_YES
 	gib->die = gib_die;
-	gib->health = 250; //mxd. Because of SOLID_TRIGGER, gibs will actually take damage, so give them some health
 	gib->touch = gib_touch; //mxd
 	gib->movetype = MOVETYPE_BOUNCE; //mxd. Let all gibs bounce (was MOVETYPE_TOSS for GIB_ORGANIC, unless (deathmatch->value && mega_gibs->value))
 
@@ -467,7 +466,7 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 	self->flags |= FL_NO_KNOCKBACK;
 	self->svflags &= ~SVF_MONSTER;
 	self->svflags |= SVF_GIB; //Knightmare- gib flag
-	self->takedamage = DAMAGE_YES;
+	self->takedamage = DAMAGE_NO; // Was DAMAGE_YES
 
 	// Lazarus: Disassociate this head with its monster
 	self->targetname = NULL;
@@ -588,8 +587,7 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 {
 	vec3_t v;
 
-	// Lazarus: Prevent gib showers (generally due to firing BFG in a crowd) from
-	// causing SZ_GetSpace: overflow
+	// Lazarus: Prevent gib showers (generally due to firing BFG in a crowd) from causing SZ_GetSpace: overflow
 	if(level.framenum > lastgibframe)
 	{
 		gibsthisframe = 0;
@@ -610,9 +608,6 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	v[2] = 100 + 100 * crandom();
 	VectorMA(self->velocity, speed, v, chunk->velocity);
 	chunk->movetype = MOVETYPE_BOUNCE;
-
-	// Info: apparently, changing this to SOLID_TRIGGER is not a good idea (https://github.com/yquake2/yquake2/commit/5d440bbb00daf7d99f00e9ed6fcb1d18f294b7ec)
-	// mxd: but I never managed to get that rock in mine4 stuck, so...
 	chunk->solid = SOLID_TRIGGER;
 
 	//mxd. Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
@@ -628,9 +623,10 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	chunk->s.frame = 0;
 	chunk->flags = 0;
 	chunk->classname = "debris";
-	chunk->takedamage = DAMAGE_YES;
+	chunk->class_id = ENTITY_DEBRIS; //mxd
+	chunk->svflags |= SVF_GIB; //Knightmare- gib flag
+	chunk->takedamage = DAMAGE_NO; // Was DAMAGE_YES
 	chunk->die = debris_die;
-	chunk->health = 250; //mxd. Because of SOLID_TRIGGER, chunks will actually take damage, so give them some health
 	chunk->touch = gib_touch; //mxd. Added
 	chunk->style = GIB_METALLIC; //mxd
 
