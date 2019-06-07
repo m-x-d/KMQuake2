@@ -128,26 +128,6 @@ gibs
 =================
 */
 
-//mxd
-static void SetGibAlpha(edict_t *self, edict_t *gib)
-{
-#ifdef KMQUAKE2_ENGINE_MOD
-	//Knightmare- transparent entities throw transparent gibs
-	if (self->s.alpha > 0.0f)
-	{
-		gib->s.alpha = self->s.alpha;
-		return;
-	}
-#endif
-
-	if (gib->s.renderfx & RF_TRANSLUCENT)
-		gib->s.alpha = 0.7f;
-	else if (gib->s.effects & EF_SPHERETRANS)
-		gib->s.alpha = 0.3f;
-	else
-		gib->s.alpha = 1.0f;
-}
-
 //Knightmare- gib fade
 #ifdef KMQUAKE2_ENGINE_MOD
 void gib_fade2(edict_t *self)
@@ -172,8 +152,15 @@ void gib_fade(edict_t *self)
 		self->s.renderfx &= ~RF_NOSHADOW;
 	}
 
+	if (self->s.renderfx & RF_TRANSLUCENT)
+		self->s.alpha = 0.7f;
+	else if (self->s.effects & EF_SPHERETRANS)
+		self->s.alpha = 0.3f;
+	else if (self->s.alpha <= 0.0f || self->s.alpha > 1.0f)
+		self->s.alpha = 1.0f;
+
+	self->nextthink = level.time + FRAMETIME * 2;
 	self->think = gib_fade2; //mxd. Moved from gib_fade2()
-	gib_fade2(self);
 }
 
 #else
@@ -206,8 +193,8 @@ void gib_think (edict_t *self)
 
 	if (self->s.frame == 10)
 	{
-		self->think = G_FreeEdict;
-		self->nextthink = level.time + 8 + random()*10;
+		self->think = gib_fade; //mxd. Was G_FreeEdict;
+		self->nextthink = level.time + 8 + random() * 10;
 	}
 }
 
@@ -216,17 +203,14 @@ void gib_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 	if (!self->groundentity)
 		return;
 
-	//mxd
-	vec3_t relvel;
-	VectorSubtract(self->groundentity->velocity, self->velocity, relvel); // Factor in groundentity movement...
-	const float maxlen = 300.0f;
-	const float len = min(VectorLength(relvel), maxlen);
-
-	if(len < 1) //mxd
-		self->touch = NULL;
-
 	if (plane)
 	{
+		//mxd
+		vec3_t relvel;
+		VectorSubtract(self->groundentity->velocity, self->velocity, relvel); // Factor in groundentity movement...
+		const float maxlen = 300.0f;
+		const float len = min(VectorLength(relvel), maxlen);
+
 		if(rand() & 1)
 		{
 			//mxd. Added sound for GIB_METALLIC
@@ -249,6 +233,9 @@ void gib_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 		// Align to touched surface when stopped
 		if(len < 1)
 		{
+			VectorClear(self->avelocity); //mxd. In case of getting stuck in unexpected places...
+			self->touch = NULL; //mxd
+			
 			if(plane->type == PLANE_Z) // Horizontal plane
 			{
 				self->s.angles[PITCH] = 0;
@@ -271,7 +258,6 @@ void gib_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 
 			if (self->s.modelindex == sm_meat_index)
 			{
-				self->s.frame++;
 				self->think = gib_think;
 				self->nextthink = level.time + FRAMETIME;
 			}
@@ -330,8 +316,8 @@ void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 	gib->clipmask = MASK_SHOT; // Knightmare added
 
 	//mxd. Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
-	VectorSet(gib->mins, -4, -4, -4);
-	VectorSet(gib->maxs, 4, 4, 4);
+	VectorSet(gib->mins, -1, -1, -1);
+	VectorSet(gib->maxs, 1, 1, 1);
 
 	if (self->blood_type == 1)
 	{
@@ -347,12 +333,21 @@ void ThrowGib(edict_t *self, char *gibname, int damage, int type)
 		gib->s.effects |= EF_GIB;
 	}
 
-	SetGibAlpha(self, gib); //mxd
+	// Inherit translucency flags from parent entity
+	if (self->s.renderfx & RF_TRANSLUCENT)
+		gib->s.renderfx |= RF_TRANSLUCENT;
+	if (self->s.effects & EF_SPHERETRANS)
+		gib->s.effects |= EF_SPHERETRANS;
+
+#ifdef KMQUAKE2_ENGINE_MOD
+	// Knightmare- translucent monsters throw translucent gibs
+	if (self->s.alpha > 0.0f && self->s.alpha < 1.0f)
+		gib->s.alpha = self->s.alpha;
+#endif
 
 	gib->flags |= FL_NO_KNOCKBACK;
 	gib->svflags |= SVF_GIB; //Knightmare- gib flag
 	gib->takedamage = DAMAGE_NO; // Was DAMAGE_YES
-	gib->die = gib_die;
 	gib->touch = gib_touch; //mxd
 	gib->movetype = MOVETYPE_BOUNCE; //mxd. Let all gibs bounce (was MOVETYPE_TOSS for GIB_ORGANIC, unless (deathmatch->value && mega_gibs->value))
 
@@ -417,8 +412,6 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 {
 	self->s.skinnum = 0;
 	self->s.frame = 0;
-	VectorClear(self->mins);
-	VectorClear(self->maxs);
 
 	DeleteReflection(self, -1);
 
@@ -444,8 +437,8 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 	self->clipmask = MASK_SHOT; // Knightmare added
 
 	//mxd. Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
-	VectorSet(self->mins, -4, -4, -4);
-	VectorSet(self->maxs, 4, 4, 4);
+	VectorSet(self->mins, -1, -1, -1);
+	VectorSet(self->maxs, 1, 1, 1);
 
 	if(self->blood_type == 1)
 	{
@@ -470,7 +463,6 @@ void ThrowHead(edict_t *self, char *gibname, int damage, int type)
 
 	// Lazarus: Disassociate this head with its monster
 	self->targetname = NULL;
-	self->die = gib_die;
 	self->touch = gib_touch; //mxd. Let all gibs run touch logic
 	self->dmgteam = NULL; // Prevent gibs from becoming angry if their buddies are hurt
 	self->postthink = NULL;	// Knightmare- stop lava check
@@ -542,8 +534,8 @@ void ThrowClientHead(edict_t *self, int damage)
 	gi.setmodel(self, gibname);
 
 	// Set bbox. Fixes models in some cases rendered as black on sloped surfaces.
-	VectorSet(self->mins, -4, -4, -4);
-	VectorSet(self->maxs, 4, 4, 4);
+	VectorSet(self->mins, -1, -1, -1);
+	VectorSet(self->maxs, 1, 1, 1);
 
 	self->takedamage = DAMAGE_NO;
 	self->solid = SOLID_TRIGGER; //mxd. Changed from SOLID_NOT. Makes gibs move with conveyor belts etc, like in fact2 (https://github.com/yquake2/yquake2/commit/07477e0f75707ebcdbadf243ae7e88555f0065b2)
@@ -601,7 +593,17 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	VectorCopy(origin, chunk->s.origin);
 	gi.setmodel(chunk, modelname);
 
-	SetGibAlpha(self, chunk); //mxd
+	// Inherit translucency flags from parent entity
+	if (self->s.renderfx & RF_TRANSLUCENT)
+		chunk->s.renderfx |= RF_TRANSLUCENT;
+	if (self->s.effects & EF_SPHERETRANS)
+		chunk->s.effects |= EF_SPHERETRANS;
+
+#ifdef KMQUAKE2_ENGINE_MOD
+	// Knightmare- translucent entities throw translucent debris
+	if (self->s.alpha > 0.0f && self->s.alpha < 1.0f)
+		chunk->s.alpha = self->s.alpha;
+#endif
 
 	v[0] = 100 * crandom();
 	v[1] = 100 * crandom();
@@ -626,7 +628,6 @@ void ThrowDebris(edict_t *self, char *modelname, float speed, vec3_t origin, int
 	chunk->class_id = ENTITY_DEBRIS; //mxd
 	chunk->svflags |= SVF_GIB; //Knightmare- gib flag
 	chunk->takedamage = DAMAGE_NO; // Was DAMAGE_YES
-	chunk->die = debris_die;
 	chunk->touch = gib_touch; //mxd. Added
 	chunk->style = GIB_METALLIC; //mxd
 
@@ -2829,7 +2830,7 @@ void SP_misc_gib_arm(edict_t *ent)
 	ent->avelocity[0] = crandom() * 200;
 	ent->avelocity[1] = crandom() * 200;
 	ent->avelocity[2] = crandom() * 200;
-	ent->think = G_FreeEdict;
+	ent->think = gib_fade; //mxd. Was G_FreeEdict;
 	ent->nextthink = level.time + 30;
 
 	gi.linkentity(ent);
@@ -2852,7 +2853,7 @@ void SP_misc_gib_leg(edict_t *ent)
 	ent->avelocity[0] = crandom() * 200;
 	ent->avelocity[1] = crandom() * 200;
 	ent->avelocity[2] = crandom() * 200;
-	ent->think = G_FreeEdict;
+	ent->think = gib_fade; //mxd. Was G_FreeEdict;
 	ent->nextthink = level.time + 30;
 
 	gi.linkentity(ent);
@@ -2875,7 +2876,7 @@ void SP_misc_gib_head(edict_t *ent)
 	ent->avelocity[0] = crandom() * 200;
 	ent->avelocity[1] = crandom() * 200;
 	ent->avelocity[2] = crandom() * 200;
-	ent->think = G_FreeEdict;
+	ent->think = gib_fade; //mxd. Was G_FreeEdict;
 	ent->nextthink = level.time + 30;
 
 	gi.linkentity(ent);
