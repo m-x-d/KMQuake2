@@ -63,6 +63,7 @@ vec3_t	r_origin;
 float	r_world_matrix[16];
 float	r_base_world_matrix[16];
 
+GLdouble r_farz; // Knightmare- variable sky range, made this a global var
 
 //
 // screen size info
@@ -392,12 +393,8 @@ R_SetupGL
 */
 void R_SetupGL(void)
 {
-	//Knightmare- variable sky range
-	static GLdouble farz;
-	//end Knightmare
-
 	// Knightmare- update r_modulate in real time
-	if (r_modulate->modified && r_worldmodel) //Don't do this if no map is loaded
+	if (r_modulate->modified && r_worldmodel) // Don't do this if no map is loaded
 	{
 		msurface_t *surf;
 		int i;
@@ -429,15 +426,15 @@ void R_SetupGL(void)
 
 		GLdouble boxsize = r_skydistance->value;
 		boxsize -= 252 * ceil(boxsize / 2300);
-		farz = 1.0;
-		while (farz < boxsize) //make this a power of 2
+		r_farz = 1.0;
+		while (r_farz < boxsize) //make this a power of 2
 		{
-			farz *= 2.0;
-			if (farz >= 65536) //don't make it larger than this
+			r_farz *= 2.0;
+			if (r_farz >= 65536) //don't make it larger than this
 				break;
 		}
 
-		farz *= 2.0; //double since boxsize is distance from camera to edge of skybox, not total size of skybox
+		r_farz *= 2.0; //double since boxsize is distance from camera to edge of skybox, not total size of skybox
 
 		R_UpdateFogVars(); //mxd
 	}
@@ -456,23 +453,23 @@ void R_SetupGL(void)
 	const float screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
 //	yfov = 2*atan((float)r_newrefdef.height/r_newrefdef.width)*180/M_PI;
 	qglMatrixMode(GL_PROJECTION);
-    qglLoadIdentity();
+	qglLoadIdentity();
 
 	//Knightmare- 12/26/2001- increase back clipping plane distance
-    MYgluPerspective(r_newrefdef.fov_y,  screenaspect,  4, farz); //was 4096
+	MYgluPerspective(r_newrefdef.fov_y,  screenaspect,  4, r_farz); //was 4096
 	//end Knightmare
 
 	GL_CullFace(GL_FRONT);
 
 	qglMatrixMode(GL_MODELVIEW);
-    qglLoadIdentity();
+	qglLoadIdentity();
 
-    qglRotatef(-90, 1, 0, 0);	    // put Z going up
-    qglRotatef( 90, 0, 0, 1);	    // put Z going up
-    qglRotatef(-r_newrefdef.viewangles[2], 1, 0, 0);
-    qglRotatef(-r_newrefdef.viewangles[0], 0, 1, 0);
-    qglRotatef(-r_newrefdef.viewangles[1], 0, 0, 1);
-    qglTranslatef(-r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2]);
+	qglRotatef(-90, 1, 0, 0); // Put Z going up
+	qglRotatef( 90, 0, 0, 1); // Put Z going up
+	qglRotatef(-r_newrefdef.viewangles[2], 1, 0, 0);
+	qglRotatef(-r_newrefdef.viewangles[0], 0, 1, 0);
+	qglRotatef(-r_newrefdef.viewangles[1], 0, 0, 1);
+	qglTranslatef(-r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2]);
 
 //	if ( glState.camera_separation != 0 && glState.stereo_enabled )
 //		qglTranslatef ( glState.camera_separation, 0, 0 );
@@ -491,7 +488,8 @@ void R_SetupGL(void)
 	GL_Disable(GL_ALPHA_TEST);
 	GL_Enable(GL_DEPTH_TEST);
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
 }
 
 

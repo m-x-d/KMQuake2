@@ -162,6 +162,8 @@ extern vec3_t vpn; // Forward view vector
 extern vec3_t vright; // Right view vector
 extern vec3_t r_origin; // Player view origin
 
+extern GLdouble r_farz; // Knightmare- variable sky range, made this a global var
+
 //
 // Screen size info
 //
