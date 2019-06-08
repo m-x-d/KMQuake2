@@ -182,10 +182,11 @@ cvar_t	*vid_fullscreen;
 cvar_t	*vid_gamma;
 cvar_t	*vid_ref;
 
-cvar_t	*r_bloom;	// BLOOMS
+cvar_t	*r_bloom; // BLOOMS
 
 cvar_t	*r_skydistance; //Knightmare- variable sky range
-cvar_t	*r_saturation;	//** DMP
+cvar_t	*r_fog_skyratio; //Knightmare- variable sky fog ratio
+cvar_t	*r_saturation; //** DMP
 
 
 /*
@@ -438,9 +439,16 @@ void R_SetupGL(void)
 
 		farz *= 2.0; //double since boxsize is distance from camera to edge of skybox, not total size of skybox
 
-		//VID_Printf(PRINT_DEVELOPER, "farz now set to %g\n", farz);
+		R_UpdateFogVars(); //mxd
 	}
 	// end Knightmare
+
+	//mxd. Update variable sky fogging ratio.
+	if(r_fog_skyratio->modified)
+	{
+		r_fog_skyratio->modified = false;
+		R_UpdateFogVars();
+	}
 
 	//
 	// set up projection matrix
@@ -612,26 +620,18 @@ void R_RenderView(refdef_t *fd)
 	R_SetupFrame();
 	R_SetFrustum();
 	R_SetupGL();
+	R_SetFog();
 	R_MarkLeaves();	// done here so we know if we're in water
 	R_DrawWorld();
 
 	if (r_newrefdef.rdflags & RDF_NOWORLDMODEL) // options menu
 	{
-		qboolean fog_on = false;
-		//Knightmare- no fogging on menu/hud models
-		if (qglIsEnabled(GL_FOG)) //check if fog is enabled
-		{
-			fog_on = true;
-			qglDisable(GL_FOG); //if so, disable it
-		}
+		R_SuspendFog();
 
-		//R_DrawAllDecals();
 		R_DrawAllEntities(false);
 		R_DrawAllParticles();
 
-		//re-enable fog if it was on
-		if (fog_on)
-			qglEnable(GL_FOG);
+		R_ResumeFog();
 	}
 	else
 	{
@@ -674,8 +674,6 @@ void R_RenderView(refdef_t *fd)
 
 		R_Flash();
 	}
-
-	R_SetFog();
 }
 
 
@@ -929,6 +927,7 @@ void R_Register(void)
 	r_bloom = Cvar_Get("r_bloom", "0", CVAR_ARCHIVE);	// BLOOMS
 
 	r_skydistance = Cvar_Get("r_skydistance", "10000", CVAR_ARCHIVE); // variable sky range
+	r_fog_skyratio = Cvar_Get("r_fog_skyratio", "10", CVAR_ARCHIVE);  // variable sky fog ratio
 	r_saturation = Cvar_Get("r_saturation", "1.0", CVAR_ARCHIVE);	  //** DMP saturation setting (.89 good for nvidia)
 	r_lightcutoff = Cvar_Get("r_lightcutoff", "0", CVAR_ARCHIVE);	  //** DMP dynamic light cutoffnow variable
 

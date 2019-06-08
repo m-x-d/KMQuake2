@@ -272,6 +272,7 @@ extern cvar_t *r_lockpvs;
 extern cvar_t *r_intensity;
 
 extern cvar_t *r_skydistance; //Knightmare- variable sky range
+extern cvar_t *r_fog_skyratio; //Knightmare- variable sky fog ratio
 extern cvar_t *r_saturation; //** DMP
 
 extern cvar_t *r_bloom;
@@ -587,8 +588,12 @@ qboolean STBSaveTGA(const char *filename, byte* source, int width, int height);
 // r_fog.c
 //
 void R_SetFog();
+void R_SetSkyFog(qboolean setSkyFog);
+void R_SuspendFog(void);
+void R_ResumeFog(void);
 void R_InitFogVars();
 void R_SetFogVars(qboolean enable, int model, int density, int start, int end, int red, int green, int blue);
+void R_UpdateFogVars(); //mxd
 
 /*
 ** GL config stuff

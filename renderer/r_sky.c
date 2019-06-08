@@ -319,6 +319,8 @@ void R_DrawSkyBox (void)
 			return; // Nothing visible
 	}
 
+	R_SetSkyFog(true); // Set sky distance fog
+
 	qglPushMatrix();
 	qglTranslatef(r_origin[0], r_origin[1], r_origin[2]);
 	qglRotatef(r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
@@ -356,6 +358,8 @@ void R_DrawSkyBox (void)
 	}
 
 	qglPopMatrix();
+
+	R_SetSkyFog(false); // Restore normal distance fog
 }
 
 
