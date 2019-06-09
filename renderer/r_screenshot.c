@@ -143,7 +143,7 @@ void R_ScaledScreenshot(char *filename)
 	fclose(file);
 
 	//mxd. Save image
-	if (!STBSaveJPG(filename, jpgdata, saveshotwidth, saveshotheight, 75))
+	if (!STBSaveJPG(filename, jpgdata, saveshotwidth, saveshotheight, 95))
 		VID_Printf(PRINT_ALL, "%s: Couldn't save %s\n", __func__, filename);
 
 	// Free screenshot data
