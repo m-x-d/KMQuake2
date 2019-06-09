@@ -114,12 +114,15 @@ void R_ScreenShot_Silent_f(void)
 byte *saveshotdata;
 
 // By Knightmare. Creates preview screenshot for save/load menus.
-void R_ScaledScreenshot(char *filename) 
+void R_ScaledScreenshot(char *filename)
 {
 	if (!saveshotdata)
 		return;
 
-	const int saveshotwidth = vid.width / 2;
+	// Round down width to nearest multiple of 4 to match logic in R_GrabScreen().
+	const int grab_width = vid.width & ~3;
+
+	const int saveshotwidth = grab_width / 2;
 	const int saveshotheight = vid.height / 2;
 
 	// Allocate room for reduced screenshot
@@ -128,7 +131,7 @@ void R_ScaledScreenshot(char *filename)
 		return;
 
 	//mxd. Resize grabbed screen
-	STBResize(saveshotdata, vid.width, vid.height, jpgdata, saveshotwidth, saveshotheight, false);
+	STBResize(saveshotdata, grab_width, vid.height, jpgdata, saveshotwidth, saveshotheight, false);
 
 	// Check filename
 	FILE *file = fopen(filename, "wb");
