@@ -2091,7 +2091,7 @@ void ClientBegin (edict_t *ent)
 		return;
 	}
 
-	Fog_Off();
+	Fog(ent); //mxd. Was Fog_Off(). Fixes no fog rendered for the first server frame after loading a save of a map, which has fog enabled.
 
 	stuffcmd(ent,"alias +zoomin zoomin;alias -zoomin zoominstop\n");
 	stuffcmd(ent,"alias +zoomout zoomout;alias -zoomout zoomoutstop\n");
