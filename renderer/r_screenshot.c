@@ -65,32 +65,28 @@ static void R_ScreenShot(qboolean silent)
 		return;
 	}
 
-	// Round down width to nearest multiple of 4
-	const int grab_width = vid.width & ~3;
-	const int grab_x = (vid.width - grab_width) / 2;
-
 	// Grab pixels
-	byte *buffer = malloc(grab_width * vid.height * 3);
-	qglReadPixels(grab_x, 0, grab_width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+	byte *buffer = malloc(vid.width * vid.height * 3);
+	qglReadPixels(0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 
 	// Save the image...
 	if (!Q_strcasecmp(r_screenshot_format->string, "jpg"))
 	{
 		// Check quality...
-		if (r_screenshot_jpeg_quality->integer > 100 || r_screenshot_jpeg_quality->value < 1)
+		if (r_screenshot_jpeg_quality->integer > 100 || r_screenshot_jpeg_quality->integer < 1)
 			Cvar_Set("r_screenshot_jpeg_quality", "85");
 		
-		if (!STBSaveJPG(filename, buffer, grab_width, vid.height, r_screenshot_jpeg_quality->integer))
+		if (!STBSaveJPG(filename, buffer, vid.width, vid.height, r_screenshot_jpeg_quality->integer))
 			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: Couldn't save a file\n", __func__);
 	}
 	else if(!Q_strcasecmp(r_screenshot_format->string, "png"))
 	{
-		if (!STBSavePNG(filename, buffer, grab_width, vid.height))
+		if (!STBSavePNG(filename, buffer, vid.width, vid.height))
 			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: Couldn't save a file\n", __func__);
 	}
 	else // TGA
 	{
-		if (!STBSaveTGA(filename, buffer, grab_width, vid.height))
+		if (!STBSaveTGA(filename, buffer, vid.width, vid.height))
 			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: Couldn't save a file\n", __func__);
 	}
 
@@ -119,10 +115,7 @@ void R_ScaledScreenshot(char *filename)
 	if (!saveshotdata)
 		return;
 
-	// Round down width to nearest multiple of 4 to match logic in R_GrabScreen().
-	const int grab_width = vid.width & ~3;
-
-	const int saveshotwidth = grab_width / 2;
+	const int saveshotwidth = vid.width / 2;
 	const int saveshotheight = vid.height / 2;
 
 	// Allocate room for reduced screenshot
@@ -131,7 +124,7 @@ void R_ScaledScreenshot(char *filename)
 		return;
 
 	//mxd. Resize grabbed screen
-	STBResize(saveshotdata, grab_width, vid.height, jpgdata, saveshotwidth, saveshotheight, false);
+	STBResize(saveshotdata, vid.width, vid.height, jpgdata, saveshotwidth, saveshotheight, false);
 
 	// Check filename
 	FILE *file = fopen(filename, "wb");
@@ -155,15 +148,11 @@ void R_GrabScreen(void) // Knightmare
 	// Free saveshot buffer first
 	free(saveshotdata);
 
-	// Round down width to nearest multiple of 4
-	const int grab_width = vid.width & ~3;
-	const int grab_x = (vid.width - grab_width) / 2;
-
 	// Allocate room for a copy of the framebuffer
-	saveshotdata = malloc(grab_width * vid.height * 3);
+	saveshotdata = malloc(vid.width * vid.height * 3);
 	if (!saveshotdata)
 		return;
 
 	// Read the framebuffer into our storage
-	qglReadPixels(grab_x, 0, grab_width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, saveshotdata);
+	qglReadPixels(0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, saveshotdata);
 }
