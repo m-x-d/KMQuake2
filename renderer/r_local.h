@@ -208,7 +208,7 @@ extern cvar_t *r_ext_draw_range_elements;
 extern cvar_t *r_ext_compiled_vertex_array;
 extern cvar_t *r_arb_texturenonpoweroftwo;
 extern cvar_t *r_nonpoweroftwo_mipmaps;
-extern cvar_t *r_newlightmapformat; // Knightmare- whether to use new lightmap format
+extern cvar_t *r_sgis_generatemipmap; // Knightmare- whether to use GL_SGIS_generate_mipmap
 extern cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 extern cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 extern cvar_t *r_arb_vertex_buffer_object;
@@ -283,7 +283,6 @@ extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_gamma;
 
 
-extern int gl_lightmap_format;
 extern int gl_tex_solid_format;
 extern int gl_tex_alpha_format;
 
