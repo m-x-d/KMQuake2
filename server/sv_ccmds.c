@@ -157,35 +157,6 @@ void SV_WipeSavegame(char *savename)
 	Sys_FindClose();
 }
 
-void CopyFile(char *src, char *dst)
-{
-	Com_DPrintf("CopyFile (%s, %s)\n", src, dst);
-
-	FILE *f1 = fopen(src, "rb");
-	if (!f1)
-		return;
-
-	FILE *f2 = fopen(dst, "wb");
-	if (!f2)
-	{
-		fclose(f1);
-		return;
-	}
-
-	byte buffer[65536];
-	while (true)
-	{
-		const int len = fread(buffer, 1, sizeof(buffer), f1);
-		if (!len)
-			break;
-
-		fwrite(buffer, 1, len, f2);
-	}
-
-	fclose(f1);
-	fclose(f2);
-}
-
 void SV_CopySaveGame(char *src, char *dst)
 {
 	Com_DPrintf("SV_CopySaveGame(%s, %s)\n", src, dst);
@@ -197,18 +168,18 @@ void SV_CopySaveGame(char *src, char *dst)
 	Com_sprintf(name,  sizeof(name),  "%s/save/%s/server.ssv", FS_Gamedir(), src);
 	Com_sprintf(name2, sizeof(name2), "%s/save/%s/server.ssv", FS_Gamedir(), dst);
 	FS_CreatePath(name2);
-	CopyFile(name, name2);
+	FS_CopyFile(name, name2);
 
 	Com_sprintf(name,  sizeof(name),  "%s/save/%s/game.ssv", FS_Gamedir(), src);
 	Com_sprintf(name2, sizeof(name2), "%s/save/%s/game.ssv", FS_Gamedir(), dst);
-	CopyFile(name, name2);
+	FS_CopyFile(name, name2);
 
 	// Knightmare- copy screenshot
 	if (strcmp(dst, "kmq2save0")) // No screenshot for start of level autosaves
 	{
 		Com_sprintf(name,  sizeof(name),  "%s/save/%s/shot.jpg", FS_Gamedir(), src);
 		Com_sprintf(name2, sizeof(name2), "%s/save/%s/shot.jpg", FS_Gamedir(), dst);
-		CopyFile(name, name2);
+		FS_CopyFile(name, name2);
 	}
 
 	Com_sprintf(name, sizeof(name), "%s/save/%s/", FS_Gamedir(), src);
@@ -219,14 +190,14 @@ void SV_CopySaveGame(char *src, char *dst)
 	{
 		Q_strncpyz(name + len, found + len, sizeof(name) - len);
 		Com_sprintf(name2, sizeof(name2), "%s/save/%s/%s", FS_Gamedir(), dst, found + len);
-		CopyFile(name, name2);
+		FS_CopyFile(name, name2);
 
 		// Change sav to sv2
 		int l = strlen(name);
 		Q_strncpyz(name + l - 3, "sv2", sizeof(name) - l + 3);
 		l = strlen(name2);
 		Q_strncpyz(name2 + l - 3, "sv2", sizeof(name2) - l + 3);
-		CopyFile(name, name2);
+		FS_CopyFile(name, name2);
 
 		found = Sys_FindNext(0, 0);
 	}

@@ -765,7 +765,7 @@ void FS_Seek(fileHandle_t f, int offset, fsOrigin_t origin);
 int FS_Tell(fileHandle_t f);
 qboolean FS_FileExists(char *path);
 qboolean FS_LocalFileExists(char *path);
-//void FS_CopyFile (const char *srcPath, const char *dstPath);
+void FS_CopyFile(const char *srcPath, const char *dstPath);
 void FS_RenameFile(const char *oldPath, const char *newPath);
 void FS_DeleteFile(const char *path);
 

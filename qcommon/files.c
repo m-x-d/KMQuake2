@@ -758,6 +758,35 @@ qboolean FS_LocalFileExists(char *path)
 	return false;
 }
 
+void FS_CopyFile(const char *srcPath, const char *dstPath)
+{
+	Com_DPrintf("%s(%s, %s)\n", __func__, srcPath, dstPath);
+
+	FILE *f1 = fopen(srcPath, "rb");
+	if (!f1)
+		return;
+
+	FILE *f2 = fopen(dstPath, "wb");
+	if (!f2)
+	{
+		fclose(f1);
+		return;
+	}
+
+	byte buffer[65536];
+	while (true)
+	{
+		const int len = fread(buffer, 1, sizeof(buffer), f1);
+		if (!len)
+			break;
+
+		fwrite(buffer, 1, len, f2);
+	}
+
+	fclose(f1);
+	fclose(f2);
+}
+
 void FS_RenameFile(const char *oldPath, const char *newPath)
 {
 	FS_DPrintf("FS_RenameFile( %s, %s )\n", oldPath, newPath);
