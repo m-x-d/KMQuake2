@@ -569,6 +569,10 @@ void CL_ClearState(void)
 	memset(&cl, 0, sizeof(cl));
 	memset(&cl_entities, 0, sizeof(cl_entities));
 
+	//mxd. Initialize with unreachable value (fixes incorrect view interpolation after loading a game when the player is within 32 map units from [0,0,0] coords).
+	for (int i = 0; i < CMD_BACKUP; i++)
+		cl.predicted_origins[i][2] = MAX_WORLD_COORD * 2;
+
 	cl.maxclients = MAX_CLIENTS; // From R1Q2
 	SZ_Clear(&cls.netchan.message);
 }
