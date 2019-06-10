@@ -524,7 +524,7 @@ static void SCR_CheckDrawCenterString(void)
 #pragma region ======================= Console commands
 
 static void SCR_SizeUp_f(void)
-{	
+{
 	// Handle HUD scale
 	const int hudscale = min(Cvar_VariableValue("hud_scale") + 1, 6); //mxd. +min
 	Cvar_SetValue("hud_scale", hudscale);
@@ -568,6 +568,127 @@ static void SCR_Sky_f(void)
 	}
 
 	R_SetSky(Cmd_Argv(1), rotate, axis);
+}
+
+void SCR_DumpStatusLayout_f(void)
+{
+	char buffer[2048];
+	char rawLine[MAX_QPATH + 1];
+	char statLine[32];
+	char name[MAX_OSPATH];
+
+	if (Cmd_Argc() > 2)
+	{
+		Com_Printf("Usage: dumpstatuslayout <filename>\n");
+		return;
+	}
+
+	if(Cmd_Argc() == 1) //mxd. Auto filename
+		Com_sprintf(name, sizeof(name), "%s/statusbar_layout.txt", FS_Gamedir());
+	else
+		Com_sprintf(name, sizeof(name), "%s/%s.txt", FS_Gamedir(), Cmd_Argv(1));
+
+	FS_CreatePath(name);
+	FILE* f = fopen(name, "w");
+	if (!f)
+	{
+		Com_Printf("ERROR: couldn't open.\n");
+		return;
+	}
+
+	// Statusbar layout is in multiple configstrings starting at CS_STATUSBAR and ending at CS_AIRACCEL
+	char* p = &buffer[0];
+	int bufcount = 0;
+
+	for (int i = CS_STATUSBAR; i < CS_AIRACCEL; i++)
+	{
+		for (int j = 0; j < MAX_QPATH; j++)
+		{
+			// Check for end
+			if (cl.configstrings[i][j] == '\0')
+				break;
+
+			//mxd. Skip extra spaces
+			if ((cl.configstrings[i][j] == '\t' || cl.configstrings[i][j] == ' ') && bufcount > 0 && (*(p - 1) == ' ' || *(p - 1) == '\n'))
+				continue;
+
+			*p = cl.configstrings[i][j];
+
+			if (*p == '\t')
+				*p = ' ';
+
+			// Check for "endif", insert newline after
+			if(bufcount > 4 && !strncmp(p - 4, "endif", 5))
+			{
+				p++;
+				bufcount++;
+				*p = '\n';
+			}
+
+			//mxd. Check for "if", insert newline before
+			if (bufcount > 2 && !strncmp(p - 2, " if", 3))
+				*(p - 2) = '\n';
+
+			p++;
+			bufcount++;
+		}
+	}
+
+	fwrite(&buffer, 1, bufcount, f);
+	buffer[0] = 0;
+	bufcount = 0;
+
+	// Write out the raw dump
+	Com_sprintf(statLine, sizeof(statLine), "\nRaw Dump\n--------\n");
+	Q_strncatz(buffer, statLine, sizeof(buffer));
+	bufcount += strlen(statLine);
+	fwrite(&buffer, 1, bufcount, f);
+	buffer[0] = 0;
+	bufcount = 0;
+
+	for (int i = CS_STATUSBAR; i < CS_AIRACCEL; i++)
+	{
+		memset(rawLine, 0, sizeof(rawLine));
+
+		for (int j = 0; j < MAX_QPATH; j++)
+		{
+			rawLine[j] = cl.configstrings[i][j];
+
+			if (rawLine[j] == '\0' || rawLine[j] == '\t')
+				rawLine[j] = ' ';
+		}
+
+		rawLine[MAX_QPATH] = '\n';
+		fwrite(&rawLine, 1, sizeof(rawLine), f);
+	}
+
+	// Write out the stat values for debugging
+	Com_sprintf(statLine, sizeof(statLine), "\nStat Values\n-----------\n");
+	Q_strncatz(buffer, statLine, sizeof(buffer));
+	bufcount += strlen(statLine);
+
+	for (int i = 0; i < MAX_STATS; i++)
+	{
+		Com_sprintf(statLine, sizeof(statLine), "%i: %i\n", i, cl.frame.playerstate.stats[i]);
+
+		// Prevent buffer overflow
+		if (bufcount + strlen(statLine) >= sizeof(buffer))
+		{
+			fwrite(&buffer, 1, bufcount, f);
+			buffer[0] = 0;
+			bufcount = 0;
+		}
+
+		Q_strncatz(buffer, statLine, sizeof(buffer));
+		bufcount += strlen(statLine);
+	}
+
+	fwrite(&buffer, 1, bufcount, f);
+	buffer[0] = 0;
+
+	fclose(f);
+
+	Com_Printf("Dumped statusbar layout to '%s'.\n", name);
 }
 
 static void SCR_Loading_f(void)
@@ -657,6 +778,7 @@ void SCR_Init(void)
 	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
 	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
 	Cmd_AddCommand("sky", SCR_Sky_f);
+	Cmd_AddCommand("dumpstatuslayout", SCR_DumpStatusLayout_f);
 
 	SCR_InitScreenScale();
 	InitHudScale();
