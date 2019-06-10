@@ -144,11 +144,6 @@ void SortCrosshairs(char **list, int len)
 	}
 }
 
-qboolean IsNumeric(char ch)
-{
-	return (ch >= '0' && ch <= '9');
-}
-
 char **SetCrosshairNames(void)
 {
 	char *curCrosshair;
@@ -193,10 +188,10 @@ char **SetCrosshairNames(void)
 			if (namelen < 7 || namelen > 9)
 				continue;
 
-			if (!IsNumeric(p[2]))
+			if (!isdigit(p[2]))
 				continue;
 
-			if (namelen >= 8 && !IsNumeric(p[3]))
+			if (namelen >= 8 && !isdigit(p[3]))
 				continue;
 
 			// ch100 is only valid 5-char name
@@ -247,10 +242,10 @@ char **SetCrosshairNames(void)
 			if (namelen < 7 || namelen > 9)
 				continue;
 
-			if (!IsNumeric(p[2]))
+			if (!isdigit(p[2]))
 				continue;
 
-			if (namelen >= 8 && !IsNumeric(p[3]))
+			if (namelen >= 8 && !isdigit(p[3]))
 				continue;
 
 			// ch100 is only valid 5-char name
