@@ -413,9 +413,6 @@
     <ClInclude Include="..\..\..\client\cdaudio.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\client\cinematic.h">
-      <Filter>Header Files\client</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\client\client.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>

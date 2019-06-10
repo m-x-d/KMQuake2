@@ -282,7 +282,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\cdaudio.h" />
-    <ClInclude Include="..\..\..\client\cinematic.h" />
     <ClInclude Include="..\..\..\client\client.h" />
     <ClInclude Include="..\..\..\client\console.h" />
     <ClInclude Include="..\..\..\client\input.h" />
