@@ -330,7 +330,6 @@ void SV_ReadServerFile(void)
 {
 	fileHandle_t f;
 	char fileName[MAX_OSPATH];
-	char string[128];
 	char comment[32];
 	char mapcmd[MAX_TOKEN_CHARS];
 
@@ -340,7 +339,7 @@ void SV_ReadServerFile(void)
 	FS_FOpenFile(fileName, &f, FS_READ);
 	if (!f)
 	{
-		Com_Printf("Couldn't read %s\n", fileName);
+		Com_Printf("%s: couldn't read '%s'\n", __func__, fileName);
 		return;
 	}
 
@@ -353,13 +352,25 @@ void SV_ReadServerFile(void)
 	// Read all CVAR_LATCH cvars. These will be things like coop, skill, deathmatch, etc
 	while (true)
 	{
-		char varName[128];
-		if (!FS_Read(varName, sizeof(varName), f)) //mxd. Was FS_FRead. Why?
+		char name[128] = { 0 };
+		if (!FS_Read(name, sizeof(name), f)) //mxd. Was FS_FRead. Why?
 			break;
 
-		FS_Read(string, sizeof(string), f);
-		Com_DPrintf("Set %s = %s\n", varName, string);
-		Cvar_ForceSet(varName, string);
+		char value[128] = { 0 };
+		FS_Read(value, sizeof(value), f);
+
+		// Skip first cvar slot in KMQ2 0.21 and later saves (embedded extra save info)
+		if (!strncmp(name, "KMQ2SSV", 7))
+			continue;
+
+		// Don't load game, basegame, engine name/version, or sys_* cvars from savegames
+		if (strcmp(name, "game") && strncmp(name, "basegame", 8)
+			&& strncmp(name, "sv_engine", 9) && strncmp(name, "cl_engine", 9)
+			&& strncmp(name, "sys_", 4))
+		{
+			Com_DPrintf("Set '%s' = '%s'\n", name, value);
+			Cvar_ForceSet(name, value);
+		}
 	}
 
 	FS_FCloseFile(f);
