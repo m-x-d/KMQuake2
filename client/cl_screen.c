@@ -592,7 +592,7 @@ void SCR_DumpStatusLayout_f(void)
 	FILE* f = fopen(name, "w");
 	if (!f)
 	{
-		Com_Printf("ERROR: couldn't open.\n");
+		Com_Printf(S_COLOR_RED"Error: couldn't open '%s'.\n", name);
 		return;
 	}
 
