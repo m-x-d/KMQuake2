@@ -391,11 +391,36 @@ void CL_ParseConfigString(void)
 
 	char *s = MSG_ReadString(&net_message);
 
-	strncpy (olds, cl.configstrings[i], sizeof(olds));
-	olds[sizeof(olds) - 1] = 0;
+	Q_strncpyz(olds, cl.configstrings[i], sizeof(olds));
+
+	// Check length
+	const uint length = strlen(s);
+	if (length >= (sizeof(cl.configstrings[0]) * (MAX_CONFIGSTRINGS - i)) - 1)
+		Com_Error(ERR_DROP, "%s: string %i exceeds available buffer space!", __func__, i);
 
 	// Don't use a null-terminated strncpy here!!
-	strncpy(cl.configstrings[i], s, sizeof(cl.configstrings[i]));
+	if (i >= CS_STATUSBAR && i < CS_AIRACCEL) // Allow writes to statusbar strings to overflow
+	{	
+		strncpy(cl.configstrings[i], s, (sizeof(cl.configstrings[i]) * (CS_AIRACCEL - i)) - 1);
+		cl.configstrings[CS_AIRACCEL - 1][MAX_QPATH - 1] = 0; // null-terminate end of section
+	}
+	else if (LegacyProtocol() && (i >= OLD_CS_GENERAL && i < OLD_MAX_CONFIGSTRINGS)) // Allow writes to general strings to overflow
+	{	
+		strncpy(cl.configstrings[i], s, (sizeof(cl.configstrings[i]) * (OLD_MAX_CONFIGSTRINGS - i)) - 1);
+		cl.configstrings[OLD_MAX_CONFIGSTRINGS - 1][MAX_QPATH - 1] = 0; // null-terminate end of section
+	}
+	else if (!LegacyProtocol() && (i >= CS_GENERAL && i < CS_PAKFILE)) // Allow writes to general strings to overflow
+	{	
+		strncpy(cl.configstrings[i], s, (sizeof(cl.configstrings[i]) * (CS_PAKFILE - i)) - 1);
+		cl.configstrings[CS_PAKFILE - 1][MAX_QPATH - 1] = 0; // null-terminate end of section
+	}
+	else
+	{
+		if (length >= MAX_QPATH)
+			Com_Printf(S_COLOR_YELLOW"%s: configstring %i is too long (%i / %i chars).\n", __func__, i, length, MAX_QPATH - 1);
+
+		Q_strncpyz(cl.configstrings[i], s, sizeof(cl.configstrings[i]));
+	}
 
 	// Do something apropriate 
 	if (i >= cs_lights && i < cs_lights + MAX_LIGHTSTYLES)
@@ -428,7 +453,7 @@ void CL_ParseConfigString(void)
 		if (cl.refresh_prepped)
 			cl.sound_precache[i - cs_sounds] = S_RegisterSound(cl.configstrings[i]);
 	}
-	else if (i >= cs_images && i < cs_images + max_images) //Knightmare- was MAX_MODELS
+	else if (i >= cs_images && i < cs_images + max_images) //Knightmare- was MAX_IMAGES
 	{
 		if (cl.refresh_prepped)
 			cl.image_precache[i - cs_images] = R_DrawFindPic(cl.configstrings[i]);
