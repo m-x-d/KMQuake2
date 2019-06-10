@@ -593,7 +593,7 @@ void R_SetFog();
 void R_SetSkyFog(qboolean setSkyFog);
 void R_SuspendFog(void);
 void R_ResumeFog(void);
-void R_InitFogVars();
+//void R_InitFogVars(); //mxd. Disabled
 void R_SetFogVars(qboolean enable, int model, int density, int start, int end, int red, int green, int blue);
 void R_UpdateFogVars(); //mxd
 

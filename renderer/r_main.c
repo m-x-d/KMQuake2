@@ -1588,7 +1588,7 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	R_DrawInitLocal();
 
 	R_InitDSTTex(); // init shader warp texture
-	R_InitFogVars(); // reset fog variables
+	//R_InitFogVars(); // reset fog variables //mxd. Don't.
 	VLight_Init(); // Vic's bmodel lights
 
 	const int err = qglGetError();

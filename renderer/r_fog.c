@@ -96,7 +96,8 @@ void R_ResumeFog(void)
 	}
 }
 
-void R_InitFogVars(void)
+//mxd. Disabled. Fixes fog vars being reset after changing resolution when a map is loaded. Doesn't seem to break anything.
+/*void R_InitFogVars(void)
 {
 	r_fogenable = false;
 	r_fogsuspended = false;
@@ -108,7 +109,7 @@ void R_InitFogVars(void)
 	r_fogskyfar = 10240.0f;
 
 	Vector4Set(r_fogColor, 1.0f, 1.0f, 1.0f, 1.0f);
-}
+}*/
 
 void R_SetFogVars(qboolean enable, int model, int density, int start, int end, int red, int green, int blue)
 {
