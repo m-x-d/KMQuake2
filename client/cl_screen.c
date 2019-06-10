@@ -677,7 +677,7 @@ void SCR_DrawCrosshair(void)
 	if (crosshair->modified)
 	{
 		//mxd. Handle here instead of SCR_TouchPics to avoid message spam when crosshair image is missing
-		if (modType("dday")) // dday has no crosshair (FORCED)
+		if (FS_ModType("dday")) // dday has no crosshair (FORCED)
 		{
 			Cvar_SetInteger("crosshair", 0);
 		}

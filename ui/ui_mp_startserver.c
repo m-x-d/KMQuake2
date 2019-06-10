@@ -110,7 +110,7 @@ static void InitializePersistentSettings()
 			ps_currentrule = MAP_3TCTF;
 		else if (Cvar_VariableInteger("ctf"))
 			ps_currentrule = MAP_CTF;
-		else if (roguepath() && Cvar_VariableInteger("gamerules") == 2)
+		else if (FS_RoguePath() && Cvar_VariableInteger("gamerules") == 2)
 			ps_currentrule = MAP_TAG;
 		else if (Cvar_VariableInteger("coop"))
 			ps_currentrule = MAP_COOP;
@@ -543,7 +543,7 @@ static void RulesChangeFunc(void *self)
 		UI_RefreshMapList(MAP_3TCTF);
 	}
 	// ROGUE GAMES
-	else if (roguepath() && s_rules_box.curvalue == MAP_TAG)
+	else if (FS_RoguePath() && s_rules_box.curvalue == MAP_TAG)
 	{
 		if (atoi(s_maxclients_field.buffer) < 8) // Set default of 8
 		{
@@ -573,7 +573,7 @@ static void StartServerActionFunc(void *self)
 	Cvar_SetInteger("coop", s_rules_box.curvalue == MAP_COOP);
 	Cvar_SetInteger("ctf", s_rules_box.curvalue == MAP_CTF);
 	Cvar_SetInteger("ttctf", s_rules_box.curvalue == MAP_3TCTF);
-	Cvar_SetInteger("gamerules", roguepath() ? ((s_rules_box.curvalue == MAP_TAG) ? MAP_CTF : MAP_DM) : MAP_DM);
+	Cvar_SetInteger("gamerules", FS_RoguePath() ? ((s_rules_box.curvalue == MAP_TAG) ? MAP_CTF : MAP_DM) : MAP_DM);
 
 	SavePersistentSettings(); //mxd
 
@@ -658,7 +658,7 @@ static void StartServer_MenuInit(void)
 	s_rules_box.generic.x		= 0;
 	s_rules_box.generic.y		= y += 3 * MENU_LINE_SIZE;
 	s_rules_box.generic.name	= "Rules";
-	s_rules_box.itemnames		= (roguepath() ? dm_coop_names_rogue : dm_coop_names); //PGM - rogue games only available with rogue DLL.
+	s_rules_box.itemnames		= (FS_RoguePath() ? dm_coop_names_rogue : dm_coop_names); //PGM - rogue games only available with rogue DLL.
 	s_rules_box.curvalue		= ps_currentrule; //mxd
 	s_rules_box.generic.callback = RulesChangeFunc;
 

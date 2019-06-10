@@ -95,11 +95,11 @@ static void ToggleGammaRamp(qboolean enable)
 }
 // end Vic's hardware gammaramp
 
-extern qboolean modType(char *name);
+extern qboolean FS_ModType(char *name);
 
-#define	WINDOW_CLASS_NAME	ENGINE_NAME // changed
-#define	WINDOW_CLASS_NAME2	ENGINE_NAME" - The Reckoning" // changed
-#define	WINDOW_CLASS_NAME3	ENGINE_NAME" - Ground Zero" // changed
+#define WINDOW_CLASS_NAME	ENGINE_NAME // changed
+#define WINDOW_CLASS_NAME2	ENGINE_NAME" - The Reckoning" // changed
+#define WINDOW_CLASS_NAME3	ENGINE_NAME" - Ground Zero" // changed
 
 static qboolean VID_CreateWindow(int width, int height, qboolean fullscreen)
 {
@@ -115,9 +115,9 @@ static qboolean VID_CreateWindow(int width, int height, qboolean fullscreen)
 	wc.cbWndExtra = 0;
 	wc.hInstance = glw_state.hInstance;
 
-	if (modType("xatrix")) // q2mp1
+	if (FS_ModType("xatrix")) // q2mp1
 		wc.hIcon = LoadIcon(glw_state.hInstance, MAKEINTRESOURCE(IDI_ICON2));
-	else if (modType("rogue")) // q2mp2
+	else if (FS_ModType("rogue")) // q2mp2
 		wc.hIcon = LoadIcon(glw_state.hInstance, MAKEINTRESOURCE(IDI_ICON3));
 	else 
 		wc.hIcon = LoadIcon(glw_state.hInstance, MAKEINTRESOURCE(IDI_ICON1));

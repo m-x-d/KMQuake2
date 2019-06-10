@@ -560,8 +560,8 @@ void CL_ParticleEffectSplash(vec3_t org, vec3_t dir, int color8, int count);
 void CL_ElectricParticles(vec3_t org, vec3_t dir, int count);
 
 // Psychospaz's mod detector
-qboolean modType(char *name);
-qboolean roguepath(void);
+qboolean FS_ModType(char *name);
+qboolean FS_RoguePath(void);
 // utility function for protocol version
 qboolean LegacyProtocol(void);
 

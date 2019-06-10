@@ -199,7 +199,7 @@ void FS_CreatePath(char *path)
 }
 
 // Psychospaz's mod detector
-qboolean modType(char *name)
+qboolean FS_ModType(char *name)
 {
 	for (fsSearchPath_t *search = fs_searchPaths; search; search = search->next)
 		if (strstr(search->path, name))
@@ -209,9 +209,9 @@ qboolean modType(char *name)
 }
 
 // This enables Rogue menu options for Q2MP4
-qboolean roguepath()
+qboolean FS_RoguePath()
 {
-	return (modType("rogue") || fs_roguegame->value);
+	return (FS_ModType("rogue") || fs_roguegame->value);
 }
 
 void FS_DPrintf(const char *format, ...)

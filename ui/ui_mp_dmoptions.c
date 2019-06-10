@@ -68,7 +68,7 @@ extern	menulist_s	s_rules_box;
 
 qboolean CTFMenuMode(void)
 {
-	const qboolean roguegame = roguepath(); //mxd
+	const qboolean roguegame = FS_RoguePath(); //mxd
 	return ((roguegame && s_rules_box.curvalue >= 3) || (!roguegame && s_rules_box.curvalue >= 2));
 }
 
@@ -166,12 +166,12 @@ static void DMFlagCallback(void *self)
 	{
 		bit = DF_QUAD_DROP;
 	}
-	else if (modType("xatrix"))	// XATRIX // Knightmare added
+	else if (FS_ModType("xatrix"))	// XATRIX // Knightmare added
 	{
 		if (f == &s_quadfire_drop_box)
 			bit = DF_QUADFIRE_DROP;
 	}
-	else if (roguepath())		// ROGUE
+	else if (FS_RoguePath())		// ROGUE
 	{
 		if (f == &s_no_mines_box)
 			bit = DF_NO_MINES;
@@ -254,11 +254,11 @@ void DMOptions_MenuInit(void)
 	DMOptions_SetupMenuItem(&s_friendlyfire_box, "Friendly fire", y += MENU_LINE_SIZE, ((dmflags & DF_NO_FRIENDLY_FIRE) == 0));
 
 	// Knightmare added
-	if (modType("xatrix")) // XATRIX
+	if (FS_ModType("xatrix")) // XATRIX
 	{
 		DMOptions_SetupMenuItem(&s_quadfire_drop_box, "Dualfire drop", y += MENU_LINE_SIZE, ((dmflags & DF_QUADFIRE_DROP) != 0));
 	}
-	else if (roguepath()) // ROGUE
+	else if (FS_RoguePath()) // ROGUE
 	{
 		DMOptions_SetupMenuItem(&s_no_mines_box, "Remove mines", y += MENU_LINE_SIZE, ((dmflags & DF_NO_MINES) != 0));
 		DMOptions_SetupMenuItem(&s_no_nukes_box, "Remove nukes", y += MENU_LINE_SIZE, ((dmflags & DF_NO_NUKES) != 0));
@@ -297,11 +297,11 @@ void DMOptions_MenuInit(void)
 	Menu_AddItem(&s_dmoptions_menu, &s_friendlyfire_box);
 
 	
-	if (modType("xatrix"))	 // XATRIX
+	if (FS_ModType("xatrix"))	 // XATRIX
 	{
 		Menu_AddItem(&s_dmoptions_menu, &s_quadfire_drop_box);
 	}
-	else if (roguepath())	 // ROGUE
+	else if (FS_RoguePath())	 // ROGUE
 	{
 		Menu_AddItem(&s_dmoptions_menu, &s_no_mines_box);
 		Menu_AddItem(&s_dmoptions_menu, &s_no_nukes_box);
