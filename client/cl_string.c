@@ -153,9 +153,9 @@ qboolean StringCheckParams(char modifier)
 }
 
 //mxd
-qboolean IsColoredString(char *s)
+qboolean IsColoredString(const char *s)
 {
-	if (strlen(s) < 2 || *s != Q_COLOR_ESCAPE)
+	if (!s || !s[1] || *s != Q_COLOR_ESCAPE)
 		return false;
 
 	switch (s[1])

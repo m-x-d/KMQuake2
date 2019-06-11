@@ -408,59 +408,45 @@ void SCR_CenterPrint(char *str)
 	scr_centertime_off = scr_centertime->value;
 	scr_centertime_end = scr_centertime_off;
 	scr_centertime_start = cl.time;
-
-	// Count the number of lines for centering
 	scr_center_lines = 1;
-	char *start = str;
-	while (*start)
-	{
-		if (*start == '\n')
-			scr_center_lines++;
-		start++;
-	}
 
 	// Echo it to the console
 	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
 
-	start = str;
+	char *start = str;
 	do	
 	{
 		// Scan the width of the line
 		int len, totallen;
-		for (len = 0, totallen = 0; len < 40 && totallen < 64; len++, totallen++)
+		for (len = 0, totallen = 0; totallen < 40; len++, totallen++)
 		{
-			// Take colouring sequences into account...
-			if (start[totallen] == '^' || (totallen > 0 && start[totallen - 1] == '^'))
-				len--;
-			
 			if (start[totallen] == '\n' || !start[totallen])
 				break;
+
+			// Take colouring sequences into account...
+			if (IsColoredString(&start[totallen]))
+				len -= 2;
 		}
 
-		// Add spaces to center the line
-		int pos;
+		// Copy input text to line
 		char line[64];
-		for (pos = 0; pos < (40 - len) / 2; pos++)
-			line[pos] = ' ';
+		Q_strncpyz(line, start, totallen + 1);
 
-		// Copy text to line
-		for (int i = 0; i < totallen; i++)
-			line[pos++] = start[i];
-
-		line[pos] = '\n';
-		line[pos + 1] = 0;
-
-		Com_Printf("%s", line);
+		// Print to console, prepend with spaces for centering
+		const int padding = (40 - len) / 2;
+		Com_Printf("%*s%s\n", padding, " ", line);
 
 		// Advance input text to next line
-		while (*start && *start != '\n')
-			start++;
+		start += totallen;
 
 		if (!*start)
 			break;
 
 		// Skip the \n
-		start++; 
+		start++;
+
+		// Count the number of lines for centering
+		scr_center_lines++;
 	} while (true);
 
 	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
@@ -469,9 +455,6 @@ void SCR_CenterPrint(char *str)
 
 static void SCR_DrawCenterString(void)
 {
-	char line[512];
-	int len, y;
-
 	// Added Psychospaz's fading centerstrings
 	const int alpha = 255 * (1 - (cl.time + (scr_centertime->value - 1) - scr_centertime_start) / 1000.0f / scr_centertime_end);
 
@@ -479,6 +462,7 @@ static void SCR_DrawCenterString(void)
 	int remaining = 9999;
 	char *start = scr_centerstring;
 
+	int y;
 	if (scr_center_lines <= 4)
 		y = viddef.height * 0.35f;
 	else
@@ -487,34 +471,37 @@ static void SCR_DrawCenterString(void)
 	do
 	{
 		// Scan the width of the line
-		for (len = 0; len < 40; len++)
-			if (start[len] == '\n' || !start[len])
+		int len, totallen;
+		for (len = 0, totallen = 0; len < 40; len++, totallen++)
+		{
+			if (start[totallen] == '\n' || !start[totallen])
 				break;
 
-		Com_sprintf(line, sizeof(line), "");
-		unsigned skipchars = 0; //mxd
-		for (int j = 0; j < len; j++)
-		{
-			//mxd. Formatting sequences (like '^b' or '^1') should not affect horizontal position
-			if(start[j] == '^' && j + 1 < len && StringCheckParams(start[j + 1]))
-				skipchars += 2;
-			
-			Com_sprintf(line, sizeof(line), "%s%c", line, start[j]);
-			
-			if (!remaining--)
-				return;
+			// Take colouring sequences into account...
+			if (IsColoredString(&start[totallen]))
+				len -= 2;
 		}
 
-		DrawStringGeneric((int)((viddef.width - (strlen(line) - skipchars) * FONT_SIZE) * 0.5f), y, line, alpha, SCALETYPE_CONSOLE, false);
+		remaining -= len;
+		if(remaining < 0)
+			return;
+
+		// Copy input text to line
+		char line[512];
+		Q_strncpyz(line, start, totallen + 1);
+
+		// Print centered
+		DrawStringGeneric((int)((viddef.width - CL_UnformattedStringLength(line) * FONT_SIZE) * 0.5f), y, line, alpha, SCALETYPE_CONSOLE, false);
 		y += FONT_SIZE;
 
-		while (*start && *start != '\n')
-			start++;
+		// Advance input text to next line
+		start += totallen;
 
 		if (!*start)
 			break;
 
-		start++; // Skip the \n
+		// Skip the \n
+		start++;
 	} while (true);
 }
 
