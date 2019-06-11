@@ -67,6 +67,7 @@ static void R_ScreenShot(qboolean silent)
 
 	// Grab pixels
 	byte *buffer = malloc(vid.width * vid.height * 3);
+	qglPixelStorei(GL_PACK_ALIGNMENT, 1); //mxd. Align to byte instead of word.
 	qglReadPixels(0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 
 	// Save the image...
@@ -154,5 +155,6 @@ void R_GrabScreen(void) // Knightmare
 		return;
 
 	// Read the framebuffer into our storage
+	qglPixelStorei(GL_PACK_ALIGNMENT, 1); //mxd. Align to byte instead of word.
 	qglReadPixels(0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, saveshotdata);
 }
