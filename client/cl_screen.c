@@ -395,19 +395,15 @@ static void SCR_DrawDebugGraph(void)
 
 #pragma region ======================= CENTER PRINTING
 
-static char		scr_centerstring[1024];
-static float	scr_centertime_start; // For slow victory printing
-static float	scr_centertime_off;
-static float	scr_centertime_end;
-static int		scr_center_lines;
-static int		scr_erase_center;
+static char scr_centerstring[1024];
+static float scr_centertime_start; // For slow victory printing
+static float scr_centertime_off;
+static float scr_centertime_end;
+static int scr_center_lines;
 
 // Called for important messages that should stay in the center of the screen for a few moments
 void SCR_CenterPrint(char *str)
 {
-	char line[64];
-	int i, len;
-
 	strncpy(scr_centerstring, str, sizeof(scr_centerstring) - 1);
 	scr_centertime_off = scr_centertime->value;
 	scr_centertime_end = scr_centertime_off;
@@ -430,28 +426,41 @@ void SCR_CenterPrint(char *str)
 	do	
 	{
 		// Scan the width of the line
-		for (len = 0; len < 40; len++)
-			if (start[len] == '\n' || !start[len])
+		int len, totallen;
+		for (len = 0, totallen = 0; len < 40 && totallen < 64; len++, totallen++)
+		{
+			// Take colouring sequences into account...
+			if (start[totallen] == '^' || (totallen > 0 && start[totallen - 1] == '^'))
+				len--;
+			
+			if (start[totallen] == '\n' || !start[totallen])
 				break;
+		}
 
-		for (i = 0; i < (40 - len) / 2; i++)
-			line[i] = ' ';
+		// Add spaces to center the line
+		int pos;
+		char line[64];
+		for (pos = 0; pos < (40 - len) / 2; pos++)
+			line[pos] = ' ';
 
-		for (int j = 0; j < len; j++)
-			line[i++] = start[j];
+		// Copy text to line
+		for (int i = 0; i < totallen; i++)
+			line[pos++] = start[i];
 
-		line[i] = '\n';
-		line[i + 1] = 0;
+		line[pos] = '\n';
+		line[pos + 1] = 0;
 
 		Com_Printf("%s", line);
 
+		// Advance input text to next line
 		while (*start && *start != '\n')
 			start++;
 
 		if (!*start)
 			break;
 
-		start++; // Skip the \n
+		// Skip the \n
+		start++; 
 	} while (true);
 
 	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
@@ -468,8 +477,6 @@ static void SCR_DrawCenterString(void)
 
 	// The finale prints the characters one at a time
 	int remaining = 9999;
-
-	scr_erase_center = 0;
 	char *start = scr_centerstring;
 
 	if (scr_center_lines <= 4)
