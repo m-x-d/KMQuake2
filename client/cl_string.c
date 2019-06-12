@@ -146,13 +146,6 @@ qboolean StringSetParams(char modifier, int *red, int *green, int *blue, qboolea
 }
 
 //mxd
-qboolean StringCheckParams(char modifier)
-{
-	int i; qboolean b;
-	return StringSetParams(modifier, &i, &i, &i, &b, &b, &b, &b);
-}
-
-//mxd
 qboolean IsColoredString(const char *s)
 {
 	if (!s || !s[1] || *s != Q_COLOR_ESCAPE)
@@ -174,6 +167,7 @@ qboolean IsColoredString(const char *s)
 		case COLOR_BOLD:
 		case COLOR_SHADOW:
 		case COLOR_ITALIC:
+		case COLOR_RESET:
 			return true;
 
 		default:
@@ -184,14 +178,14 @@ qboolean IsColoredString(const char *s)
 // Returns the length of formatting sequences (like ^1) in given string. Was named stringLengthExtra in KMQ2.
 int CL_StringLengthExtra(const char *string)
 {
-	const uint len = strlen(string);
-	int ulen = 0;
+	const char *start = string;
+	int xlen = 0;
 
-	for (uint i = 0; i < len; i++)
-		if (string[i] == '^' && i < len - 1)
-			ulen += 2;
+	while (*start)
+		if (IsColoredString(start++))
+			xlen += 2;
 
-	return ulen;
+	return xlen;
 }
 
 //mxd. Returns string length without formatting sequences (like ^1). Was named stringLen in KMQ2.
@@ -206,7 +200,7 @@ char *CL_UnformattedString(const char *string)
 	static char newstring[MAXPRINTMSG];
 	const uint len = strlen(string);
 
-	if(len > MAXPRINTMSG)
+	if (len > MAXPRINTMSG)
 	{
 		Com_Error(ERR_DROP, "%s: len > MAXPRINTMSG", __func__);
 		return NULL;
