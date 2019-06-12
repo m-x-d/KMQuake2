@@ -956,27 +956,24 @@ void Moving_Speaker_Think(edict_t *ent);
 //
 // g_fog.c
 //
-#define MAX_FOGS 16
-extern fog_t gfogs[MAX_FOGS];
 void Cmd_Fog_f(edict_t *ent);
 void Fog_Init();
-void Fog(edict_t *ent); //vec3_t viewpoint);
+void Fog(edict_t *ent);
 void Fog_Off();
-void Fog_SetFogParms();
 //
 // g_func.c
 //
-#define TRAIN_START_ON		   1
-#define TRAIN_TOGGLE		   2
-#define TRAIN_BLOCK_STOPS	   4
-#define TRAIN_ROTATE           8
-#define TRAIN_ROTATE_CONSTANT 16
-#define TRAIN_ROTATE_MASK     (TRAIN_ROTATE | TRAIN_ROTATE_CONSTANT)
-#define TRAIN_ANIMATE         32
-#define TRAIN_ANIMATE_FAST    64
-#define TRAIN_SMOOTH         128
-#define TRAIN_SPLINE        8192
-#define TRAIN_ORIGIN        16384
+#define TRAIN_START_ON			1
+#define TRAIN_TOGGLE			2
+#define TRAIN_BLOCK_STOPS		4
+#define TRAIN_ROTATE			8
+#define TRAIN_ROTATE_CONSTANT	16
+#define TRAIN_ROTATE_MASK		(TRAIN_ROTATE | TRAIN_ROTATE_CONSTANT)
+#define TRAIN_ANIMATE			32
+#define TRAIN_ANIMATE_FAST		64
+#define TRAIN_SMOOTH			128
+#define TRAIN_SPLINE			8192
+#define TRAIN_ORIGIN			16384
 
 qboolean box_walkmove (edict_t *ent, float yaw, float dist);
 void button_use (edict_t *self, edict_t *other, edict_t *activator);

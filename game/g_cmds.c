@@ -2072,9 +2072,7 @@ void ClientCommand (edict_t *ent)
 #endif
 
 	// ==================== fog stuff =========================
-	else if (developer->value && !Q_stricmp(cmd,"fog"))
-		Cmd_Fog_f(ent);
-	else if (developer->value && !Q_strncasecmp(cmd, "fog_", 4))
+	else if (!Q_stricmp(cmd, "fog") || !Q_strncasecmp(cmd, "fog_", 4))
 		Cmd_Fog_f(ent);
 	// ================ end fog stuff =========================
 
