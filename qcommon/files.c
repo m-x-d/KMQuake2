@@ -64,9 +64,19 @@ instruct clients to write files over areas they shouldn't.
 typedef struct
 {
 	char name[MAX_QPATH];
+	uint hash; // To speed up searching
+	int size;
+	int offset; // Ignored in PK3 files
+	qboolean ignore; // Whether this file should be ignored
+} fsPackFile_t;
+
+typedef struct
+{
+	char name[MAX_QPATH];
 	fsMode_t mode;
-	FILE *file;		// Only one of file or
+	FILE *file;		// Either file or
 	unzFile *zip;	// zip will be used
+	fsPackFile_t *pak; // Only used for seek/tell in .pak files
 } fsHandle_t;
 
 typedef struct fsLink_s
@@ -76,15 +86,6 @@ typedef struct fsLink_s
 	char *to;
 	struct fsLink_s *next;
 } fsLink_t;
-
-typedef struct
-{
-	char name[MAX_QPATH];
-	uint hash; // To speed up searching
-	int size;
-	int offset;	// This is ignored in PK3 files
-	qboolean ignore; // Whether this file should be ignored
-} fsPackFile_t;
 
 typedef struct
 {
@@ -420,6 +421,7 @@ static int FS_FOpenFileRead(fsHandle_t *handle)
 						// PAK
 						file_from_pak = true; // Knightmare added
 						handle->file = fopen(pack->name, "rb");
+						handle->pak = &pack->files[itemindex]; // Set pakfile pointer
 						if (handle->file)
 						{
 							fseek(handle->file, pack->files[itemindex].offset, SEEK_SET);
@@ -660,7 +662,17 @@ void FS_Seek(fileHandle_t f, int offset, fsOrigin_t origin)
 	static byte dummy[0x8000]; //mxd. +static
 	fsHandle_t *handle = FS_GetFileByHandle(f);
 
-	if (handle->file)
+	if (handle->pak) // Inside .pak file uses offset/size
+	{
+		switch (origin)
+		{
+			case FS_SEEK_SET: fseek(handle->file, handle->pak->offset + offset, SEEK_SET); break;
+			case FS_SEEK_CUR: fseek(handle->file, offset, SEEK_CUR); break;
+			case FS_SEEK_END: fseek(handle->file, handle->pak->offset + handle->pak->size, SEEK_SET); break;
+			default: Com_Error(ERR_FATAL, "FS_Seek: bad origin (%i)", origin); break;
+		}
+	}
+	else if (handle->file)
 	{
 		switch (origin)
 		{
@@ -718,6 +730,16 @@ void FS_Seek(fileHandle_t f, int offset, fsOrigin_t origin)
 int FS_Tell(fileHandle_t f)
 {
 	fsHandle_t *handle = FS_GetFileByHandle(f);
+
+	if (handle->pak)
+	{
+		// Inside .pak file uses offset/size
+		long pos = ftell(handle->file);
+		if (pos != -1)
+			pos -= handle->pak->offset;
+
+		return pos;
+	}
 
 	if (handle->file)
 		return ftell(handle->file);
