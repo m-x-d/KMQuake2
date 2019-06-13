@@ -153,22 +153,26 @@ void G_RunFrame (void);
 
 //===================================================================
 
-void ShutdownGame (void)
+void ShutdownGame(void)
 {
-	gi.dprintf ("==== ShutdownGame ====\n");
-	if(!deathmatch->value && !coop->value) {
+	gi.dprintf("==== ShutdownGame ====\n");
+
+	if(!deathmatch->value && !coop->value)
+	{
 #ifndef KMQUAKE2_ENGINE_MOD // engine has zoom autosensitivity
 		gi.cvar_forceset("m_pitch", va("%f",lazarus_pitch->value));
 #endif
 		//gi.cvar_forceset("cd_loopcount", va("%d",lazarus_cd_loop->value));
 		//gi.cvar_forceset("gl_clear", va("%d", lazarus_gl_clear->value));
 	}
-	// Lazarus: Turn off fog if it's on
-	if(!dedicated->value)
-		Fog_Off();
 
-	gi.FreeTags (TAG_LEVEL);
-	gi.FreeTags (TAG_GAME);
+	// Lazarus: Turn off fog if it's on
+	// Knightmare: If game is shutting down, g_edicts will likely be invalid and the client will clear the fog automatically
+	//if(!dedicated->value)
+		//Fog_Off();
+
+	gi.FreeTags(TAG_LEVEL);
+	gi.FreeTags(TAG_GAME);
 }
 
 
