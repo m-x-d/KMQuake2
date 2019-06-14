@@ -595,7 +595,7 @@ void Cmd_RemoveCommand(char *cmd_name)
 			return;
 		}
 
-		if (!strcmp (cmd_name, cmd->name))
+		if (!strcmp(cmd_name, cmd->name))
 		{
 			*back = cmd->next;
 			Z_Free(cmd);
@@ -609,7 +609,7 @@ void Cmd_RemoveCommand(char *cmd_name)
 qboolean Cmd_Exists(char *cmd_name)
 {
 	for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
-		if (!strcmp (cmd_name,cmd->name))
+		if (!strcmp(cmd_name,cmd->name))
 			return true;
 
 	return false;

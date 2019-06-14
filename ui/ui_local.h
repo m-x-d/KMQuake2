@@ -206,10 +206,10 @@ int UI_MenuDepth(); //mxd. Returns current menu depth
 
 // menu_main.c
 
-#define NUM_MAINMENU_CURSOR_FRAMES 15
+#define NUM_MAINMENU_CURSOR_FRAMES	15
 
-#define MOUSEBUTTON1 0
-#define MOUSEBUTTON2 1
+#define MOUSEBUTTON1	0
+#define MOUSEBUTTON2	1
 
 #define LOADSCREEN_NAME		"/gfx/ui/unknownmap.pcx"
 #define UI_BACKGROUND_NAME	"/gfx/ui/menu_background.pcx"
@@ -221,7 +221,7 @@ int UI_MenuDepth(); //mxd. Returns current menu depth
 #define UI_MOUSECURSOR_OVER_PIC		"/gfx/ui/cursors/m_cur_over.pcx"
 #define UI_MOUSECURSOR_TEXT_PIC		"/gfx/ui/cursors/m_cur_text.pcx"*/
 
-#define UI_MOUSECURSOR_PIC			"/gfx/ui/cursors/m_mouse_cursor.pcx"
+#define UI_MOUSECURSOR_PIC	"/gfx/ui/cursors/m_mouse_cursor.pcx"
 
 extern cvar_t *ui_cursor_scale;
 cursor_t cursor;
@@ -230,7 +230,7 @@ static char *menu_in_sound		= "misc/menu1.wav";
 static char *menu_move_sound	= "misc/menu2.wav";
 static char *menu_out_sound		= "misc/menu3.wav";
 
-qboolean m_entersound; // Played after drawing a frame, so caching won't disrupt the sound
+extern qboolean m_entersound; // Played after drawing a frame, so caching won't disrupt the sound
 
 void M_Menu_Main_f(void);
 	void M_Menu_Game_f(void);
