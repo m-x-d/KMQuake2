@@ -27,12 +27,7 @@ image_t *R_LoadWal(char *name, imagetype_t type)
 	miptex_t *mt;
 	FS_LoadFile(name, (void **)&mt);
 	if (!mt)
-	{
-		if (type == it_wall)
-			VID_Printf(PRINT_ALL, S_COLOR_YELLOW"%s: can't load '%s'\n", __func__, name);
-
 		return NULL;
-	}
 
 	image_t *image = R_LoadPic(name, (byte *)mt + mt->offsets[0], mt->width, mt->height, it_wall, 8);
 
