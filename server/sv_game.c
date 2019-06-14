@@ -310,6 +310,10 @@ void SV_InitGameProgs(void)
 	import.SetAreaPortalState = CM_SetAreaPortalState;
 	import.AreasConnected = CM_AreasConnected;
 
+	//mxd. Client-side Cmd_AddCommand / Cmd_RemoveCommand support
+	import.AddCommand = Cmd_AddCommand;
+	import.RemoveCommand = Cmd_RemoveCommand;
+
 	ge = (game_export_t *)Sys_GetGameAPI(&import);
 
 	if (!ge)

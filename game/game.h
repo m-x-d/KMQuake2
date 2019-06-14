@@ -206,6 +206,10 @@ typedef struct
 	void	(*CloseFile) (fileHandle_t f);
 	int		(*FRead) (void *buffer, int size, fileHandle_t f);
 	int		(*FWrite) (const void *buffer, int size, fileHandle_t f);*/
+
+	//mxd. Client-side Cmd_AddCommand / Cmd_RemoveCommand support
+	void	(*AddCommand) (char *cmd_name, xcommand_t function);
+	void	(*RemoveCommand) (char *cmd_name);
 #endif
 
 } game_import_t;

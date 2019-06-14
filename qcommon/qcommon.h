@@ -402,12 +402,8 @@ void Cbuf_InsertFromDefer(void);
 
 //===========================================================================
 
-/*
-Command execution takes a null terminated string, breaks it into tokens,
-then searches for a command or variable that matches the first token.
-*/
-
-typedef void (*xcommand_t) (void);
+// Command execution takes a null terminated string, breaks it into tokens,
+// then searches for a command or variable that matches the first token.
 
 void Cmd_Init(void);
 
