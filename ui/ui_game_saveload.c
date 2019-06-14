@@ -240,9 +240,10 @@ static void LoadGameCallback(void *self)
 	}
 
 	if (m_savevalid[a->generic.localdata[0]])
+	{
 		Cbuf_AddText(va("load kmq2save%i\n", a->generic.localdata[0]));
-
-	UI_ForceMenuOff();
+		UI_ForceMenuOff();
+	}
 }
 
 static void LoadGame_MenuInit(void)
