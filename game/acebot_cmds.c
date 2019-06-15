@@ -123,7 +123,7 @@ qboolean ACECM_Commands(edict_t *ent)
 	}
 
 	if (!debug_mode)
-		safe_cprintf(ent, PRINT_HIGH, S_COLOR_YELLOW"Enable ACE debug mode ('acedebug 1') to use this command.\n");
+		safe_cprintf(ent, PRINT_HIGH, S_COLOR_YELLOW"Enable ACE debug mode ('sv acedebug 1') to use this command.\n");
 
 	return true;
 }

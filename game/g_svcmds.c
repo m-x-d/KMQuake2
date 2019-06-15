@@ -258,19 +258,19 @@ void ServerCommand(void)
 	}
 	else if (Q_stricmp(cmd, "acedebug") == 0) // ACEBOT_ADD
 	{
-		if (gi.argc() == 1)
+		if (gi.argc() == 2) // sv acedebug
 		{
 			debug_mode = !debug_mode;
 			safe_bprintf(PRINT_MEDIUM, "ACE: debug mode %s.\n", (debug_mode ? "enabled" : "disabled"));
 		}
-		else if (gi.argc() == 2)
+		else if (gi.argc() == 3)
 		{
 			debug_mode = atoi(gi.argv(2));
 			safe_bprintf(PRINT_MEDIUM, "ACE: debug mode %s.\n", (debug_mode ? "enabled" : "disabled"));
 		}
 		else
 		{
-			safe_bprintf(PRINT_MEDIUM, "Usage: acedebug <enable>\n");
+			safe_bprintf(PRINT_MEDIUM, "Usage: sv acedebug <enable>\n");
 		}
 	}
 	else if (Q_stricmp(cmd, "addbot") == 0)
@@ -281,7 +281,7 @@ void ServerCommand(void)
 			return;
 		}
 
-		if (ctf->integer) // name, skin, team
+		if (ctf->integer) // team, name, skin
 			ACESP_SpawnBot(gi.argv(2), gi.argv(3), gi.argv(4), NULL);
 		else // name, skin
 			ACESP_SpawnBot(NULL, gi.argv(2), gi.argv(3), NULL);
