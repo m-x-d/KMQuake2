@@ -1453,7 +1453,7 @@ extern void Fog ( edict_t * ent ) ;
 extern void init_trigger_fog_delay ( edict_t * self ) ;
 extern void trig_fog_fade ( edict_t * self ) ;
 extern void GLFog ( void ) ;
-extern void Cmd_Fog_f ( edict_t * ent ) ;
+extern qboolean Fog_ProcessCommand ( ) ;
 extern void Fog_ConsoleFog ( void ) ;
 extern void CTFSetPowerUpEffect ( edict_t * ent , int def ) ;
 extern void CTFBoot ( edict_t * ent ) ;

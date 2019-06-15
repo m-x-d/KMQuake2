@@ -128,15 +128,12 @@ void Fog_ConsoleFog(void)
 	}
 }
 
-extern void Cmd_Say_f(edict_t *ent, qboolean team, qboolean arg0);
-
-void Cmd_Fog_f(edict_t *ent)
+qboolean Fog_ProcessCommand()
 {
-	char *parm;
-
 	fog_t* fog = &gfogs[0];
 	char* cmd = gi.argv(0);
 
+	char *parm;
 	if (gi.argc() < 2)
 		parm = NULL;
 	else
@@ -145,8 +142,8 @@ void Cmd_Fog_f(edict_t *ent)
 	if (Q_stricmp(cmd, "fog_help") == 0)
 	{
 		gi.dprintf("Fog parameters for console only.\n"
-			       "Use fog_active to see parameters of currently active fog.\n"
-			       "Use fog_list to see parameters of all fogs.\n"
+				   "Use fog_active to see parameters of currently active fog.\n"
+				   "Use fog_list to see parameters of all fogs.\n"
 				   "Use fog [1/0] to turn fog on/off (currently %s).\n\n", (level.active_fog > 0 ? "on" : "off"));
 
 		gi.dprintf("fog_red   = red color in 0 - 1 range.\n"
@@ -325,8 +322,10 @@ void Cmd_Fog_f(edict_t *ent)
 	}
 	else
 	{
-		Cmd_Say_f(ent, false, true);
+		return false;
 	}
+
+	return true;
 }
 
 void GLFog(void)

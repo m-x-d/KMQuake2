@@ -1780,103 +1780,605 @@ void ForcewallOff(edict_t *player)
 	G_FreeEdict(tr.ent);
 }
 
-/*
-=================
-ClientCommand
-=================
-*/
-void Cmd_TechCount_f (edict_t *ent);
+#pragma region ======================= Client console command processing
 
-void ClientCommand (edict_t *ent)
+extern mmove_t actor_move_switch;
+extern int medic_test;
+
+//mxd
+static qboolean DeveloperClientCommand(edict_t *ent, char* cmd, char *parm)
 {
-	char	*cmd;
-	char	*parm;
+	if (!Q_stricmp(cmd, "lightswitch"))
+	{
+		if(developer->integer)
+			ToggleLights();
+	}
+	else if (!Q_stricmp(cmd, "bbox"))
+	{
+		if (developer->integer)
+			Cmd_Bbox_f(ent);
+	}
+	else if (!Q_stricmp(cmd, "forcewall"))
+	{
+		if (developer->integer)
+			SpawnForcewall(ent);
+	}
+	else if (!Q_stricmp(cmd, "forcewall_off"))
+	{
+		if (developer->integer)
+			ForcewallOff(ent);
+	}
+	else if (!Q_stricmp(cmd, "freeze"))
+	{
+		if (developer->integer)
+		{
+			if (level.freeze)
+				level.freeze = false;
+			else if (ent->client->jetpack)
+				gi.dprintf(S_COLOR_YELLOW"Cannot use freeze while using jetpack!\n");
+			else
+				level.freeze = true;
+		}
+	}
+	else if (!Q_stricmp(cmd, "hint_test"))
+	{
+		if (developer->integer)
+		{
+			edict_t* viewing = LookingAt(ent, LOOKAT_MD2, NULL, NULL);
+			if (!viewing)
+			{
+				gi.dprintf(S_COLOR_YELLOW"No target entity!\n"); //mxd
+				return true;
+			}
 
+			if (viewing->monsterinfo.aiflags & AI_HINT_TEST)
+			{
+				viewing->monsterinfo.aiflags &= ~AI_HINT_TEST;
+				gi.dprintf("%s (%s): back to my normal self now.\n", viewing->classname, viewing->targetname);
+
+				return true;
+			}
+
+			if (!(viewing->svflags & SVF_MONSTER))
+				gi.dprintf(S_COLOR_YELLOW"hint_test is only valid for monsters and actors.\n");
+
+			const int result = HintTestStart(viewing);
+			switch (result)
+			{
+				case -1:
+					gi.dprintf("%s (%s): can't see any hint_paths from here.\n");
+					break;
+
+				case 0:
+					gi.dprintf("This map does not contain hint_paths.\n");
+					break;
+
+				case 1:
+					gi.dprintf("%s (%s): searching for hint_path %s at %s. %s\n",
+						viewing->classname, (viewing->targetname ? viewing->targetname : "<noname>"),
+						(viewing->movetarget->targetname ? viewing->movetarget->targetname : "<noname>"),
+						vtos(viewing->movetarget->s.origin),
+						visible(viewing, viewing->movetarget) ? "I see it." : "I don't see it.");
+					break;
+
+				default:
+					gi.dprintf("Unknown error\n");
+					break;
+			}
+		}
+	}
+	else if (!Q_stricmp(cmd, "entid"))
+	{
+		if (developer->integer)
+		{
+			float range;
+			edict_t* viewing = LookingAt(ent, 0, NULL, &range);
+			if (!viewing)
+			{
+				gi.dprintf(S_COLOR_YELLOW"No target entity!\n"); //mxd
+				return true;
+			}
+
+			vec3_t origin;
+			VectorAdd(viewing->s.origin, viewing->origin_offset, origin);
+
+			gi.dprintf("classname: '%s' at %s, velocity: %s\n", viewing->classname, vtos(origin), vtos(viewing->velocity));
+			gi.dprintf("health: %d, mass: %d, dmg: %d, wait: %g, sounds: %d, angles: %s, movetype: %d\n", viewing->health, viewing->mass, viewing->dmg, viewing->wait, viewing->sounds, vtos(viewing->s.angles), viewing->movetype);
+			gi.dprintf("targetname: '%s', target: '%s', spawnflags: 0x%04x\n", viewing->targetname, viewing->target, viewing->spawnflags);
+			gi.dprintf("absmin: %s\n", vtos(viewing->absmin));
+			gi.dprintf("absmax: %s\n", vtos(viewing->absmax));
+			gi.dprintf("size:   %s\n", vtos(viewing->size));
+			gi.dprintf("range: %g\n", range);
+			gi.dprintf("groundentity: '%s'\n", (viewing->groundentity ? viewing->groundentity->classname : "NULL"));
+		}
+	}
+	else if (!Q_stricmp(cmd, "item_left"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 1);
+	}
+	else if (!Q_stricmp(cmd, "item_right"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 2);
+	}
+	else if (!Q_stricmp(cmd, "item_forward"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 4);
+	}
+	else if (!Q_stricmp(cmd, "item_back"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 8);
+	}
+	else if (!Q_stricmp(cmd, "item_up"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 16);
+	}
+	else if (!Q_stricmp(cmd, "item_down"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 32);
+	}
+	else if (!Q_stricmp(cmd, "item_drop"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 64);
+	}
+	else if (!Q_stricmp(cmd, "item_pitch"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 128);
+	}
+	else if (!Q_stricmp(cmd, "item_yaw"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 256);
+	}
+	else if (!Q_stricmp(cmd, "item_roll"))
+	{
+		if (developer->integer)
+			ShiftItem(ent, 512);
+	}
+	else if (!Q_stricmp(cmd, "item_release"))
+	{
+		if (developer->integer)
+			ent->client->shift_dir = 0;
+	}
+	else if (!Q_stricmp(cmd, "medic_test"))
+	{
+		if (developer->integer)
+		{
+			if (parm)
+				medic_test = atoi(parm);
+			else
+				medic_test = !medic_test;
+
+			gi.dprintf("medic_test is %s\n", (medic_test ? "on" : "off"));
+		}
+	}
+	else if (!Q_stricmp(cmd, "muzzle") || !Q_stricmp(cmd, "muzzlex") || !Q_stricmp(cmd, "muzzley") || !Q_stricmp(cmd, "muzzlez"))
+	{
+		if (developer->integer)
+		{
+			edict_t* viewing = LookingAt(ent, 0, NULL, NULL);
+			if (!viewing)
+			{
+				gi.dprintf(S_COLOR_YELLOW"No target entity!\n"); //mxd
+				return true;
+			}
+
+			if (!viewing->classname)
+			{
+				gi.dprintf(S_COLOR_YELLOW"Target has no classname!\n"); //mxd
+				return true;
+			}
+
+			if (!(viewing->monsterinfo.aiflags & AI_ACTOR))
+			{
+				gi.dprintf(S_COLOR_YELLOW"Target doesn't have AI_ACTOR flag!\n"); //mxd
+				return true;
+			}
+
+			if (!Q_stricmp(cmd, "muzzle"))
+			{
+				gi.dprintf("Muzzle offset: %g %g %g\n", viewing->muzzle[0], viewing->muzzle[1], viewing->muzzle[2]);
+			}
+			else if (gi.argc() == 2)
+			{
+				if (!Q_stricmp(cmd, "muzzlex"))
+					viewing->muzzle[0] = atof(gi.argv(1));
+				else if (!Q_stricmp(cmd, "muzzley"))
+					viewing->muzzle[1] = atof(gi.argv(1));
+				else if (!Q_stricmp(cmd, "muzzlez"))
+					viewing->muzzle[2] = atof(gi.argv(1));
+			}
+			else
+			{
+				gi.dprintf("Usage: muzzle[x|y|z] <value>\n");
+			}
+		}
+	}
+	else if (!Q_stricmp(cmd, "range"))
+	{
+		if (developer->integer)
+		{
+			vec3_t forward, point, start;
+			VectorCopy(ent->s.origin, start);
+			start[2] += ent->viewheight;
+
+			AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+			VectorMA(start, WORLD_SIZE, forward, point); // Was 8192
+
+			trace_t tr = gi.trace(start, NULL, NULL, point, ent, MASK_SOLID);
+			VectorSubtract(tr.endpos, start, point);
+
+			gi.dprintf("range: %g\n", VectorLength(point));
+		}
+	}
+	else if (!Q_stricmp(cmd, "setskill"))
+	{
+		if (developer->integer)
+		{
+			if (gi.argc() < 2)
+				gi.dprintf("Usage: setskill <index>\n");
+			else
+				gi.cvar_forceset("skill", va("%i", atoi(gi.argv(1))));
+		}
+	}
+	else if (!Q_stricmp(cmd, "sk"))
+	{
+		if (developer->integer)
+		{
+			edict_t* viewing = LookingAt(ent, 0, NULL, NULL);
+			if (!viewing)
+			{
+				gi.dprintf(S_COLOR_YELLOW"No target entity!\n"); //mxd
+				return true;
+			}
+
+			if (parm)
+			{
+				viewing->s.skinnum = atoi(parm);
+				gi.linkentity(viewing);
+				gi.dprintf(S_COLOR_YELLOW"Entity skin set to %i.\n", viewing->s.skinnum); //mxd
+			}
+			else
+			{
+				gi.dprintf("Currently using skin #%i\n", viewing->s.skinnum);
+			}
+		}
+	}
+	else if (!Q_stricmp(cmd, "spawn"))
+	{
+		if (developer->integer)
+		{
+			if (!parm)
+			{
+				gi.dprintf("Usage: spawn <classname>\n");
+				return true;
+			}
+
+			edict_t* e = G_Spawn();
+			e->classname = gi.TagMalloc(strlen(parm) + 1, TAG_LEVEL);
+			strcpy(e->classname, parm);
+
+			vec3_t forward;
+			AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+			VectorMA(ent->s.origin, 128, forward, e->s.origin);
+
+			e->s.angles[YAW] = ent->s.angles[YAW];
+			ED_CallSpawn(e);
+		}
+	}
+	else if (!Q_stricmp(cmd, "spawngoodguy"))
+	{
+		if (developer->integer)
+		{
+			if (gi.argc() < 3)
+			{
+				gi.dprintf("Usage: spawngoodguy <modelname> <weapon>\n");
+				return true;
+			}
+
+			edict_t* e = G_Spawn();
+			e->classname = gi.TagMalloc(12, TAG_LEVEL);
+			strcpy(e->classname, "misc_actor");
+
+			e->usermodel = gi.argv(1);
+			e->sounds = atoi(gi.argv(2));
+			e->spawnflags = SF_MONSTER_GOODGUY;
+
+			vec3_t forward;
+			AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+			VectorMA(ent->s.origin, 128, forward, e->s.origin);
+
+			e->s.origin[2] = max(e->s.origin[2], ent->s.origin[2] + 8);
+			e->s.angles[YAW] = ent->s.angles[YAW];
+
+			ED_CallSpawn(e);
+			actor_files();
+		}
+	}
+	else if (!Q_stricmp(cmd, "spawnself"))
+	{
+		if (developer->integer)
+		{
+			edict_t* decoy = G_Spawn();
+			decoy->classname = "fakeplayer";
+			memcpy(&decoy->s, &ent->s, sizeof(entity_state_t));
+
+			decoy->s.number = decoy - g_edicts;
+			decoy->s.frame = ent->s.frame;
+
+			vec3_t forward;
+			AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+			VectorMA(ent->s.origin, 64, forward, decoy->s.origin);
+
+			decoy->s.angles[YAW] = ent->s.angles[YAW];
+			decoy->takedamage = DAMAGE_AIM;
+			decoy->flags = (ent->flags & FL_NOTARGET);
+			decoy->movetype = MOVETYPE_TOSS;
+			decoy->viewheight = ent->viewheight;
+			decoy->mass = ent->mass;
+			decoy->solid = SOLID_BBOX;
+			decoy->deadflag = DEAD_NO;
+			decoy->clipmask = MASK_PLAYERSOLID;
+			decoy->health = ent->health;
+			decoy->light_level = ent->light_level;
+			decoy->think = decoy_think;
+			decoy->monsterinfo.aiflags = AI_GOOD_GUY;
+			decoy->die = decoy_die;
+			decoy->nextthink = level.time + FRAMETIME;
+
+			VectorCopy(ent->mins, decoy->mins);
+			VectorCopy(ent->maxs, decoy->maxs);
+
+			gi.linkentity(decoy);
+		}
+	}
+	else if (!Q_stricmp(cmd, "switch"))
+	{
+		if (developer->integer)
+		{
+			edict_t* viewing = LookingAt(ent, 0, NULL, NULL);
+			if (!viewing)
+			{
+				gi.dprintf(S_COLOR_YELLOW"No target entity!\n"); //mxd
+				return true;
+			}
+
+			if (!(viewing->monsterinfo.aiflags & AI_ACTOR))
+			{
+				gi.dprintf(S_COLOR_YELLOW"Target must be a misc_actor!\n");
+				return true;
+			}
+
+			viewing->monsterinfo.currentmove = &actor_move_switch;
+		}
+	}
+#ifndef KMQUAKE2_ENGINE_MOD // these functions moved clientside in engine
+	else if (!Q_stricmp(cmd, "texture"))
+	{
+		vec3_t forward, start, end;
+
+		if (ent->client->chasetoggle)
+		{
+			VectorCopy(ent->client->chasecam->s.origin, start);
+		}
+		else
+		{
+			VectorCopy(ent->s.origin, start);
+			start[2] += ent->viewheight;
+		}
+
+		AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+		VectorMA(start, 8192, forward, end);
+		trace_t tr = gi.trace(start, NULL, NULL, end, ent, MASK_ALL);
+
+		if (!tr.ent)
+		{
+			gi.dprintf("Nothing hit?\n");
+		}
+		else
+		{
+			if (!tr.surface)
+				gi.dprintf("Not a brush\n");
+			else
+				gi.dprintf("Texture=%s, surface=0x%08x, value=%d\n", tr.surface->name, tr.surface->flags, tr.surface->value);
+		}
+	}
+	else if (!Q_stricmp(cmd, "surf"))
+	{
+		vec3_t forward, start, end;
+
+		if (gi.argc() < 2)
+		{
+			gi.dprintf("Usage: surf <value>\n");
+			return;
+		}
+		
+		int s = atoi(gi.argv(1));
+
+		if (ent->client->chasetoggle)
+		{
+			VectorCopy(ent->client->chasecam->s.origin, start);
+		}
+		else
+		{
+			VectorCopy(ent->s.origin, start);
+			start[2] += ent->viewheight;
+		}
+
+		AngleVectors(ent->client->v_angle, forward, NULL, NULL);
+		VectorMA(start, 8192, forward, end);
+		trace_t tr = gi.trace(start, NULL, NULL, end, ent, MASK_ALL);
+		if (!tr.ent)
+		{
+			gi.dprintf("Nothing hit?\n");
+		}
+		else
+		{
+			if (!tr.surface)
+				gi.dprintf("Not a brush\n");
+			else
+				tr.surface->flags = s;
+		}
+	}
+#endif	// KMQUAKE2_ENGINE_MOD
+	else
+	{
+		return false;
+	}
+
+	if (!developer->integer)
+		safe_cprintf(ent, PRINT_HIGH, S_COLOR_YELLOW"Enable developer mode ('developer 1') to use this command.\n");
+
+	return true;
+}
+
+extern void Cmd_TechCount_f(edict_t *ent);
+
+void ClientCommand(edict_t *ent)
+{
 	if (!ent->client)
-		return;		// not fully in game yet
+		return; // Not fully in game yet
 
-// ACEBOT_ADD
+	// ACEBOT_ADD
 	if (ACECM_Commands(ent))
 		return;
-// ACEBOT_END
 
-	cmd = gi.argv(0);
-	if(gi.argc() < 2)
+	//mxd
+	if (Fog_ProcessCommand())
+		return;
+
+	char* cmd = gi.argv(0);
+
+	char *parm;
+	if (gi.argc() < 2)
 		parm = NULL;
 	else
 		parm = gi.argv(1);
 
-	if (Q_stricmp (cmd, "players") == 0)
+	if (Q_stricmp(cmd, "players") == 0)
 	{
-		Cmd_Players_f (ent);
+		Cmd_Players_f(ent);
 		return;
 	}
-	if (Q_stricmp (cmd, "say") == 0)
+
+	if (Q_stricmp(cmd, "say") == 0)
 	{
-		Cmd_Say_f (ent, false, false);
+		Cmd_Say_f(ent, false, false);
 		return;
 	}
-	if (Q_stricmp (cmd, "say_team") == 0)
+
+	if (Q_stricmp(cmd, "say_team") == 0)
 	{
-		Cmd_Say_f (ent, true, false);
+		Cmd_Say_f(ent, true, false);
 		return;
 	}
-	if (Q_stricmp (cmd, "score") == 0)
+
+	if (Q_stricmp(cmd, "score") == 0)
 	{
-		Cmd_Score_f (ent);
+		Cmd_Score_f(ent);
 		return;
 	}
-	if (Q_stricmp (cmd, "help") == 0)
+
+	if (Q_stricmp(cmd, "help") == 0)
 	{
-		Cmd_Help_f (ent);
+		Cmd_Help_f(ent);
 		return;
 	}
 
 	if (level.intermissiontime)
 		return;
 
-	if (Q_stricmp (cmd, "use") == 0)
-		Cmd_Use_f (ent);
-	else if (Q_stricmp (cmd, "drop") == 0)
-		Cmd_Drop_f (ent);
-	else if (Q_stricmp (cmd, "give") == 0)
-		Cmd_Give_f (ent);
-	else if (Q_stricmp (cmd, "god") == 0)
-		Cmd_God_f (ent);
-	else if (Q_stricmp (cmd, "notarget") == 0)
-		Cmd_Notarget_f (ent);
-	else if (Q_stricmp (cmd, "noclip") == 0)
-		Cmd_Noclip_f (ent);
-	else if (Q_stricmp (cmd, "inven") == 0)
-		Cmd_Inven_f (ent);
-	else if (Q_stricmp (cmd, "invnext") == 0)
-		SelectNextItem (ent, -1);
-	else if (Q_stricmp (cmd, "invprev") == 0)
-		SelectPrevItem (ent, -1);
-	else if (Q_stricmp (cmd, "invnextw") == 0)
-		SelectNextItem (ent, IT_WEAPON);
-	else if (Q_stricmp (cmd, "invprevw") == 0)
-		SelectPrevItem (ent, IT_WEAPON);
-	else if (Q_stricmp (cmd, "invnextp") == 0)
-		SelectNextItem (ent, IT_POWERUP);
-	else if (Q_stricmp (cmd, "invprevp") == 0)
-		SelectPrevItem (ent, IT_POWERUP);
-	else if (Q_stricmp (cmd, "invuse") == 0)
-		Cmd_InvUse_f (ent);
-	else if (Q_stricmp (cmd, "invdrop") == 0)
-		Cmd_InvDrop_f (ent);
-	else if (Q_stricmp (cmd, "weapprev") == 0)
-		Cmd_WeapPrev_f (ent);
-	else if (Q_stricmp (cmd, "weapnext") == 0)
-		Cmd_WeapNext_f (ent);
-	else if (Q_stricmp (cmd, "weaplast") == 0)
-		Cmd_WeapLast_f (ent);
-	else if (Q_stricmp (cmd, "kill") == 0)
-		Cmd_Kill_f (ent);
-	else if (Q_stricmp (cmd, "putaway") == 0)
-		Cmd_PutAway_f (ent);
-	else if (Q_stricmp (cmd, "wave") == 0)
-		Cmd_Wave_f (ent);
+	if (Q_stricmp(cmd, "use") == 0)
+	{
+		Cmd_Use_f(ent);
+	}
+	else if (Q_stricmp(cmd, "drop") == 0)
+	{
+		Cmd_Drop_f(ent);
+	}
+	else if (Q_stricmp(cmd, "give") == 0)
+	{
+		Cmd_Give_f(ent);
+	}
+	else if (Q_stricmp(cmd, "god") == 0)
+	{
+		Cmd_God_f(ent);
+	}
+	else if (Q_stricmp(cmd, "notarget") == 0)
+	{
+		Cmd_Notarget_f(ent);
+	}
+	else if (Q_stricmp(cmd, "noclip") == 0)
+	{
+		Cmd_Noclip_f(ent);
+	}
+	else if (Q_stricmp(cmd, "inven") == 0)
+	{
+		Cmd_Inven_f(ent);
+	}
+	else if (Q_stricmp(cmd, "invnext") == 0)
+	{
+		SelectNextItem(ent, -1);
+	}
+	else if (Q_stricmp(cmd, "invprev") == 0)
+	{
+		SelectPrevItem(ent, -1);
+	}
+	else if (Q_stricmp(cmd, "invnextw") == 0)
+	{
+		SelectNextItem(ent, IT_WEAPON);
+	}
+	else if (Q_stricmp(cmd, "invprevw") == 0)
+	{
+		SelectPrevItem(ent, IT_WEAPON);
+	}
+	else if (Q_stricmp(cmd, "invnextp") == 0)
+	{
+		SelectNextItem(ent, IT_POWERUP);
+	}
+	else if (Q_stricmp(cmd, "invprevp") == 0)
+	{
+		SelectPrevItem(ent, IT_POWERUP);
+	}
+	else if (Q_stricmp(cmd, "invuse") == 0)
+	{
+		Cmd_InvUse_f(ent);
+	}
+	else if (Q_stricmp(cmd, "invdrop") == 0)
+	{
+		Cmd_InvDrop_f(ent);
+	}
+	else if (Q_stricmp(cmd, "weapprev") == 0)
+	{
+		Cmd_WeapPrev_f(ent);
+	}
+	else if (Q_stricmp(cmd, "weapnext") == 0)
+	{
+		Cmd_WeapNext_f(ent);
+	}
+	else if (Q_stricmp(cmd, "weaplast") == 0)
+	{
+		Cmd_WeapLast_f(ent);
+	}
+	else if (Q_stricmp(cmd, "kill") == 0)
+	{
+		Cmd_Kill_f(ent);
+	}
+	else if (Q_stricmp(cmd, "putaway") == 0)
+	{
+		Cmd_PutAway_f(ent);
+	}
+	else if (Q_stricmp(cmd, "wave") == 0)
+	{
+		Cmd_Wave_f(ent);
+	}
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 	{
 		if (ctf->value)
@@ -1884,326 +2386,400 @@ void ClientCommand (edict_t *ent)
 		else
 			Cmd_PlayerList_f(ent);
 	}
-//ZOID
-	else if (Q_stricmp (cmd, "team") == 0)
-		CTFTeam_f (ent);
-	else if (Q_stricmp(cmd, "id") == 0)
-		CTFID_f (ent);
-	else if (Q_stricmp(cmd, "yes") == 0)
-		CTFVoteYes(ent);
-	else if (Q_stricmp(cmd, "no") == 0)
-		CTFVoteNo(ent);
-	else if (Q_stricmp(cmd, "ready") == 0)
-		CTFReady(ent);
-	else if (Q_stricmp(cmd, "notready") == 0)
-		CTFNotReady(ent);
-	else if (Q_stricmp(cmd, "ghost") == 0)
-		CTFGhost(ent);
-	else if (Q_stricmp(cmd, "admin") == 0)
-		CTFAdmin(ent);
-	else if (Q_stricmp(cmd, "stats") == 0)
-		CTFStats(ent);
-	else if (Q_stricmp(cmd, "warp") == 0)
-		CTFWarp(ent);
-	else if (Q_stricmp(cmd, "boot") == 0)
-		CTFBoot(ent);
-	else if (Q_stricmp(cmd, "observer") == 0)
-		CTFObserver(ent);
-	// Knightmare added
-	else if (Q_stricmp(cmd, "ctfmenu") == 0)
+	else if (Q_stricmp(cmd, "team") == 0) //ZOID
 	{
-		if (!ctf->value)
+		CTFTeam_f(ent);
+	}
+	else if (Q_stricmp(cmd, "id") == 0)
+	{
+		CTFID_f(ent);
+	}
+	else if (Q_stricmp(cmd, "yes") == 0)
+	{
+		CTFVoteYes(ent);
+	}
+	else if (Q_stricmp(cmd, "no") == 0)
+	{
+		CTFVoteNo(ent);
+	}
+	else if (Q_stricmp(cmd, "ready") == 0)
+	{
+		CTFReady(ent);
+	}
+	else if (Q_stricmp(cmd, "notready") == 0)
+	{
+		CTFNotReady(ent);
+	}
+	else if (Q_stricmp(cmd, "ghost") == 0)
+	{
+		CTFGhost(ent);
+	}
+	else if (Q_stricmp(cmd, "admin") == 0)
+	{
+		CTFAdmin(ent);
+	}
+	else if (Q_stricmp(cmd, "stats") == 0)
+	{
+		CTFStats(ent);
+	}
+	else if (Q_stricmp(cmd, "warp") == 0)
+	{
+		CTFWarp(ent);
+	}
+	else if (Q_stricmp(cmd, "boot") == 0)
+	{
+		CTFBoot(ent);
+	}
+	else if (Q_stricmp(cmd, "observer") == 0)
+	{
+		CTFObserver(ent);
+	}
+	else if (Q_stricmp(cmd, "ctfmenu") == 0) // Knightmare added
+	{
+		if (!ctf->integer)
+		{
+			gi.dprintf("Available only in CTF mode.\n"); //mxd
 			return;
+		}
+
 		if (ent->client->menu)
+		{
 			PMenu_Close(ent);
-		else {
-			if (ttctf->value)
+		}
+		else
+		{
+			if (ttctf->integer)
 				TTCTFOpenJoinMenu(ent);
 			else
 				CTFOpenJoinMenu(ent);
 		}
 	}
 	else if (Q_stricmp(cmd, "techcount") == 0)
+	{
 		Cmd_TechCount_f(ent);
-
-//ZOID
+	} //ZOID END
 #ifdef FLASHLIGHT_MOD
-#if FLASHLIGHT_USE==POWERUP_USE_ITEM
-	else if (Q_stricmp (cmd, "flashlight") == 0)
-		Use_Flashlight_f (ent, (gitem_t *)NULL);
-#endif
-#endif
-
-	// ==================== fog stuff =========================
-	else if (!Q_stricmp(cmd, "fog") || !Q_strncasecmp(cmd, "fog_", 4))
-		Cmd_Fog_f(ent);
-	// ================ end fog stuff =========================
-
-	// tpp
-	else if (Q_stricmp (cmd, "thirdperson") == 0) {
-		Cmd_Chasecam_Toggle (ent);
-		gi.cvar_set ("tpp", va("%i", ent->client->chasetoggle));
-	//	tpp->value = ent->client->chasetoggle;
+	#if FLASHLIGHT_USE == POWERUP_USE_ITEM
+	else if (Q_stricmp(cmd, "flashlight") == 0)
+	{
+		Use_Flashlight_f(ent, (gitem_t *)NULL);
 	}
+	#endif
+#endif
+	else if (Q_stricmp(cmd, "thirdperson") == 0) // tpp
+	{
+		Cmd_Chasecam_Toggle(ent);
+		gi.cvar_set("tpp", va("%i", ent->client->chasetoggle));
+	}
+	else if (!Q_stricmp(cmd, "zoomin")) // Zoom ccmds
+	{
+		if (!deathmatch->integer && !coop->integer && !ent->client->chasetoggle)
+		{
+			if (ent->client->ps.fov > 5)
+			{
+				if (cl_gun->integer)
+					stuffcmd(ent, "cl_gun 0\n");
 
-	// alternate attack mode
-	/*else if (!Q_stricmp(cmd,"attack2_off"))
-		Cmd_attack2_f(ent,false);
-	else if (!Q_stricmp(cmd,"attack2_on"))
-		Cmd_attack2_f(ent,true);*/
-
-	// zoom
-	else if (!Q_stricmp(cmd, "zoomin")) {
-		if(!deathmatch->value && !coop->value && !ent->client->chasetoggle) {
-			if(ent->client->ps.fov > 5) {
-				if(cl_gun->value)
-					stuffcmd(ent,"cl_gun 0\n");
 				ent->client->frame_zoomrate = zoomrate->value * ent->client->secs_per_frame;
 				ent->client->zooming = 1;
 				ent->client->zoomed = true;
 			}
 		}
 	}
-	else if (!Q_stricmp(cmd, "zoomout")) {
-		if(!deathmatch->value && !coop->value && !ent->client->chasetoggle) {
-			if(ent->client->ps.fov < ent->client->original_fov) {
-				if(cl_gun->value)
-					stuffcmd(ent,"cl_gun 0\n");
+	else if (!Q_stricmp(cmd, "zoomout"))
+	{
+		if (!deathmatch->integer && !coop->integer && !ent->client->chasetoggle)
+		{
+			if (ent->client->ps.fov < ent->client->original_fov)
+			{
+				if (cl_gun->integer)
+					stuffcmd(ent, "cl_gun 0\n");
+
 				ent->client->frame_zoomrate = zoomrate->value * ent->client->secs_per_frame;
 				ent->client->zooming = -1;
 				ent->client->zoomed = true;
 			}
 		}
 	}
-	else if (!Q_stricmp(cmd, "zoom")) {
-		if (!deathmatch->value && !coop->value && !ent->client->chasetoggle)
+	else if (!Q_stricmp(cmd, "zoom"))
+	{
+		if (!deathmatch->integer && !coop->integer && !ent->client->chasetoggle)
 		{
 			if (!parm)
-				gi.dprintf("syntax: zoom [0/1]  (0=off, 1=on)\n");
-			else if (!atoi(parm)) {
+			{
+				gi.dprintf("Usage: zoom [0/1]  (0 = off, 1 = on).\n");
+			}
+			else if (!atoi(parm))
+			{
 				ent->client->ps.fov = ent->client->original_fov;
 				ent->client->zooming = 0;
 				ent->client->zoomed = false;
-				SetSensitivities(ent,true);
-			} else if (!ent->client->zoomed && !ent->client->zooming) {
+				SetSensitivities(ent, true);
+			}
+			else if (!ent->client->zoomed && !ent->client->zooming)
+			{
 				ent->client->ps.fov = zoomsnap->value;
 				ent->client->pers.hand = 2;
-				if (cl_gun->value)
-					stuffcmd(ent,"cl_gun 0\n");
+
+				if (cl_gun->integer)
+					stuffcmd(ent, "cl_gun 0\n");
+
 				ent->client->zooming = 0;
 				ent->client->zoomed = true;
-				SetSensitivities(ent,false);
+				SetSensitivities(ent, false);
 			}
 		}
 	}
-	else if (!Q_stricmp(cmd, "zoomoff")) {
-		if (!deathmatch->value && !coop->value && !ent->client->chasetoggle) {
-			if (ent->client->zoomed && !ent->client->zooming) {
-				ent->client->ps.fov = ent->client->original_fov;
-				ent->client->zooming = 0;
-				ent->client->zoomed = false;
-				SetSensitivities(ent,true);
-			}
-		}
-	}
-	else if (!Q_stricmp(cmd, "zoomon")) {
-		if (!deathmatch->value && !coop->value && !ent->client->chasetoggle) {
-			if (!ent->client->zoomed && !ent->client->zooming) {
-				ent->client->ps.fov = zoomsnap->value;
-				ent->client->pers.hand = 2;
-				if (cl_gun->value)
-					stuffcmd(ent,"cl_gun 0\n");
-				ent->client->zooming = 0;
-				ent->client->zoomed = true;
-				SetSensitivities(ent,false);
-			}
-		}
-	}
-	else if (!Q_stricmp(cmd, "zoominstop")) {
-		if (!deathmatch->value && !coop->value && !ent->client->chasetoggle) {
-			if (ent->client->zooming > 0) {
-				ent->client->zooming = 0;
-				if (ent->client->ps.fov == ent->client->original_fov) {
-					ent->client->zoomed = false;
-					SetSensitivities(ent,true);
-				} else {
-					gi.cvar_forceset("zoomsnap",va("%f",ent->client->ps.fov));
-					SetSensitivities(ent,false);
-				}
-			}
-		}
-	}
-	else if (!Q_stricmp(cmd, "zoomoutstop")) {
-		if (!deathmatch->value && !coop->value && !ent->client->chasetoggle) {
-			if (ent->client->zooming < 0) {
-				ent->client->zooming = 0;
-				if (ent->client->ps.fov == ent->client->original_fov) {
-					ent->client->zoomed = false;
-					SetSensitivities(ent,true);
-				} else {
-					gi.cvar_forceset("zoomsnap",va("%f",ent->client->ps.fov));
-					SetSensitivities(ent,false);
-				}
-			}
-		}
-	}
-
-	else if(!Q_stricmp(cmd, "entlist")) {
-		if(parm) {
-			edict_t	*e;
-			FILE	*f;
-			int		i;
-			vec3_t	origin;
-			int		count;
-
-			f = fopen(parm,"w");
-			if(f) {
-				fprintf(f,"Movetype codes\n"
-					      " 0 MOVETYPE_NONE\n"
-						  " 1 MOVETYPE_NOCLIP\n"
-						  " 2 MOVETYPE_PUSH       (most moving brush models)\n"
-						  " 3 MOVETYPE_STOP       (buttons)\n"
-						  " 4 MOVETYPE_WALK       (players only)\n"
-						  " 5 MOVETYPE_STEP       (monsters)\n"
-						  " 6 MOVETYPE_FLY        (never used)\n"
-						  " 7 MOVETYPE_TOSS       (gibs, normal debris)\n"
-						  " 8 MOVETYPE_FLYMISSILE (rockets)\n"
-						  " 9 MOVETYPE_BOUNCE     (grenades)\n"
-						  "10 MOVETYPE_VEHICLE    (Lazarus func_vehicle)\n"
-						  "11 MOVETYPE_PUSHABLE   (Lazarus func_pushable)\n"
-						  "12 MOVETYPE_DEBRIS     (Lazarus target_rocks)\n"
-						  "13 MOVETYPE_RAIN       (Lazarus precipitation)\n\n");
-				fprintf(f,"Solid codes\n"
-					      " 0 SOLID_NOT       no interaction with other objects\n"
-						  " 1 SOLID_TRIGGER   trigger fields, pickups\n"
-						  " 2 SOLID_BBOX      solid point entities\n"
-						  " 3 SOLID_BSP       brush models\n\n");
-				fprintf(f,"CONTENT_ codes (clipmask)\n"
-					      " 0x00000001 SOLID\n"
-						  " 0x00000002 WINDOW\n"
-						  " 0x00000004 AUX\n"
-						  " 0x00000008 LAVA\n"
-						  " 0x00000010 SLIME\n"
-						  " 0x00000020 WATER\n"
-						  " 0x00000040 MIST\n"
-						  " 0x00008000 AREAPORTAL\n"
-						  " 0x00010000 PLAYERCLIP\n"
-						  " 0x00020000 MONSTERCLIP\n"
-						  " 0x00040000 CURRENT_0\n"
-						  " 0x00080000 CURRENT_90\n"
-						  " 0x00100000 CURRENT_180\n"
-						  " 0x00200000 CURRENT_270\n"
-						  " 0x00400000 CURRENT_UP\n"
-						  " 0x00800000 CURRENT_DOWN\n"
-						  " 0x01000000 ORIGIN\n"
-						  " 0x02000000 MONSTER\n"
-						  " 0x04000000 DEADMONSTER\n"
-						  " 0x08000000 DETAIL\n"
-						  " 0x10000000 TRANSLUCENT\n"
-						  " 0x20000000 LADDER\n\n");
-				fprintf(f,"NOTE: \"freed\" indicates an empty slot in the edicts array.\n\n");
-
-				fprintf(f,"============================================================\n");
-				count = 0;
-				for(i=0, e=&g_edicts[0]; i<globals.num_edicts; i++, e++) {
-					VectorAdd(e->s.origin,e->origin_offset,origin);
-					fprintf(f,"entity #%d, classname = %s at %s, velocity = %s\n",i,e->classname,vtos(origin),vtos(e->velocity));
-					fprintf(f,"health=%d, mass=%d, dmg=%d, wait=%g, angles=%s\n",e->health, e->mass, e->dmg, e->wait, vtos(e->s.angles));
-					fprintf(f,"targetname=%s, target=%s, spawnflags=0x%04x\n",e->targetname,e->target,e->spawnflags);
-					fprintf(f,"absmin,absmax,size=%s, %s, %s\n",vtos(e->absmin),vtos(e->absmax),vtos(e->size));
-					fprintf(f,"groundentity=%s\n",(e->groundentity ? e->groundentity->classname : "NULL"));
-					if(e->classname)
-					{
-						// class-specific output
-						if(!Q_stricmp(e->classname,"target_changelevel"))
-							fprintf(f,"map=%s\n",e->map);
-					}
-					fprintf(f,"movetype=%d, solid=%d, clipmask=0x%08x\n",e->movetype,e->solid,e->clipmask);
-					fprintf(f,"================================================================================\n");
-					if(e->inuse) count++;
-				}
-				fprintf(f,"Total number of entities = %d\n",count);
-				fclose(f);
-				gi.dprintf("done!\n");
-			} else {
-				gi.dprintf("Error opening %s\n",parm);
-			}
-		} else {
-			gi.dprintf("syntax: entlist <filename>\n");
-		}
-	}
-	else if(!Q_stricmp(cmd, "properties"))
+	else if (!Q_stricmp(cmd, "zoomoff"))
 	{
-		if(parm) {
-			char	filename[MAX_QPATH];
-			edict_t	*e;
-			FILE	*f;
-//			int		i;
-
-			e = LookingAt(ent,0,NULL,NULL);
-			if(!e) return;
-	
-			GameDirRelativePath(parm, filename, sizeof(filename));
-		//	strncat(filename, ".txt");
-			Q_strncatz(filename, ".txt", sizeof(filename));
-			f = fopen(filename, "w");
-//			for(i=0; i<globals.num_edicts; i++)
-//			{
-//				e = &g_edicts[i];
-				SaveEntProps(e,f);
-//			}
-			fclose(f);
-		} else {
-			gi.dprintf("syntax: properties <filename>\n");
-		}
-	}
-	else if(!Q_stricmp(cmd,"go"))
-	{
-		edict_t *viewing;
-		float	range;
-
-		viewing = LookingAt(ent,0,NULL,&range);
-		if(range > 512)
-			return;
-		if(!(viewing->monsterinfo.aiflags & AI_ACTOR))
-			return;
-		if(viewing->enemy)
-			return;
-		if(!(viewing->monsterinfo.aiflags & AI_FOLLOW_LEADER))
-			return;
-		actor_moveit(ent,viewing);
-	}
-	else if(!Q_stricmp(cmd,"hud"))
-	{
-		if(parm)
+		if (!deathmatch->integer && !coop->integer && !ent->client->chasetoggle)
 		{
-			int	state = atoi(parm);
+			if (ent->client->zoomed && !ent->client->zooming)
+			{
+				ent->client->ps.fov = ent->client->original_fov;
+				ent->client->zooming = 0;
+				ent->client->zoomed = false;
+				SetSensitivities(ent, true);
+			}
+		}
+	}
+	else if (!Q_stricmp(cmd, "zoomon"))
+	{
+		if (!deathmatch->integer && !coop->integer && !ent->client->chasetoggle)
+		{
+			if (!ent->client->zoomed && !ent->client->zooming)
+			{
+				ent->client->ps.fov = zoomsnap->value;
+				ent->client->pers.hand = 2;
 
-			if(state)
+				if (cl_gun->integer)
+					stuffcmd(ent, "cl_gun 0\n");
+
+				ent->client->zooming = 0;
+				ent->client->zoomed = true;
+				SetSensitivities(ent, false);
+			}
+		}
+	}
+	else if (!Q_stricmp(cmd, "zoominstop"))
+	{
+		if (!deathmatch->value && !coop->value && !ent->client->chasetoggle)
+		{
+			if (ent->client->zooming > 0)
+			{
+				ent->client->zooming = 0;
+
+				if (ent->client->ps.fov == ent->client->original_fov)
+				{
+					ent->client->zoomed = false;
+					SetSensitivities(ent, true);
+				}
+				else
+				{
+					gi.cvar_forceset("zoomsnap", va("%f", ent->client->ps.fov));
+					SetSensitivities(ent, false);
+				}
+			}
+		}
+	}
+	else if (!Q_stricmp(cmd, "zoomoutstop"))
+	{
+		if (!deathmatch->integer && !coop->integer && !ent->client->chasetoggle)
+		{
+			if (ent->client->zooming < 0)
+			{
+				ent->client->zooming = 0;
+
+				if (ent->client->ps.fov == ent->client->original_fov)
+				{
+					ent->client->zoomed = false;
+					SetSensitivities(ent, true);
+				}
+				else
+				{
+					gi.cvar_forceset("zoomsnap", va("%f", ent->client->ps.fov));
+					SetSensitivities(ent, false);
+				}
+			}
+		}
+	} // Zoom ccmds end
+	else if (!Q_stricmp(cmd, "entlist"))
+	{
+		if (parm)
+		{
+			FILE* f = fopen(parm, "w");
+			if (f)
+			{
+				fprintf(f, "Movetype codes\n"
+					" 0 MOVETYPE_NONE\n"
+					" 1 MOVETYPE_NOCLIP\n"
+					" 2 MOVETYPE_PUSH       (most moving brush models)\n"
+					" 3 MOVETYPE_STOP       (buttons)\n"
+					" 4 MOVETYPE_WALK       (players only)\n"
+					" 5 MOVETYPE_STEP       (monsters)\n"
+					" 6 MOVETYPE_FLY        (never used)\n"
+					" 7 MOVETYPE_TOSS       (gibs, normal debris)\n"
+					" 8 MOVETYPE_FLYMISSILE (rockets)\n"
+					" 9 MOVETYPE_BOUNCE     (grenades)\n"
+					"10 MOVETYPE_VEHICLE    (Lazarus func_vehicle)\n"
+					"11 MOVETYPE_PUSHABLE   (Lazarus func_pushable)\n"
+					"12 MOVETYPE_DEBRIS     (Lazarus target_rocks)\n"
+					"13 MOVETYPE_RAIN       (Lazarus precipitation)\n\n");
+				fprintf(f, "Solid codes\n"
+					" 0 SOLID_NOT       no interaction with other objects\n"
+					" 1 SOLID_TRIGGER   trigger fields, pickups\n"
+					" 2 SOLID_BBOX      solid point entities\n"
+					" 3 SOLID_BSP       brush models\n\n");
+				fprintf(f, "CONTENT_ codes (clipmask)\n"
+					" 0x00000001 SOLID\n"
+					" 0x00000002 WINDOW\n"
+					" 0x00000004 AUX\n"
+					" 0x00000008 LAVA\n"
+					" 0x00000010 SLIME\n"
+					" 0x00000020 WATER\n"
+					" 0x00000040 MIST\n"
+					" 0x00008000 AREAPORTAL\n"
+					" 0x00010000 PLAYERCLIP\n"
+					" 0x00020000 MONSTERCLIP\n"
+					" 0x00040000 CURRENT_0\n"
+					" 0x00080000 CURRENT_90\n"
+					" 0x00100000 CURRENT_180\n"
+					" 0x00200000 CURRENT_270\n"
+					" 0x00400000 CURRENT_UP\n"
+					" 0x00800000 CURRENT_DOWN\n"
+					" 0x01000000 ORIGIN\n"
+					" 0x02000000 MONSTER\n"
+					" 0x04000000 DEADMONSTER\n"
+					" 0x08000000 DETAIL\n"
+					" 0x10000000 TRANSLUCENT\n"
+					" 0x20000000 LADDER\n\n");
+				fprintf(f, "NOTE: \"freed\" indicates an empty slot in the edicts array.\n\n");
+
+				fprintf(f, "============================================================\n");
+
+				int count = 0;
+
+				edict_t* e = &g_edicts[0];
+				for (int i = 0; i < globals.num_edicts; i++, e++)
+				{
+					vec3_t origin;
+					VectorAdd(e->s.origin, e->origin_offset, origin);
+
+					fprintf(f, "entity #%d, classname: '%s' at %s, velocity: %s\n", i, e->classname, vtos(origin), vtos(e->velocity));
+					fprintf(f, "health: %d, mass: %d, dmg: %d, wait: %g, angles: %s\n", e->health, e->mass, e->dmg, e->wait, vtos(e->s.angles));
+					fprintf(f, "targetname: '%s', target: '%s', spawnflags: 0x%04x\n", e->targetname, e->target, e->spawnflags);
+					fprintf(f, "absmin: %s\n", vtos(e->absmin));
+					fprintf(f, "absmax: %s\n", vtos(e->absmax));
+					fprintf(f, "size:   %s\n", vtos(e->size));
+					fprintf(f, "groundentity: '%s'\n", (e->groundentity ? e->groundentity->classname : "NULL"));
+
+					// Class-specific output
+					if (e->classname && !Q_stricmp(e->classname, "target_changelevel"))
+						fprintf(f, "map=%s\n", e->map);
+
+					fprintf(f, "movetype: %d, solid: %d, clipmask: 0x%08x\n", e->movetype, e->solid, e->clipmask);
+					fprintf(f, "================================================================================\n");
+
+					if (e->inuse)
+						count++;
+				}
+
+				fprintf(f, "Total number of entities: %d, in use: %d\n", globals.num_edicts, count);
+				fclose(f);
+
+				gi.dprintf("Done!\n");
+			}
+			else
+			{
+				gi.dprintf("Error opening '%s'.\n", parm);
+			}
+		}
+		else
+		{
+			gi.dprintf("Usage: entlist <filename>\n");
+		}
+	}
+	else if (!Q_stricmp(cmd, "properties"))
+	{
+		if (parm)
+		{
+			edict_t* e = LookingAt(ent, 0, NULL, NULL);
+			if (!e)
+				return;
+
+			char filename[MAX_QPATH];
+			GameDirRelativePath(parm, filename, sizeof(filename));
+			Q_strncatz(filename, ".txt", sizeof(filename));
+			FILE* f = fopen(filename, "w");
+			SaveEntProps(e, f);
+			fclose(f);
+		}
+		else
+		{
+			gi.dprintf("Usage: properties <filename>\n");
+		}
+	}
+	else if (!Q_stricmp(cmd, "go"))
+	{
+		float range;
+		edict_t* viewing = LookingAt(ent, 0, NULL, &range);
+		if (range > 512)
+		{
+			gi.dprintf(S_COLOR_YELLOW"Target is too far away (%i / %i mu.).\n", (int)range, 512); //mxd
+			return;
+		}
+
+		if (!(viewing->monsterinfo.aiflags & AI_ACTOR))
+		{
+			gi.dprintf(S_COLOR_YELLOW"Target does not have AI_ACTOR flag.\n"); //mxd
+			return;
+		}
+
+		if (viewing->enemy)
+		{
+			gi.dprintf(S_COLOR_YELLOW"Target has enemy.\n"); //mxd
+			return;
+		}
+
+		if (!(viewing->monsterinfo.aiflags & AI_FOLLOW_LEADER))
+		{
+			gi.dprintf(S_COLOR_YELLOW"Target does not have AI_FOLLOW_LEADER flag.\n"); //mxd
+			return;
+		}
+
+		actor_moveit(ent, viewing);
+	}
+	else if (!Q_stricmp(cmd, "hud"))
+	{
+		if (parm)
+		{
+			if (atoi(parm))
 				Hud_On();
 			else
 				Hud_Off();
 		}
 		else
-			Cmd_ToggleHud();
-	}
-	else if(!Q_stricmp(cmd,"whatsit"))
-	{
-		if(parm)
 		{
-			int state = atoi(parm);
-			if(state)
+			Cmd_ToggleHud();
+		}
+	}
+	else if (!Q_stricmp(cmd, "whatsit"))
+	{
+		if (parm)
+		{
+			if (atoi(parm))
 				world->effects |= FX_WORLDSPAWN_WHATSIT;
 			else
 				world->effects &= ~FX_WORLDSPAWN_WHATSIT;
 		}
 		else
+		{
 			world->effects ^= FX_WORLDSPAWN_WHATSIT;
+		}
 	}
-
-/*	else if(!Q_stricmp(cmd,"lsight"))
+	/*else if (!Q_stricmp(cmd, "lsight"))
 	{
-		if(ent->client->laser_sight)
+		if (ent->client->laser_sight)
 		{
 			G_FreeEdict(ent->client->laser_sight);
 			ent->client->laser_sight = NULL;
@@ -2226,349 +2802,35 @@ void ClientCommand (edict_t *ent)
 			laser->think(laser);
 		}
 	} */
-	else if(!Q_stricmp(cmd,"whereis"))
+	else if (!Q_stricmp(cmd, "whereis"))
 	{
-		if(parm)
+		if (parm)
 		{
-			edict_t	*e;
-			int		i;
-			int		count=0;
+			int count = 0;
 
-			for(i=1; i<globals.num_edicts; i++)
+			for (int i = 1; i < globals.num_edicts; i++)
 			{
-				e = &g_edicts[i];
-				if(e->classname && !Q_stricmp(parm,e->classname))
+				edict_t* e = &g_edicts[i];
+				if (e->classname && !Q_stricmp(parm, e->classname))
 				{
 					count++;
-					gi.dprintf("%d. %s\n",count,vtos(e->s.origin));
+					gi.dprintf("%d. %s\n", count, vtos(e->s.origin));
 				}
 			}
-			if(!count)
-				gi.dprintf("none found\n");
+
+			if (count == 0)
+				gi.dprintf("None found...\n");
 		}
 		else
-			gi.dprintf("syntax: whereis <classname>\n");
+		{
+			gi.dprintf("Usage: whereis <classname>\n");
+		}
 	}
-	// debugging/developer stuff
-	else if(developer->value) {
-		if (!Q_stricmp(cmd,"lightswitch"))
-			ToggleLights();
-		else if (!Q_stricmp(cmd,"bbox"))
-			Cmd_Bbox_f (ent);
-		else if(!Q_stricmp(cmd,"forcewall"))
-		{
-			SpawnForcewall(ent);
-		}
-		else if(!Q_stricmp(cmd,"forcewall_off"))
-		{
-			ForcewallOff(ent);
-		}
-		else if (!Q_stricmp(cmd,"freeze"))
-		{
-			if(level.freeze)
-				level.freeze = false;
-			else
-			{
-				if(ent->client->jetpack)
-					gi.dprintf("Cannot use freeze while using jetpack\n");
-				else
-					level.freeze = true;
-			}
-		}
-		else if (!Q_stricmp(cmd,"hint_test"))
-		{
-			edict_t *viewing;
-			int		result;
-			viewing = LookingAt(ent,LOOKAT_MD2,NULL,NULL);
-			if(!viewing)
-				return;
-			if(viewing->monsterinfo.aiflags & AI_HINT_TEST)
-			{
-				viewing->monsterinfo.aiflags &= ~AI_HINT_TEST;
-				gi.dprintf("%s (%s): Back to my normal self now.\n",
-					viewing->classname,viewing->targetname);
-				return;
-			}
-			if(!(viewing->svflags & SVF_MONSTER))
-				gi.dprintf("hint_test is only valid for monsters and actors.\n");
-			result = HintTestStart(viewing);
-			switch(result)
-			{
-			case -1:
-				gi.dprintf("%s (%s): I cannot see any hint_paths from here.\n");
-				break;
-			case  0:
-				gi.dprintf("This map does not contain hint_paths.\n");
-				break;
-			case  1:
-				gi.dprintf("%s (%s) searching for hint_path %s at %s. %s\n",
-			 			viewing->classname, (viewing->targetname ? viewing->targetname : "<noname>"),
-						(viewing->movetarget->targetname ? viewing->movetarget->targetname : "<noname>"),
-						vtos(viewing->movetarget->s.origin),
-						visible(viewing,viewing->movetarget) ? "I see it." : "I don't see it.");
-				break;
-			default: gi.dprintf("Unknown error\n");
-			}
-		}
-		else if (!Q_stricmp(cmd,"entid")) {
-			edict_t *viewing;
-			vec3_t	origin;
-			float	range;
-			viewing = LookingAt(ent,0,NULL,&range);
-			if(!viewing) 
-				return;
-			VectorAdd(viewing->s.origin,viewing->origin_offset,origin);
-			gi.dprintf("classname = %s at %s, velocity = %s\n",viewing->classname,vtos(origin),vtos(viewing->velocity));
-			gi.dprintf("health=%d, mass=%d, dmg=%d, wait=%g, sounds=%d, angles=%s, movetype=%d\n",viewing->health, viewing->mass, viewing->dmg, viewing->wait, viewing->sounds, vtos(viewing->s.angles), viewing->movetype);
-			gi.dprintf("targetname=%s, target=%s, spawnflags=0x%04x\n",viewing->targetname,viewing->target,viewing->spawnflags);
-			gi.dprintf("absmin,absmax,size=%s, %s, %s, range=%g\n",vtos(viewing->absmin),vtos(viewing->absmax),vtos(viewing->size),range);
-			gi.dprintf("groundentity=%s\n",(viewing->groundentity ? viewing->groundentity->classname : "NULL"));
-		}
-		else if (!Q_stricmp(cmd, "item_left"))
-			ShiftItem(ent,1);
-		else if (!Q_stricmp(cmd, "item_right"))
-			ShiftItem(ent,2);
-		else if (!Q_stricmp(cmd, "item_forward"))
-			ShiftItem(ent,4);
-		else if (!Q_stricmp(cmd, "item_back"))
-			ShiftItem(ent,8);
-		else if (!Q_stricmp(cmd, "item_up"))
-			ShiftItem(ent,16);
-		else if (!Q_stricmp(cmd, "item_down"))
-			ShiftItem(ent,32);
-		else if (!Q_stricmp(cmd, "item_drop"))
-			ShiftItem(ent,64);
-		else if (!Q_stricmp(cmd, "item_pitch"))
-			ShiftItem(ent,128);
-		else if (!Q_stricmp(cmd, "item_yaw"))
-			ShiftItem(ent,256);
-		else if (!Q_stricmp(cmd, "item_roll"))
-			ShiftItem(ent,512);
-		else if (!Q_stricmp(cmd, "item_release"))
-			ent->client->shift_dir = 0;
-		else if(!Q_stricmp(cmd,"medic_test"))
-		{
-			extern	int	medic_test;
-			if(parm)
-				medic_test = atoi(parm);
-			else if(medic_test)
-				medic_test = 0;
-			else
-				medic_test = 1;
-			gi.dprintf("medic_test is %s\n",(medic_test ? "on" : "off"));
-		}
-		else if (strstr(cmd, "muzzle")) {
-			edict_t	*viewing;
-			viewing = LookingAt(ent,0,NULL,NULL);
-			if(!viewing)
-				return;
-			if(!viewing->classname)
-				return;
-			if(!(viewing->monsterinfo.aiflags & AI_ACTOR))
-				return;
-			if(gi.argc() < 2)
-			{
-				gi.dprintf("Muzzle offset=%g, %g, %g\n",
-					viewing->muzzle[0],viewing->muzzle[1],viewing->muzzle[2]);
-			}
-			else
-			{
-				if(!Q_stricmp(cmd,"muzzlex"))
-					viewing->muzzle[0] = atof(gi.argv(1));
-				else if(!Q_stricmp(cmd,"muzzley"))
-					viewing->muzzle[1] = atof(gi.argv(1));
-				else if(!Q_stricmp(cmd,"muzzlez"))
-					viewing->muzzle[2] = atof(gi.argv(1));
-				else
-					gi.dprintf("Syntax: muzzle[x|y|z] <value>\n");
-			}
-		}
-		else if(!Q_stricmp(cmd,"range"))
-		{
-			vec3_t	forward, point, start;
-			trace_t	tr;
-			VectorCopy(ent->s.origin,start);
-
-			start[2] += ent->viewheight;
-			AngleVectors(ent->client->v_angle,forward,NULL,NULL);
-			VectorMA(start, WORLD_SIZE, forward, point); // Was 8192
-			tr = gi.trace(start,NULL,NULL,point,ent,MASK_SOLID);
-			VectorSubtract(tr.endpos,start,point);
-			gi.dprintf("range=%g\n",VectorLength(point));
-		}
-		else if (!Q_stricmp(cmd,"setskill")) {
-			if(gi.argc() < 2)
-				gi.dprintf("Syntax: setskill X\n");
-			else
-			{
-				int	s = atoi(gi.argv(1));
-				gi.cvar_forceset("skill", va("%i", s));
-			}
-		}
-		else if (!Q_stricmp(cmd,"sk")) {
-			edict_t *viewing;
-			int		skinnum;
-
-			viewing = LookingAt(ent,0,NULL,NULL);
-			if(!viewing) 
-				return;
-
-			if(parm) {
-				skinnum = atoi(parm);
-				viewing->s.skinnum = skinnum;
-				gi.linkentity(viewing);
-			}
-			else
-				gi.dprintf("Currently using skin #%i\n",viewing->s.skinnum);
-
-		}
-		else if(!Q_stricmp(cmd,"spawn"))
-		{
-			edict_t	*e;
-			vec3_t	forward;
-		
-			if(!parm)
-			{
-				gi.dprintf("syntax: spawn <classname>\n");
-				return;
-			}
-			e = G_Spawn();
-			e->classname = gi.TagMalloc(strlen(parm)+1,TAG_LEVEL);
-			strcpy(e->classname,parm);
-			AngleVectors(ent->client->v_angle,forward,NULL,NULL);
-			VectorMA(ent->s.origin,128,forward,e->s.origin);
-			e->s.angles[YAW] = ent->s.angles[YAW];
-			ED_CallSpawn(e);
-		}
-		else if(!Q_stricmp(cmd,"spawngoodguy"))
-		{
-			edict_t	*e;
-			vec3_t	forward;
-		
-			if(gi.argc() < 3)
-			{
-				gi.dprintf("syntax: spawngoodguy <modelname> <weapon>\n");
-				return;
-			}
-			e = G_Spawn();
-			e->classname = gi.TagMalloc(12,TAG_LEVEL);
-			strcpy(e->classname,"misc_actor");
-			e->usermodel = gi.argv(1);
-			e->sounds = atoi(gi.argv(2));
-			e->spawnflags = SF_MONSTER_GOODGUY;
-			AngleVectors(ent->client->v_angle,forward,NULL,NULL);
-			VectorMA(ent->s.origin,128,forward,e->s.origin);
-			e->s.origin[2] = max(e->s.origin[2],ent->s.origin[2] + 8);
-			e->s.angles[YAW] = ent->s.angles[YAW];
-			ED_CallSpawn(e);
-			actor_files();
-		}
-		else if(!Q_stricmp(cmd,"spawnself"))
-		{
-			edict_t	*decoy;
-			vec3_t	forward;
-
-			decoy = G_Spawn();
-			decoy->classname    = "fakeplayer";
-			memcpy(&decoy->s,&ent->s,sizeof(entity_state_t));
-			decoy->s.number     = decoy-g_edicts;
-			decoy->s.frame      = ent->s.frame; 
-			AngleVectors(ent->client->v_angle,forward,NULL,NULL);
-			VectorMA(ent->s.origin,64,forward,decoy->s.origin);
-			decoy->s.angles[YAW] = ent->s.angles[YAW]; 
-			decoy->takedamage   = DAMAGE_AIM;
-			decoy->flags        = (ent->flags & FL_NOTARGET);
-			decoy->movetype     = MOVETYPE_TOSS;
-			decoy->viewheight   = ent->viewheight;
-			decoy->mass         = ent->mass;
-			decoy->solid        = SOLID_BBOX;
-			decoy->deadflag     = DEAD_NO;
-			decoy->clipmask     = MASK_PLAYERSOLID;
-			decoy->health       = ent->health;
-			decoy->light_level  = ent->light_level;
-			decoy->think        = decoy_think;
-			decoy->monsterinfo.aiflags = AI_GOOD_GUY;
-			decoy->die          = decoy_die;
-			decoy->nextthink    = level.time + FRAMETIME;
-			VectorCopy(ent->mins,decoy->mins);
-			VectorCopy(ent->maxs,decoy->maxs);
-			gi.linkentity (decoy); 
-		}
-		else if (!Q_stricmp(cmd,"switch")) {
-			extern mmove_t	actor_move_switch;
-			edict_t *viewing;
-
-			viewing = LookingAt(ent,0,NULL,NULL);
-			if(!viewing)
-				return;
-			if(!(viewing->monsterinfo.aiflags & AI_ACTOR))
-			{
-				gi.dprintf("Must be a misc_actor\n");
-				return;
-			}
-			viewing->monsterinfo.currentmove = &actor_move_switch;
-		}
-#ifndef KMQUAKE2_ENGINE_MOD // these functions moved clientside in engine
-		else if(!Q_stricmp(cmd,"texture")) {
-			trace_t	tr;
-			vec3_t	forward, start, end;
-
-			if(ent->client->chasetoggle)
-				VectorCopy(ent->client->chasecam->s.origin,start);
-			else {
-				VectorCopy(ent->s.origin, start);
-				start[2] += ent->viewheight;
-			}
-			AngleVectors(ent->client->v_angle, forward, NULL, NULL);
-			VectorMA(start, 8192, forward, end);
-			tr = gi.trace(start,NULL,NULL,end,ent,MASK_ALL);
-			if(!tr.ent)
-				gi.dprintf("Nothing hit?\n");
-			else {
-				if(!tr.surface)
-					gi.dprintf("Not a brush\n");
-				else
-					gi.dprintf("Texture=%s, surface=0x%08x, value=%d\n",tr.surface->name,tr.surface->flags,tr.surface->value);
-			}
-		}
-		else if(!Q_stricmp(cmd,"surf")) {
-			trace_t	tr;
-			vec3_t	forward, start, end;
-			int		s;
-
-			if(gi.argc() < 2)
-			{
-				gi.dprintf("Syntax: surf <value>\n");
-				return;
-			}
-			else
-				s = atoi(gi.argv(1));
-
-			if(ent->client->chasetoggle)
-				VectorCopy(ent->client->chasecam->s.origin,start);
-			else {
-				VectorCopy(ent->s.origin, start);
-				start[2] += ent->viewheight;
-			}
-			AngleVectors(ent->client->v_angle, forward, NULL, NULL);
-			VectorMA(start, 8192, forward, end);
-			tr = gi.trace(start,NULL,NULL,end,ent,MASK_ALL);
-			if(!tr.ent)
-				gi.dprintf("Nothing hit?\n");
-			else
-			{
-				if(!tr.surface)
-					gi.dprintf("Not a brush\n");
-				else
-					tr.surface->flags = s;
-			}
-		}
-#endif	// KMQUAKE2_ENGINE_MOD
-		else
-			Cmd_Say_f (ent, false, true);
+	else if (!DeveloperClientCommand(ent, cmd, parm)) // Debugging/developer stuff
+	{
+		// Anything that doesn't match a command will be a chat
+		Cmd_Say_f(ent, false, true);
 	}
-	// end debugging stuff
-
-	else	// anything that doesn't match a command will be a chat
-		Cmd_Say_f (ent, false, true);
 }
+
+#pragma endregion

@@ -956,7 +956,7 @@ void Moving_Speaker_Think(edict_t *ent);
 //
 // g_fog.c
 //
-void Cmd_Fog_f(edict_t *ent);
+qboolean Fog_ProcessCommand(); //mxd
 void Fog_Init();
 void Fog(edict_t *ent);
 void Fog_Off();

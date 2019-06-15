@@ -1453,7 +1453,7 @@
 {"init_trigger_fog_delay", (byte *)init_trigger_fog_delay},
 {"trig_fog_fade", (byte *)trig_fog_fade},
 {"GLFog", (byte *)GLFog},
-{"Cmd_Fog_f", (byte *)Cmd_Fog_f},
+{"Fog_ProcessCommand", (byte *)Fog_ProcessCommand},
 {"Fog_ConsoleFog", (byte *)Fog_ConsoleFog},
 {"CTFSetPowerUpEffect", (byte *)CTFSetPowerUpEffect},
 {"CTFBoot", (byte *)CTFBoot},
