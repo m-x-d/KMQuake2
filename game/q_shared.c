@@ -83,6 +83,141 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, c
 		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 }
 
+// Rotates input angles [in] by delta angles around the local coordinate system, returns new angles in [out].
+void RotateAngles(const vec3_t in, const vec3_t delta, vec3_t out)
+{
+	vec3_t x = { 1, 0, 0 };
+	vec3_t y = { 0, 1, 0 };
+	float angle, c, s;
+	float xtemp, ytemp, ztemp;
+
+	if (delta[ROLL] != 0)
+	{
+		// Rotate about the X axis by delta roll
+		angle = DEG2RAD(delta[ROLL]);
+		c = cosf(angle);
+		s = sinf(angle);
+		ytemp = c * x[1] - s * x[2];
+		ztemp = c * x[2] + s * x[1];
+		x[1] = ytemp;
+		x[2] = ztemp;
+		ytemp = c * y[1] - s * y[2];
+		ztemp = c * y[2] + s * y[1];
+		y[1] = ytemp;
+		y[2] = ztemp;
+	}
+
+	if (delta[PITCH] != 0)
+	{
+		// Rotate about the Y axis by delta yaw
+		angle = -DEG2RAD(delta[PITCH]);
+		c = cosf(angle);
+		s = sinf(angle);
+		ztemp = c * x[2] - s * x[0];
+		xtemp = c * x[0] + s * x[2];
+		x[0] = xtemp;
+		x[2] = ztemp;
+		ztemp = c * y[2] - s * y[0];
+		xtemp = c * y[0] + s * y[2];
+		y[0] = xtemp;
+		y[2] = ztemp;
+	}
+
+	if (delta[YAW] != 0)
+	{
+		// Rotate about the Z axis by delta yaw
+		angle = DEG2RAD(delta[YAW]);
+		c = cosf(angle);
+		s = sinf(angle);
+		xtemp = c * x[0] - s * x[1];
+		ytemp = c * x[1] + s * x[0];
+		x[0] = xtemp;
+		x[1] = ytemp;
+		xtemp = c * y[0] - s * y[1];
+		ytemp = c * y[1] + s * y[0];
+		y[0] = xtemp;
+		y[1] = ytemp;
+	}
+
+	if (in[ROLL] != 0)
+	{
+		// Rotate about X axis by input roll
+		angle = DEG2RAD(in[ROLL]);
+		c = cosf(angle);
+		s = sinf(angle);
+		ytemp = c * x[1] - s * x[2];
+		ztemp = c * x[2] + s * x[1];
+		x[1] = ytemp;
+		x[2] = ztemp;
+		ytemp = c * y[1] - s * y[2];
+		ztemp = c * y[2] + s * y[1];
+		y[1] = ytemp;
+		y[2] = ztemp;
+	}
+
+	if (in[PITCH] != 0)
+	{
+		// Rotate about Y axis by input pitch
+		angle = -DEG2RAD(in[PITCH]);
+		c = cosf(angle);
+		s = sinf(angle);
+		ztemp = c * x[2] - s * x[0];
+		xtemp = c * x[0] + s * x[2];
+		x[0] = xtemp;
+		x[2] = ztemp;
+		ztemp = c * y[2] - s * y[0];
+		xtemp = c * y[0] + s * y[2];
+		y[0] = xtemp;
+		y[2] = ztemp;
+	}
+
+	if (in[YAW] != 0)
+	{
+		// Rotate about Z axis by input yaw
+		angle = DEG2RAD(in[YAW]);
+		c = cosf(angle);
+		s = sinf(angle);
+		xtemp = c * x[0] - s * x[1];
+		ytemp = c * x[1] + s * x[0];
+		x[0] = xtemp;
+		x[1] = ytemp;
+		xtemp = c * y[0] - s * y[1];
+		ytemp = c * y[1] + s * y[0];
+		y[0] = xtemp;
+		y[1] = ytemp;
+	}
+
+	out[YAW] = (180.0f / M_PI) * atan2(x[1], x[0]);
+	if (out[YAW] != 0)
+	{
+		angle = -DEG2RAD(out[YAW]);
+		c = cosf(angle);
+		s = sinf(angle);
+		xtemp = c * x[0] - s * x[1];
+		ytemp = c * x[1] + s * x[0];
+		x[0] = xtemp;
+		x[1] = ytemp;
+		xtemp = c * y[0] - s * y[1];
+		ytemp = c * y[1] + s * y[0];
+		y[0] = xtemp;
+		y[1] = ytemp;
+	}
+
+	out[PITCH] = (180.0f / M_PI) * atan2(x[2], x[0]);
+	if (out[PITCH] != 0)
+	{
+		angle = DEG2RAD(out[PITCH]);
+		c = cosf(angle);
+		s = sinf(angle);
+		ztemp = c * y[2] - s * y[0];
+		xtemp = c * y[0] + s * y[2];
+		y[0] = xtemp;
+		y[2] = ztemp;
+	}
+
+	out[ROLL] = (180.0f / M_PI) * atan2(y[2], y[1]);
+}
+
 void AngleVectors(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
 	if (!angles)

@@ -62,6 +62,7 @@ extern void VecToAngleRolled ( vec3_t value1 , float angleyaw , vec3_t angles ) 
 extern void MakeNormalVectors ( vec3_t forward , vec3_t right , vec3_t up ) ;
 extern void VectorsToAngles ( const vec3_t forward , const vec3_t right , const vec3_t up , vec3_t ang ) ;
 extern void AngleVectors ( const vec3_t angles , vec3_t forward , vec3_t right , vec3_t up ) ;
+extern void RotateAngles ( const vec3_t in , const vec3_t delta , vec3_t out ) ;
 extern void RotatePointAroundVector ( vec3_t dst , const vec3_t dir , const vec3_t point , const float degrees ) ;
 extern void kick_attack ( edict_t * ent ) ;
 extern void Weapon_Null ( edict_t * ent ) ;
@@ -1673,7 +1674,6 @@ extern char * ClientTeam ( edict_t * ent ) ;
 extern void ShiftItem ( edict_t * ent , int direction ) ;
 extern void SaveEntProps ( edict_t * e , FILE * f ) ;
 extern void laser_sight_think ( edict_t * laser ) ;
-extern void RotateAngles ( vec3_t in , vec3_t delta , vec3_t out ) ;
 extern void GetChaseTarget ( edict_t * ent ) ;
 extern void ChasePrev ( edict_t * ent ) ;
 extern void ChaseNext ( edict_t * ent ) ;
