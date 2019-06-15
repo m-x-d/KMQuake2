@@ -561,7 +561,7 @@ void Cmd_AddCommand(char *cmd_name, xcommand_t function)
 	// Fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
-		Com_Printf("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
+		Com_Printf(S_COLOR_YELLOW"%s: '%s' is already defined as a var.\n", __func__, cmd_name);
 		return;
 	}
 	
@@ -570,7 +570,7 @@ void Cmd_AddCommand(char *cmd_name, xcommand_t function)
 	{
 		if (!strcmp(cmd_name, cmd->name))
 		{
-			Com_Printf("Cmd_AddCommand: %s already defined\n", cmd_name);
+			Com_Printf(S_COLOR_YELLOW"%s: command '%s' is already defined.\n", __func__, cmd_name);
 			return;
 		}
 	}
@@ -591,7 +591,7 @@ void Cmd_RemoveCommand(char *cmd_name)
 
 		if (!cmd)
 		{
-			Com_Printf("Cmd_RemoveCommand: %s not added\n", cmd_name);
+			Com_Printf(S_COLOR_YELLOW"%s: failed to find command '%s'.\n", __func__, cmd_name);
 			return;
 		}
 
