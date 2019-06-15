@@ -135,38 +135,7 @@ cvar_t *sv_step_fraction; // Knightmare- this was a define in p_view.c
 
 cvar_t *blaster_color; // Knightmare added
 
-extern void SpawnEntities(char *mapname, char *entities, char *spawnpoint);
-extern void ClientDisconnect(edict_t *ent);
-extern void ClientBegin(edict_t *ent);
-extern void ClientCommand(edict_t *ent);
-extern void WriteGame(char *filename, qboolean autosave);
-extern void ReadGame(char *filename);
-extern void WriteLevel(char *filename);
-extern void ReadLevel(char *filename);
-extern void InitGame(void);
-void G_RunFrame(void);
-
 //===================================================================
-
-static void ShutdownGame(void)
-{
-	gi.dprintf("==== ShutdownGame ====\n");
-
-	if (!deathmatch->integer && !coop->integer)
-	{
-#ifndef KMQUAKE2_ENGINE_MOD // Engine has zoom autosensitivity
-		gi.cvar_forceset("m_pitch", va("%f",lazarus_pitch->value));
-#endif
-	}
-
-	// Lazarus: Turn off fog if it's on
-	// Knightmare: If game is shutting down, g_edicts will likely be invalid and the client will clear the fog automatically
-	//if (!dedicated->value)
-		//Fog_Off();
-
-	gi.FreeTags(TAG_LEVEL);
-	gi.FreeTags(TAG_GAME);
-}
 
 static game_import_t RealFunc;
 int max_modelindex;
@@ -195,6 +164,18 @@ static int Debug_Soundindex(char *name)
 
 	return soundnum;
 }
+
+extern void SpawnEntities(char *mapname, char *entities, char *spawnpoint);
+extern void ClientDisconnect(edict_t *ent);
+extern void ClientBegin(edict_t *ent);
+extern void ClientCommand(edict_t *ent);
+extern void WriteGame(char *filename, qboolean autosave);
+extern void ReadGame(char *filename);
+extern void WriteLevel(char *filename);
+extern void ReadLevel(char *filename);
+extern void InitGame(void);
+extern void ShutdownGame(void); //mxd. Moved to g_save.c
+void G_RunFrame(void);
 
 // Returns a pointer to the structure with all entry points and global variables
 game_export_t *GetGameAPI(game_import_t *import)

@@ -1000,6 +1000,7 @@
 {"GetMmoveByAddress", (byte *)GetMmoveByAddress},
 {"FindFunctionByName", (byte *)FindFunctionByName},
 {"GetFunctionByAddress", (byte *)GetFunctionByAddress},
+{"ShutdownGame", (byte *)ShutdownGame},
 {"InitGame", (byte *)InitGame},
 {"SP_func_reflect", (byte *)SP_func_reflect},
 {"use_func_reflect", (byte *)use_func_reflect},

@@ -1000,6 +1000,7 @@ extern mmove_t * FindMmoveByName ( char * name ) ;
 extern mmoveList_t * GetMmoveByAddress ( mmove_t * adr ) ;
 extern byte * FindFunctionByName ( char * name ) ;
 extern functionList_t * GetFunctionByAddress ( byte * adr ) ;
+extern void ShutdownGame ( void ) ;
 extern void InitGame ( void ) ;
 extern void SP_func_reflect ( edict_t * self ) ;
 extern void use_func_reflect ( edict_t * self , edict_t * other , edict_t * activator ) ;

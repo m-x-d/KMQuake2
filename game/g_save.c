@@ -502,6 +502,222 @@ void InitGame (void)
 //ZOID
 	CTFInit();
 //ZOID
+
+	//mxd. Register console commands. The only thing this does is allow command completion to work - all unknown commands are automatically forwarded to the server.
+	// ACECM_Commands():
+	gi.AddCommand("addnode", NULL);
+	gi.AddCommand("addlink", NULL);
+	gi.AddCommand("removelink", NULL);
+	gi.AddCommand("showpath", NULL);
+	gi.AddCommand("findnode", NULL);
+	gi.AddCommand("movenode", NULL);
+
+	// ClientCommand():
+	gi.AddCommand("players", NULL);
+	gi.AddCommand("score", NULL);
+	gi.AddCommand("help", NULL);
+	gi.AddCommand("invnextw", NULL);
+	gi.AddCommand("invprevw", NULL);
+	gi.AddCommand("invnextp", NULL);
+	gi.AddCommand("invprevp", NULL);
+	gi.AddCommand("putaway", NULL);
+	gi.AddCommand("playerlist", NULL);
+	gi.AddCommand("team", NULL);
+	gi.AddCommand("id", NULL);
+	gi.AddCommand("yes", NULL);
+	gi.AddCommand("no", NULL);
+	gi.AddCommand("ready", NULL);
+	gi.AddCommand("notready", NULL);
+	gi.AddCommand("ghost", NULL);
+	gi.AddCommand("admin", NULL);
+	gi.AddCommand("stats", NULL);
+	gi.AddCommand("warp", NULL);
+	gi.AddCommand("boot", NULL);
+	gi.AddCommand("observer", NULL);
+	gi.AddCommand("ctfmenu", NULL);
+	gi.AddCommand("techcount", NULL);
+
+#if defined(FLASHLIGHT_MOD) && FLASHLIGHT_USE == POWERUP_USE_ITEM
+	gi.AddCommand("flashlight", NULL);
+#endif
+
+	// Fog commands
+	gi.AddCommand("fog", NULL);
+	gi.AddCommand("fog_help", NULL);
+	gi.AddCommand("fog_active", NULL);
+	gi.AddCommand("fog_list", NULL);
+	gi.AddCommand("fog_red", NULL);
+	gi.AddCommand("fog_green", NULL);
+	gi.AddCommand("fog_blue", NULL);
+	gi.AddCommand("fog_model", NULL);
+	gi.AddCommand("fog_near", NULL);
+	gi.AddCommand("fog_far", NULL);
+	gi.AddCommand("fog_density", NULL);
+
+	gi.AddCommand("thirdperson", NULL);
+
+	// Zoom commands
+	gi.AddCommand("zoom", NULL);
+	gi.AddCommand("zoomin", NULL);
+	gi.AddCommand("zoomout", NULL);
+	gi.AddCommand("zoomoff", NULL);
+	gi.AddCommand("zoomon", NULL);
+	gi.AddCommand("zoominstop", NULL);
+	gi.AddCommand("zoomoutstop", NULL);
+
+	gi.AddCommand("entlist", NULL);
+	gi.AddCommand("properties", NULL);
+	gi.AddCommand("go", NULL);
+	gi.AddCommand("hud", NULL);
+	gi.AddCommand("whatsit", NULL);
+	gi.AddCommand("whereis", NULL);
+
+	// Debugging/developer stuff
+	gi.AddCommand("lightswitch", NULL);
+	gi.AddCommand("bbox", NULL);
+	gi.AddCommand("forcewall", NULL);
+	gi.AddCommand("forcewall_off", NULL);
+	gi.AddCommand("freeze", NULL);
+	gi.AddCommand("hint_test", NULL);
+	gi.AddCommand("entid", NULL);
+	gi.AddCommand("item_left", NULL);
+	gi.AddCommand("item_right", NULL);
+	gi.AddCommand("item_forward", NULL);
+	gi.AddCommand("item_back", NULL);
+	gi.AddCommand("item_up", NULL);
+	gi.AddCommand("item_down", NULL);
+	gi.AddCommand("item_drop", NULL);
+	gi.AddCommand("item_pitch", NULL);
+	gi.AddCommand("item_yaw", NULL);
+	gi.AddCommand("item_roll", NULL);
+	gi.AddCommand("item_release", NULL);
+	gi.AddCommand("medic_test", NULL);
+	gi.AddCommand("muzzle", NULL);
+	gi.AddCommand("range", NULL);
+	gi.AddCommand("setskill", NULL);
+	gi.AddCommand("sk", NULL);
+	gi.AddCommand("spawn", NULL);
+	gi.AddCommand("spawngoodguy", NULL);
+	gi.AddCommand("spawnself", NULL);
+	gi.AddCommand("switch", NULL);
+}
+
+void ShutdownGame(void) //mxd. Moved from g_main.c
+{
+	gi.dprintf("==== ShutdownGame ====\n");
+
+	if (!deathmatch->integer && !coop->integer)
+	{
+#ifndef KMQUAKE2_ENGINE_MOD // Engine has zoom autosensitivity
+		gi.cvar_forceset("m_pitch", va("%f", lazarus_pitch->value));
+#endif
+	}
+
+	// Lazarus: Turn off fog if it's on
+	// Knightmare: If game is shutting down, g_edicts will likely be invalid and the client will clear the fog automatically
+	//if (!dedicated->value)
+	//Fog_Off();
+
+	gi.FreeTags(TAG_LEVEL);
+	gi.FreeTags(TAG_GAME);
+
+	//mxd. Unregister console commands
+	// ACECM_Commands():
+	gi.RemoveCommand("addnode");
+	gi.RemoveCommand("addlink");
+	gi.RemoveCommand("removelink");
+	gi.RemoveCommand("showpath");
+	gi.RemoveCommand("findnode");
+	gi.RemoveCommand("movenode");
+
+	// ClientCommand():
+	gi.RemoveCommand("players");
+	gi.RemoveCommand("score");
+	gi.RemoveCommand("help");
+	gi.RemoveCommand("invnextw");
+	gi.RemoveCommand("invprevw");
+	gi.RemoveCommand("invnextp");
+	gi.RemoveCommand("invprevp");
+	gi.RemoveCommand("putaway");
+	gi.RemoveCommand("playerlist");
+	gi.RemoveCommand("team");
+	gi.RemoveCommand("id");
+	gi.RemoveCommand("yes");
+	gi.RemoveCommand("no");
+	gi.RemoveCommand("ready");
+	gi.RemoveCommand("notready");
+	gi.RemoveCommand("ghost");
+	gi.RemoveCommand("admin");
+	gi.RemoveCommand("stats");
+	gi.RemoveCommand("warp");
+	gi.RemoveCommand("boot");
+	gi.RemoveCommand("observer");
+	gi.RemoveCommand("ctfmenu");
+	gi.RemoveCommand("techcount");
+
+#if defined(FLASHLIGHT_MOD) && FLASHLIGHT_USE == POWERUP_USE_ITEM
+	gi.RemoveCommand("flashlight");
+#endif
+
+	// Fog commands 
+	gi.RemoveCommand("fog");
+	gi.RemoveCommand("fog_help");
+	gi.RemoveCommand("fog_active");
+	gi.RemoveCommand("fog_list");
+	gi.RemoveCommand("fog_red");
+	gi.RemoveCommand("fog_green");
+	gi.RemoveCommand("fog_blue");
+	gi.RemoveCommand("fog_model");
+	gi.RemoveCommand("fog_near");
+	gi.RemoveCommand("fog_far");
+	gi.RemoveCommand("fog_density");
+
+	gi.RemoveCommand("thirdperson");
+
+	// Zoom commands
+	gi.RemoveCommand("zoom");
+	gi.RemoveCommand("zoomin");
+	gi.RemoveCommand("zoomout");
+	gi.RemoveCommand("zoomoff");
+	gi.RemoveCommand("zoomon");
+	gi.RemoveCommand("zoominstop");
+	gi.RemoveCommand("zoomoutstop");
+
+	gi.RemoveCommand("entlist");
+	gi.RemoveCommand("properties");
+	gi.RemoveCommand("go");
+	gi.RemoveCommand("hud");
+	gi.RemoveCommand("whatsit");
+	gi.RemoveCommand("whereis");
+
+	// Debugging/developer stuff
+	gi.RemoveCommand("lightswitch");
+	gi.RemoveCommand("bbox");
+	gi.RemoveCommand("forcewall");
+	gi.RemoveCommand("forcewall_off");
+	gi.RemoveCommand("freeze");
+	gi.RemoveCommand("hint_test");
+	gi.RemoveCommand("entid");
+	gi.RemoveCommand("item_left");
+	gi.RemoveCommand("item_right");
+	gi.RemoveCommand("item_forward");
+	gi.RemoveCommand("item_back");
+	gi.RemoveCommand("item_up");
+	gi.RemoveCommand("item_down");
+	gi.RemoveCommand("item_drop");
+	gi.RemoveCommand("item_pitch");
+	gi.RemoveCommand("item_yaw");
+	gi.RemoveCommand("item_roll");
+	gi.RemoveCommand("item_release");
+	gi.RemoveCommand("medic_test");
+	gi.RemoveCommand("muzzle");
+	gi.RemoveCommand("range");
+	gi.RemoveCommand("setskill");
+	gi.RemoveCommand("sk");
+	gi.RemoveCommand("spawn");
+	gi.RemoveCommand("spawngoodguy");
+	gi.RemoveCommand("spawnself");
+	gi.RemoveCommand("switch");
 }
 
 //=========================================================
