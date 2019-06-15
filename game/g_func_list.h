@@ -1651,7 +1651,6 @@
 {"CheckFlood", (byte *)CheckFlood},
 {"Cmd_Wave_f", (byte *)Cmd_Wave_f},
 {"Cmd_Players_f", (byte *)Cmd_Players_f},
-{"PlayerSort", (byte *)PlayerSort},
 {"Cmd_PutAway_f", (byte *)Cmd_PutAway_f},
 {"Cmd_Kill_f", (byte *)Cmd_Kill_f},
 {"Cmd_InvDrop_f", (byte *)Cmd_InvDrop_f},

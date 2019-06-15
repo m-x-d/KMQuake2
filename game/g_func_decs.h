@@ -1651,7 +1651,6 @@ extern void Cmd_Say_f ( edict_t * ent , qboolean team , qboolean arg0 ) ;
 extern qboolean CheckFlood ( edict_t * ent ) ;
 extern void Cmd_Wave_f ( edict_t * ent ) ;
 extern void Cmd_Players_f ( edict_t * ent ) ;
-extern int PlayerSort ( void const * a , void const * b ) ;
 extern void Cmd_PutAway_f ( edict_t * ent ) ;
 extern void Cmd_Kill_f ( edict_t * ent ) ;
 extern void Cmd_InvDrop_f ( edict_t * ent ) ;

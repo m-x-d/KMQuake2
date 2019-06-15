@@ -271,90 +271,101 @@ void SVCmd_WriteIP_f (void)
 	fclose (f);
 }
 
-/*
-=================
-ServerCommand
-
-ServerCommand will be called when an "sv" command is issued.
-The game can issue gi.argc() / gi.argv() commands to get the rest
-of the parameters
-=================
-*/
-void	ServerCommand (void)
+// ServerCommand will be called when an "sv" command is issued.
+// The game can issue gi.argc() / gi.argv() commands to get the rest of the parameters
+void ServerCommand(void)
 {
-	char	*cmd;
+	char* cmd = gi.argv(1);
 
-	cmd = gi.argv(1);
-	if (Q_stricmp (cmd, "test") == 0)
-		Svcmd_Test_f ();
-	else if (Q_stricmp (cmd, "addip") == 0)
-		SVCmd_AddIP_f ();
-	else if (Q_stricmp (cmd, "removeip") == 0)
-		SVCmd_RemoveIP_f ();
-	else if (Q_stricmp (cmd, "listip") == 0)
-		SVCmd_ListIP_f ();
-	else if (Q_stricmp (cmd, "writeip") == 0)
-		SVCmd_WriteIP_f ();
-
-// ACEBOT_ADD
-	else if(Q_stricmp (cmd, "acedebug") == 0)
- 		if (strcmp(gi.argv(2),"on")==0)
+	if (Q_stricmp(cmd, "test") == 0)
+	{
+		Svcmd_Test_f();
+	}
+	else if (Q_stricmp(cmd, "addip") == 0)
+	{
+		SVCmd_AddIP_f();
+	}
+	else if (Q_stricmp(cmd, "removeip") == 0)
+	{
+		SVCmd_RemoveIP_f();
+	}
+	else if (Q_stricmp(cmd, "listip") == 0)
+	{
+		SVCmd_ListIP_f();
+	}
+	else if (Q_stricmp(cmd, "writeip") == 0)
+	{
+		SVCmd_WriteIP_f();
+	}
+	else if (Q_stricmp(cmd, "acedebug") == 0) // ACEBOT_ADD
+	{
+		if (gi.argc() == 1)
 		{
-			safe_bprintf (PRINT_MEDIUM, "ACE: Debug Mode On\n");
-			debug_mode = true;
+			debug_mode = !debug_mode;
+			safe_bprintf(PRINT_MEDIUM, "ACE: debug mode %s.\n", (debug_mode ? "enabled" : "disabled"));
+		}
+		else if (gi.argc() == 2)
+		{
+			debug_mode = atoi(gi.argv(2));
+			safe_bprintf(PRINT_MEDIUM, "ACE: debug mode %s.\n", (debug_mode ? "enabled" : "disabled"));
 		}
 		else
 		{
-			safe_bprintf (PRINT_MEDIUM, "ACE: Debug Mode Off\n");
-			debug_mode = false;
+			safe_bprintf(PRINT_MEDIUM, "Usage: acedebug <enable>\n");
 		}
-
-	else if (Q_stricmp (cmd, "addbot") == 0)
+	}
+	else if (Q_stricmp(cmd, "addbot") == 0)
 	{
-		if (!deathmatch->value) // Knightmare added
+		if (!deathmatch->integer) // Knightmare added
 		{
-			safe_bprintf (PRINT_MEDIUM, "ACE: Can only spawn bots in deathmatch mode.\n");
+			safe_bprintf(PRINT_MEDIUM, S_COLOR_YELLOW"ACE: Can only spawn bots in deathmatch mode.\n");
 			return;
 		}
-		if(ctf->value) // name, skin, team
-			ACESP_SpawnBot (gi.argv(2), gi.argv(3), gi.argv(4), NULL);
+
+		if (ctf->integer) // name, skin, team
+			ACESP_SpawnBot(gi.argv(2), gi.argv(3), gi.argv(4), NULL);
 		else // name, skin
-			ACESP_SpawnBot (NULL, gi.argv(2), gi.argv(3), NULL);
+			ACESP_SpawnBot(NULL, gi.argv(2), gi.argv(3), NULL);
 	}	
-
-	// removebot
-    else if(Q_stricmp (cmd, "removebot") == 0)
-    	ACESP_RemoveBot(gi.argv(2));
-	// Node saving
-	else if(Q_stricmp (cmd, "savenodes") == 0)
-    	ACEND_SaveNodes();
-// ACEBOT_END
-	// Knightmare added- DM pause
-    else if(Q_stricmp (cmd, "dmpause") == 0)
+	else if (Q_stricmp(cmd, "removebot") == 0)
 	{
-		if (!deathmatch->value) {
-			safe_cprintf (NULL, PRINT_HIGH, "Dmpause only works in deathmatch.\n", cmd);
+		ACESP_RemoveBot(gi.argv(2));
+	}
+	else if (Q_stricmp(cmd, "savenodes") == 0)
+	{
+		ACEND_SaveNodes();
+	} // ACEBOT_END
+	else if(Q_stricmp(cmd, "dmpause") == 0) // Knightmare added- DM pause
+	{
+		if (!deathmatch->value)
+		{
+			safe_cprintf(NULL, PRINT_HIGH, S_COLOR_YELLOW"Dmpause only works in deathmatch.\n", cmd);
 			paused = false;
+
 			return;
 		}
+
 		paused = !paused;
-		if (!paused) // unfreeze players
+
+		if (!paused) // Unfreeze players
 		{
-			int	i;
-			edict_t *player;
-			for (i=0; i<game.maxclients; i++)
+			for (int i = 0; i < game.maxclients; i++)
 			{
-				player = &g_edicts[1+i];
+				edict_t* player = &g_edicts[i + 1];
 				if (!player->inuse || !player->client)
 					continue;
+
 				if (player->is_bot || player->client->ctf_grapple)
 					continue;
+
 				player->client->ps.pmove.pm_flags &= ~PMF_NO_PREDICTION;
 			}
-			safe_bprintf (PRINT_HIGH, "Game unpaused\n");
+
+			safe_bprintf(PRINT_HIGH, "Game unpaused\n");
 		}
 	}
 	else
-		safe_cprintf (NULL, PRINT_HIGH, "Unknown server command \"%s\"\n", cmd);
+	{
+		safe_cprintf(NULL, PRINT_HIGH, S_COLOR_YELLOW"Unknown server command: \"%s\".\n", cmd);
+	}
 }
-
