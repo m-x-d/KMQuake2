@@ -444,7 +444,7 @@ void init_trigger_fog_delay(edict_t *self)
 
 void Fog(edict_t *ent)
 {
-	if (!gl_driver || !vid_ref || deathmatch->integer || coop->integer)
+	if (deathmatch->integer || coop->integer)
 		return;
 
 	edict_t	*player = ent;

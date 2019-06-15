@@ -1122,9 +1122,6 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	char		*com_token;
 	int			i;
 	float		skill_level;
-	extern int	max_modelindex;
-	extern int	max_soundindex;
-	extern int	lastgibframe;
 
 	if (developer->value)
 		gi.dprintf("====== SpawnEntities ========\n");
@@ -1741,15 +1738,9 @@ void SP_worldspawn (edict_t *ent)
 
 	Lights();
 
-	// Fog clipping - if "fogclip" is non-zero, force gl_clear to a good
-	// value for obscuring HOM with fog... "good" is driver-dependent
+	// Fog clipping - if "fogclip" is non-zero, force-enable gl_clear to obscure HOMs with fog.
 	if(ent->fogclip)
-	{
-		if(gl_driver && !Q_stricmp(gl_driver->string,"3dfxgl"))
-			gi.cvar_forceset("gl_clear", "0");
-		else
-			gi.cvar_forceset("gl_clear", "1");
-	}
+		gi.cvar_forceset("gl_clear", "1");
 
 	// cvar overrides for effects flags:
 	if(alert_sounds->value)
