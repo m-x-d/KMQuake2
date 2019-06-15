@@ -1716,7 +1716,6 @@ a deathmatch.
 */
 void PutClientInServer (edict_t *ent)
 {
-	extern	int			nostatus;
 	vec3_t				mins = {-16, -16, -24};
 	vec3_t				maxs = {16, 16, 32};
 	int					index;

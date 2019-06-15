@@ -388,7 +388,6 @@ Lazarus spawnflags:
 void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 {
 	edict_t	*transition;
-	extern	int	nostatus;
 
 	if (level.intermissiontime)
 		return;		// already activated
@@ -481,7 +480,6 @@ void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 
 		if((self->spawnflags & 4) && activator->client && !deathmatch->value && !coop->value)
 		{
-			nostatus = 1;
 			stuffcmd(activator,"cl_gun 0;crosshair 0\n");
 			activator->client->pers.hand = 2;
 		}
