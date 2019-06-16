@@ -33,13 +33,13 @@ void RefreshFont(void)
 {
 	con_font->modified = false;
 
-	draw_chars = R_FindImage(va("fonts/%s.pcx", con_font->string), it_pic, true);
+	draw_chars = R_FindImage(va("fonts/%s.pcx", con_font->string), it_font, true);
 
 	if (!draw_chars) // Fall back to default font
-		draw_chars = R_FindImage("fonts/default.pcx", it_pic, true);
+		draw_chars = R_FindImage("fonts/default.pcx", it_font, true);
 
 	if (!draw_chars) // Fall back to old Q2 conchars
-		draw_chars = R_FindImage("pics/conchars.pcx", it_pic, true);
+		draw_chars = R_FindImage("pics/conchars.pcx", it_font, true);
 
 	if (!draw_chars) // Prevent crash caused by missing font
 		VID_Error(ERR_FATAL, "RefreshFont: couldn't load pics/conchars");

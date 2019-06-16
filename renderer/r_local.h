@@ -56,7 +56,8 @@ typedef enum
 	it_wall,
 	it_pic,
 	it_sky,
-	it_part //Knightmare added
+	it_part, //Knightmare added
+	it_font //mxd
 } imagetype_t;
 
 typedef struct image_s
@@ -77,12 +78,13 @@ typedef struct image_s
 	float sl, tl, sh, th; // 0,0 - 1,1 unless part of the scrap
 	
 	qboolean has_alpha;
+	qboolean mipmap; //mxd
 
 	float replace_scale_w; // Knightmare- for scaling hi-res replacement images
 	float replace_scale_h; // Knightmare- for scaling hi-res replacement images
 } image_t;
 
-#define MAX_LIGHTMAPS		256	// Change by Brendon Chung, was 128
+#define MAX_LIGHTMAPS		256 // Change by Brendon Chung, was 128
 
 #define TEXNUM_LIGHTMAPS	1024
 #define TEXNUM_SCRAPS		(TEXNUM_LIGHTMAPS + MAX_LIGHTMAPS) // Was 1152

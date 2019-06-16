@@ -136,24 +136,20 @@ void GL_TextureMode(char *string)
 
 	// Change all the existing mipmap texture objects
 	image_t *glt = gltextures;
-	const int filter = (!strncmp(r_texturemode->string, "GL_NEAREST", 10) ? GL_NEAREST : GL_LINEAR); //mxd
-
 	for (int i = 0; i < numgltextures; i++, glt++)
 	{
-		if (glt->texnum < 1) //mxd
-			continue;
-		
-		//mxd. Also sky
-		if (glt->type == it_sky)
-			GL_ApplyTextureMode(glt->texnum, filter, filter, r_anisotropic->value);
-		else if (glt->type != it_pic)
-			GL_ApplyTextureMode(glt->texnum, gl_filter_min, gl_filter_max, r_anisotropic->value);
+		if (glt->texnum > 0) //mxd
+		{
+			//mxd. Textures without mipmaps require texture filters without mipmaps
+			const int filter_min = (glt->mipmap ? gl_filter_min : gl_filter_max);
+			GL_ApplyTextureMode(glt->texnum, filter_min, gl_filter_max, r_anisotropic->value);
+		}
 	}
 
 	//mxd. Change lightmap filtering when _lightmap_scale is 1. The idea is to make them look like they are part of the texture
-	if(gl_lms.lmshift == 0)
+	if (gl_lms.lmshift == 0)
 		for (int i = 1; i < gl_lms.current_lightmap_texture; i++)
-			GL_ApplyTextureMode(glState.lightmap_textures + i, filter, filter, r_anisotropic->value);
+			GL_ApplyTextureMode(glState.lightmap_textures + i, gl_filter_max, gl_filter_max, r_anisotropic->value); //mxd. Lightmap textures have no mipmaps, hence 2x gl_filter_max
 }
 
 void GL_TextureAlphaMode(char *string)
@@ -266,6 +262,7 @@ void R_ImageList_f(void)
 			case it_pic:	VID_Printf(PRINT_ALL, "Picture:  "); break;
 			case it_part:	VID_Printf(PRINT_ALL, "Particle: "); break;
 			case it_sky:	VID_Printf(PRINT_ALL, "Sky:      "); break;
+			case it_font:	VID_Printf(PRINT_ALL, "Font:     "); break;
 			default:		VID_Printf(PRINT_ALL, "Unknown:  "); break;
 		}
 		
@@ -745,6 +742,7 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 				scrap_texels[texnum][(y + i) * BLOCK_WIDTH + x + j] = pic[k];
 
 		image->texnum = TEXNUM_SCRAPS + texnum;
+		image->mipmap = false; //mxd
 		image->has_alpha = true;
 		image->sl = (x + 0.01f) / (float)BLOCK_WIDTH;
 		image->sh = (x + image->width - 0.01f) / (float)BLOCK_WIDTH;
@@ -757,10 +755,11 @@ nonscrap:
 		image->texnum = TEXNUM_IMAGES + (image - gltextures);
 		GL_Bind(image->texnum);
 
+		image->mipmap = (image->type != it_pic && image->type != it_sky && image->type != it_font); //mxd
 		if (bits == 8)
-			image->has_alpha = GL_Upload8(pic, width, height, (image->type != it_pic && image->type != it_sky));
+			image->has_alpha = GL_Upload8(pic, width, height, image->mipmap);
 		else
-			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, (image->type != it_pic && image->type != it_sky));
+			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, image->mipmap);
 
 		image->upload_width = upload_width; // After power of 2 and scales
 		image->upload_height = upload_height;
@@ -951,8 +950,8 @@ void R_FreeUnusedImages(void)
 		if (!image->registration_sequence)
 			continue; // Free image_t slot
 
-		if (image->type == it_pic)
-			continue; // Don't free pics
+		if (image->type == it_pic || image->type == it_font) //mxd. +it_font
+			continue; // Don't free pics or fonts
 
 		// Free it
 		qglDeleteTextures(1, (const GLuint*)&image->texnum);
