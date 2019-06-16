@@ -513,7 +513,6 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 //
 // r_sky.c
 //
-extern image_t *sky_images[6]; //mxd. For applying texture filtering
 void R_AddSkySurface(msurface_t *fa);
 void R_ClearSkyBox();
 void R_DrawSkyBox();

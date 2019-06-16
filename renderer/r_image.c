@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 image_t	gltextures[MAX_GLTEXTURES];
 int		numgltextures;
-int		base_textureid; // gltextures[i] = base_textureid + i
 
 static byte			 intensitytable[256];
 static unsigned char gammatable[256];
@@ -37,7 +36,7 @@ unsigned d_8to24table[256];
 qboolean GL_Upload8(byte *data, int width, int height, qboolean mipmap);
 qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap);
 
-#define GL_SOLID_FORMAT 3 //mxd
+#define GL_SOLID_FORMAT	3 //mxd
 #define GL_ALPHA_FORMAT 4 //mxd
 
 int gl_tex_solid_format = 3;
@@ -45,36 +44,14 @@ int gl_tex_alpha_format = 4;
 int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
 int gl_filter_max = GL_LINEAR;
 
-void GL_SetTexturePalette(const unsigned palette[256])
-{
-	unsigned char temptable[768];
-
-	if (qglColorTableEXT)
-	{
-		for (int i = 0; i < 256; i++)
-		{
-			temptable[i * 3 + 0] = (palette[i] >> 0) & 0xff;
-			temptable[i * 3 + 1] = (palette[i] >> 8) & 0xff;
-			temptable[i * 3 + 2] = (palette[i] >> 16) & 0xff;
-		}
-
-		qglColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
-						 GL_RGB,
-						 256,
-						 GL_RGB,
-						 GL_UNSIGNED_BYTE,
-						 temptable);
-	}
-}
-
-
 typedef struct
 {
 	char *name;
-	int	minimize, maximize;
+	int minimize;
+	int maximize;
 } glmode_t;
 
-glmode_t modes[] =
+static glmode_t modes[] =
 {
 	{ "GL_NEAREST", GL_NEAREST, GL_NEAREST },
 	{ "GL_LINEAR", GL_LINEAR, GL_LINEAR },
@@ -92,7 +69,7 @@ typedef struct
 	int mode;
 } gltmode_t;
 
-gltmode_t gl_alpha_modes[] =
+static gltmode_t gl_alpha_modes[] =
 {
 	{ "default", 4 },
 	{ "GL_RGBA", GL_RGBA },
@@ -104,7 +81,7 @@ gltmode_t gl_alpha_modes[] =
 
 #define NUM_GL_ALPHA_MODES (sizeof(gl_alpha_modes) / sizeof (gltmode_t))
 
-gltmode_t gl_solid_modes[] =
+static gltmode_t gl_solid_modes[] =
 {
 	{ "default", 3 },
 	{ "GL_RGB", GL_RGB },
@@ -120,7 +97,7 @@ gltmode_t gl_solid_modes[] =
 #define NUM_GL_SOLID_MODES (sizeof(gl_solid_modes) / sizeof (gltmode_t))
 
 //mxd
-void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy)
+static void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy)
 {
 	GL_Bind(texnum);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_min);
@@ -141,7 +118,7 @@ void GL_TextureMode(char *string)
 
 	if (mode == NUM_GL_MODES)
 	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad texture filtering mode name: '%s'\n", string);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad texture filtering mode name: '%s'.\n", string);
 		return;
 	}
 
@@ -153,8 +130,8 @@ void GL_TextureMode(char *string)
 	{
 		if (r_anisotropic->value > glConfig.max_anisotropy)
 			Cvar_SetValue("r_anisotropic", glConfig.max_anisotropy);
-		else if (r_anisotropic->value < 1.0)
-			Cvar_SetValue("r_anisotropic", 1.0);
+		else if (r_anisotropic->value < 1.0f)
+			Cvar_SetValue("r_anisotropic", 1.0f);
 	}
 
 	// Change all the existing mipmap texture objects
@@ -165,25 +142,18 @@ void GL_TextureMode(char *string)
 	{
 		if (glt->texnum < 1) //mxd
 			continue;
-
+		
 		//mxd. Also sky
 		if (glt->type == it_sky)
-		{
-			for (int c = 0; c < 6; c++)
-				GL_ApplyTextureMode(sky_images[c]->texnum, filter, filter, r_anisotropic->value);
-		}
+			GL_ApplyTextureMode(glt->texnum, filter, filter, r_anisotropic->value);
 		else if (glt->type != it_pic)
-		{
 			GL_ApplyTextureMode(glt->texnum, gl_filter_min, gl_filter_max, r_anisotropic->value);
-		}
 	}
 
 	//mxd. Change lightmap filtering when _lightmap_scale is 1. The idea is to make them look like they are part of the texture
 	if(gl_lms.lmshift == 0)
-	{
 		for (int i = 1; i < gl_lms.current_lightmap_texture; i++)
 			GL_ApplyTextureMode(glState.lightmap_textures + i, filter, filter, r_anisotropic->value);
-	}
 }
 
 void GL_TextureAlphaMode(char *string)
@@ -196,7 +166,7 @@ void GL_TextureAlphaMode(char *string)
 
 	if (mode == NUM_GL_ALPHA_MODES)
 	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad alpha texture mode name: '%s'\n", string);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad alpha texture mode name: '%s'.\n", string);
 		return;
 	}
 
@@ -213,7 +183,7 @@ void GL_TextureSolidMode(char *string)
 
 	if (mode == NUM_GL_SOLID_MODES)
 	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad solid texture mode name: '%s'\n", string);
+		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad solid texture mode name: '%s'.\n", string);
 		return;
 	}
 
@@ -310,26 +280,21 @@ void R_ImageList_f(void)
 
 #pragma endregion 
 
-/*
-=============================================================================
-	Scrap allocation
+#pragma region ======================= Scrap allocation
 
-Allocate all the little status bar objects into a single texture to crutch up inefficient hardware / drivers
-=============================================================================
-*/
+// Allocate all the little status bar objects into a single texture to crutch up inefficient hardware / drivers
 
-#define	MAX_SCRAPS		1
-#define	BLOCK_WIDTH		256
-#define	BLOCK_HEIGHT	256
+#define MAX_SCRAPS		1
+#define BLOCK_WIDTH		256
+#define BLOCK_HEIGHT	256
 
-int			scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
-byte		scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT];
-qboolean	scrap_dirty;
+byte scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT];
+qboolean scrap_dirty;
 
 // Returns a texture number and the position inside it
-int Scrap_AllocBlock(int w, int h, int *x, int *y)
+static int Scrap_AllocBlock(int w, int h, int *x, int *y)
 {
-	int j;
+	static int scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH]; //mxd. Made local
 
 	for (int texnum = 0; texnum < MAX_SCRAPS; texnum++)
 	{
@@ -338,7 +303,7 @@ int Scrap_AllocBlock(int w, int h, int *x, int *y)
 		for (int i = 0; i < BLOCK_WIDTH - w; i++)
 		{
 			int best2 = 0;
-
+			int j;
 			for (j = 0; j < w; j++)
 			{
 				if (scrap_allocated[texnum][i + j] >= best)
@@ -375,19 +340,16 @@ void Scrap_Upload(void)
 	scrap_dirty = false;
 }
 
+#pragma endregion
 
-/*
-====================================================================
-IMAGE FLOOD FILLING
-====================================================================
-*/
+#pragma region ======================= Image flood filling
 
 typedef struct
 {
 	short x, y;
 } floodfill_t;
 
-// must be a power of 2
+// Must be a power of 2
 #define FLOODFILL_FIFO_SIZE 0x1000
 #define FLOODFILL_FIFO_MASK (FLOODFILL_FIFO_SIZE - 1)
 
@@ -407,13 +369,13 @@ typedef struct
 }
 
 // Fill background pixels so mipmapping doesn't have haloes
-void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
+static void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 {
-	const byte	fillcolor = *skin; // assume this is the pixel to fill
+	const byte fillcolor = *skin; // assume this is the pixel to fill
 	floodfill_t	fifo[FLOODFILL_FIFO_SIZE];
-	int			inpt = 0;
-	int			outpt = 0;
-	int			filledcolor = 0;
+	int inpt = 0;
+	int outpt = 0;
+	int filledcolor = 0;
 
 	// Attempt to find opaque black
 	for (int i = 0; i < 256; ++i)
@@ -456,10 +418,10 @@ void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 	}
 }
 
-//=======================================================
+#pragma endregion
 
 // Scale up the pixel values in a texture to increase the lighting range
-void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboolean only_gamma)
+static void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboolean only_gamma)
 {
 	byte *p = (byte *)in;
 	const int size = inwidth * inheight;
@@ -499,23 +461,6 @@ void GL_MipMap(byte *in, int width, int height)
 }
 #endif
 
-void GL_BuildPalettedTexture(unsigned char *paletted_texture, unsigned char *scaled, int scaled_width, int scaled_height)
-{
-	for (int i = 0; i < scaled_width * scaled_height; i++ )
-	{
-		const unsigned int r = (scaled[0] >> 3) & 31;
-		const unsigned int g = (scaled[1] >> 2) & 63;
-		const unsigned int b = (scaled[2] >> 3) & 31;
-
-		const unsigned int c = r | (g << 5) | (b << 11);
-
-		paletted_texture[i] = glState.d_16to8table[c];
-
-		scaled += 4;
-	}
-}
-
-
 /*
 ===============
 here starts modified code by Heffo/changes by Nexus
@@ -552,9 +497,10 @@ static int nearest_power_of_2(int size)
 // Returns has_alpha
 qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 {
-	unsigned 	*scaled;
-	int			scaled_width, scaled_height;
-	int			comp;
+	unsigned *scaled;
+	int scaled_width;
+	int scaled_height;
+	int comp;
 
 	// Scan the texture for any non-255 alpha
 	const int size = width * height;
@@ -592,13 +538,13 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	scaled_height = min(glConfig.max_texsize, scaled_height);
 
 	// Allow sampling down of the world textures for speed
-	if (mipmap && (int)r_picmip->value > 0)
+	if (mipmap && r_picmip->integer > 0)
 	{
 		int maxsize;
 
-		if ((int)r_picmip->value == 1)		// clamp to 512x512
+		if (r_picmip->integer == 1)		// clamp to 512x512
 			maxsize = 512;
-		else if ((int)r_picmip->value == 2) // clamp to 256x256
+		else if (r_picmip->integer == 2) // clamp to 256x256
 			maxsize = 256;
 		else								// clamp to 128x128
 			maxsize = 128;
@@ -734,14 +680,14 @@ image_t *R_LoadPic(char *name, byte *pic, int width, int height, imagetype_t typ
 	if (imagenum == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			VID_Error(ERR_DROP, "%s: map has too many textures (max. is %i)", __func__, MAX_GLTEXTURES);
+			VID_Error(ERR_DROP, "%s: map has too many textures (max. is %i).", __func__, MAX_GLTEXTURES);
 
 		numgltextures++;
 	}
 
 	const size_t len = strlen(name); //mxd
 	if (len >= sizeof(image->name))
-		VID_Error(ERR_DROP, "%s: image name \"%s\" is too long (%i / %i chars)", __func__, name, len, sizeof(image->name));
+		VID_Error(ERR_DROP, "%s: image name \"%s\" is too long (%i / %i chars).", __func__, name, len, sizeof(image->name));
 
 	Q_strncpyz(image->name, name, sizeof(image->name));
 	image->registration_sequence = registration_sequence;
@@ -838,7 +784,7 @@ void R_InitFailedImgList(void)
 	failedImgListIndex = 0;
 }
 
-qboolean R_CheckImgFailed(uint namehash) //mxd. Check hash instead of name
+static qboolean R_CheckImgFailed(uint namehash) //mxd. Check hash instead of name
 {
 	for (int i = 0; i < NUM_FAIL_IMAGES; i++)
 		if (namehash == failedImageHashes[i])
@@ -847,7 +793,7 @@ qboolean R_CheckImgFailed(uint namehash) //mxd. Check hash instead of name
 	return false;
 }
 
-void R_AddToFailedImgList(char *name)
+static void R_AddToFailedImgList(char *name)
 {
 	if (!strncmp(name, "save/", 5)) // Don't add saveshots
 		return;

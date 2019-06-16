@@ -23,12 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-char	skyname[MAX_QPATH];
-float	skyrotate;
-vec3_t	skyaxis;
-image_t	*sky_images[6];
+static char skyname[MAX_QPATH];
+static float skyrotate;
+static vec3_t skyaxis;
+static image_t *sky_images[6];
 
-vec3_t skyclip[6] =
+static vec3_t skyclip[6] =
 {
 	{ 1,  1, 0 },
 	{ 1, -1, 0 },
@@ -38,10 +38,8 @@ vec3_t skyclip[6] =
 	{-1,  0, 1 }
 };
 
-int	c_sky;
-
 // 1 = s, 2 = t, 3 = 2048
-int	st_to_vec[6][3] =
+static int st_to_vec[6][3] =
 {
 	{ 3, -1, 2 },
 	{-3,  1, 2 },
@@ -54,7 +52,7 @@ int	st_to_vec[6][3] =
 };
 
 // s = [0]/[2], t = [1]/[2]
-int	vec_to_st[6][3] =
+static int vec_to_st[6][3] =
 {
 	{-2,  3,  1 },
 	{ 2,  3, -1 },
@@ -66,15 +64,15 @@ int	vec_to_st[6][3] =
 	{-2,  1, -3 }
 };
 
-float skymins[2][6], skymaxs[2][6];
-float sky_min, sky_max;
+static float skymins[2][6];
+static float skymaxs[2][6];
+static float sky_min;
+static float sky_max;
 
-void DrawSkyPolygon(int nump, vec3_t vecs)
+static void DrawSkyPolygon(int nump, vec3_t vecs)
 {
-	vec3_t	v, av;
-	float	s, t, dv;
-
-	c_sky++;
+	vec3_t v, av;
+	float s, t, dv;
 
 	// Decide which face it maps to
 	VectorCopy(vec3_origin, v);
@@ -102,7 +100,7 @@ void DrawSkyPolygon(int nump, vec3_t vecs)
 		else
 			dv = -vecs[-j - 1];
 
-		if (dv < 0.001)
+		if (dv < 0.001f)
 			continue; // Don't divide by zero
 
 		j = vec_to_st[axis][0];
@@ -125,17 +123,15 @@ void DrawSkyPolygon(int nump, vec3_t vecs)
 	}
 }
 
-#define	ON_EPSILON		0.1 // Point on plane side epsilon
+#define	ON_EPSILON		0.1f // Point on plane side epsilon
 #define	MAX_CLIP_VERTS	64
 
-void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
+static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 {
-	float	*v;
-	float	dists[MAX_CLIP_VERTS];
-	int		sides[MAX_CLIP_VERTS];
-	vec3_t	newv[2][MAX_CLIP_VERTS];
-	int		newc[2];
-	int		i;
+	float *v;
+	float dists[MAX_CLIP_VERTS];
+	int sides[MAX_CLIP_VERTS];
+	int i;
 
 	if (nump > MAX_CLIP_VERTS - 2)
 		VID_Error(ERR_DROP, "ClipSkyPolygon: MAX_CLIP_VERTS");
@@ -152,7 +148,7 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 	float *norm = skyclip[stage];
 	for (i = 0, v = vecs; i < nump; i++, v += 3)
 	{
-		float d = DotProduct(v, norm);
+		const float d = DotProduct(v, norm);
 
 		if (d > ON_EPSILON)
 		{
@@ -183,28 +179,30 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 	sides[i] = sides[0];
 	dists[i] = dists[0];
 	VectorCopy(vecs, (vecs + (i * 3)));
-	newc[0] = newc[1] = 0;
 
-	for (i = 0, v = vecs ; i<nump ; i++, v+=3)
+	vec3_t newv[2][MAX_CLIP_VERTS];
+	int newc[2] = { 0, 0 };
+
+	for (i = 0, v = vecs; i < nump; i++, v += 3)
 	{
 		switch (sides[i])
 		{
-		case SIDE_FRONT:
-			VectorCopy(v, newv[0][newc[0]]);
-			newc[0]++;
-			break;
+			case SIDE_FRONT:
+				VectorCopy(v, newv[0][newc[0]]);
+				newc[0]++;
+				break;
 
-		case SIDE_BACK:
-			VectorCopy(v, newv[1][newc[1]]);
-			newc[1]++;
-			break;
+			case SIDE_BACK:
+				VectorCopy(v, newv[1][newc[1]]);
+				newc[1]++;
+				break;
 
-		case SIDE_ON:
-			VectorCopy(v, newv[0][newc[0]]);
-			newc[0]++;
-			VectorCopy(v, newv[1][newc[1]]);
-			newc[1]++;
-			break;
+			case SIDE_ON:
+				VectorCopy(v, newv[0][newc[0]]);
+				newc[0]++;
+				VectorCopy(v, newv[1][newc[1]]);
+				newc[1]++;
+				break;
 		}
 
 		if (sides[i] == SIDE_ON || sides[i + 1] == SIDE_ON || sides[i + 1] == sides[i])
@@ -228,11 +226,6 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 	ClipSkyPolygon(newc[1], newv[1][0], stage + 1);
 }
 
-/*
-=================
-R_AddSkySurface
-=================
-*/
 void R_AddSkySurface(msurface_t *fa)
 {
 	vec3_t verts[MAX_CLIP_VERTS];
@@ -247,12 +240,6 @@ void R_AddSkySurface(msurface_t *fa)
 	}
 }
 
-
-/*
-==============
-R_ClearSkyBox
-==============
-*/
 void R_ClearSkyBox(void)
 {
 	for (int i = 0; i < 6; i++)
@@ -262,8 +249,7 @@ void R_ClearSkyBox(void)
 	}
 }
 
-
-void MakeSkyVec(float s, float t, int axis)
+static void MakeSkyVec(float s, float t, int axis)
 {
 	vec3_t v, b;
 
@@ -282,13 +268,13 @@ void MakeSkyVec(float s, float t, int axis)
 			v[j] = b[k - 1];
 	}
 
-	// avoid bilerp seam
-	s = (s + 1) * 0.5;
-	t = (t + 1) * 0.5;
+	// Avoid bilerp seam
+	s = (s + 1) * 0.5f;
+	t = (t + 1) * 0.5f;
 
 	s = clamp(s, sky_min, sky_max);
 	t = clamp(t, sky_min, sky_max);
-	t = 1.0 - t;
+	t = 1.0f - t;
 
 	VA_SetElem2(texCoordArray[0][rb_vertex], s, t);
 	VA_SetElem3(vertexArray[rb_vertex], v[0], v[1], v[2]);
@@ -297,15 +283,10 @@ void MakeSkyVec(float s, float t, int axis)
 	rb_vertex++;
 }
 
-/*
-==============
-R_DrawSkyBox
-==============
-*/
-int skytexorder[6] = { 0, 2, 1, 3, 4, 5 };
-
-void R_DrawSkyBox (void)
+void R_DrawSkyBox(void)
 {
+	static int skytexorder[6] = { 0, 2, 1, 3, 4, 5 }; //mxd. Made local
+	
 	if (skyrotate)
 	{
 		int c;
@@ -329,7 +310,7 @@ void R_DrawSkyBox (void)
 	{
 		if (skyrotate)
 		{
-			// hack, forces full sky to draw when rotating
+			// Hack, forces full sky to draw when rotating
 			skymins[0][i] = -1;
 			skymins[1][i] = -1;
 			skymaxs[0][i] = 1;
@@ -341,7 +322,9 @@ void R_DrawSkyBox (void)
 
 		GL_Bind(sky_images[skytexorder[i]]->texnum);
 
-		rb_vertex = rb_index = 0;
+		rb_vertex = 0;
+		rb_index = 0;
+
 		indexArray[rb_index++] = rb_vertex;
 		indexArray[rb_index++] = rb_vertex + 1;
 		indexArray[rb_index++] = rb_vertex + 2;
@@ -362,20 +345,13 @@ void R_DrawSkyBox (void)
 	R_SetSkyFog(false); // Restore normal distance fog
 }
 
-
-/*
-============
-R_SetSky
-============
-*/
-
-// 3dstudio environment map names
-char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
-
 void R_SetSky(char *name, float rotate, vec3_t axis)
 {
-	char	pathname[MAX_QPATH];
-	float	imagesize;
+	// 3dstudio environment map names
+	static char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" }; //mxd. Made local
+	
+	char pathname[MAX_QPATH];
+	float imagesize;
 
 	strncpy(skyname, name, sizeof(skyname) - 1);
 	skyrotate = rotate;
@@ -383,7 +359,7 @@ void R_SetSky(char *name, float rotate, vec3_t axis)
 
 	for (int i = 0; i < 6; i++)
 	{
-		if (r_skymip->value) // take less memory
+		if (r_skymip->value) // Take less memory
 			r_picmip->value++;
 
 		Com_sprintf(pathname, sizeof(pathname), "env/%s%s.tga", skyname, suf[i]);
@@ -398,15 +374,15 @@ void R_SetSky(char *name, float rotate, vec3_t axis)
 
 		if (r_skymip->value)
 		{
-			r_picmip->value--; // take less memory
-			imagesize = min(512.0, imagesize); // cap at 512
+			r_picmip->value--; // Take less memory
+			imagesize = min(512.0f, imagesize); // Cap at 512
 		}
 		else
 		{
-			imagesize = min(1024.0, imagesize); // cap at 1024
+			imagesize = min(1024.0f, imagesize); // Cap at 1024
 		}
 
-		sky_min = 1.0 / imagesize; // was 256
-		sky_max = (imagesize - 1.0) / imagesize;
+		sky_min = 1.0f / imagesize; // Was 256
+		sky_max = (imagesize - 1.0f) / imagesize;
 	}
 }
