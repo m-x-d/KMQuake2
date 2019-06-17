@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 static void BoundPoly(int numverts, float *verts, vec3_t mins, vec3_t maxs)
 {
-	mins[0] = mins[1] = mins[2] = 999999;
-	maxs[0] = maxs[1] = maxs[2] = -999999;
+	VectorSetAll(mins, 999999);
+	VectorSetAll(maxs, -999999);
 	float *v = verts;
 
 	for (int i = 0; i < numverts; i++)
@@ -311,7 +311,7 @@ static void CreateDSTTex_NV(void)
 // Create the texture which warps texture shaders
 static void CreateDSTTex_ARB(void)
 {
-	unsigned char dist[DST_SIZE][DST_SIZE][4];
+	byte dist[DST_SIZE][DST_SIZE][4];
 
 	srand(GetTickCount());
 	for (int x = 0; x < DST_SIZE; x++)
@@ -352,12 +352,12 @@ extern image_t *R_TextureAnimation(msurface_t *surf);
 // Backend for R_DrawWarpSurface
 static void RB_RenderWarpSurface(msurface_t *fa)
 {
-	float		args[7] = {0, 0.05, 0, 0, 0.04, 0, 0};
-	image_t		*image = R_TextureAnimation(fa);
-	const qboolean	light = r_warp_lighting->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
-	const qboolean	texShaderWarpNV = glConfig.NV_texshaders && glConfig.multitexture && r_pixel_shader_warp->value;
-	qboolean		texShaderWarpARB = glConfig.arb_fragment_program && glConfig.multitexture && r_pixel_shader_warp->value;
-	const qboolean	texShaderWarp = (texShaderWarpNV || texShaderWarpARB);
+	float args[] = { 0.0f, 0.05f, 0.0f, 0.0f, 0.04f, 0.0f, 0.0f };
+	image_t *image = R_TextureAnimation(fa);
+	const qboolean light = r_warp_lighting->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
+	const qboolean texShaderWarpNV = glConfig.NV_texshaders && glConfig.multitexture && r_pixel_shader_warp->value;
+	qboolean texShaderWarpARB = glConfig.arb_fragment_program && glConfig.multitexture && r_pixel_shader_warp->value;
+	const qboolean texShaderWarp = (texShaderWarpNV || texShaderWarpARB);
 	
 	if (texShaderWarpNV && texShaderWarpARB)
 		texShaderWarpARB = (r_pixel_shader_warp->value == 1.0f);
@@ -420,7 +420,7 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 	// MrG - texture shader waterwarp
 	if (texShaderWarpARB)
 	{
-		GL_Disable (GL_FRAGMENT_PROGRAM_ARB);
+		GL_Disable(GL_FRAGMENT_PROGRAM_ARB);
 		GL_DisableTexture(1);
 		GL_SelectTexture(0);
 	}
@@ -431,13 +431,13 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // Psychospaz's lighting
 
 		GL_SelectTexture(0);
-		GL_Disable (GL_TEXTURE_SHADER_NV);
+		GL_Disable(GL_TEXTURE_SHADER_NV);
 	}
 
 	// Psychospaz's vertex lighting
 	if (light)
 	{
-		GL_ShadeModel (GL_FLAT);
+		GL_ShadeModel(GL_FLAT);
 		if (!texShaderWarp)
 			R_SetVertexRGBScale(false); 
 	}
@@ -449,7 +449,7 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 }
 
 // Does a water warp on the pre-fragmented glpoly_t chain.
-// added Psychospaz's lightmaps on alpha surfaces
+// Added Psychospaz's lightmaps on alpha surfaces
 void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 {
 	float scroll;
@@ -518,13 +518,17 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 			}
 
 			if (light && p->vertexlight && p->vertexlightset)
+			{
 				VA_SetElem4(colorArray[rb_vertex],
 					(float)(p->vertexlight[i * 3 + 0] * DIV255),
 					(float)(p->vertexlight[i * 3 + 1] * DIV255),
 					(float)(p->vertexlight[i * 3 + 2] * DIV255),
 					alpha);
+			}
 			else
+			{
 				VA_SetElem4(colorArray[rb_vertex], glState.inverse_intensity, glState.inverse_intensity, glState.inverse_intensity, alpha);
+			}
 
 			VA_SetElem3(vertexArray[rb_vertex], point[0], point[1], point[2]);
 
