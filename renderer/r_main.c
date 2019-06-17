@@ -23,184 +23,174 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 #include "vlights.h"
 
-void R_Clear(void);
+viddef_t vid;
 
-viddef_t	vid;
+model_t *r_worldmodel;
 
-model_t		*r_worldmodel;
+float gldepthmin;
+float gldepthmax;
 
-float		gldepthmin, gldepthmax;
+glconfig_t glConfig;
+glstate_t glState;
+glmedia_t glMedia;
 
-glconfig_t	glConfig;
-glstate_t	glState;
-glmedia_t	glMedia;
+entity_t *currententity;
+int r_worldframe; // Added for trans animations
+model_t *currentmodel;
 
-entity_t	*currententity;
-int			r_worldframe; // added for trans animations
-model_t		*currentmodel;
+cplane_t frustum[4];
 
-cplane_t	frustum[4];
+int r_visframecount; // Bumped when going to a new PVS
+int r_framecount; // Used for dlight push checking
 
-int			r_visframecount;	// bumped when going to a new PVS
-int			r_framecount;		// used for dlight push checking
+// Per-frame statistics to print when r_speeds->value is set.
+int c_brush_calls;
+int c_brush_surfs;
+int c_brush_polys;
+int c_alias_polys;
+int c_part_polys;
 
-int			c_brush_calls, c_brush_surfs, c_brush_polys, c_alias_polys, c_part_polys;
+static float v_blend[4]; // Final blending color
 
-float		v_blend[4];			// final blending color
+// View origin
+vec3_t vup;
+vec3_t vpn;
+vec3_t vright;
+vec3_t r_origin;
 
-int			maxsize;			// Nexus
-
-void GL_Strings_f(void);
-
-//
-// view origin
-//
-vec3_t	vup;
-vec3_t	vpn;
-vec3_t	vright;
-vec3_t	r_origin;
-
-float	r_world_matrix[16];
-float	r_base_world_matrix[16];
+float r_world_matrix[16];
 
 GLdouble r_farz; // Knightmare- variable sky range, made this a global var
 
-//
-// screen size info
-//
-refdef_t	r_newrefdef;
+// Screen size info
+refdef_t r_newrefdef;
 
-int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
+int r_viewcluster;
+int r_viewcluster2;
+int r_oldviewcluster;
+int r_oldviewcluster2;
 
-cvar_t	*gl_allow_software;
-cvar_t  *gl_driver;
-cvar_t	*gl_clear;
+cvar_t *gl_driver;
+cvar_t *gl_clear;
 
-cvar_t	*con_font; // Psychospaz's console font size option
-cvar_t	*con_font_size;
-cvar_t	*alt_text_color;
-cvar_t	*scr_netgraph_pos;
+cvar_t *con_font; // Psychospaz's console font size option
+cvar_t *con_font_size;
+cvar_t *alt_text_color;
+cvar_t *scr_netgraph_pos;
 
-cvar_t	*r_norefresh;
-cvar_t	*r_drawentities;
-cvar_t	*r_drawworld;
-cvar_t	*r_speeds;
-cvar_t	*r_fullbright;
-cvar_t	*r_novis;
-cvar_t	*r_nocull;
-cvar_t	*r_lerpmodels;
-cvar_t	*r_ignorehwgamma; // hardware gamma
-cvar_t	*r_lefthand;
-cvar_t	*r_waterwave;	// water waves
-cvar_t  *r_caustics;	// Barnes water caustics
-cvar_t  *r_glows;		// texture glows
+cvar_t *r_norefresh;
+cvar_t *r_drawentities;
+cvar_t *r_drawworld;
+cvar_t *r_speeds;
+cvar_t *r_fullbright;
+cvar_t *r_novis;
+cvar_t *r_nocull;
+cvar_t *r_lerpmodels;
+cvar_t *r_ignorehwgamma; // Hardware gamma
+cvar_t *r_lefthand;
+cvar_t *r_waterwave; // Water waves
+cvar_t *r_caustics; // Barnes water caustics
+cvar_t *r_glows; // Texture glows
 
-cvar_t	*r_dlights_normal; // lerped dlights on models
-cvar_t	*r_model_shading;
-cvar_t	*r_model_dlights;
+cvar_t *r_dlights_normal; // Lerped dlights on models
+cvar_t *r_model_shading;
+cvar_t *r_model_dlights;
 
-cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light level
+cvar_t *r_lightlevel; // FIXME: This is a HACK to get the client's light level
 
-cvar_t	*r_rgbscale; // Vic's RGB brightening
+cvar_t *r_rgbscale; // Vic's RGB brightening
 
-cvar_t	*r_vertex_arrays;
+cvar_t *r_vertex_arrays;
 
-cvar_t	*r_ext_swapinterval;
-cvar_t	*r_ext_multitexture;
-cvar_t	*r_ext_draw_range_elements;
-cvar_t	*r_ext_compiled_vertex_array;
-cvar_t	*r_arb_texturenonpoweroftwo;	// Knightmare- non-power-of-two texture support
-cvar_t	*r_nonpoweroftwo_mipmaps;		// Knightmare- non-power-of-two texture support
-cvar_t	*r_sgis_generatemipmap;			// Knightmare- whether to use GL_SGIS_generate_mipmap
-cvar_t	*r_ext_mtexcombine; // Vic's RGB brightening
-cvar_t	*r_stencilTwoSide; // Echon's two-sided stenciling
-cvar_t	*r_arb_fragment_program;
-cvar_t	*r_arb_vertex_program;
-cvar_t	*r_arb_vertex_buffer_object;
-cvar_t	*r_pixel_shader_warp;	// allow disabling the nVidia water warp
-cvar_t	*r_trans_lighting;		// disabling of lightmaps on trans surfaces
-cvar_t	*r_warp_lighting;		// allow disabling of lighting on warp surfaces
-cvar_t	*r_solidalpha;			// allow disabling of trans33+trans66 surface flag combining
-cvar_t	*r_entity_fliproll;		// allow disabling of backwards alias model roll
-cvar_t	*r_old_nullmodel;		// allow selection of nullmodel
+cvar_t *r_ext_swapinterval;
+cvar_t *r_ext_multitexture;
+cvar_t *r_ext_draw_range_elements;
+cvar_t *r_ext_compiled_vertex_array;
+cvar_t *r_arb_texturenonpoweroftwo; // Knightmare- non-power-of-two texture support
+cvar_t *r_nonpoweroftwo_mipmaps;  // Knightmare- non-power-of-two texture support
+cvar_t *r_sgis_generatemipmap;   // Knightmare- whether to use GL_SGIS_generate_mipmap
+cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
+cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
+cvar_t *r_arb_fragment_program;
+cvar_t *r_arb_vertex_program;
+cvar_t *r_arb_vertex_buffer_object;
+cvar_t *r_pixel_shader_warp; // Allow disabling the nVidia water warp
+cvar_t *r_trans_lighting; // Disabling of lightmaps on trans surfaces
+cvar_t *r_warp_lighting; // Allow disabling of lighting on warp surfaces
+cvar_t *r_solidalpha; // Allow disabling of trans33+trans66 surface flag combining
+cvar_t *r_entity_fliproll; // Allow disabling of backwards alias model roll
+cvar_t *r_old_nullmodel; // Allow selection of nullmodel
 
-cvar_t	*r_glass_envmaps; // Psychospaz's envmapping
-cvar_t	*r_trans_surf_sorting; // trans bmodel sorting
-cvar_t	*r_shelltype; // entity shells: 0 = solid, 1 = warp, 2 = spheremap
-cvar_t	*r_ext_texture_compression; // Heffo - ARB Texture Compression
-cvar_t	*r_screenshot_format;		// determines screenshot format
-cvar_t	*r_screenshot_jpeg_quality;	// Heffo - JPEG Screenshots
+cvar_t *r_glass_envmaps; // Psychospaz's envmapping
+cvar_t *r_trans_surf_sorting; // Translucent bmodel sorting
+cvar_t *r_shelltype; // Entity shells: 0 = solid, 1 = warp, 2 = spheremap
+cvar_t *r_ext_texture_compression; // Heffo - ARB Texture Compression
+cvar_t *r_screenshot_format; // Determines screenshot format
+cvar_t *r_screenshot_jpeg_quality; // Heffo - JPEG Screenshots
 
-//cvar_t	*r_motionblur;				// motionblur
-cvar_t	*r_lightcutoff;	//** DMP - allow dynamic light cutoff to be user-settable
+cvar_t *r_lightcutoff; //** DMP - allow dynamic light cutoff to be user-settable
 
-cvar_t	*r_dlightshadowmapscale; //mxd. 0 - disabled, 1 - 1 ray per 1 lightmap pixel, 2 - 1 ray per 2x2 lightmap pixels, 4 - 1 ray per 4x4 lightmap pixels etc.
-cvar_t	*r_dlightshadowrange;   //mxd. Dynamic lights don't cast shadows when distance between camera and dlight is > r_dlightshadowrange.
-cvar_t	*r_dlightnormalmapping; //mxd. Dynamic lights use normalmaps (1) or not (0).
+cvar_t *r_dlightshadowmapscale; //mxd. 0 - disabled, 1 - 1 ray per 1 lightmap pixel, 2 - 1 ray per 2x2 lightmap pixels, 4 - 1 ray per 4x4 lightmap pixels etc.
+cvar_t *r_dlightshadowrange; //mxd. Dynamic lights don't cast shadows when distance between camera and dlight is > r_dlightshadowrange.
+cvar_t *r_dlightnormalmapping; //mxd. Dynamic lights use normalmaps (1) or not (0).
 
-cvar_t	*r_log;
-cvar_t	*r_drawbuffer;
-cvar_t	*r_lightmap;
-cvar_t	*r_shadows;
-cvar_t	*r_shadowalpha;
-cvar_t	*r_shadowrange;
-cvar_t	*r_shadowvolumes;
-cvar_t	*r_stencil;
-cvar_t	*r_transrendersort; // correct trasparent sorting
-cvar_t	*r_particle_lighting;	// particle lighting
-cvar_t	*r_particle_min;
-cvar_t	*r_particle_max;
-cvar_t	*r_particle_mode; //mxd
+cvar_t *r_log;
+cvar_t *r_drawbuffer;
+cvar_t *r_lightmap;
+cvar_t *r_shadows;
+cvar_t *r_shadowalpha;
+cvar_t *r_shadowrange;
+cvar_t *r_shadowvolumes;
+cvar_t *r_stencil;
+cvar_t *r_transrendersort; // Correct trasparent sorting
+cvar_t *r_particle_lighting; // Particle lighting
+cvar_t *r_particle_min;
+cvar_t *r_particle_max;
+cvar_t *r_particle_mode; //mxd
 
-cvar_t	*r_particledistance;
-cvar_t	*r_particle_overdraw;
+cvar_t *r_particledistance;
+cvar_t *r_particle_overdraw;
 
-cvar_t	*r_mode;
-cvar_t	*r_dynamic;
+cvar_t *r_mode;
+cvar_t *r_dynamic;
 
-cvar_t	*r_modulate;
-cvar_t	*r_nobind;
-cvar_t	*r_round_down;
-cvar_t	*r_picmip;
-cvar_t	*r_skymip;
-cvar_t	*r_playermip;
-cvar_t	*r_showtris;
-cvar_t	*r_showbbox;	// show model bounding box
-cvar_t	*r_ztrick;
-cvar_t	*r_finish;
-cvar_t	*r_cull;
-cvar_t	*r_polyblend;
-cvar_t	*r_flashblend;
-cvar_t  *r_saturatelighting;
-cvar_t	*r_swapinterval;
-cvar_t	*r_texturemode;
-cvar_t	*r_texturealphamode;
-cvar_t	*r_texturesolidmode;
-cvar_t	*r_anisotropic;
-cvar_t	*r_anisotropic_avail;
-cvar_t	*r_lockpvs;
+cvar_t *r_modulate;
+cvar_t *r_nobind;
+cvar_t *r_round_down;
+cvar_t *r_picmip;
+cvar_t *r_skymip;
+cvar_t *r_playermip;
+cvar_t *r_showtris;
+cvar_t *r_showbbox; // Show model bounding box
+cvar_t *r_ztrick;
+cvar_t *r_finish;
+cvar_t *r_cull;
+cvar_t *r_polyblend;
+cvar_t *r_flashblend;
+cvar_t *r_saturatelighting;
+cvar_t *r_swapinterval;
+cvar_t *r_texturemode;
+cvar_t *r_texturealphamode;
+cvar_t *r_texturesolidmode;
+cvar_t *r_anisotropic;
+cvar_t *r_anisotropic_avail;
+cvar_t *r_lockpvs;
 
-cvar_t	*vid_fullscreen;
-cvar_t	*vid_gamma;
-cvar_t	*vid_ref;
+cvar_t *vid_fullscreen;
+cvar_t *vid_gamma;
+cvar_t *vid_ref;
 
-cvar_t	*r_bloom; // BLOOMS
+cvar_t *r_bloom; // BLOOMS
 
-cvar_t	*r_skydistance; //Knightmare- variable sky range
-cvar_t	*r_fog_skyratio; //Knightmare- variable sky fog ratio
-cvar_t	*r_saturation; //** DMP
+cvar_t *r_skydistance; //Knightmare- variable sky range
+cvar_t *r_fog_skyratio; //Knightmare- variable sky fog ratio
+cvar_t *r_saturation; //** DMP
 
 
-/*
-=================
-R_CullBox
-
-Returns true if the box is completely outside the frustom
-=================
-*/
+// Returns true if the box is completely outside the frustom
 qboolean R_CullBox(vec3_t mins, vec3_t maxs)
 {
-	if (r_nocull->value)
+	if (r_nocull->integer)
 		return false;
 
 	for (int i = 0; i < 4; i++)
@@ -210,15 +200,9 @@ qboolean R_CullBox(vec3_t mins, vec3_t maxs)
 	return false;
 }
 
-
-/*
-============
-R_PolyBlend
-============
-*/
-void R_PolyBlend(void)
+static void R_PolyBlend(void)
 {
-	if (!r_polyblend->value || !v_blend[3])
+	if (!r_polyblend->integer || !v_blend[3])
 		return;
 
 	GL_Disable(GL_ALPHA_TEST);
@@ -226,13 +210,15 @@ void R_PolyBlend(void)
 	GL_Disable(GL_DEPTH_TEST);
 	GL_DisableTexture(0);
 
-    qglLoadIdentity();
+	qglLoadIdentity();
 
 	// FIXME: get rid of these
-    qglRotatef(-90, 1, 0, 0);	    // put Z going up
-    qglRotatef( 90, 0, 0, 1);	    // put Z going up
+	qglRotatef(-90, 1, 0, 0); // Put Z going up
+	qglRotatef( 90, 0, 0, 1); // Put Z going up
 
-	rb_vertex = rb_index = 0;
+	rb_vertex = 0;
+	rb_index = 0;
+
 	indexArray[rb_index++] = rb_vertex + 0;
 	indexArray[rb_index++] = rb_vertex + 1;
 	indexArray[rb_index++] = rb_vertex + 2;
@@ -265,11 +251,9 @@ void R_PolyBlend(void)
 	qglColor4f(1, 1, 1, 1);
 }
 
-//=======================================================================
-
-int SignbitsForPlane(cplane_t *out)
+static int SignbitsForPlane(cplane_t *out)
 {
-	// for fast box on planeside test
+	// For fast box on planeside test
 	int bits = 0;
 	for (int j = 0; j < 3; j++)
 		if (out->normal[j] < 0)
@@ -278,19 +262,18 @@ int SignbitsForPlane(cplane_t *out)
 	return bits;
 }
 
-
-void R_SetFrustum(void)
+static void R_SetFrustum(void)
 {
-	// rotate VPN right by FOV_X/2 degrees
+	// Rotate VPN right by FOV_X/2 degrees
 	RotatePointAroundVector(frustum[0].normal, vup, vpn, -(90 - r_newrefdef.fov_x / 2 ));
 	
-	// rotate VPN left by FOV_X/2 degrees
+	// Rotate VPN left by FOV_X/2 degrees
 	RotatePointAroundVector(frustum[1].normal, vup, vpn, 90 - r_newrefdef.fov_x / 2);
 	
-	// rotate VPN up by FOV_X/2 degrees
+	// Rotate VPN up by FOV_X/2 degrees
 	RotatePointAroundVector(frustum[2].normal, vright, vpn, 90 - r_newrefdef.fov_y / 2);
 	
-	// rotate VPN down by FOV_X/2 degrees
+	// Rotate VPN down by FOV_X/2 degrees
 	RotatePointAroundVector(frustum[3].normal, vright, vpn, -(90 - r_newrefdef.fov_y / 2));
 
 	for (int i = 0; i < 4; i++)
@@ -301,49 +284,43 @@ void R_SetFrustum(void)
 	}
 }
 
-//=======================================================================
-
-/*
-===============
-R_SetupFrame
-===============
-*/
-void R_SetupFrame(void)
+static void R_SetupFrame(void)
 {
 	r_framecount++;
 
-// build the transformation matrix for the given view angles
+	// Build the transformation matrix for the given view angles
 	VectorCopy(r_newrefdef.vieworg, r_origin);
 
 	AngleVectors(r_newrefdef.viewangles, vpn, vright, vup);
 
-// current viewcluster
+	// Current viewcluster
 	if (!(r_newrefdef.rdflags & RDF_NOWORLDMODEL))
 	{
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
-		mleaf_t *leaf = Mod_PointInLeaf (r_origin, r_worldmodel);
-		r_viewcluster = r_viewcluster2 = leaf->cluster;
+		mleaf_t *leaf = Mod_PointInLeaf(r_origin, r_worldmodel);
+		r_viewcluster = leaf->cluster;
+		r_viewcluster2 = leaf->cluster;
 
-		// check above and below so crossing solid water doesn't draw wrong
+		// Check above and below so crossing solid water doesn't draw wrong
 		if (!leaf->contents)
-		{	
-			// look down a bit
-			vec3_t	temp;
-
+		{
+			// Look down a bit
+			vec3_t temp;
 			VectorCopy(r_origin, temp);
 			temp[2] -= 16;
+
 			leaf = Mod_PointInLeaf(temp, r_worldmodel);
 			if (!(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
 				r_viewcluster2 = leaf->cluster;
 		}
 		else
-		{	
-			// look up a bit
-			vec3_t	temp;
-
+		{
+			// Look up a bit
+			vec3_t temp;
 			VectorCopy(r_origin, temp);
 			temp[2] += 16;
+
 			leaf = Mod_PointInLeaf(temp, r_worldmodel);
 			if (!(leaf->contents & CONTENTS_SOLID) && leaf->cluster != r_viewcluster2)
 				r_viewcluster2 = leaf->cluster;
@@ -359,7 +336,7 @@ void R_SetupFrame(void)
 	c_alias_polys = 0;
 	c_part_polys = 0;
 
-	// clear out the portion of the screen that the NOWORLDMODEL defines
+	// Clear out the portion of the screen that the NOWORLDMODEL defines
 	/*if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
 	{
 		GL_Enable( GL_SCISSOR_TEST );
@@ -370,7 +347,6 @@ void R_SetupFrame(void)
 		GL_Disable( GL_SCISSOR_TEST );
 	}*/
 }
-
 
 void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
 {
@@ -386,12 +362,6 @@ void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble z
 	qglFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
-
-/*
-=============
-R_SetupGL
-=============
-*/
 void R_SetupGL(void)
 {
 	// Knightmare- update r_modulate in real time
@@ -406,9 +376,7 @@ void R_SetupGL(void)
 		r_modulate->modified = 0; 
 	}
 
-	//
-	// set up viewport
-	//
+	// Set up viewport
 	const int x = floor(r_newrefdef.x * vid.width / vid.width);
 	const int x2 = ceil((r_newrefdef.x + r_newrefdef.width) * vid.width / vid.width);
 	const int y = floor(vid.height - r_newrefdef.y * vid.height / vid.height);
@@ -420,7 +388,7 @@ void R_SetupGL(void)
 	qglViewport(x, y2, w, h);
 
 	// Knightmare- variable sky range
-	// calc farz falue from skybox size
+	// Calc farz falue from skybox size
 	if (r_skydistance->modified)
 	{
 		r_skydistance->modified = false;
@@ -428,37 +396,33 @@ void R_SetupGL(void)
 		GLdouble boxsize = r_skydistance->value;
 		boxsize -= 252 * ceil(boxsize / 2300);
 		r_farz = 1.0;
-		while (r_farz < boxsize) //make this a power of 2
+		while (r_farz < boxsize) // Make this a power of 2
 		{
 			r_farz *= 2.0;
-			if (r_farz >= 65536) //don't make it larger than this
+			if (r_farz >= 65536) // Don't make it larger than this
 				break;
 		}
 
-		r_farz *= 2.0; //double since boxsize is distance from camera to edge of skybox, not total size of skybox
+		r_farz *= 2.0; // Double since boxsize is distance from camera to edge of skybox, not total size of skybox
 
 		R_UpdateFogVars(); //mxd
 	}
 	// end Knightmare
 
 	//mxd. Update variable sky fogging ratio.
-	if(r_fog_skyratio->modified)
+	if (r_fog_skyratio->modified)
 	{
 		r_fog_skyratio->modified = false;
 		R_UpdateFogVars();
 	}
 
-	//
-	// set up projection matrix
-	//
-	const float screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
-//	yfov = 2*atan((float)r_newrefdef.height/r_newrefdef.width)*180/M_PI;
+	// Set up projection matrix
+	const float screenaspect = (float)r_newrefdef.width / r_newrefdef.height;
 	qglMatrixMode(GL_PROJECTION);
 	qglLoadIdentity();
 
 	//Knightmare- 12/26/2001- increase back clipping plane distance
 	MYgluPerspective(r_newrefdef.fov_y,  screenaspect,  4, r_farz); //was 4096
-	//end Knightmare
 
 	GL_CullFace(GL_FRONT);
 
@@ -477,9 +441,7 @@ void R_SetupGL(void)
 
 	qglGetFloatv(GL_MODELVIEW_MATRIX, r_world_matrix);
 
-	//
-	// set drawing parms
-	//
+	// Set drawing parms
 	if (r_cull->value)
 		GL_Enable(GL_CULL_FACE);
 	else
@@ -493,108 +455,61 @@ void R_SetupGL(void)
 	rb_index = 0;
 }
 
-
-/*
-=============
-R_Clear
-=============
-*/
-void R_Clear(void)
+static void R_Clear(void)
 {
-	GLbitfield clearBits = 0;	// bitshifter's consolidation
+	GLbitfield clearBits = 0; // Bitshifter's consolidation
 
-	if (gl_clear->value)
+	if (gl_clear->integer)
 		clearBits |= GL_COLOR_BUFFER_BIT;
 
-	if (r_ztrick->value)
+	if (r_ztrick->integer)
 	{
-		static int trickframe;
-
-	//	if (gl_clear->value)
-	//		qglClear (GL_COLOR_BUFFER_BIT);
+		static int trickframe = 0;
 
 		trickframe++;
 		if (trickframe & 1)
 		{
-			gldepthmin = 0;
-			gldepthmax = 0.49999;
+			gldepthmin = 0.0f;
+			gldepthmax = 0.49999f;
 			GL_DepthFunc(GL_LEQUAL);
 		}
 		else
 		{
-			gldepthmin = 1;
-			gldepthmax = 0.5;
+			gldepthmin = 1.0f;
+			gldepthmax = 0.5f;
 			GL_DepthFunc(GL_GEQUAL);
 		}
 	}
 	else
 	{
-	//	if (gl_clear->value)
-	//		qglClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//	else
-	//		qglClear (GL_DEPTH_BUFFER_BIT);
 		clearBits |= GL_DEPTH_BUFFER_BIT;
 
-		gldepthmin = 0;
-		gldepthmax = 1;
+		gldepthmin = 0.0f;
+		gldepthmax = 1.0f;
 		GL_DepthFunc(GL_LEQUAL);
 	}
 
 	GL_DepthRange(gldepthmin, gldepthmax);
 
-	// added stencil buffer
+	// Added stencil buffer
 	if (glConfig.have_stencil)
 	{
 		if (r_shadows->value == 3) // BeefQuake R6 shadows
 			qglClearStencil(0);
 		else
 			qglClearStencil(1);
-	//	qglClear(GL_STENCIL_BUFFER_BIT);
+
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
-//	GL_DepthRange (gldepthmin, gldepthmax);
 
-	if (clearBits)	// bitshifter's consolidation
+	if (clearBits) // Bitshifter's consolidation
 		qglClear(clearBits);
 }
 
-
-/*
-=============
-R_Flash
-=============
-*/
-void R_Flash(void)
-{
-	R_PolyBlend();
-}
-
-
-/*
-=============
-R_DrawLastElements
-=============
-*/
-void R_DrawLastElements(void)
-{
-	//if (parts_prerender)
-	//	R_DrawParticles(parts_prerender);
-	if (ents_trans)
-		R_DrawEntitiesOnList(ents_trans);
-}
-//============================================
-
-
-/*
-================
-R_RenderView
-
-r_newrefdef must be set before the first call
-================
-*/
+// r_newrefdef must be set before the first call
 void R_RenderView(refdef_t *fd)
 {
-	if (r_norefresh->value)
+	if (r_norefresh->integer)
 		return;
 
 	r_newrefdef = *fd;
@@ -602,7 +517,7 @@ void R_RenderView(refdef_t *fd)
 	if (!r_worldmodel && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL))
 		VID_Error(ERR_DROP, "R_RenderView: NULL worldmodel");
 
-	if (r_speeds->value)
+	if (r_speeds->integer)
 	{
 		c_brush_calls = 0;
 		c_brush_surfs = 0;
@@ -613,17 +528,17 @@ void R_RenderView(refdef_t *fd)
 
 	R_PushDlights();
 
-	if (r_finish->value)
+	if (r_finish->integer)
 		qglFinish();
 
 	R_SetupFrame();
 	R_SetFrustum();
 	R_SetupGL();
 	R_SetFog();
-	R_MarkLeaves();	// done here so we know if we're in water
+	R_MarkLeaves();	// Done here so we know if we're in water
 	R_DrawWorld();
 
-	if (r_newrefdef.rdflags & RDF_NOWORLDMODEL) // options menu
+	if (r_newrefdef.rdflags & RDF_NOWORLDMODEL) // Options menu
 	{
 		R_SuspendFog();
 
@@ -638,7 +553,7 @@ void R_RenderView(refdef_t *fd)
 
 		R_RenderDlights();
 
-		if (r_transrendersort->value)
+		if (r_transrendersort->integer)
 		{
 			//R_BuildParticleList();
 			R_SortParticlesOnList();
@@ -662,38 +577,32 @@ void R_RenderView(refdef_t *fd)
 		R_ParticleStencil(2);
 
 		R_ParticleStencil(3);
-		if (r_particle_overdraw->value) // redraw over alpha surfaces, those behind are occluded
+		if (r_particle_overdraw->integer) // Redraw over alpha surfaces, those behind are occluded
 			R_DrawAllParticles();
 		R_ParticleStencil(4);
 
-		// always draw vwep last...
+		// Always draw vwep last...
 		R_DrawEntitiesOnList(ents_viewweaps_trans);
 
-		R_BloomBlend(fd);	// BLOOMS
+		R_BloomBlend(fd); // BLOOMS
 
-		R_Flash();
+		R_PolyBlend(); //mxd. Was R_Flash(), which called R_PolyBlend()...
 	}
 }
 
+extern void Con_DrawString(int x, int y, char *string, int alpha);
+extern float SCR_ScaledVideo(float param);
+#define FONT_SIZE SCR_ScaledVideo(con_font_size->value)
 
-/*
-================
-R_SetGL2D
-================
-*/
-void Con_DrawString(int x, int y, char *string, int alpha);
-float SCR_ScaledVideo(float param);
-#define	FONT_SIZE SCR_ScaledVideo(con_font_size->value)
-
-void R_SetGL2D(void)
+static void R_SetGL2D(void)
 {
-	// set 2D virtual screen size
-	qglViewport(0,0, vid.width, vid.height);
+	// Set 2D virtual screen size
+	qglViewport(0, 0, vid.width, vid.height);
 	qglMatrixMode(GL_PROJECTION);
-    qglLoadIdentity();
+	qglLoadIdentity();
 	qglOrtho(0, vid.width, vid.height, 0, -99999, 99999);
 	qglMatrixMode(GL_MODELVIEW);
-    qglLoadIdentity();
+	qglLoadIdentity();
 	GL_Disable(GL_DEPTH_TEST);
 	GL_Disable(GL_CULL_FACE);
 	GL_Disable(GL_BLEND);
@@ -701,7 +610,7 @@ void R_SetGL2D(void)
 	qglColor4f(1, 1, 1, 1);
 
 	// Knightmare- draw r_speeds (modified from Echon's tutorial)
-	if (r_speeds->value && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL)) // don't do this for options menu
+	if (r_speeds->value && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL)) // Don't do this for options menu
 	{
 		char line[128];
 		const int lines = (glConfig.multitexture ? 5 : 7);
@@ -711,9 +620,9 @@ void R_SetGL2D(void)
 			int len = 0;
 			switch (i)
 			{
-				case 0:	len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wcall", c_brush_calls); break;
-				case 1:	len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wsurf", c_brush_surfs); break;
-				case 2:	len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wpoly", c_brush_polys); break;
+				case 0: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wcall", c_brush_calls); break;
+				case 1: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wsurf", c_brush_surfs); break;
+				case 2: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wpoly", c_brush_polys); break;
 				case 3: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i epoly", c_alias_polys); break;
 				case 4: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i ppoly", c_part_polys); break;
 				case 5: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i tex  ", c_visible_textures); break;
@@ -733,32 +642,20 @@ void R_SetGL2D(void)
 	}
 }
 
-
-/*
-====================
-R_SetLightLevel
-====================
-*/
-void R_SetLightLevel(void)
+static void R_SetLightLevel(void)
 {
 	vec3_t shadelight;
 
 	if (r_newrefdef.rdflags & RDF_NOWORLDMODEL)
 		return;
 
-	// save off light value for server to look at (BIG HACK!)
+	// Save off light value for server to look at (BIG HACK!)
 	R_LightPoint(r_newrefdef.vieworg, shadelight, false);
 
-	// pick the greatest component, which should be the same as the mono value returned by software
+	// Pick the greatest component, which should be the same as the mono value returned by software
 	r_lightlevel->value = 150 * max(shadelight[0], max(shadelight[1], shadelight[2])); //mxd
 }
 
-
-/*
-@@@@@@@@@@@@@@@@@@@@@
-R_RenderFrame
-@@@@@@@@@@@@@@@@@@@@@
-*/
 void R_RenderFrame(refdef_t *fd)
 {
 	R_RenderView(fd);
@@ -766,32 +663,9 @@ void R_RenderFrame(refdef_t *fd)
 	R_SetGL2D();
 }
 
+void GL_Strings_f(void);
 
-void AssertCvarRange(cvar_t *var, float min, float max, qboolean isInteger)
-{
-	if (!var)
-		return;
-
-	if (isInteger && ((int)var->value != var->integer))
-	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Warning: cvar '%s' must be an integer (%f)\n", var->name, var->value);
-		Cvar_Set(var->name, va("%d", var->integer));
-	}
-
-	if (var->value < min)
-	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Warning: cvar '%s' is out of range (%f < %f)\n", var->name, var->value, min);
-		Cvar_Set(var->name, va("%f", min));
-	}
-	else if (var->value > max)
-	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Warning: cvar '%s' is out of range (%f > %f)\n", var->name, var->value, max);
-		Cvar_Set(var->name, va("%f", max));
-	}
-}
-
-
-void R_Register(void)
+static void R_Register(void)
 {
 	// Added Psychospaz's console font size option
 	con_font = Cvar_Get("con_font", "default", CVAR_ARCHIVE);
@@ -885,35 +759,33 @@ void R_Register(void)
 
 	r_arb_vertex_buffer_object = Cvar_Get("r_arb_vertex_buffer_object", "1", CVAR_ARCHIVE);
 
-	// allow disabling the nVidia water warp
+	// Allow disabling the nVidia water warp
 	r_pixel_shader_warp = Cvar_Get("r_pixel_shader_warp", "1", CVAR_ARCHIVE);
 
-	// allow disabling of lightmaps on trans surfaces
+	// Allow disabling of lightmaps on trans surfaces
 	r_trans_lighting = Cvar_Get("r_trans_lighting", "2", CVAR_ARCHIVE);
 
-	// allow disabling of lighting on warp surfaces
+	// Allow disabling of lighting on warp surfaces
 	r_warp_lighting = Cvar_Get("r_warp_lighting", "1", CVAR_ARCHIVE);
 
-	// allow disabling of trans33+trans66 surface flag combining
+	// Allow disabling of trans33+trans66 surface flag combining
 	r_solidalpha = Cvar_Get("r_solidalpha", "1", CVAR_ARCHIVE);
 
-	// allow disabling of backwards alias model roll
+	// Allow disabling of backwards alias model roll
 	r_entity_fliproll = Cvar_Get("r_entity_fliproll", "1", CVAR_ARCHIVE);
 
-	// allow selection of nullmodel
+	// Allow selection of nullmodel
 	r_old_nullmodel = Cvar_Get("r_old_nullmodel", "0", CVAR_ARCHIVE);
 
-	// added Psychospaz's envmapping
+	// Added Psychospaz's envmapping
 	r_glass_envmaps = Cvar_Get("r_glass_envmaps", "1", CVAR_ARCHIVE);
 	r_trans_surf_sorting = Cvar_Get("r_trans_surf_sorting", "0", CVAR_ARCHIVE);
 	r_shelltype = Cvar_Get("r_shelltype", "1", CVAR_ARCHIVE);
 
 	r_ext_texture_compression = Cvar_Get("r_ext_texture_compression", "0", CVAR_ARCHIVE); // Heffo - ARB Texture Compression
 
-	r_screenshot_format = Cvar_Get("r_screenshot_format", "jpg", CVAR_ARCHIVE);	// determines screenshot format
+	r_screenshot_format = Cvar_Get("r_screenshot_format", "jpg", CVAR_ARCHIVE); // Determines screenshot format
 	r_screenshot_jpeg_quality = Cvar_Get("r_screenshot_jpeg_quality", "85", CVAR_ARCHIVE); // Heffo - JPEG Screenshots
-
-	//r_motionblur = Cvar_Get( "r_motionblur", "0", CVAR_ARCHIVE );	// motionblur
 
 	r_drawbuffer = Cvar_Get("r_drawbuffer", "GL_BACK", 0);
 	r_swapinterval = Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
@@ -921,13 +793,13 @@ void R_Register(void)
 	r_saturatelighting = Cvar_Get("r_saturatelighting", "0", 0);
 
 	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE);
-	vid_gamma = Cvar_Get("vid_gamma", "0.8", CVAR_ARCHIVE); // was 1.0
+	vid_gamma = Cvar_Get("vid_gamma", "0.8", CVAR_ARCHIVE); // Was 1.0
 	vid_ref = Cvar_Get("vid_ref", "gl", CVAR_ARCHIVE);
 
-	r_bloom = Cvar_Get("r_bloom", "0", CVAR_ARCHIVE);	// BLOOMS
+	r_bloom = Cvar_Get("r_bloom", "0", CVAR_ARCHIVE); // BLOOMS
 
-	r_skydistance = Cvar_Get("r_skydistance", "10000", CVAR_ARCHIVE); // variable sky range
-	r_fog_skyratio = Cvar_Get("r_fog_skyratio", "10", CVAR_ARCHIVE);  // variable sky fog ratio
+	r_skydistance = Cvar_Get("r_skydistance", "10000", CVAR_ARCHIVE); // Variable sky range
+	r_fog_skyratio = Cvar_Get("r_fog_skyratio", "10", CVAR_ARCHIVE);  // Variable sky fog ratio
 	r_saturation = Cvar_Get("r_saturation", "1.0", CVAR_ARCHIVE);	  //** DMP saturation setting (.89 good for nvidia)
 	r_lightcutoff = Cvar_Get("r_lightcutoff", "0", CVAR_ARCHIVE);	  //** DMP dynamic light cutoffnow variable
 
@@ -940,24 +812,12 @@ void R_Register(void)
 	Cmd_AddCommand("screenshot_silent", R_ScreenShot_Silent_f);
 	Cmd_AddCommand("modellist", Mod_Modellist_f);
 	Cmd_AddCommand("gl_strings", GL_Strings_f);
-	//	Cmd_AddCommand ("resetvertexlights", R_ResetVertextLights_f);
 }
 
-
-/*
-==================
-R_SetMode
-==================
-*/
-qboolean R_SetMode (void)
+static qboolean R_SetMode(void)
 {
-	const qboolean fullscreen = vid_fullscreen->value;
-	r_skydistance->modified = true; // skybox size variable
-
-	// don't allow modes 0, 1, or 2
-	/*if ((r_mode->value > -1) && (r_mode->value < 3))
-		Cvar_SetValue( "r_mode", 3);*/
-
+	const qboolean fullscreen = vid_fullscreen->integer;
+	r_skydistance->modified = true; // Skybox size variable
 	vid_fullscreen->modified = false;
 	r_mode->modified = false;
 
@@ -997,17 +857,10 @@ qboolean R_SetMode (void)
 	return true;
 }
 
-
-/*
-===============
-StringContainsToken
-
-A non-ambiguous alternative to strstr.
-Useful for parsing the GL extension string.
-Similar to code in Fruitz of Dojo Quake2 MacOSX Port.
-===============
-*/
-qboolean StringContainsToken(const char *string, const char *findToken)
+// A non-ambiguous alternative to strstr.
+// Useful for parsing the GL extension string.
+// Similar to code in Fruitz of Dojo Quake2 MacOSX Port.
+static qboolean StringContainsToken(const char *string, const char *findToken)
 {
 	if (!string || !findToken) 
 		return false;
@@ -1027,7 +880,7 @@ qboolean StringContainsToken(const char *string, const char *findToken)
 
 		char *terminatorPos = tokPos + tokenLen;
 
-		if ( (tokPos == strPos || *(tokPos - 1) == ' ') && (*terminatorPos == ' ' || *terminatorPos == 0) )
+		if ((tokPos == strPos || *(tokPos - 1) == ' ') && (*terminatorPos == ' ' || *terminatorPos == 0))
 			return true;
 
 		strPos = terminatorPos;
@@ -1036,15 +889,8 @@ qboolean StringContainsToken(const char *string, const char *findToken)
 	return false;
 }
 
-
-/*
-===============
-R_CheckGLExtensions
-
-Grabs GL extensions
-===============
-*/
-qboolean R_CheckGLExtensions()
+// Grabs GL extensions
+static qboolean R_CheckGLExtensions()
 {
 	// OpenGL multitexture on GL 1.2.1 or later or GL_ARB_multitexture
 	glConfig.multitexture = false;
@@ -1469,60 +1315,54 @@ qboolean R_CheckGLExtensions()
 	return true;
 }
 
-
-/*
-===============
-R_Init
-===============
-*/
 qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 {	
 	Draw_GetPalette();
 	R_Register();
 
-	// place default error
+	// Place default error
 	memcpy(reason, "Unknown failure on intialization!\0", 34);
 
-	// initialize our QGL dynamic bindings
+	// Initialize our QGL dynamic bindings
 	if (!QGL_Init(gl_driver->string))
 	{
 		QGL_Shutdown();
-        VID_Printf(PRINT_ALL, "R_Init() - could not load \"%s\"\n", gl_driver->string);
+		VID_Printf(PRINT_ALL, "R_Init() - could not load \"%s\"\n", gl_driver->string);
 		memcpy(reason, "Init of QGL dynamic bindings Failed!\0", 37);
+
 		return false;
 	}
 
-	// initialize OS-specific parts of OpenGL
+	// Initialize OS-specific parts of OpenGL
 	if (!GLimp_Init(hinstance, hWnd))
 	{
 		QGL_Shutdown();
 		memcpy(reason, "Init of OS-specific parts of OpenGL Failed!\0", 44);
+
 		return false;
 	}
 
-	// set our "safe" modes
+	// Set our "safe" modes
 	glState.prev_mode = 3;
 
-	// create the window and set up the context
+	// Create the window and set up the context
 	if (!R_SetMode())
 	{
 		QGL_Shutdown();
-        VID_Printf(PRINT_ALL, "R_Init() - could not R_SetMode()\n");
+		VID_Printf(PRINT_ALL, "R_Init() - could not R_SetMode()\n");
 		memcpy(reason, "Creation of the window/context set-up Failed!\0", 46);
+
 		return false;
 	}
 
-	RB_InitBackend(); // init mini-backend
+	RB_InitBackend(); // Init mini-backend
 
-
-	//
-	// get our various GL strings
-	//
-	glConfig.vendor_string = qglGetString(GL_VENDOR);
+	// Get our various GL strings
+	glConfig.vendor_string = (const char*)qglGetString(GL_VENDOR);
 	VID_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glConfig.vendor_string);
-	glConfig.renderer_string = qglGetString(GL_RENDERER);
+	glConfig.renderer_string = (const char*)qglGetString(GL_RENDERER);
 	VID_Printf(PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string);
-	glConfig.version_string = qglGetString(GL_VERSION);
+	glConfig.version_string = (const char*)qglGetString(GL_VERSION);
 	sscanf(glConfig.version_string, "%d.%d.%d", &glConfig.version_major, &glConfig.version_minor, &glConfig.version_release);
 	VID_Printf(PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string);
 
@@ -1531,14 +1371,16 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	{
 		QGL_Shutdown();
 		memcpy(reason, "No hardware acceleration detected.\nPlease install drivers provided by your video card/GPU vendor.\0", 98);
+
 		return false;
 	}
 
 	//mxd. We need at least OpenGL 1.4
-	if(glConfig.version_major == 1 && glConfig.version_minor < 4)
+	if (glConfig.version_major == 1 && glConfig.version_minor < 4)
 	{
 		QGL_Shutdown();
 		memcpy(reason, "Support for OpenGL 1.4 is not available!\0", 41);
+
 		return false;
 	}
 
@@ -1548,7 +1390,7 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 
 	glConfig.extensions_string = (const char*)qglGetString(GL_EXTENSIONS);
 	
-	if (developer->value > 0)	// print extensions 2 to a line
+	if (developer->value > 0) // Print 2 extensions per line
 	{
 		unsigned line = 0;
 
@@ -1579,11 +1421,9 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	Cvar_SetValue("r_finish", 0);
 #endif
 
-	r_swapinterval->modified = true; // force swapinterval update
+	r_swapinterval->modified = true; // Force swapinterval update
 
-	//
-	// grab extensions
-	//
+	// Grab extensions
 	if (!R_CheckGLExtensions())
 	{
 		QGL_Shutdown(); //mxd
@@ -1597,7 +1437,7 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	R_InitMedia();
 	R_DrawInitLocal();
 
-	R_InitDSTTex(); // init shader warp texture
+	R_InitDSTTex(); // Init shader warp texture
 	//R_InitFogVars(); // reset fog variables //mxd. Don't.
 	VLight_Init(); // Vic's bmodel lights
 
@@ -1608,28 +1448,16 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	return true;
 }
 
-
-/*
-===============
-R_ClearState
-===============
-*/
 void R_ClearState(void)
 {	
-	R_SetFogVars(false, 0, 0, 0, 0, 0, 0, 0); // clear fog effets
+	R_SetFogVars(false, 0, 0, 0, 0, 0, 0, 0); // Clear fog effets
 	GL_EnableMultitexture(false);
 	GL_SetDefaultState();
 }
 
-
-/*
-=================
-GL_Strings_f
-=================
-*/
-void GL_Strings_f(void)
+static void GL_Strings_f(void)
 {
-	unsigned line = 0;
+	uint line = 0;
 
 	VID_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glConfig.vendor_string);
 	VID_Printf(PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string);
@@ -1655,12 +1483,6 @@ void GL_Strings_f(void)
 		VID_Printf(PRINT_ALL, "\n");
 }
 
-
-/*
-===============
-R_Shutdown
-===============
-*/
 void R_Shutdown(void)
 {	
 	Cmd_RemoveCommand("modellist");
@@ -1668,7 +1490,6 @@ void R_Shutdown(void)
 	Cmd_RemoveCommand("screenshot_silent");
 	Cmd_RemoveCommand("imagelist");
 	Cmd_RemoveCommand("gl_strings");
-//	Cmd_RemoveCommand("resetvertexlights");
 
 	// Knightmare- Free saveshot buffer
 	free(saveshotdata);
@@ -1686,15 +1507,8 @@ void R_Shutdown(void)
 	QGL_Shutdown();
 }
 
-
-
-/*
-@@@@@@@@@@@@@@@@@@@@@
-R_BeginFrame
-@@@@@@@@@@@@@@@@@@@@@
-*/
-void UpdateGammaRamp(void); //Knightmare added
-void RefreshFont(void);
+extern void UpdateGammaRamp(void); //Knightmare added
+extern void RefreshFont(void);
 
 void R_BeginFrame(float camera_separation)
 {
