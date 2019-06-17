@@ -442,11 +442,7 @@ void R_SetupGL(void)
 	qglGetFloatv(GL_MODELVIEW_MATRIX, r_world_matrix);
 
 	// Set drawing parms
-	if (r_cull->value)
-		GL_Enable(GL_CULL_FACE);
-	else
-		GL_Disable(GL_CULL_FACE);
-
+	GL_Set(GL_CULL_FACE, r_cull->integer); //mxd
 	GL_Disable(GL_BLEND);
 	GL_Disable(GL_ALPHA_TEST);
 	GL_Enable(GL_DEPTH_TEST);

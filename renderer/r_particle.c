@@ -183,10 +183,7 @@ static void R_CheckParticleRenderState(particleRenderState_t *check, int numVert
 			GL_Disable(GL_POLYGON_OFFSET_FILL);
 		}
 
-		if (currentParticleState.alphatest)
-			GL_Enable(GL_ALPHA_TEST);
-		else
-			GL_Disable(GL_ALPHA_TEST);
+		GL_Set(GL_ALPHA_TEST, currentParticleState.alphatest); //mxd
 	}
 	// Else just continue adding to array
 }

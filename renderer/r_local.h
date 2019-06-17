@@ -412,7 +412,6 @@ void R_DrawBeam(entity_t *e);
 void R_DrawWorld();
 void R_RenderDlights();
 void R_DrawAlphaSurfaces();
-void R_RenderBrushPoly(msurface_t *fa);
 void R_DrawInitLocal();
 void R_SubdivideSurface(model_t *model, msurface_t *fa); //mxd. +model
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
@@ -711,6 +710,7 @@ qboolean GL_HasStencil();
 
 void GL_Enable(GLenum cap);
 void GL_Disable(GLenum cap);
+void GL_Set(GLenum cap, qboolean enable); //mxd
 void GL_ShadeModel(GLenum mode);
 void GL_TexEnv(GLenum value);
 void GL_CullFace(GLenum mode);

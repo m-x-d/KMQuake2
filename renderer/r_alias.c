@@ -152,20 +152,9 @@ void RB_RenderAliasMesh(maliasmodel_t *paliashdr, uint meshnum, uint skinnum, im
 	// md3 skin scripting
 	const renderparms_t skinParms = mesh->skins[skinnum].renderparms;
 
-	if (skinParms.twosided)
-		GL_Disable(GL_CULL_FACE);
-	else
-		GL_Enable(GL_CULL_FACE);
-
-	if (skinParms.alphatest && !shellModel)
-		GL_Enable(GL_ALPHA_TEST);
-	else
-		GL_Disable(GL_ALPHA_TEST);
-
-	if (thisalpha < 1.0f || skinParms.blend)
-		GL_Enable(GL_BLEND);
-	else
-		GL_Disable(GL_BLEND);
+	GL_Set(GL_CULL_FACE, !skinParms.twosided); //mxd
+	GL_Set(GL_ALPHA_TEST, skinParms.alphatest && !shellModel); //mxd
+	GL_Set(GL_BLEND, thisalpha < 1.0f || skinParms.blend); //mxd
 
 	if (skinParms.blend && !shellModel)
 		GL_BlendFunc(skinParms.blendfunc_src, skinParms.blendfunc_dst);

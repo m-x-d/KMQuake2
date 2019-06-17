@@ -22,172 +22,236 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-
-/*
-=================
-GL_Enable
-=================
-*/
-void GL_Enable (GLenum cap)
+void GL_Enable(GLenum cap)
 {
 	switch (cap)
 	{
-	case GL_CULL_FACE:
-		if (glState.cullFace)
-			return;
-		glState.cullFace = true;
-		break;
+		case GL_CULL_FACE:
+			if (glState.cullFace)
+				return;
+			glState.cullFace = true;
+			break;
 
-	case GL_POLYGON_OFFSET_FILL:
-		if (glState.polygonOffsetFill)
-			return;
-		glState.polygonOffsetFill = true;
-		break;
+		case GL_POLYGON_OFFSET_FILL:
+			if (glState.polygonOffsetFill)
+				return;
+			glState.polygonOffsetFill = true;
+			break;
 
-	case GL_TEXTURE_SHADER_NV: 
-		if (!glConfig.NV_texshaders || glState.TexShaderNV)
-			return;
-		glState.TexShaderNV = true;
-		break;
+		case GL_TEXTURE_SHADER_NV: 
+			if (!glConfig.NV_texshaders || glState.TexShaderNV)
+				return;
+			glState.TexShaderNV = true;
+			break;
 
-	case GL_VERTEX_PROGRAM_ARB:
-		if (!glConfig.arb_vertex_program || glState.vertexProgram)
-			return;
-		glState.vertexProgram = true;
-		break;
+		case GL_VERTEX_PROGRAM_ARB:
+			if (!glConfig.arb_vertex_program || glState.vertexProgram)
+				return;
+			glState.vertexProgram = true;
+			break;
 
-	case GL_FRAGMENT_PROGRAM_ARB:
-		if (!glConfig.arb_fragment_program || glState.fragmentProgram)
-			return;
-		glState.fragmentProgram = true;
-		break;
+		case GL_FRAGMENT_PROGRAM_ARB:
+			if (!glConfig.arb_fragment_program || glState.fragmentProgram)
+				return;
+			glState.fragmentProgram = true;
+			break;
 
-	case GL_ALPHA_TEST:
-		if (glState.alphaTest)
-			return;
-		glState.alphaTest = true;
-		break;
+		case GL_ALPHA_TEST:
+			if (glState.alphaTest)
+				return;
+			glState.alphaTest = true;
+			break;
 
-	case GL_BLEND:
-		if (glState.blend)
-			return;
-		glState.blend = true;
-		break;
+		case GL_BLEND:
+			if (glState.blend)
+				return;
+			glState.blend = true;
+			break;
 
-	case GL_DEPTH_TEST:
-		if (glState.depthTest)
-			return;
-		glState.depthTest = true;
-		break;
+		case GL_DEPTH_TEST:
+			if (glState.depthTest)
+				return;
+			glState.depthTest = true;
+			break;
 
-	case GL_STENCIL_TEST:
-		if (glState.stencilTest)
-			return;
-		glState.stencilTest = true;
-		break;
+		case GL_STENCIL_TEST:
+			if (glState.stencilTest)
+				return;
+			glState.stencilTest = true;
+			break;
 
-	case GL_SCISSOR_TEST:
-		if (glState.scissorTest)
-			return;
-		glState.scissorTest = true;
-		break;
+		case GL_SCISSOR_TEST:
+			if (glState.scissorTest)
+				return;
+			glState.scissorTest = true;
+			break;
+
+		default: //mxd
+			VID_Error(ERR_QUIT, "%s: unknown parameter %i", __func__, cap);
+			break;
 	}
 
 	qglEnable(cap);
 }
 
-
-/*
-=================
-GL_Disable
-=================
-*/
-void GL_Disable (GLenum cap)
+void GL_Disable(GLenum cap)
 {
 	switch (cap)
 	{
-	case GL_CULL_FACE:
-		if (!glState.cullFace)
-			return;
-		glState.cullFace = false;
-		break;
+		case GL_CULL_FACE:
+			if (!glState.cullFace)
+				return;
+			glState.cullFace = false;
+			break;
 
-	case GL_POLYGON_OFFSET_FILL:
-		if (!glState.polygonOffsetFill)
-			return;
-		glState.polygonOffsetFill = false;
-		break;
+		case GL_POLYGON_OFFSET_FILL:
+			if (!glState.polygonOffsetFill)
+				return;
+			glState.polygonOffsetFill = false;
+			break;
 
-	case GL_TEXTURE_SHADER_NV: 
-		if (!glConfig.NV_texshaders || !glState.TexShaderNV)
-			return;
-		glState.TexShaderNV = false;
-		break;
+		case GL_TEXTURE_SHADER_NV: 
+			if (!glConfig.NV_texshaders || !glState.TexShaderNV)
+				return;
+			glState.TexShaderNV = false;
+			break;
 
-	case GL_VERTEX_PROGRAM_ARB:
-		if (!glConfig.arb_vertex_program || !glState.vertexProgram)
-			return;
-		glState.vertexProgram = false;
-		break;
+		case GL_VERTEX_PROGRAM_ARB:
+			if (!glConfig.arb_vertex_program || !glState.vertexProgram)
+				return;
+			glState.vertexProgram = false;
+			break;
 
-	case GL_FRAGMENT_PROGRAM_ARB:
-		if (!glConfig.arb_fragment_program || !glState.fragmentProgram)
-			return;
-		glState.fragmentProgram = false;
-		break;
+		case GL_FRAGMENT_PROGRAM_ARB:
+			if (!glConfig.arb_fragment_program || !glState.fragmentProgram)
+				return;
+			glState.fragmentProgram = false;
+			break;
 
-	case GL_ALPHA_TEST:
-		if (!glState.alphaTest)
-			return;
-		glState.alphaTest = false;
-		break;
+		case GL_ALPHA_TEST:
+			if (!glState.alphaTest)
+				return;
+			glState.alphaTest = false;
+			break;
 
-	case GL_BLEND:
-		if (!glState.blend)
-			return;
-		glState.blend = false;
-		break;
+		case GL_BLEND:
+			if (!glState.blend)
+				return;
+			glState.blend = false;
+			break;
 
-	case GL_DEPTH_TEST:
-		if (!glState.depthTest)
-			return;
-		glState.depthTest = false;
-		break;
+		case GL_DEPTH_TEST:
+			if (!glState.depthTest)
+				return;
+			glState.depthTest = false;
+			break;
 
-	case GL_STENCIL_TEST:
-		if (!glState.stencilTest)
-			return;
-		glState.stencilTest = false;
-		break;
-	case GL_SCISSOR_TEST:
-		if (!glState.scissorTest)
-			return;
-		glState.scissorTest = false;
-		break;
+		case GL_STENCIL_TEST:
+			if (!glState.stencilTest)
+				return;
+			glState.stencilTest = false;
+			break;
+
+		case GL_SCISSOR_TEST:
+			if (!glState.scissorTest)
+				return;
+			glState.scissorTest = false;
+			break;
+
+		default: //mxd
+			VID_Error(ERR_QUIT, "%s: unknown parameter %i", __func__, cap);
+			break;
 	}
 
 	qglDisable(cap);
 }
 
-
-/*
-=================
-GL_Stencil
-setting stencil buffer stenciling for shadows & color shells
-=================
-*/
-void GL_Stencil (qboolean enable, qboolean shell)
+//mxd
+void GL_Set(GLenum cap, qboolean enable)
 {
-	if (!glConfig.have_stencil || !r_stencil->value) 
+	switch (cap)
+	{
+		case GL_CULL_FACE:
+			if (glState.cullFace == enable)
+				return;
+			glState.cullFace = enable;
+			break;
+
+		case GL_POLYGON_OFFSET_FILL:
+			if (glState.polygonOffsetFill == enable)
+				return;
+			glState.polygonOffsetFill = enable;
+			break;
+
+		case GL_TEXTURE_SHADER_NV:
+			if (!glConfig.NV_texshaders || glState.TexShaderNV == enable)
+				return;
+			glState.TexShaderNV = enable;
+			break;
+
+		case GL_VERTEX_PROGRAM_ARB:
+			if (!glConfig.arb_vertex_program || glState.vertexProgram == enable)
+				return;
+			glState.vertexProgram = enable;
+			break;
+
+		case GL_FRAGMENT_PROGRAM_ARB:
+			if (!glConfig.arb_fragment_program || glState.fragmentProgram == enable)
+				return;
+			glState.fragmentProgram = enable;
+			break;
+
+		case GL_ALPHA_TEST:
+			if (glState.alphaTest == enable)
+				return;
+			glState.alphaTest = enable;
+			break;
+
+		case GL_BLEND:
+			if (glState.blend == enable)
+				return;
+			glState.blend = enable;
+			break;
+
+		case GL_DEPTH_TEST:
+			if (glState.depthTest == enable)
+				return;
+			glState.depthTest = enable;
+			break;
+
+		case GL_STENCIL_TEST:
+			if (glState.stencilTest == enable)
+				return;
+			glState.stencilTest = enable;
+			break;
+
+		case GL_SCISSOR_TEST:
+			if (glState.scissorTest == enable)
+				return;
+			glState.scissorTest = enable;
+			break;
+
+		default: //mxd
+			VID_Error(ERR_QUIT, "%s: unknown parameter %i", __func__, cap);
+			break;
+	}
+
+	qglEnable(cap);
+}
+
+// Set stencil buffer stenciling for shadows & color shells
+void GL_Stencil(qboolean enable, qboolean shell)
+{
+	if (!glConfig.have_stencil || !r_stencil->integer)
 		return;
 
 	if (enable)
 	{
-		if (shell || r_shadows->value == 3)
+		if (shell || r_shadows->integer == 3)
 		{
 			qglPushAttrib(GL_STENCIL_BUFFER_BIT);
 
-			if (r_shadows->value == 3)
+			if (r_shadows->integer == 3)
 				qglClearStencil(1);
 
 			qglClear(GL_STENCIL_BUFFER_BIT);
@@ -195,71 +259,59 @@ void GL_Stencil (qboolean enable, qboolean shell)
 
 		GL_Enable(GL_STENCIL_TEST);
 		qglStencilFunc(GL_EQUAL, 1, 2);
-		qglStencilOp(GL_KEEP,GL_KEEP,GL_INCR);
+		qglStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
 	}
 	else
 	{
 		GL_Disable(GL_STENCIL_TEST);
-		if (shell || r_shadows->value == 3)
+		if (shell || r_shadows->integer == 3)
 			qglPopAttrib();
 	}
 }
 
-qboolean GL_HasStencil (void)
+qboolean GL_HasStencil(void)
 {
-	return (glConfig.have_stencil && r_stencil->value);
+	return (glConfig.have_stencil && r_stencil->integer);
 }
 
-/*
-=================
-R_ParticleStencil
-uses stencil buffer to redraw particles only over trans surfaces
-=================
-*/
 extern cvar_t *r_particle_overdraw;
 
-void R_ParticleStencil (int passnum)
+// Uses stencil buffer to redraw particles only over trans surfaces
+void R_ParticleStencil(int passnum)
 {
-	if (!glConfig.have_stencil || !r_particle_overdraw->value) 
+	if (!glConfig.have_stencil || !r_particle_overdraw->integer)
 		return;
 
-	switch(passnum) //mxd
+	switch (passnum) //mxd
 	{
-	case 1: // write area of trans surfaces to stencil buffer
-		qglPushAttrib(GL_STENCIL_BUFFER_BIT); // save stencil buffer
-		qglClearStencil(1);
-		qglClear(GL_STENCIL_BUFFER_BIT);
+		case 1: // Write area of trans surfaces to stencil buffer
+			qglPushAttrib(GL_STENCIL_BUFFER_BIT); // save stencil buffer
+			qglClearStencil(1);
+			qglClear(GL_STENCIL_BUFFER_BIT);
 
-		GL_Enable(GL_STENCIL_TEST);
-		qglStencilFunc(GL_ALWAYS, 1, 0xFF);
-		qglStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-		break;
+			GL_Enable(GL_STENCIL_TEST);
+			qglStencilFunc(GL_ALWAYS, 1, 0xFF);
+			qglStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+			break;
 
-	case 2: // turn off writing
-		GL_Disable(GL_STENCIL_TEST);
-		break;
+		case 2: // Turn off writing
+			GL_Disable(GL_STENCIL_TEST);
+			break;
 
-	case 3: // enable drawing only to affected area
-		GL_Enable(GL_STENCIL_TEST);
-		qglStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		qglStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-		break;
+		case 3: // Enable drawing only to affected area
+			GL_Enable(GL_STENCIL_TEST);
+			qglStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			qglStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+			break;
 
-	case 4: // turn off and restore
-		GL_Disable(GL_STENCIL_TEST);
-		qglPopAttrib(); // restore stencil buffer
-		break;
+		case 4: // Turn off and restore
+			GL_Disable(GL_STENCIL_TEST);
+			qglPopAttrib(); // Restore stencil buffer
+			break;
 	}
 }
 
-
-/*
-=================
-GL_Envmap
-setting up envmap
-=================
-*/
-void GL_Envmap (qboolean enable)
+void GL_Envmap(qboolean enable)
 {
 	if (enable)
 	{
@@ -286,13 +338,7 @@ void GL_Envmap (qboolean enable)
 	}
 }
 
-
-/*
-=================
-GL_ShadeModel
-=================
-*/
-void GL_ShadeModel (GLenum mode)
+void GL_ShadeModel(GLenum mode)
 {
 	if (glState.shadeModelMode != mode)
 	{
@@ -301,13 +347,7 @@ void GL_ShadeModel (GLenum mode)
 	}
 }
 
-
-/*
-=================
-GL_TexEnv
-=================
-*/
-void GL_TexEnv (GLenum mode)
+void GL_TexEnv(GLenum mode)
 {
 	static GLenum lastmodes[2] = { -1, -1 };
 
@@ -318,13 +358,7 @@ void GL_TexEnv (GLenum mode)
 	}
 }
 
-
-/*
-=================
-GL_CullFace
-=================
-*/
-void GL_CullFace (GLenum mode)
+void GL_CullFace(GLenum mode)
 {
 	if (glState.cullMode != mode)
 	{
@@ -333,13 +367,7 @@ void GL_CullFace (GLenum mode)
 	}
 }
 
-
-/*
-=================
-GL_PolygonOffset
-=================
-*/
-void GL_PolygonOffset (GLfloat factor, GLfloat units)
+void GL_PolygonOffset(GLfloat factor, GLfloat units)
 {
 	if (glState.offsetFactor != factor || glState.offsetUnits != units)
 	{
@@ -349,13 +377,7 @@ void GL_PolygonOffset (GLfloat factor, GLfloat units)
 	}
 }
 
-
-/*
-=================
-GL_AlphaFunc
-=================
-*/
-void GL_AlphaFunc (GLenum func, GLclampf ref)
+void GL_AlphaFunc(GLenum func, GLclampf ref)
 {
 	if (glState.alphaFunc != func || glState.alphaRef != ref)
 	{
@@ -365,13 +387,7 @@ void GL_AlphaFunc (GLenum func, GLclampf ref)
 	}
 }
 
-
-/*
-=================
-GL_BlendFunc
-=================
-*/
-void GL_BlendFunc (GLenum src, GLenum dst)
+void GL_BlendFunc(GLenum src, GLenum dst)
 {
 	if (glState.blendSrc != src || glState.blendDst != dst)
 	{
@@ -381,13 +397,7 @@ void GL_BlendFunc (GLenum src, GLenum dst)
 	}
 }
 
-
-/*
-=================
-GL_DepthFunc
-=================
-*/
-void GL_DepthFunc (GLenum func)
+void GL_DepthFunc(GLenum func)
 {
 	if (glState.depthFunc != func)
 	{
@@ -396,13 +406,7 @@ void GL_DepthFunc (GLenum func)
 	}
 }
 
-
-/*
-=================
-GL_DepthMask
-=================
-*/
-void GL_DepthMask (GLboolean mask)
+void GL_DepthMask(GLboolean mask)
 {
 	if (glState.depthMask != mask)
 	{
@@ -411,12 +415,7 @@ void GL_DepthMask (GLboolean mask)
 	}
 }
 
-/*
-=================
-GL_DepthRange
-=================
-*/
-void GL_DepthRange (GLfloat rMin, GLfloat rMax)
+void GL_DepthRange(GLfloat rMin, GLfloat rMax)
 {
 	if (glState.depthMin != rMin || glState.depthMax != rMax)
 	{
@@ -426,13 +425,7 @@ void GL_DepthRange (GLfloat rMin, GLfloat rMax)
 	}
 }
 
-
-/*
-=============
-GL_LockArrays
-=============
-*/
-void GL_LockArrays (int numVerts)
+void GL_LockArrays(int numVerts)
 {
 	if (!glConfig.extCompiledVertArray || glState.arraysLocked)
 		return;
@@ -441,13 +434,7 @@ void GL_LockArrays (int numVerts)
 	glState.arraysLocked = true;
 }
 
-
-/*
-=============
-GL_UnlockArrays
-=============
-*/
-void GL_UnlockArrays (void)
+void GL_UnlockArrays(void)
 {
 	if (!glConfig.extCompiledVertArray || !glState.arraysLocked)
 		return;
@@ -456,12 +443,7 @@ void GL_UnlockArrays (void)
 	glState.arraysLocked = false;
 }
 
-/*
-=================
-GL_EnableTexture
-=================
-*/
-void GL_EnableTexture (unsigned tmu)
+void GL_EnableTexture(unsigned tmu)
 {
 	if (tmu > 0 && !glConfig.multitexture)
 		return;
@@ -476,12 +458,7 @@ void GL_EnableTexture (unsigned tmu)
 	glState.activetmu[tmu] = true;
 }
 
-/*
-=================
-GL_DisableTexture
-=================
-*/
-void GL_DisableTexture (unsigned tmu)
+void GL_DisableTexture(unsigned tmu)
 {
 	if (tmu > 0 && !glConfig.multitexture)
 		return;
@@ -495,13 +472,8 @@ void GL_DisableTexture (unsigned tmu)
 	glState.activetmu[tmu] = false;
 }
 
-/*
-=================
-GL_EnableMultitexture
-Only used for world drawing
-=================
-*/
-void GL_EnableMultitexture (qboolean enable)
+// Only used for world drawing
+void GL_EnableMultitexture(qboolean enable)
 {
 	if (!glConfig.multitexture)
 		return;
@@ -521,12 +493,7 @@ void GL_EnableMultitexture (qboolean enable)
 	GL_TexEnv(GL_REPLACE);
 }
 
-/*
-=================
-GL_SelectTexture
-=================
-*/
-void GL_SelectTexture (unsigned tmu)
+void GL_SelectTexture(unsigned tmu)
 {
 	if (!glConfig.multitexture)
 		return;
@@ -542,16 +509,11 @@ void GL_SelectTexture (unsigned tmu)
 	qglClientActiveTextureARB(GL_TEXTURE0_ARB + tmu);
 }
 
-/*
-=================
-GL_Bind
-=================
-*/
-void GL_Bind (int texnum)
-{
-	extern image_t *draw_chars;
+extern image_t *draw_chars;
 
-	if (r_nobind->value && draw_chars) // performance evaluation option
+void GL_Bind(int texnum)
+{
+	if (r_nobind->value && draw_chars) // Performance evaluation option
 		texnum = draw_chars->texnum;
 
 	if (glState.currenttextures[glState.currenttmu] == texnum)
@@ -561,12 +523,7 @@ void GL_Bind (int texnum)
 	qglBindTexture(GL_TEXTURE_2D, texnum);
 }
 
-/*
-=================
-GL_MBind
-=================
-*/
-void GL_MBind (unsigned tmu, int texnum)
+void GL_MBind(unsigned tmu, int texnum)
 {
 	if (tmu >= MAX_TEXTURE_UNITS || tmu >= glConfig.max_texunits)
 		return;
@@ -579,16 +536,11 @@ void GL_MBind (unsigned tmu, int texnum)
 	GL_Bind(texnum);
 }
 
-/*
-=================
-GL_UpdateSwapInterval
-=================
-*/
 void GL_UpdateSwapInterval(void)
 {
 	static qboolean registering;
 
-	// don't swap interval if loading a map
+	// Don't swap interval if loading a map
 	if (registering != registration_active)
 		r_swapinterval->modified = true;
 
@@ -607,12 +559,7 @@ void GL_UpdateSwapInterval(void)
 	}
 }
 
-/*
-=================
-GL_SetDefaultState
-=================
-*/
-void GL_SetDefaultState (void)
+void GL_SetDefaultState(void)
 {
 	// Reset the state manager
 	glState.texgen = false;
@@ -635,7 +582,7 @@ void GL_SetDefaultState (void)
 	glState.offsetFactor = -1;
 	glState.offsetUnits = -2;
 	glState.alphaFunc = GL_GREATER;
-	glState.alphaRef = 0.666;
+	glState.alphaRef = 0.666f;
 	glState.blendSrc = GL_SRC_ALPHA;
 	glState.blendDst = GL_ONE_MINUS_SRC_ALPHA;
 	glState.depthFunc = GL_LEQUAL;
@@ -657,16 +604,16 @@ void GL_SetDefaultState (void)
 	qglCullFace(GL_FRONT);
 	qglShadeModel(GL_FLAT);
 	qglPolygonOffset(-1, -2);
-	qglAlphaFunc(GL_GREATER, 0.666);
+	qglAlphaFunc(GL_GREATER, 0.666f);
 	qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	qglDepthFunc(GL_LEQUAL);
 	qglDepthMask(GL_TRUE);
 
-	qglClearColor(1,0, 0.5, 0.5);
+	qglClearColor(1.0f, 0.0f, 0.5f, 0.5f);
 	qglClearDepth(1.0);
 	qglClearStencil(128);
 
-	qglColor4f (1,1,1,1);
+	qglColor4f(1, 1, 1, 1);
 
 	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
