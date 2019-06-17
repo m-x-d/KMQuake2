@@ -417,9 +417,9 @@ void UI_Draw(void)
 	// Dim everything behind it down
 	if (cl.cinematictime > 0 || cls.state == ca_disconnected)
 	{
-		if (menu_alpha->value > 0 && R_DrawFindPic("/gfx/ui/menu_background.pcx"))
+		if (menu_alpha->value > 0 && R_DrawFindPic(UI_BACKGROUND_NAME))
 		{
-			R_DrawStretchPic(0, 0, viddef.width, viddef.height, "/gfx/ui/menu_background.pcx", 1.0f);
+			R_DrawStretchPic(0, 0, viddef.width, viddef.height, UI_BACKGROUND_NAME, 1.0f);
 
 			//mxd. Let's apply menu_alpha here as well
 			R_DrawFill(0, 0, viddef.width, viddef.height, 0, 0, 0, (int)((1.0f - menu_alpha->value) * 255));
@@ -430,9 +430,9 @@ void UI_Draw(void)
 		}
 	}
 	// Ingame menu uses alpha
-	else if (R_DrawFindPic("/gfx/ui/menu_background.pcx"))
+	else if (R_DrawFindPic(UI_BACKGROUND_NAME))
 	{
-		R_DrawStretchPic(0, 0, viddef.width, viddef.height, "/gfx/ui/menu_background.pcx", menu_alpha->value);
+		R_DrawStretchPic(0, 0, viddef.width, viddef.height, UI_BACKGROUND_NAME, menu_alpha->value);
 	}
 	else
 	{
