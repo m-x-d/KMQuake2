@@ -18,34 +18,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-// r_beam.c -- beam rendering
-// moved from r_main.c
+// r_beam.c -- beam rendering. Moved from r_main.c
 
 #include "r_local.h"
 
-
-/*
-=======================
-R_RenderBeam
-=======================
-*/
-void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green, float blue, float alpha) //mxd. red, green, blue, alpha are in [0..1] range
+static void R_RenderBeam(const vec3_t start, const vec3_t end, const float size, const float red, const float green, const float blue, const float alpha) //mxd. red, green, blue, alpha are in [0..1] range
 {
-	//vec3_t		up		= {vup[0]    * 0.75f, vup[1]    * 0.75f, vup[2]    * 0.75f};
-	//vec3_t		right	= {vright[0] * 0.75f, vright[1] * 0.75f, vright[2] * 0.75f};
-	vec3_t		vert[4], ang_up, ang_right, vdelta;
-	vec2_t		texCoord[4];
-	vec4_t		beamColor;
+	vec3_t vert[4], ang_up, ang_right, vdelta;
+	vec2_t texCoord[4];
+	vec4_t beamColor;
 
 	c_alias_polys += 2;
 
-	GL_TexEnv (GL_MODULATE);
-	GL_DepthMask (false);
-	GL_BlendFunc (GL_SRC_ALPHA, GL_ONE); // this fixes the black background
-	GL_Enable (GL_BLEND);
-	GL_ShadeModel (GL_SMOOTH);
+	GL_TexEnv(GL_MODULATE);
+	GL_DepthMask(false);
+	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE); // this fixes the black background
+	GL_Enable(GL_BLEND);
+	GL_ShadeModel(GL_SMOOTH);
 	GL_Bind(glMedia.particlebeam->texnum);
-	//Vector4Set(beamColor, red/255, green/255, blue/255, alpha/255);
 	Vector4Set(beamColor, red, green, blue, alpha); //mxd
 
 	VectorSubtract(start, end, ang_up);
@@ -56,7 +46,7 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 	if (!VectorCompare(ang_right, vec3_origin))
 		VectorNormalize(ang_right);
 
-	VectorScale (ang_right, size*2, ang_right); // Knightmare- a little narrower, please
+	VectorScale(ang_right, size * 2, ang_right); // Knightmare- a little narrower, please
 
 	VectorAdd(start, ang_right, vert[0]);
 	VectorAdd(end, ang_right, vert[1]);
@@ -68,13 +58,16 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 	Vector2Set(texCoord[2], 1, 0);
 	Vector2Set(texCoord[3], 1, 1);
 
-	rb_vertex = rb_index = 0;
-	indexArray[rb_index++] = rb_vertex+0;
-	indexArray[rb_index++] = rb_vertex+1;
-	indexArray[rb_index++] = rb_vertex+2;
-	indexArray[rb_index++] = rb_vertex+0;
-	indexArray[rb_index++] = rb_vertex+2;
-	indexArray[rb_index++] = rb_vertex+3;
+	rb_vertex = 0;
+	rb_index = 0;
+
+	indexArray[rb_index++] = rb_vertex + 0;
+	indexArray[rb_index++] = rb_vertex + 1;
+	indexArray[rb_index++] = rb_vertex + 2;
+	indexArray[rb_index++] = rb_vertex + 0;
+	indexArray[rb_index++] = rb_vertex + 2;
+	indexArray[rb_index++] = rb_vertex + 3;
+
 	for (int i = 0; i < 4; i++)
 	{
 		VA_SetElem2(texCoordArray[0][rb_vertex], texCoord[i][0], texCoord[i][1]);
@@ -82,34 +75,31 @@ void R_RenderBeam (vec3_t start, vec3_t end, float size, float red, float green,
 		VA_SetElem4(colorArray[rb_vertex], beamColor[0], beamColor[1], beamColor[2], beamColor[3]);
 		rb_vertex++;
 	}
-	RB_DrawArrays ();
+	RB_DrawArrays();
 
-	GL_BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GL_TexEnv (GL_MODULATE);
-	GL_DepthMask (true);
-	GL_Disable (GL_BLEND);
+	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GL_TexEnv(GL_MODULATE);
+	GL_DepthMask(true);
+	GL_Disable(GL_BLEND);
 
-	RB_DrawMeshTris ();
-	rb_vertex = rb_index = 0;
+	RB_DrawMeshTris();
+
+	rb_vertex = 0;
+	rb_index = 0;
 }
 
-
-/*
-=======================
-R_RenderClassicBeam (mxd)
-=======================
-*/
-void R_RenderClassicBeam(vec3_t start, vec3_t end, float size, float red, float green, float blue, float alpha) //mxd. red, green, blue, alpha are in [0..1] range
+//mxd
+static void R_RenderClassicBeam(const vec3_t start, const vec3_t end, const float size, const float red, const float green, const float blue, const float alpha) //mxd. red, green, blue, alpha are in [0..1] range
 {
-#define NUM_BEAM_SEGS 6
+	#define NUM_BEAM_SEGS 6
 
 	vec3_t perpvec;
 	vec3_t direction, normalized_direction;
-	vec3_t	start_points[NUM_BEAM_SEGS], end_points[NUM_BEAM_SEGS];
+	vec3_t start_points[NUM_BEAM_SEGS];
+	vec3_t end_points[NUM_BEAM_SEGS];
 
-	normalized_direction[0] = direction[0] = end[0] - start[0];
-	normalized_direction[1] = direction[1] = end[1] - start[1];
-	normalized_direction[2] = direction[2] = end[2] - start[2];
+	VectorSubtract(end, start, direction);
+	VectorCopy(direction, normalized_direction);
 
 	if (!VectorNormalize(normalized_direction))
 		return;
@@ -119,7 +109,7 @@ void R_RenderClassicBeam(vec3_t start, vec3_t end, float size, float red, float 
 
 	for (int i = 0; i < 6; i++)
 	{
-		RotatePointAroundVector(start_points[i], normalized_direction, perpvec, (360.0 / NUM_BEAM_SEGS) * i);
+		RotatePointAroundVector(start_points[i], normalized_direction, perpvec, (360.0f / NUM_BEAM_SEGS) * i);
 		VectorAdd(start_points[i], start, start_points[i]);
 		VectorAdd(start_points[i], direction, end_points[i]);
 	}
@@ -135,8 +125,8 @@ void R_RenderClassicBeam(vec3_t start, vec3_t end, float size, float red, float 
 	{
 		qglVertex3fv(start_points[i]);
 		qglVertex3fv(end_points[i]);
-		qglVertex3fv(start_points[(i + 1)%NUM_BEAM_SEGS]);
-		qglVertex3fv(end_points[(i + 1)%NUM_BEAM_SEGS]);
+		qglVertex3fv(start_points[(i + 1) % NUM_BEAM_SEGS]);
+		qglVertex3fv(end_points[(i + 1) % NUM_BEAM_SEGS]);
 	}
 	qglEnd();
 
@@ -145,21 +135,15 @@ void R_RenderClassicBeam(vec3_t start, vec3_t end, float size, float red, float 
 	qglDepthMask(GL_TRUE);
 }
 
-
-/*
-=======================
-R_DrawBeam
-=======================
-*/
-void R_DrawBeam( entity_t *e )
+void R_DrawBeam(entity_t *e)
 {
 	qboolean fog_on = false;
 
 	// Knightmare- no fog on lasers
-	if (qglIsEnabled(GL_FOG)) // check if fog is enabled
+	if (qglIsEnabled(GL_FOG)) // Check if fog is enabled
 	{
 		fog_on = true;
-		qglDisable(GL_FOG); // if so, disable it
+		qglDisable(GL_FOG); // If so, disable it
 	}
 
 	//mxd
@@ -167,9 +151,9 @@ void R_DrawBeam( entity_t *e )
 	float g = (d_8to24table[e->skinnum & 0xFF] >> 8) & 0xFF;
 	float b = (d_8to24table[e->skinnum & 0xFF] >> 16) & 0xFF;
 
-	r *= 1 / 255.0F;
-	g *= 1 / 255.0F;
-	b *= 1 / 255.0F;
+	r *= 1 / 255.0f;
+	g *= 1 / 255.0f;
+	b *= 1 / 255.0f;
 
 	//mxd
 	if (r_particle_mode->integer == 1)
@@ -177,7 +161,7 @@ void R_DrawBeam( entity_t *e )
 	else
 		R_RenderClassicBeam(e->origin, e->oldorigin, e->frame, r, g, b, e->alpha);
 
-	// re-enable fog if it was on
+	// Re-enable fog if it was on
 	if (fog_on)
 		qglEnable(GL_FOG);
 }
