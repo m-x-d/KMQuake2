@@ -580,7 +580,8 @@ void GetWalInfo(char *name, int *width, int *height); //mxd
 // r_image_stb.c (mxd)
 //
 qboolean STBLoad(const char *origname, const char* type, byte **pic, int *width, int *height);
-qboolean STBResize(byte *input_pixels, int input_width, int input_height, byte *output_pixels, int output_width, int output_height, qboolean usealpha);
+qboolean STBResize(const byte *input_pixels, const int input_width, const int input_height, byte *output_pixels, const int output_width, const int output_height, const qboolean usealpha);
+void STBResizeNearest(const byte* input_pixels, const int input_width, const int input_height, byte* output_pixels, const int output_width, const int output_height);
 qboolean STBSaveJPG(const char *filename, byte* source, int width, int height, int quality);
 qboolean STBSavePNG(const char *filename, byte* source, int width, int height);
 qboolean STBSaveTGA(const char *filename, byte* source, int width, int height);

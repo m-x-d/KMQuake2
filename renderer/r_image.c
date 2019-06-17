@@ -33,8 +33,8 @@ cvar_t *r_intensity;
 unsigned d_8to24table[256];
 
 
-qboolean GL_Upload8(byte *data, int width, int height, qboolean mipmap);
-qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap);
+qboolean GL_Upload8(byte *data, int width, int height, imagetype_t type, qboolean mipmap);
+qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap);
 
 #define GL_SOLID_FORMAT	3 //mxd
 #define GL_ALPHA_FORMAT 4 //mxd
@@ -97,14 +97,14 @@ static gltmode_t gl_solid_modes[] =
 #define NUM_GL_SOLID_MODES (sizeof(gl_solid_modes) / sizeof (gltmode_t))
 
 //mxd
-static void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy)
+static void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy, qboolean mipmap)
 {
 	GL_Bind(texnum);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_min);
+	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mipmap ? filter_min : filter_mag));
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mag);
 
 	// Set anisotropic filter if supported and enabled
-	if (glConfig.anisotropic && anisotropy)
+	if (mipmap && glConfig.anisotropic && anisotropy)
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
 }
 
@@ -137,19 +137,13 @@ void GL_TextureMode(char *string)
 	// Change all the existing mipmap texture objects
 	image_t *glt = gltextures;
 	for (int i = 0; i < numgltextures; i++, glt++)
-	{
 		if (glt->texnum > 0) //mxd
-		{
-			//mxd. Textures without mipmaps require texture filters without mipmaps
-			const int filter_min = (glt->mipmap ? gl_filter_min : gl_filter_max);
-			GL_ApplyTextureMode(glt->texnum, filter_min, gl_filter_max, r_anisotropic->value);
-		}
-	}
+			GL_ApplyTextureMode(glt->texnum, gl_filter_min, gl_filter_max, r_anisotropic->value, glt->mipmap);
 
 	//mxd. Change lightmap filtering when _lightmap_scale is 1. The idea is to make them look like they are part of the texture
 	if (gl_lms.lmshift == 0)
 		for (int i = 1; i < gl_lms.current_lightmap_texture; i++)
-			GL_ApplyTextureMode(glState.lightmap_textures + i, gl_filter_max, gl_filter_max, r_anisotropic->value); //mxd. Lightmap textures have no mipmaps, hence 2x gl_filter_max
+			GL_ApplyTextureMode(glState.lightmap_textures + i, gl_filter_min, gl_filter_max, r_anisotropic->value, false); //mxd. Lightmap textures have no mipmaps
 }
 
 void GL_TextureAlphaMode(char *string)
@@ -333,7 +327,7 @@ static int Scrap_AllocBlock(int w, int h, int *x, int *y)
 void Scrap_Upload(void)
 {
 	GL_Bind(TEXNUM_SCRAPS);
-	GL_Upload8(scrap_texels[0], BLOCK_WIDTH, BLOCK_HEIGHT, false);
+	GL_Upload8(scrap_texels[0], BLOCK_WIDTH, BLOCK_HEIGHT, it_pic, false);
 	scrap_dirty = false;
 }
 
@@ -492,7 +486,7 @@ static int nearest_power_of_2(int size)
 }
 
 // Returns has_alpha
-qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
+qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap)
 {
 	unsigned *scaled;
 	int scaled_width;
@@ -534,16 +528,30 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	scaled_width =  min(glConfig.max_texsize, scaled_width);
 	scaled_height = min(glConfig.max_texsize, scaled_height);
 
-	// Allow sampling down of the world textures for speed
-	if (mipmap && r_picmip->integer > 0)
+	if (type == it_font)
 	{
+		//mxd. Upscale font textures to 1024x1024, so texture filtering causes less artifacts when using vanilla-sized font texture.
+		const int maxsize = min(glConfig.max_texsize, 1024);
+
+		while (true)
+		{
+			if (scaled_width >= maxsize && scaled_height >= maxsize)
+				break;
+
+			scaled_width <<= 1;
+			scaled_height <<= 1;
+		}
+	}
+	else if (mipmap && r_picmip->integer > 0)
+	{
+		// Allow sampling down of the world textures for speed
 		int maxsize;
 
-		if (r_picmip->integer == 1)		// clamp to 512x512
+		if (r_picmip->integer == 1)		 // Clamp to 512x512
 			maxsize = 512;
-		else if (r_picmip->integer == 2) // clamp to 256x256
+		else if (r_picmip->integer == 2) // Clamp to 256x256
 			maxsize = 256;
-		else								// clamp to 128x128
+		else							 // Clamp to 128x128
 			maxsize = 128;
 
 		while (true)
@@ -560,7 +568,11 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	if (scaled_width != width || scaled_height != height) 
 	{
 		scaled = malloc(scaled_width * scaled_height * 4);
-		STBResize((byte *)data, width, height, (byte *)scaled, scaled_width, scaled_height, true); //mxd
+
+		if (type == it_font) //mxd. Upscale fonts using nearest neighbour resizing.
+			STBResizeNearest((byte *)data, width, height, (byte *)scaled, scaled_width, scaled_height);
+		else
+			STBResize((byte *)data, width, height, (byte *)scaled, scaled_width, scaled_height, true); //mxd
 	}
 	else
 	{
@@ -604,6 +616,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 	}
 	else
 	{
+		qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); //mxd. Explicitly disable mipmaps. Fixes the first it_pic texture rendered all white...
 		qglTexImage2D(GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
 	}
 #endif
@@ -625,7 +638,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, qboolean mipmap)
 }
 
 // Returns has_alpha
-qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
+qboolean GL_Upload8(byte *data, int width, int height, imagetype_t type, qboolean mipmap)
 {
 	unsigned trans[512 * 256];
 
@@ -659,7 +672,7 @@ qboolean GL_Upload8(byte *data, int width, int height,  qboolean mipmap)
 		}
 	}
 
-	return GL_Upload32(trans, width, height, mipmap);
+	return GL_Upload32(trans, width, height, type, mipmap);
 }
 
 // This is also used as an entry point for the generated notexture
@@ -757,9 +770,9 @@ nonscrap:
 
 		image->mipmap = (image->type != it_pic && image->type != it_sky && image->type != it_font); //mxd
 		if (bits == 8)
-			image->has_alpha = GL_Upload8(pic, width, height, image->mipmap);
+			image->has_alpha = GL_Upload8(pic, width, height, image->type, image->mipmap);
 		else
-			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, image->mipmap);
+			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, image->type, image->mipmap);
 
 		image->upload_width = upload_width; // After power of 2 and scales
 		image->upload_height = upload_height;

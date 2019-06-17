@@ -98,10 +98,39 @@ qboolean STBLoad(const char *name, const char* ext, byte **pic, int *width, int 
 	return true;
 }
 
-qboolean STBResize(byte *input_pixels, int input_width, int input_height, byte *output_pixels, int output_width, int output_height, qboolean usealpha)
+qboolean STBResize(const byte *input_pixels, const int input_width, const int input_height, byte *output_pixels, const int output_width, const int output_height, const qboolean usealpha)
 {
 	const int numchannels = (usealpha ? 4 : 3);
 	return stbir_resize_uint8(input_pixels, input_width, input_height, 0, output_pixels, output_width, output_height, 0, numchannels);
+}
+
+//mxd. stb_resize doesn't have nearest neighbour resize implementation...
+void STBResizeNearest(const byte* input_pixels, const int input_width, const int input_height, byte* output_pixels, const int output_width, const int output_height)
+{
+	const uint* input32 = (const uint*)input_pixels;
+	uint* output32 = (uint*)output_pixels;
+
+	const int x_ratio = (int)((input_width << 16) / output_width);
+	const int y_ratio = (int)((input_height << 16) / output_height);
+
+	for (int y = 0; y < output_height; y++)
+	{
+		const int y2_xsource = ((y * y_ratio) >> 16) * input_width;
+		int i_xdest = y * output_width;
+
+		int source_x_offset = 0;
+		const int startingOffset = y2_xsource;
+		const uint *inputLine = input32 + startingOffset;
+
+		for (int x = 0; x < output_width; x++)
+		{
+			i_xdest += 1;
+			source_x_offset += x_ratio;
+			const int sourceOffset = source_x_offset >> 16;
+
+			output32[i_xdest] = inputLine[sourceOffset];
+		}
+	}
 }
 
 qboolean STBSaveJPG(const char *filename, byte* source, int width, int height, int quality)
