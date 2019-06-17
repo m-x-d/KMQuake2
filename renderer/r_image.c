@@ -37,11 +37,11 @@ qboolean GL_Upload8(byte *data, int width, int height, imagetype_t type, qboolea
 qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap);
 
 #define GL_SOLID_FORMAT	3 //mxd
-#define GL_ALPHA_FORMAT 4 //mxd
+#define GL_ALPHA_FORMAT	4 //mxd
 
 int gl_tex_solid_format = 3;
 int gl_tex_alpha_format = 4;
-int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
+int gl_filter_min = GL_LINEAR_MIPMAP_LINEAR; //mxd. Was GL_LINEAR_MIPMAP_NEAREST
 int gl_filter_max = GL_LINEAR;
 
 typedef struct
