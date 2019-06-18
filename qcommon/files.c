@@ -751,7 +751,7 @@ int FS_Tell(fileHandle_t f)
 }
 
 // Returns true when file exists and has non-zero size
-qboolean FS_FileExists(char *path)
+qboolean FS_FileExists(const char *path)
 {
 	fileHandle_t f;
 	const int size = FS_FOpenFile(path, &f, FS_READ);
@@ -828,7 +828,7 @@ void FS_DeleteFile(const char *path)
 // "path" is relative to the Quake search path.
 // Returns file size or -1 if the file is not found.
 // A NULL buffer will just return the file size without loading.
-int FS_LoadFile(char *path, void **buffer)
+int FS_LoadFile(const char *path, void **buffer)
 {
 	fileHandle_t f;
 	const int size = FS_FOpenFile(path, &f, FS_READ);

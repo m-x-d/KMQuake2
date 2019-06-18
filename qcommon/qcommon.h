@@ -759,7 +759,7 @@ int FS_Read(void *buffer, int size, fileHandle_t f);
 int FS_Write(const void *buffer, int size, fileHandle_t f);
 void FS_Seek(fileHandle_t f, int offset, fsOrigin_t origin);
 int FS_Tell(fileHandle_t f);
-qboolean FS_FileExists(char *path);
+qboolean FS_FileExists(const char *path);
 qboolean FS_LocalFileExists(char *path);
 void FS_CopyFile(const char *srcPath, const char *dstPath);
 void FS_RenameFile(const char *oldPath, const char *newPath);
@@ -767,7 +767,7 @@ void FS_DeleteFile(const char *path);
 
 void FS_CreatePath(char *path);
 void FS_DeletePath(char *path);
-char *FS_NextPath(const char *prevPath);
+char *FS_NextPath(const char *prevpath);
 char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned canthave);
 void FS_FreeFileList(char **list, int n);
 qboolean FS_ItemInList(const char *check, int num, const char **list);
@@ -777,7 +777,7 @@ void FS_Dir_f(void);
 void FS_ExecAutoexec(void);
 //int FS_GetFileList(const char *path, const char *extension, char *buffer, int size, fsSearchType_t searchType);
 
-int FS_LoadFile(char *path, void **buffer);
+int FS_LoadFile(const char *path, void **buffer);
 void FS_AddPAKFile(const char *packPath); // add pak file function
 void FS_AddPK3File(const char *packPath); // add pk3 file function
 char **FS_ListPak(char *find, int *num); // pak list function
