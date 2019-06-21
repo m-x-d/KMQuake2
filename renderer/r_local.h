@@ -646,8 +646,6 @@ typedef struct
 
 	int prev_mode;
 
-	unsigned char *d_16to8table;
-
 	int lightmap_textures;
 
 	int currenttextures[MAX_TEXTURE_UNITS];

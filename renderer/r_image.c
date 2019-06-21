@@ -1001,14 +1001,6 @@ void R_InitImages(void)
 	R_InitFailedImgList(); // Knightmare added
 	Draw_GetPalette();
 
-	//TODO: mxd. Remove glState.d_16to8table (never used)
-	/*if (qglColorTableEXT)
-	{
-		FS_LoadFile("pics/16to8.dat", (void**)&glState.d_16to8table);
-		if (!glState.d_16to8table)
-			VID_Error(ERR_FATAL, "Couldn't load pics/16to8.pcx");
-	}*/
-
 	const float g = vid_gamma->value;
 
 	for (int i = 0; i < 256; i++)
@@ -1019,7 +1011,7 @@ void R_InitImages(void)
 		}
 		else
 		{
-			const float inf = 255 * pow((i + 0.5) / 255.5, g) + 0.5;
+			const float inf = 255 * powf((i + 0.5f) / 255.5f, g) + 0.5f;
 			gammatable[i] = clamp(inf, 0, 255);
 		}
 	}
