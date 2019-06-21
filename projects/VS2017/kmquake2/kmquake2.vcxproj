@@ -78,13 +78,14 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <AdditionalIncludeDirectories>..\..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;ComCtl32.lib;ws2_32.lib;wldap32.lib;libcurl_d.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;ComCtl32.lib;ws2_32.lib;wldap32.lib;libcurl_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(BuildDir)kmquake2.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\..\win32\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -134,13 +135,14 @@
       <CompileAs>CompileAsC</CompileAs>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>..\..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;ComCtl32.lib;ws2_32.lib;wldap32.lib;libcurl_r.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;ComCtl32.lib;ws2_32.lib;wldap32.lib;libcurl_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(BuildDir)kmquake2.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\..\win32\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -193,6 +195,7 @@
     <ClCompile Include="..\..\..\client\snd_ogg.c" />
     <ClCompile Include="..\..\..\game\m_flash.c" />
     <ClCompile Include="..\..\..\game\q_shared.c" />
+    <ClCompile Include="..\..\..\include\glad\glad.c" />
     <ClCompile Include="..\..\..\include\minizip\ioapi.c" />
     <ClCompile Include="..\..\..\include\minizip\miniz\miniz.c" />
     <ClCompile Include="..\..\..\include\minizip\unzip.c" />
@@ -299,7 +302,6 @@
     <ClInclude Include="..\..\..\qcommon\qfiles.h" />
     <ClInclude Include="..\..\..\qcommon\wildcard.h" />
     <ClInclude Include="..\..\..\renderer\anormtab.h" />
-    <ClInclude Include="..\..\..\renderer\glext.h" />
     <ClInclude Include="..\..\..\renderer\qgl.h" />
     <ClInclude Include="..\..\..\renderer\r_alias.h" />
     <ClInclude Include="..\..\..\renderer\r_local.h" />

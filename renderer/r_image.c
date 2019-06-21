@@ -507,11 +507,11 @@ qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qb
 	}
 
 	// Heffo - ARB Texture Compression
-	qglHint(GL_TEXTURE_COMPRESSION_HINT_ARB, GL_NICEST);
+	qglHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
 	if (samples == GL_SOLID_FORMAT)
-		comp = (glState.texture_compression ? GL_COMPRESSED_RGB_ARB : gl_tex_solid_format);
+		comp = (glState.texture_compression ? GL_COMPRESSED_RGB : gl_tex_solid_format);
 	else if (samples == GL_ALPHA_FORMAT)
-		comp = (glState.texture_compression ? GL_COMPRESSED_RGBA_ARB : gl_tex_alpha_format);
+		comp = (glState.texture_compression ? GL_COMPRESSED_RGBA : gl_tex_alpha_format);
 
 	// Find sizes to scale to
 	if (glConfig.arbTextureNonPowerOfTwo && (!mipmap || r_nonpoweroftwo_mipmaps->value))
@@ -603,22 +603,11 @@ qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qb
 	}
 #else
 	if (mipmap)
-	{
-		if (glState.sgis_mipmap)
-		{
-			qglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, true);
-			qglTexImage2D(GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-		} 
-		else
-		{
-			gluBuild2DMipmaps(GL_TEXTURE_2D, comp, scaled_width, scaled_height, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-		}
-	}
+		qglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, true);
 	else
-	{
 		qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); //mxd. Explicitly disable mipmaps. Fixes the first it_pic texture rendered all white...
-		qglTexImage2D(GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-	}
+
+	qglTexImage2D(GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
 #endif
 
 	if (scaled_width != width || scaled_height != height)
@@ -1012,12 +1001,13 @@ void R_InitImages(void)
 	R_InitFailedImgList(); // Knightmare added
 	Draw_GetPalette();
 
-	if (qglColorTableEXT)
+	//TODO: mxd. Remove glState.d_16to8table (never used)
+	/*if (qglColorTableEXT)
 	{
 		FS_LoadFile("pics/16to8.dat", (void**)&glState.d_16to8table);
 		if (!glState.d_16to8table)
 			VID_Error(ERR_FATAL, "Couldn't load pics/16to8.pcx");
-	}
+	}*/
 
 	const float g = vid_gamma->value;
 

@@ -325,16 +325,16 @@ static void CreateDSTTex_ARB(void)
 		}
 	}
 
-	qglGenTextures(1,&dst_texture_ARB);
+	qglGenTextures(1, &dst_texture_ARB);
 	qglBindTexture(GL_TEXTURE_2D, dst_texture_ARB);
-	qglTexImage2D (GL_TEXTURE_2D, 0, 4, DST_SIZE, DST_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, dist);
+	qglTexImage2D(GL_TEXTURE_2D, 0, 4, DST_SIZE, DST_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, dist);
 
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	qglHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);
-	qglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
+	qglHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+	qglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 }
 
 // Resets the texture which warps texture shaders. Needed after a vid_restart.

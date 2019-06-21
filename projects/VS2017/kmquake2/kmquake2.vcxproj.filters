@@ -67,6 +67,9 @@
     <Filter Include="Include files\minizip\miniz">
       <UniqueIdentifier>{e916d94e-2193-46f3-b5dd-9cf0ff8af155}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Include files\glad">
+      <UniqueIdentifier>{7d970075-435a-4db2-9555-1450f44ffbef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\win32\cd_win.c">
@@ -408,6 +411,9 @@
     <ClCompile Include="..\..\..\include\minizip\miniz\miniz.c">
       <Filter>Include files\minizip\miniz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\include\glad\glad.c">
+      <Filter>Include files\glad</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\cdaudio.h">
@@ -460,9 +466,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\game\q_shared.h">
       <Filter>Header Files\game</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\renderer\glext.h">
-      <Filter>Header Files\renderer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\renderer\qgl.h">
       <Filter>Header Files\renderer</Filter>

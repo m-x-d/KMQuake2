@@ -25,12 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #include <stdio.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include "glext.h" //Knightmare- MrG's shader waterwarp support
+#include <glad/glad.h> //mxd
 #include "../client/ref.h"
 #include "qgl.h"
-
 
 #define PITCH	0 // up / down
 #define YAW		1 // left / right
@@ -507,7 +504,7 @@ extern GLuint vertex_programs[NUM_VERTEX_PROGRAM];
 // r_warp.c
 //
 void R_InitDSTTex();
-void R_DrawWarpSurface (msurface_t *fa, float alpha, qboolean render);
+void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render);
 size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *edges, int *surfedges); //mxd
 
 
@@ -618,15 +615,15 @@ typedef struct
 	int max_texunits;
 
 	// Non-power of two texture support
-	qboolean arbTextureNonPowerOfTwo;
+	qboolean arbTextureNonPowerOfTwo; //TODO: mxd. Remove. Part of GL 2.0 core.
 
-	qboolean multitexture;
-	qboolean mtexcombine;	// Added Vic's RGB brightening
+	qboolean multitexture; //TODO: mxd. Remove. Part of GL 1.3 core.
+	qboolean mtexcombine;	// Added Vic's RGB brightening //TODO: mxd. Remove. Part of GL 1.3 core.
 
 	qboolean have_stencil;
-	qboolean extStencilWrap;
-	qboolean atiSeparateStencil;
-	qboolean extStencilTwoSide;
+	qboolean extStencilWrap; //TODO: mxd. Remove. Use the below
+	qboolean atiSeparateStencil; //TODO: mxd. Replace with qglStencilOpSeparate. Part of GL 2.0 core.
+	qboolean extStencilTwoSide; //TODO: mxd. Remove. Use the above
 
 	qboolean extCompiledVertArray;
 	qboolean drawRangeElements;
@@ -663,7 +660,7 @@ typedef struct
 	// Advanced state manager - MrG
 	qboolean texgen;
 
-	qboolean sgis_mipmap;
+	qboolean sgis_mipmap; //TODO: mxd. Remove. Part of OpenGL 1.4 core
 	unsigned int dst_texture;
 
 	qboolean gammaRamp;
@@ -695,7 +692,7 @@ typedef struct
 	GLenum depthFunc;
 	GLboolean depthMask;
 
-	qboolean texture_compression; // Heffo - ARB Texture Compression
+	qboolean texture_compression; // Heffo - ARB Texture Compression //TODO: mxd. Remove. Part of GL 2.0 core. Remove EXT_ARB_texture_compression from GLAD
 } glstate_t;
 
 extern glconfig_t glConfig;

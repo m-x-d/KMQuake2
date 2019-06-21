@@ -892,13 +892,15 @@ static qboolean R_CheckGLExtensions()
 	glConfig.multitexture = false;
 	glConfig.max_texunits = 1;
 
+	//mxd. Core features since GL 1.3
 	qglMultiTexCoord2fARB = (void *)qwglGetProcAddress("glMultiTexCoord2f");
 	qglActiveTextureARB = (void *)qwglGetProcAddress("glActiveTexture");
 	qglClientActiveTextureARB = (void *)qwglGetProcAddress("glClientActiveTexture");
 
+	//TODO: mxd. Remove GL_ARB_multitexture and r_ext_multitexture. Replace with glMultiTexCoord2f, glActiveTexture, glClientActiveTexture
 	if (!qglMultiTexCoord2fARB || !qglActiveTextureARB || !qglClientActiveTextureARB)
 	{
-		VID_Printf(PRINT_ALL, "...OpenGL multitexture not found, checking for GL_ARB_multitexture\n");
+		VID_Printf(PRINT_ALL, "...OpenGL multitexture not found\n");
 	}
 	else
 	{
@@ -908,40 +910,11 @@ static qboolean R_CheckGLExtensions()
 		glConfig.multitexture = true;
 	}
 
-	if (!glConfig.multitexture && StringContainsToken(glConfig.extensions_string, "GL_ARB_multitexture"))
-	{
-		if (r_ext_multitexture->value)
-		{
-			qglMultiTexCoord2fARB = (void *)qwglGetProcAddress("glMultiTexCoord2fARB");
-			qglActiveTextureARB = (void *)qwglGetProcAddress("glActiveTextureARB");
-			qglClientActiveTextureARB = (void *)qwglGetProcAddress("glClientActiveTextureARB");
-
-			if (!qglMultiTexCoord2fARB || !qglActiveTextureARB || !qglClientActiveTextureARB)
-			{
-				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_ARB_multitexture not properly supported!\n"S_COLOR_YELLOW"WARNING: glow/caustic texture effects not enabled\n");
-			}
-			else
-			{
-				VID_Printf(PRINT_ALL, "...using GL_ARB_multitexture\n");
-				qglGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texunits);
-				VID_Printf(PRINT_ALL, "...GL_MAX_TEXTURE_UNITS_ARB: %i\n", glConfig.max_texunits);
-				glConfig.multitexture = true;
-			}
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_ARB_multitexture\n"S_COLOR_YELLOW"WARNING: glow/caustic texture effects not enabled\n");
-		}
-	}
-
-	if (!glConfig.multitexture)
-		VID_Printf(PRINT_ALL, "...GL_ARB_multitexture not found\n"S_COLOR_YELLOW"WARNING: glow/caustic texture effects not supported\n" );
-
 	// GL_EXT_compiled_vertex_array
 	// GL_SGI_compiled_vertex_array
+	//TODO: mxd. Remove GL_EXT_compiled_vertex_array. Replace with GL_ARB_vertex_buffer_object?
 	glConfig.extCompiledVertArray = false;
-	if ( StringContainsToken(glConfig.extensions_string, "GL_EXT_compiled_vertex_array") || 
-		 StringContainsToken(glConfig.extensions_string, "GL_SGI_compiled_vertex_array") )
+	if (GLAD_GL_EXT_compiled_vertex_array)
 	{
 		if (r_ext_compiled_vertex_array->value)
 		{
@@ -971,8 +944,10 @@ static qboolean R_CheckGLExtensions()
 	}
 
 	// glDrawRangeElements on GL 1.2 or higher or GL_EXT_draw_range_elements
+
+	//TODO: mxd. Remove GL_EXT_draw_range_elements and r_ext_draw_range_elements. Replace with glDrawRangeElements
 	glConfig.drawRangeElements = false;
-	if (glConfig.version_major >= 2 || (glConfig.version_major == 1 && glConfig.version_minor >= 2))
+	if (GLAD_GL_EXT_draw_range_elements)
 	{
 		if (r_ext_draw_range_elements->value)
 		{
@@ -996,54 +971,11 @@ static qboolean R_CheckGLExtensions()
 			VID_Printf(PRINT_ALL, "...ignoring glDrawRangeElements\n");
 		}
 	}
-	else if (StringContainsToken(glConfig.extensions_string, "GL_EXT_draw_range_elements"))
-	{
-		if (r_ext_draw_range_elements->value)
-		{
-			qglDrawRangeElementsEXT = (void *)qwglGetProcAddress("glDrawRangeElementsEXT");
-
-			if (!qglDrawRangeElementsEXT)
-				qglDrawRangeElementsEXT = (void *)qwglGetProcAddress("glDrawRangeElements");
-
-			if (!qglDrawRangeElementsEXT)
-			{
-				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_EXT_draw_range_elements not properly supported!\n");
-			}
-			else
-			{
-				VID_Printf(PRINT_ALL, "...enabling GL_EXT_draw_range_elements\n");
-				glConfig.drawRangeElements = true;
-			}
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_EXT_draw_range_elements\n");
-		}
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_EXT_draw_range_elements not found\n");
-	}
 
 	// GL_ARB_texture_non_power_of_two
-	glConfig.arbTextureNonPowerOfTwo = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_ARB_texture_non_power_of_two"))
-	{
-		if (r_arb_texturenonpoweroftwo->value)
-		{
-			VID_Printf(PRINT_ALL, "...using GL_ARB_texture_non_power_of_two\n");
-			glConfig.arbTextureNonPowerOfTwo = true;
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_ARB_texture_non_power_of_two\n");
-		}
 
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_ARB_texture_non_power_of_two not found\n");
-	}
+	//TODO: mxd. Remove this and r_arb_texturenonpoweroftwo. part of GL 2.0 core.
+	glConfig.arbTextureNonPowerOfTwo = true;
 
 #ifdef _WIN32
 	// WGL_EXT_swap_control
@@ -1059,8 +991,9 @@ static qboolean R_CheckGLExtensions()
 #endif
 
 	// GL_ARB_texture_env_combine - Vic
+	//TODO: mxd. Remove this and r_ext_mtexcombine. Part of GL 1.3 core.
 	glConfig.mtexcombine = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_ARB_texture_env_combine"))
+	if (GLAD_GL_ARB_texture_env_combine)
 	{
 		if (r_ext_mtexcombine->value)
 		{
@@ -1078,8 +1011,9 @@ static qboolean R_CheckGLExtensions()
 	}
 
 	// GL_EXT_stencil_wrap
+	//TODO: mxd. Replace with qglStencilOpSeparate.
 	glConfig.extStencilWrap = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_EXT_stencil_wrap"))
+	if (GLAD_GL_EXT_stencil_wrap)
 	{
 		VID_Printf(PRINT_ALL, "...using GL_EXT_stencil_wrap\n");
 		glConfig.extStencilWrap = true;
@@ -1091,7 +1025,8 @@ static qboolean R_CheckGLExtensions()
 
 	// GL_ATI_separate_stencil - Barnes
 	glConfig.atiSeparateStencil = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_ATI_separate_stencil"))
+	//TODO: mxd. Remove this and r_stencilTwoSide. Replace with qglStencilOpSeparate.
+	/*if (StringContainsToken(glConfig.extensions_string, "GL_ATI_separate_stencil"))
 	{
 		if (r_stencilTwoSide->value)
 		{
@@ -1117,11 +1052,12 @@ static qboolean R_CheckGLExtensions()
 	else
 	{
 		VID_Printf(PRINT_ALL, "...GL_ATI_separate_stencil not found\n");
-	}
+	}*/
 
 	// GL_EXT_stencil_two_side - Echon
+	//TODO: mxd. Remove this and r_stencilTwoSide.
 	glConfig.extStencilTwoSide = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_EXT_stencil_two_side"))
+	if (GLAD_GL_EXT_stencil_two_side)
 	{
 		if (r_stencilTwoSide->value)
 		{
@@ -1150,30 +1086,10 @@ static qboolean R_CheckGLExtensions()
 
 	// GL_ARB_fragment_program
 	glConfig.arb_fragment_program = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_ARB_fragment_program"))
+	if (GLAD_GL_ARB_fragment_program)
 	{
 		if (r_arb_fragment_program->value)
 		{
-			qglProgramStringARB = (void *)qwglGetProcAddress("glProgramStringARB");
-			qglBindProgramARB = (void *)qwglGetProcAddress("glBindProgramARB");
-			qglDeleteProgramsARB = (void *)qwglGetProcAddress("glDeleteProgramsARB");
-			qglGenProgramsARB = (void *)qwglGetProcAddress("glGenProgramsARB");
-			qglProgramEnvParameter4dARB = (void *)qwglGetProcAddress("glProgramEnvParameter4dARB");
-			qglProgramEnvParameter4dvARB = (void *)qwglGetProcAddress("glProgramEnvParameter4dvARB");
-			qglProgramEnvParameter4fARB = (void *)qwglGetProcAddress("glProgramEnvParameter4fARB");
-			qglProgramEnvParameter4fvARB = (void *)qwglGetProcAddress("glProgramEnvParameter4fvARB");
-			qglProgramLocalParameter4dARB = (void *)qwglGetProcAddress("glProgramLocalParameter4dARB");
-			qglProgramLocalParameter4dvARB = (void *)qwglGetProcAddress("glProgramLocalParameter4dvARB");
-			qglProgramLocalParameter4fARB = (void *)qwglGetProcAddress("glProgramLocalParameter4fARB");
-			qglProgramLocalParameter4fvARB = (void *)qwglGetProcAddress("glProgramLocalParameter4fvARB");
-			qglGetProgramEnvParameterdvARB = (void *)qwglGetProcAddress("glGetProgramEnvParameterdvARB");
-			qglGetProgramEnvParameterfvARB = (void *)qwglGetProcAddress("glGetProgramEnvParameterfvARB");
-			qglGetProgramLocalParameterdvARB = (void *)qwglGetProcAddress("glGetProgramLocalParameterdvARB");
-			qglGetProgramLocalParameterfvARB = (void *)qwglGetProcAddress("glGetProgramLocalParameterfvARB");
-			qglGetProgramivARB = (void *)qwglGetProcAddress("glGetProgramivARB");
-			qglGetProgramStringARB = (void *)qwglGetProcAddress("glGetProgramStringARB");
-			qglIsProgramARB = (void *)qwglGetProcAddress("glIsProgramARB");
-
 			if (!qglProgramStringARB || !qglBindProgramARB
 				|| !qglDeleteProgramsARB || !qglGenProgramsARB
 				|| !qglProgramEnvParameter4dARB || !qglProgramEnvParameter4dvARB
@@ -1206,15 +1122,10 @@ static qboolean R_CheckGLExtensions()
 	glConfig.arb_vertex_program = false;
 	if (glConfig.arb_fragment_program)
 	{
-		if (StringContainsToken(glConfig.extensions_string, "GL_ARB_vertex_program"))
+		if (GLAD_GL_ARB_vertex_program)
 		{
 			if (r_arb_vertex_program->value)
 			{
-				qglGetVertexAttribdvARB = (void *)qwglGetProcAddress("glGetVertexAttribdvARB");
-				qglGetVertexAttribfvARB = (void *)qwglGetProcAddress("glGetVertexAttribfvARB");
-				qglGetVertexAttribivARB = (void *)qwglGetProcAddress("glGetVertexAttribivARB");
-				qglGetVertexAttribPointervARB = (void *)qwglGetProcAddress("glGetVertexAttribPointervARB");
-
 				if (!qglGetVertexAttribdvARB || !qglGetVertexAttribfvARB || !qglGetVertexAttribivARB || !qglGetVertexAttribPointervARB)
 				{
 					VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_ARB_vertex_program not properly supported!\n");
@@ -1239,7 +1150,7 @@ static qboolean R_CheckGLExtensions()
 	R_Compile_ARB_Programs();
 
 	// GL_NV_texture_shader - MrG
-	if (StringContainsToken(glConfig.extensions_string, "GL_NV_texture_shader"))
+	if (GLAD_GL_NV_texture_shader)
 	{
 		VID_Printf(PRINT_ALL, "...using GL_NV_texture_shader\n");
 		glConfig.NV_texshaders = true;
@@ -1252,7 +1163,7 @@ static qboolean R_CheckGLExtensions()
 
 	// GL_EXT_texture_filter_anisotropic - NeVo
 	glConfig.anisotropic = false;
-	if (StringContainsToken(glConfig.extensions_string, "GL_EXT_texture_filter_anisotropic"))
+	if (GLAD_GL_EXT_texture_filter_anisotropic)
 	{
 		VID_Printf(PRINT_ALL, "...using GL_EXT_texture_filter_anisotropic\n");
 		glConfig.anisotropic = true;
@@ -1268,27 +1179,12 @@ static qboolean R_CheckGLExtensions()
 	}
 
 	// GL_SGIS_generate_mipmap
-	if (StringContainsToken(glConfig.extensions_string, "GL_SGIS_generate_mipmap"))
-	{
-		if (r_sgis_generatemipmap->integer)
-		{
-			VID_Printf(PRINT_ALL, "...using GL_SGIS_generate_mipmap\n");
-			glState.sgis_mipmap = true;
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_SGIS_generate_mipmap\n");
-			glState.sgis_mipmap = false;
-		}
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_SGIS_generate_mipmap not found\n");
-		glState.sgis_mipmap = false;
-	}
+	glState.sgis_mipmap = true; //mxd. //TODO: Remove this and r_sgis_generatemipmap
 
 	// GL_ARB_texture_compression - Heffo
-	if (StringContainsToken(glConfig.extensions_string, "GL_ARB_texture_compression"))
+	glState.texture_compression = false;
+	//TODO: mxd. Remove GL_ARB_texture_compression and r_ext_texture_compression. Part of GL 2.0 core. Also kills performance when combined with bloom
+	if (GLAD_GL_ARB_texture_compression)
 	{
 		if (!r_ext_texture_compression->value)
 		{
@@ -1353,6 +1249,20 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 
 	RB_InitBackend(); // Init mini-backend
 
+	//mxd. Load GL pointrs through GLAD.
+	if (!gladLoadGLLoader(&QGL_GetProcAddress))
+	{
+		VID_Printf(PRINT_ALL, S_COLOR_RED"%s: loading OpenGL function pointers failed!\n", __func__);
+		return false;
+	}
+
+	//mxd. We need at least OpenGL 2.1. FOR SCIENCE (and shaders)!
+	if (GLVersion.major < 2 || (GLVersion.major == 2 && GLVersion.minor < 1))
+	{
+		VID_Printf(PRINT_ALL, S_COLOR_RED"%s: OpenGL 2.1 required (got %d.%d)!\n", __func__, GLVersion.major, GLVersion.minor);
+		return false;
+	}
+
 	// Get our various GL strings
 	glConfig.vendor_string = (const char*)qglGetString(GL_VENDOR);
 	VID_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glConfig.vendor_string);
@@ -1361,24 +1271,6 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	glConfig.version_string = (const char*)qglGetString(GL_VERSION);
 	sscanf(glConfig.version_string, "%d.%d.%d", &glConfig.version_major, &glConfig.version_minor, &glConfig.version_release);
 	VID_Printf(PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string);
-
-	//mxd. We need a GPU
-	if (!strcmp(glConfig.renderer_string, "gdi generic"))
-	{
-		QGL_Shutdown();
-		memcpy(reason, "No hardware acceleration detected.\nPlease install drivers provided by your video card/GPU vendor.\0", 98);
-
-		return false;
-	}
-
-	//mxd. We need at least OpenGL 1.4
-	if (glConfig.version_major == 1 && glConfig.version_minor < 4)
-	{
-		QGL_Shutdown();
-		memcpy(reason, "Support for OpenGL 1.4 is not available!\0", 41);
-
-		return false;
-	}
 
 	// Knighmare- added max texture size
 	qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glConfig.max_texsize);
