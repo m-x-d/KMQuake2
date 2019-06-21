@@ -431,27 +431,6 @@ static void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboole
 	}
 }
 
-#ifdef USE_GLMIPMAP
-// Operates in place, quartering the size of the texture
-void GL_MipMap(byte *in, int width, int height)
-{
-	width <<= 2;
-	height >>= 1;
-	byte *out = in;
-
-	for (int h = 0; h < height; h++, in += width)
-	{
-		for (int w = 0; w < width; w += 8, out += 4, in += 8)
-		{
-			out[0] = (in[0] + in[4] + in[width + 0] + in[width + 4]) >> 2;
-			out[1] = (in[1] + in[5] + in[width + 1] + in[width + 5]) >> 2;
-			out[2] = (in[2] + in[6] + in[width + 2] + in[width + 6]) >> 2;
-			out[3] = (in[3] + in[7] + in[width + 3] + in[width + 7]) >> 2;
-		}
-	}
-}
-#endif
-
 /*
 ===============
 here starts modified code by Heffo/changes by Nexus
@@ -585,30 +564,12 @@ qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qb
 		GL_LightScaleTexture(scaled, scaled_width, scaled_height, !mipmap);
 
 	// Generate mipmaps and upload
-#ifdef USE_GLMIPMAP
-	qglTexImage2D (GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-	if (mipmap)
-	{
-		int		mip_width, mip_height, miplevel = 0;
-
-		mip_width = scaled_width;	mip_height = scaled_height;
-		while (mip_width > 1 || mip_height > 1)
-		{
-			GL_MipMap ((byte *)scaled, mip_width, mip_height);
-			mip_width = max(mip_width>>1, 1);
-			mip_height = max(mip_height>>1, 1);
-			miplevel++;
-			qglTexImage2D (GL_TEXTURE_2D, miplevel, comp, mip_width, mip_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-		}
-	}
-#else
 	if (mipmap)
 		qglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, true);
 	else
 		qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); //mxd. Explicitly disable mipmaps. Fixes the first it_pic texture rendered all white...
 
 	qglTexImage2D(GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-#endif
 
 	if (scaled_width != width || scaled_height != height)
 		free(scaled);

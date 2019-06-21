@@ -108,7 +108,6 @@ cvar_t *r_ext_draw_range_elements;
 cvar_t *r_ext_compiled_vertex_array;
 cvar_t *r_arb_texturenonpoweroftwo; // Knightmare- non-power-of-two texture support
 cvar_t *r_nonpoweroftwo_mipmaps;  // Knightmare- non-power-of-two texture support
-cvar_t *r_sgis_generatemipmap;   // Knightmare- whether to use GL_SGIS_generate_mipmap
 cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 cvar_t *r_arb_fragment_program;
@@ -743,7 +742,6 @@ static void R_Register(void)
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
 	r_arb_texturenonpoweroftwo = Cvar_Get("r_arb_texturenonpoweroftwo", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 	r_nonpoweroftwo_mipmaps = Cvar_Get("r_nonpoweroftwo_mipmaps", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
-	r_sgis_generatemipmap = Cvar_Get("r_sgis_generatemipmap", "1", CVAR_ARCHIVE);
 
 	r_ext_mtexcombine = Cvar_Get("r_ext_mtexcombine", "1", CVAR_ARCHIVE); // added Vic's RGB brightening
 
@@ -1177,9 +1175,6 @@ static qboolean R_CheckGLExtensions()
 		glConfig.max_anisotropy = 0.0f;
 		Cvar_SetValue("r_anisotropic_avail", 0.0f);
 	}
-
-	// GL_SGIS_generate_mipmap
-	glState.sgis_mipmap = true; //mxd. //TODO: Remove this and r_sgis_generatemipmap
 
 	// GL_ARB_texture_compression - Heffo
 	glState.texture_compression = false;

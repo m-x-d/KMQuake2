@@ -207,7 +207,6 @@ extern cvar_t *r_ext_draw_range_elements;
 extern cvar_t *r_ext_compiled_vertex_array;
 extern cvar_t *r_arb_texturenonpoweroftwo;
 extern cvar_t *r_nonpoweroftwo_mipmaps;
-extern cvar_t *r_sgis_generatemipmap; // Knightmare- whether to use GL_SGIS_generate_mipmap
 extern cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 extern cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 extern cvar_t *r_arb_vertex_buffer_object;
@@ -657,9 +656,6 @@ typedef struct
 
 	// Advanced state manager - MrG
 	qboolean texgen;
-
-	qboolean sgis_mipmap; //TODO: mxd. Remove. Part of OpenGL 1.4 core
-	unsigned int dst_texture;
 
 	qboolean gammaRamp;
 

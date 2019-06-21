@@ -37,7 +37,6 @@ static menulist_s		s_texqual_box;
 static menulist_s		s_texfilter_box;
 static menulist_s		s_aniso_box;
 static menulist_s		s_npot_mipmap_box;
-static menulist_s		s_sgis_mipmap_box;
 static menulist_s		s_vsync_box;
 static menulist_s		s_adjust_fov_box;
 static menulist_s		s_async_box;
@@ -113,7 +112,6 @@ static void ResetVideoDefaults(void *unused)
 	Cvar_SetToDefault("r_anisotropic");
 	Cvar_SetToDefault("r_picmip");
 	Cvar_SetToDefault("r_nonpoweroftwo_mipmaps");
-	Cvar_SetToDefault("r_sgis_generatemipmap");
 	Cvar_SetToDefault("r_ext_texture_compression"); //TODO: mxd. This doesn't have a menu item!
 	Cvar_SetToDefault("r_swapinterval");
 	Cvar_SetToDefault("cl_widescreen_fov");
@@ -179,7 +177,6 @@ static void ApplyChanges(void *unused)
 	Cvar_SetValue("r_picmip", 3 - s_texqual_box.curvalue);
 
 	Cvar_SetValue("r_nonpoweroftwo_mipmaps", s_npot_mipmap_box.curvalue);
-	Cvar_SetValue("r_sgis_generatemipmap", s_sgis_mipmap_box.curvalue);
 
 	Cvar_SetValue("r_swapinterval", s_vsync_box.curvalue);
 	Cvar_SetValue("cl_widescreen_fov", s_adjust_fov_box.curvalue);
@@ -356,14 +353,6 @@ void Menu_Video_Init(void)
 	s_npot_mipmap_box.curvalue			= ClampCvar(0, 1, Cvar_VariableInteger("r_nonpoweroftwo_mipmaps"));
 	s_npot_mipmap_box.generic.statusbar	= "Enables non-power-of-2 mipmapped textures (requires driver support)";
 
-	s_sgis_mipmap_box.generic.type		= MTYPE_SPINCONTROL;
-	s_sgis_mipmap_box.generic.x			= 0;
-	s_sgis_mipmap_box.generic.y			= y += MENU_LINE_SIZE;
-	s_sgis_mipmap_box.generic.name		= "Hardware mipmaps";
-	s_sgis_mipmap_box.itemnames			= yesno_names;
-	s_sgis_mipmap_box.curvalue			= ClampCvar(0, 1, Cvar_VariableValue("r_sgis_generatemipmap"));
-	s_sgis_mipmap_box.generic.statusbar	= "Enables driver-based mipmap generation";
-
 	s_vsync_box.generic.type			= MTYPE_SPINCONTROL;
 	s_vsync_box.generic.x				= 0;
 	s_vsync_box.generic.y				= y += 2 * MENU_LINE_SIZE;
@@ -434,7 +423,6 @@ void Menu_Video_Init(void)
 	Menu_AddItem(&s_video_menu, (void *)&s_aniso_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_texqual_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_npot_mipmap_box);
-	Menu_AddItem(&s_video_menu, (void *)&s_sgis_mipmap_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_vsync_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_adjust_fov_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_async_box);
