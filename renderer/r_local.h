@@ -264,8 +264,6 @@ extern cvar_t *r_swapinterval;
 extern cvar_t *r_anisotropic;
 extern cvar_t *r_anisotropic_avail;
 extern cvar_t *r_texturemode;
-extern cvar_t *r_texturealphamode;
-extern cvar_t *r_texturesolidmode;
 extern cvar_t *r_saturatelighting;
 extern cvar_t *r_lockpvs;
 extern cvar_t *r_intensity;
@@ -278,10 +276,6 @@ extern cvar_t *r_bloom;
 
 extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_gamma;
-
-
-extern int gl_tex_solid_format;
-extern int gl_tex_alpha_format;
 
 extern int c_visible_lightmaps;
 extern int c_visible_textures;
@@ -552,8 +546,6 @@ void R_InitImages();
 void R_ShutdownImages();
 void R_FreeUnusedImages();
 void R_LoadNormalmap(const char *texture, mtexinfo_t *tex); //mxd
-void GL_TextureAlphaMode(char *string);
-void GL_TextureSolidMode(char *string);
 
 
 //

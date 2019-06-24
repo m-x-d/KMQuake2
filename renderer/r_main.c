@@ -168,8 +168,6 @@ cvar_t *r_flashblend;
 cvar_t *r_saturatelighting;
 cvar_t *r_swapinterval;
 cvar_t *r_texturemode;
-cvar_t *r_texturealphamode;
-cvar_t *r_texturesolidmode;
 cvar_t *r_anisotropic;
 cvar_t *r_anisotropic_avail;
 cvar_t *r_lockpvs;
@@ -727,8 +725,6 @@ static void R_Register(void)
 	r_flashblend = Cvar_Get("r_flashblend", "0", 0);
 	r_playermip = Cvar_Get("r_playermip", "0", 0);
 	r_texturemode = Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_LINEAR", CVAR_ARCHIVE); //mxd. Was GL_LINEAR_MIPMAP_NEAREST
-	r_texturealphamode = Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
-	r_texturesolidmode = Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
 	r_anisotropic = Cvar_Get("r_anisotropic", "16", CVAR_ARCHIVE); //mxd. Was 0
 	r_anisotropic_avail = Cvar_Get("r_anisotropic_avail", "0", 0);
 	r_lockpvs = Cvar_Get("r_lockpvs", "0", 0);
@@ -1446,18 +1442,6 @@ void R_BeginFrame(float camera_separation)
 		GL_TextureMode(r_texturemode->string);
 		r_texturemode->modified = false;
 		r_anisotropic->modified = false;
-	}
-
-	if (r_texturealphamode->modified)
-	{
-		GL_TextureAlphaMode(r_texturealphamode->string);
-		r_texturealphamode->modified = false;
-	}
-
-	if (r_texturesolidmode->modified)
-	{
-		GL_TextureSolidMode(r_texturesolidmode->string);
-		r_texturesolidmode->modified = false;
 	}
 
 	// Swapinterval stuff

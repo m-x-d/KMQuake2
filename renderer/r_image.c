@@ -32,15 +32,9 @@ cvar_t *r_intensity;
 
 unsigned d_8to24table[256];
 
-
-qboolean GL_Upload8(byte *data, int width, int height, imagetype_t type, qboolean mipmap);
+qboolean GL_Upload8(const byte *data, int width, int height, imagetype_t type, qboolean mipmap);
 qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap);
 
-#define GL_SOLID_FORMAT	3 //mxd
-#define GL_ALPHA_FORMAT	4 //mxd
-
-int gl_tex_solid_format = 3;
-int gl_tex_alpha_format = 4;
 int gl_filter_min = GL_LINEAR_MIPMAP_LINEAR; //mxd. Was GL_LINEAR_MIPMAP_NEAREST
 int gl_filter_max = GL_LINEAR;
 
@@ -68,33 +62,6 @@ typedef struct
 	char *name;
 	int mode;
 } gltmode_t;
-
-static gltmode_t gl_alpha_modes[] =
-{
-	{ "default", 4 },
-	{ "GL_RGBA", GL_RGBA },
-	{ "GL_RGBA8", GL_RGBA8 },
-	{ "GL_RGB5_A1", GL_RGB5_A1 },
-	{ "GL_RGBA4", GL_RGBA4 },
-	{ "GL_RGBA2", GL_RGBA2 },
-};
-
-#define NUM_GL_ALPHA_MODES (sizeof(gl_alpha_modes) / sizeof (gltmode_t))
-
-static gltmode_t gl_solid_modes[] =
-{
-	{ "default", 3 },
-	{ "GL_RGB", GL_RGB },
-	{ "GL_RGB8", GL_RGB8 },
-	{ "GL_RGB5", GL_RGB5 },
-	{ "GL_RGB4", GL_RGB4 },
-	{ "GL_R3_G3_B2", GL_R3_G3_B2 },
-#ifdef GL_RGB2_EXT
-	{ "GL_RGB2", GL_RGB2_EXT },
-#endif
-};
-
-#define NUM_GL_SOLID_MODES (sizeof(gl_solid_modes) / sizeof (gltmode_t))
 
 //mxd
 static void GL_ApplyTextureMode(int texnum, int filter_min, int filter_mag, float anisotropy, qboolean mipmap)
@@ -144,40 +111,6 @@ void GL_TextureMode(char *string)
 	if (gl_lms.lmshift == 0)
 		for (int i = 1; i < gl_lms.current_lightmap_texture; i++)
 			GL_ApplyTextureMode(glState.lightmap_textures + i, gl_filter_min, gl_filter_max, r_anisotropic->value, false); //mxd. Lightmap textures have no mipmaps
-}
-
-void GL_TextureAlphaMode(char *string)
-{
-	unsigned mode;
-
-	for (mode = 0; mode < NUM_GL_ALPHA_MODES; mode++)
-		if (!Q_stricmp(gl_alpha_modes[mode].name, string))
-			break;
-
-	if (mode == NUM_GL_ALPHA_MODES)
-	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad alpha texture mode name: '%s'.\n", string);
-		return;
-	}
-
-	gl_tex_alpha_format = gl_alpha_modes[mode].mode;
-}
-
-void GL_TextureSolidMode(char *string)
-{
-	unsigned mode;
-
-	for (mode = 0; mode < NUM_GL_SOLID_MODES; mode++)
-		if (!Q_stricmp(gl_solid_modes[mode].name, string))
-			break;
-
-	if (mode == NUM_GL_SOLID_MODES)
-	{
-		VID_Printf(PRINT_ALL, S_COLOR_YELLOW"Bad solid texture mode name: '%s'.\n", string);
-		return;
-	}
-
-	gl_tex_solid_format = gl_solid_modes[mode].mode;
 }
 
 #pragma region ======================= Console functions
@@ -465,30 +398,24 @@ static int nearest_power_of_2(int size)
 }
 
 // Returns has_alpha
-qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap)
+static qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap)
 {
 	unsigned *scaled;
 	int scaled_width;
 	int scaled_height;
-	int comp;
 
 	// Scan the texture for any non-255 alpha
 	const int size = width * height;
 	byte *scan = (byte *)data + 3;
-	int samples = GL_SOLID_FORMAT;
+	int format = GL_RGB;
 	for (int i = 0; i < size; i++, scan += 4)
 	{
 		if (*scan != 255)
 		{
-			samples = GL_ALPHA_FORMAT;
+			format = GL_RGBA;
 			break;
 		}
 	}
-
-	if (samples == GL_SOLID_FORMAT)
-		comp = gl_tex_solid_format;
-	else if (samples == GL_ALPHA_FORMAT)
-		comp = gl_tex_alpha_format;
 
 	// Find sizes to scale to
 	if (glConfig.arbTextureNonPowerOfTwo && (!mipmap || r_nonpoweroftwo_mipmaps->value))
@@ -567,7 +494,7 @@ qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qb
 	else
 		qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); //mxd. Explicitly disable mipmaps. Fixes the first it_pic texture rendered all white...
 
-	qglTexImage2D(GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
+	qglTexImage2D(GL_TEXTURE_2D, 0, format, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
 
 	if (scaled_width != width || scaled_height != height)
 		free(scaled);
@@ -582,11 +509,11 @@ qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qb
 	if (mipmap && glConfig.anisotropic && r_anisotropic->value)
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, r_anisotropic->value);
 
-	return (samples == GL_ALPHA_FORMAT);
+	return (format == GL_RGBA);
 }
 
 // Returns has_alpha
-qboolean GL_Upload8(byte *data, int width, int height, imagetype_t type, qboolean mipmap)
+static qboolean GL_Upload8(const byte *data, int width, int height, imagetype_t type, qboolean mipmap)
 {
 	unsigned trans[512 * 256];
 
