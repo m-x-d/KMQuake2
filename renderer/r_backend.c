@@ -219,12 +219,7 @@ void RB_DrawArrays(void)
 		return;
 
 	GL_LockArrays(rb_vertex);
-
-	if (glConfig.drawRangeElements)
-		qglDrawRangeElementsEXT(GL_TRIANGLES, 0, rb_vertex, rb_index, GL_UNSIGNED_INT, indexArray);
-	else
-		qglDrawElements(GL_TRIANGLES, rb_index, GL_UNSIGNED_INT, indexArray);
-
+	qglDrawRangeElements(GL_TRIANGLES, 0, rb_vertex, rb_index, GL_UNSIGNED_INT, indexArray);
 	GL_UnlockArrays();
 }
 

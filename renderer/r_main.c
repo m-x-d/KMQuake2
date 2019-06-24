@@ -103,7 +103,6 @@ cvar_t *r_rgbscale; // Vic's RGB brightening
 cvar_t *r_vertex_arrays;
 
 cvar_t *r_ext_swapinterval;
-cvar_t *r_ext_draw_range_elements;
 cvar_t *r_ext_compiled_vertex_array;
 cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
@@ -721,7 +720,6 @@ static void R_Register(void)
 	r_vertex_arrays = Cvar_Get("r_vertex_arrays", "1", CVAR_ARCHIVE);
 
 	r_ext_swapinterval = Cvar_Get("r_ext_swapinterval", "1", CVAR_ARCHIVE);
-	r_ext_draw_range_elements = Cvar_Get("r_ext_draw_range_elements", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
 
 	r_ext_mtexcombine = Cvar_Get("r_ext_mtexcombine", "1", CVAR_ARCHIVE); // added Vic's RGB brightening
@@ -900,35 +898,6 @@ static qboolean R_CheckGLExtensions()
 	else
 	{
 		VID_Printf(PRINT_ALL, "...GL_EXT/SGI_compiled_vertex_array not found\n");
-	}
-
-	// glDrawRangeElements on GL 1.2 or higher or GL_EXT_draw_range_elements
-
-	//TODO: mxd. Remove GL_EXT_draw_range_elements and r_ext_draw_range_elements. Replace with glDrawRangeElements
-	glConfig.drawRangeElements = false;
-	if (GLAD_GL_EXT_draw_range_elements)
-	{
-		if (r_ext_draw_range_elements->value)
-		{
-			qglDrawRangeElementsEXT = (void *)qwglGetProcAddress("glDrawRangeElements");
-			
-			if (!qglDrawRangeElementsEXT)
-				qglDrawRangeElementsEXT = (void *)qwglGetProcAddress("glDrawRangeElementsEXT");
-
-			if (!qglDrawRangeElementsEXT)
-			{
-				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "glDrawRangeElements not properly supported!\n");
-			}
-			else
-			{
-				VID_Printf(PRINT_ALL, "...using glDrawRangeElements\n");
-				glConfig.drawRangeElements = true;
-			}
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring glDrawRangeElements\n");
-		}
 	}
 
 #ifdef _WIN32

@@ -30,7 +30,7 @@ static float aliasShadowAlpha;
 static uint shadow_va;
 static uint shadow_index;
 
-void R_LightAliasModel(vec3_t baselight, vec3_t normal, vec3_t lightOut, byte normalindex, qboolean shaded)
+static void R_LightAliasModel(vec3_t baselight, vec3_t normal, vec3_t lightOut, byte normalindex, qboolean shaded)
 {
 	if (r_fullbright->integer)
 	{
@@ -75,7 +75,7 @@ void R_LightAliasModel(vec3_t baselight, vec3_t normal, vec3_t lightOut, byte no
 		lightOut[i] = clamp(lightOut[i], 0.0f, 1.0f);
 }
 
-qboolean R_AliasMeshesAreBatchable(maliasmodel_t *paliashdr, uint meshnum1, uint meshnum2, uint skinnum)
+static qboolean R_AliasMeshesAreBatchable(maliasmodel_t *paliashdr, uint meshnum1, uint meshnum2, uint skinnum)
 {
 	if (!paliashdr)
 		return false;
@@ -135,7 +135,7 @@ qboolean R_AliasMeshesAreBatchable(maliasmodel_t *paliashdr, uint meshnum1, uint
 }
 
 // Backend for R_DrawAliasMeshes
-void RB_RenderAliasMesh(maliasmodel_t *paliashdr, uint meshnum, uint skinnum, image_t *skin)
+static void RB_RenderAliasMesh(maliasmodel_t *paliashdr, uint meshnum, uint skinnum, image_t *skin)
 {
 	entity_t *e = currententity;
 	const float thisalpha = colorArray[0][3];
@@ -220,7 +220,7 @@ void RB_RenderAliasMesh(maliasmodel_t *paliashdr, uint meshnum, uint skinnum, im
 	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void R_DrawAliasMeshes(maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly, qboolean mirrored)
+static void R_DrawAliasMeshes(maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly, qboolean mirrored)
 {
 	const qboolean shellModel = e->flags & RF_MASK_SHELL;
 	const float backlerp = e->backlerp;
@@ -423,7 +423,7 @@ void R_DrawAliasMeshes(maliasmodel_t *paliashdr, entity_t *e, qboolean lerpOnly,
 }
 
 // Based on code from BeefQuake R6
-void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
+static void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
 {
 	vec3_t  v0, v1, v2, v3;
 
@@ -551,16 +551,13 @@ void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float pr
 	free(triangleFacingLight); //mxd
 }
 
-void R_DrawShadowVolume(void)
+static void R_DrawShadowVolume(void)
 {
-	if (glConfig.drawRangeElements)
-		qglDrawRangeElementsEXT(GL_TRIANGLES, 0, shadow_va, shadow_index, GL_UNSIGNED_INT, indexArray);
-	else
-		qglDrawElements(GL_TRIANGLES, shadow_index, GL_UNSIGNED_INT, indexArray);
+	qglDrawRangeElements(GL_TRIANGLES, 0, shadow_va, shadow_index, GL_UNSIGNED_INT, indexArray);
 }
 
 // Based on code from BeefQuake R6
-void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
+static void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 {
 	dlight_t *dl = r_newrefdef.dlights;
 	vec3_t vecAdd = { 680, 0, 1024 }; // Set base vector, was 576, 0, 1024
@@ -722,7 +719,7 @@ void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
 	}
 }
 
-void R_DrawAliasPlanarShadow(maliasmodel_t *paliashdr)
+static void R_DrawAliasPlanarShadow(maliasmodel_t *paliashdr)
 {
 	vec3_t shadevector;
 	R_ShadowLight(currententity->origin, shadevector);

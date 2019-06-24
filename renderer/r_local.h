@@ -202,7 +202,6 @@ extern cvar_t *con_font_size;
 extern cvar_t *r_vertex_arrays;
 
 extern cvar_t *r_ext_swapinterval;
-extern cvar_t *r_ext_draw_range_elements;
 extern cvar_t *r_ext_compiled_vertex_array;
 extern cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 extern cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
@@ -602,7 +601,6 @@ typedef struct
 	qboolean extStencilTwoSide; //TODO: mxd. Remove. Use the above
 
 	qboolean extCompiledVertArray;
-	qboolean drawRangeElements;
 
 	// Texture shader support
 	qboolean arb_fragment_program;
