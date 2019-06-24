@@ -221,7 +221,6 @@ extern cvar_t *r_glass_envmaps; // Psychospaz's envmapping
 extern cvar_t *r_trans_surf_sorting; // Transparent bmodel sorting
 extern cvar_t *r_shelltype; // Entity shells: 0 = solid, 1 = warp, 2 = spheremap
 
-extern cvar_t *r_ext_texture_compression; // Heffo - ARB Texture Compression
 extern cvar_t *r_lightcutoff; //** DMP - allow dynamic light cutoff to be user-settable
 
 extern cvar_t *r_dlightshadowmapscale; //mxd
@@ -685,8 +684,6 @@ typedef struct
 	GLenum blendDst;
 	GLenum depthFunc;
 	GLboolean depthMask;
-
-	qboolean texture_compression; // Heffo - ARB Texture Compression //TODO: mxd. Remove. Part of GL 2.0 core. Remove EXT_ARB_texture_compression from GLAD
 } glstate_t;
 
 extern glconfig_t glConfig;

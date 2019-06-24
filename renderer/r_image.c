@@ -485,12 +485,10 @@ qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qb
 		}
 	}
 
-	// Heffo - ARB Texture Compression
-	qglHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
 	if (samples == GL_SOLID_FORMAT)
-		comp = (glState.texture_compression ? GL_COMPRESSED_RGB : gl_tex_solid_format);
+		comp = gl_tex_solid_format;
 	else if (samples == GL_ALPHA_FORMAT)
-		comp = (glState.texture_compression ? GL_COMPRESSED_RGBA : gl_tex_alpha_format);
+		comp = gl_tex_alpha_format;
 
 	// Find sizes to scale to
 	if (glConfig.arbTextureNonPowerOfTwo && (!mipmap || r_nonpoweroftwo_mipmaps->value))

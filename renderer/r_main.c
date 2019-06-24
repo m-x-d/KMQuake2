@@ -123,7 +123,6 @@ cvar_t *r_old_nullmodel; // Allow selection of nullmodel
 cvar_t *r_glass_envmaps; // Psychospaz's envmapping
 cvar_t *r_trans_surf_sorting; // Translucent bmodel sorting
 cvar_t *r_shelltype; // Entity shells: 0 = solid, 1 = warp, 2 = spheremap
-cvar_t *r_ext_texture_compression; // Heffo - ARB Texture Compression
 cvar_t *r_screenshot_format; // Determines screenshot format
 cvar_t *r_screenshot_jpeg_quality; // Heffo - JPEG Screenshots
 
@@ -776,8 +775,6 @@ static void R_Register(void)
 	r_trans_surf_sorting = Cvar_Get("r_trans_surf_sorting", "0", CVAR_ARCHIVE);
 	r_shelltype = Cvar_Get("r_shelltype", "1", CVAR_ARCHIVE);
 
-	r_ext_texture_compression = Cvar_Get("r_ext_texture_compression", "0", CVAR_ARCHIVE); // Heffo - ARB Texture Compression
-
 	r_screenshot_format = Cvar_Get("r_screenshot_format", "jpg", CVAR_ARCHIVE); // Determines screenshot format
 	r_screenshot_jpeg_quality = Cvar_Get("r_screenshot_jpeg_quality", "85", CVAR_ARCHIVE); // Heffo - JPEG Screenshots
 
@@ -1174,29 +1171,6 @@ static qboolean R_CheckGLExtensions()
 		glConfig.anisotropic = false;
 		glConfig.max_anisotropy = 0.0f;
 		Cvar_SetValue("r_anisotropic_avail", 0.0f);
-	}
-
-	// GL_ARB_texture_compression - Heffo
-	glState.texture_compression = false;
-	//TODO: mxd. Remove GL_ARB_texture_compression and r_ext_texture_compression. Part of GL 2.0 core. Also kills performance when combined with bloom
-	if (GLAD_GL_ARB_texture_compression)
-	{
-		if (!r_ext_texture_compression->value)
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_ARB_texture_compression\n");
-			glState.texture_compression = false;
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...using GL_ARB_texture_compression\n");
-			glState.texture_compression = true;
-		}
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_ARB_texture_compression not found\n");
-		glState.texture_compression = false;
-		Cvar_Set("r_ext_texture_compression", "0");
 	}
 
 	return true;
