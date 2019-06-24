@@ -355,8 +355,8 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 	float args[] = { 0.0f, 0.05f, 0.0f, 0.0f, 0.04f, 0.0f, 0.0f };
 	image_t *image = R_TextureAnimation(fa);
 	const qboolean light = r_warp_lighting->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
-	const qboolean texShaderWarpNV = glConfig.NV_texshaders && glConfig.multitexture && r_pixel_shader_warp->value;
-	qboolean texShaderWarpARB = glConfig.arb_fragment_program && glConfig.multitexture && r_pixel_shader_warp->value;
+	const qboolean texShaderWarpNV = glConfig.NV_texshaders && r_pixel_shader_warp->value;
+	qboolean texShaderWarpARB = glConfig.arb_fragment_program && r_pixel_shader_warp->value;
 	const qboolean texShaderWarp = (texShaderWarpNV || texShaderWarpARB);
 	
 	if (texShaderWarpNV && texShaderWarpARB)
@@ -398,7 +398,7 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 		GL_MBind(1, image->texnum);
 		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_2D);
 		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_OFFSET_TEXTURE_2D_NV);
-		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0_ARB);
+		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0);
 		qglTexEnvfv(GL_TEXTURE_SHADER_NV, GL_OFFSET_TEXTURE_MATRIX_NV, &args[1]);
 
 		// Psychospaz's lighting
@@ -456,7 +456,7 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 	const float rdt = r_newrefdef.time;
 	vec3_t point;
 	const qboolean light = r_warp_lighting->value && !r_fullbright->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
-	const qboolean texShaderNV = glConfig.NV_texshaders && glConfig.multitexture
+	const qboolean texShaderNV = glConfig.NV_texshaders
 								&& ( (!glConfig.arb_fragment_program && r_pixel_shader_warp->value)
 									|| (glConfig.arb_fragment_program && r_pixel_shader_warp->value > 1) );
 

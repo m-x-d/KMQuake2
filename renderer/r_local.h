@@ -202,7 +202,6 @@ extern cvar_t *con_font_size;
 extern cvar_t *r_vertex_arrays;
 
 extern cvar_t *r_ext_swapinterval;
-extern cvar_t *r_ext_multitexture;
 extern cvar_t *r_ext_draw_range_elements;
 extern cvar_t *r_ext_compiled_vertex_array;
 extern cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
@@ -271,9 +270,6 @@ extern cvar_t *r_bloom;
 
 extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_gamma;
-
-extern int c_visible_lightmaps;
-extern int c_visible_textures;
 
 extern float r_world_matrix[16];
 
@@ -598,7 +594,6 @@ typedef struct
 	int max_texsize;
 	int max_texunits;
 
-	qboolean multitexture; //TODO: mxd. Remove. Part of GL 1.3 core.
 	qboolean mtexcombine;	// Added Vic's RGB brightening //TODO: mxd. Remove. Part of GL 1.3 core.
 
 	qboolean have_stencil;

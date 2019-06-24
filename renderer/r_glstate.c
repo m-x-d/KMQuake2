@@ -445,9 +445,6 @@ void GL_UnlockArrays(void)
 
 void GL_EnableTexture(unsigned tmu)
 {
-	if (tmu > 0 && !glConfig.multitexture)
-		return;
-
 	if (tmu >= MAX_TEXTURE_UNITS || tmu >= glConfig.max_texunits)
 		return;
 
@@ -460,9 +457,6 @@ void GL_EnableTexture(unsigned tmu)
 
 void GL_DisableTexture(unsigned tmu)
 {
-	if (tmu > 0 && !glConfig.multitexture)
-		return;
-
 	if (tmu >= MAX_TEXTURE_UNITS || tmu >= glConfig.max_texunits)
 		return;
 
@@ -475,9 +469,6 @@ void GL_DisableTexture(unsigned tmu)
 // Only used for world drawing
 void GL_EnableMultitexture(qboolean enable)
 {
-	if (!glConfig.multitexture)
-		return;
-
 	if (enable)
 	{
 		GL_EnableTexture(1);
@@ -495,9 +486,6 @@ void GL_EnableMultitexture(qboolean enable)
 
 void GL_SelectTexture(unsigned tmu)
 {
-	if (!glConfig.multitexture)
-		return;
-
 	if (tmu >= MAX_TEXTURE_UNITS || tmu >= glConfig.max_texunits)
 		return;
 
@@ -505,8 +493,8 @@ void GL_SelectTexture(unsigned tmu)
 		return;
 
 	glState.currenttmu = tmu;
-	qglActiveTextureARB(GL_TEXTURE0_ARB + tmu);
-	qglClientActiveTextureARB(GL_TEXTURE0_ARB + tmu);
+	qglActiveTexture(GL_TEXTURE0 + tmu);
+	qglClientActiveTexture(GL_TEXTURE0 + tmu);
 }
 
 extern image_t *draw_chars;

@@ -103,7 +103,6 @@ cvar_t *r_rgbscale; // Vic's RGB brightening
 cvar_t *r_vertex_arrays;
 
 cvar_t *r_ext_swapinterval;
-cvar_t *r_ext_multitexture;
 cvar_t *r_ext_draw_range_elements;
 cvar_t *r_ext_compiled_vertex_array;
 cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
@@ -600,7 +599,7 @@ static void R_SetGL2D(void)
 	if (r_speeds->value && !(r_newrefdef.rdflags & RDF_NOWORLDMODEL)) // Don't do this for options menu
 	{
 		char line[128];
-		const int lines = (glConfig.multitexture ? 5 : 7);
+		const int lines = 5;
 
 		for (int i = 0; i < lines; i++)
 		{
@@ -612,8 +611,6 @@ static void R_SetGL2D(void)
 				case 2: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i wpoly", c_brush_polys); break;
 				case 3: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i epoly", c_alias_polys); break;
 				case 4: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i ppoly", c_part_polys); break;
-				case 5: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i tex  ", c_visible_textures); break;
-				case 6: len = sprintf(line, S_COLOR_ALT S_COLOR_SHADOW"%5i lmaps", c_visible_lightmaps); break;
 				default: break;
 			}
 
@@ -724,7 +721,6 @@ static void R_Register(void)
 	r_vertex_arrays = Cvar_Get("r_vertex_arrays", "1", CVAR_ARCHIVE);
 
 	r_ext_swapinterval = Cvar_Get("r_ext_swapinterval", "1", CVAR_ARCHIVE);
-	r_ext_multitexture = Cvar_Get("r_ext_multitexture", "1", CVAR_ARCHIVE);
 	r_ext_draw_range_elements = Cvar_Get("r_ext_draw_range_elements", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
 
@@ -869,27 +865,9 @@ static qboolean StringContainsToken(const char *string, const char *findToken)
 // Grabs GL extensions
 static qboolean R_CheckGLExtensions()
 {
-	// OpenGL multitexture on GL 1.2.1 or later or GL_ARB_multitexture
-	glConfig.multitexture = false;
-	glConfig.max_texunits = 1;
-
-	//mxd. Core features since GL 1.3
-	qglMultiTexCoord2fARB = (void *)qwglGetProcAddress("glMultiTexCoord2f");
-	qglActiveTextureARB = (void *)qwglGetProcAddress("glActiveTexture");
-	qglClientActiveTextureARB = (void *)qwglGetProcAddress("glClientActiveTexture");
-
-	//TODO: mxd. Remove GL_ARB_multitexture and r_ext_multitexture. Replace with glMultiTexCoord2f, glActiveTexture, glClientActiveTexture
-	if (!qglMultiTexCoord2fARB || !qglActiveTextureARB || !qglClientActiveTextureARB)
-	{
-		VID_Printf(PRINT_ALL, "...OpenGL multitexture not found\n");
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...using OpenGL multitexture\n");
-		qglGetIntegerv(GL_MAX_TEXTURE_UNITS, &glConfig.max_texunits);
-		VID_Printf(PRINT_ALL, "...GL_MAX_TEXTURE_UNITS: %i\n", glConfig.max_texunits);
-		glConfig.multitexture = true;
-	}
+	// OpenGL multitexture
+	qglGetIntegerv(GL_MAX_TEXTURE_UNITS, &glConfig.max_texunits);
+	VID_Printf(PRINT_ALL, "...GL_MAX_TEXTURE_UNITS: %i\n", glConfig.max_texunits);
 
 	// GL_EXT_compiled_vertex_array
 	// GL_SGI_compiled_vertex_array
