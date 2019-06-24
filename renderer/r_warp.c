@@ -406,7 +406,7 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 		// We won't bother check for the extensions availabiliy, as the hardware required
 		// to make it this far definately supports this as well.
 		if (light)
-			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
+			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 
 		GL_Enable(GL_TEXTURE_SHADER_NV);
 	}

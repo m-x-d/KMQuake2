@@ -816,7 +816,7 @@ void R_InitImages(void)
 	registration_sequence = 1;
 
 	// Knightmare- added Vic's RGB brightening
-	r_intensity = Cvar_Get("r_intensity", (glConfig.mtexcombine ? "1" : "2"), 0);
+	r_intensity = Cvar_Get("r_intensity", "1", 0);
 
 	if (r_intensity->value <= 1)
 		Cvar_Set("r_intensity", "1");

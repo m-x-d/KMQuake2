@@ -86,48 +86,37 @@ static image_t *R_TextureAnimationGlow(msurface_t *surf)
 static void R_SetLightingMode(int renderflags)
 {
 	GL_SelectTexture(0);
+	GL_TexEnv(GL_COMBINE);
 
-	if (!glConfig.mtexcombine)
+	const GLint texenvmode = (renderflags & RF_TRANSLUCENT ? GL_MODULATE : GL_REPLACE); //mxd
+	qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, texenvmode);
+	qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+	qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, texenvmode);
+	qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_TEXTURE);
+
+	GL_SelectTexture(1);
+	GL_TexEnv(GL_COMBINE);
+
+	if (r_lightmap->integer)
 	{
-		GL_SelectTexture(0);
-		GL_TexEnv(GL_REPLACE);
-		GL_SelectTexture(1);
-		GL_TexEnv(r_lightmap->value ? GL_REPLACE : GL_MODULATE);
-	}
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_TEXTURE);
+	} 
 	else 
 	{
-		GL_SelectTexture(0);
-		GL_TexEnv(GL_COMBINE_ARB);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
 
-		const GLint texenvmode = (renderflags & RF_TRANSLUCENT ? GL_MODULATE : GL_REPLACE); //mxd
-		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, texenvmode);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, texenvmode);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_TEXTURE);
-
-		GL_SelectTexture(1);
-		GL_TexEnv(GL_COMBINE_ARB);
-		if (r_lightmap->integer)
-		{
-			qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_REPLACE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_REPLACE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_TEXTURE);
-		} 
-		else 
-		{
-			qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PREVIOUS_ARB);
-
-			qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_MODULATE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_TEXTURE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_ARB, GL_PREVIOUS_ARB);
-		}
-
-		if (r_rgbscale->integer)
-			qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, r_rgbscale->integer);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_TEXTURE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA, GL_PREVIOUS);
 	}
+
+	if (r_rgbscale->integer)
+		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, r_rgbscale->integer);
 }
 
 static float SurfAlphaCalc(int flags)
@@ -746,28 +735,21 @@ static void RB_RenderLightmappedSurface (msurface_t *surf)
 		GL_EnableTexture(2);
 		GL_MBind(2, glow->texnum);
 
-		if (!glConfig.mtexcombine) // If we've got > 2 TMUs, this can't be the case, right?
-		{
-			GL_TexEnv(GL_ADD);
-		}
-		else
-		{
-			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_ADD);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PREVIOUS_ARB);
-		//	qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB_ARB, GL_CONSTANT_ARB);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_SRC_COLOR);
-		//	qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB_ARB, GL_SRC_ALPHA);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, (alpha < 1.0f ? GL_MODULATE : GL_ADD));
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_TEXTURE);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_ARB, GL_PREVIOUS_ARB);
-		//	qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_ALPHA_ARB, GL_CONSTANT_ARB);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA_ARB, GL_SRC_ALPHA);
-			qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA_ARB, GL_SRC_ALPHA);
-		//	qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_ALPHA_ARB, GL_SRC_ALPHA);
-		}
+		qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_ADD);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
+	//	qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB_ARB, GL_CONSTANT_ARB);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+	//	qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB_ARB, GL_SRC_ALPHA);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, (alpha < 1.0f ? GL_MODULATE : GL_ADD));
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_TEXTURE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA, GL_PREVIOUS);
+	//	qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_ALPHA_ARB, GL_CONSTANT_ARB);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+	//	qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_ALPHA_ARB, GL_SRC_ALPHA);
 	}
 
 	RB_DrawArrays();

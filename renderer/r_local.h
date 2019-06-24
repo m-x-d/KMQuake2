@@ -203,7 +203,6 @@ extern cvar_t *r_vertex_arrays;
 
 extern cvar_t *r_ext_swapinterval;
 extern cvar_t *r_ext_compiled_vertex_array;
-extern cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 extern cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 extern cvar_t *r_arb_vertex_buffer_object;
 extern cvar_t *r_pixel_shader_warp;	// Allow disabling the nVidia water warp
@@ -592,8 +591,6 @@ typedef struct
 	// Max texture size
 	int max_texsize;
 	int max_texunits;
-
-	qboolean mtexcombine;	// Added Vic's RGB brightening //TODO: mxd. Remove. Part of GL 1.3 core.
 
 	qboolean have_stencil;
 	qboolean extStencilWrap; //TODO: mxd. Remove. Use the below

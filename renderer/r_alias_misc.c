@@ -147,22 +147,22 @@ void R_ShadowBlend(float shadowalpha)
 
 void R_SetVertexRGBScale(qboolean toggle)
 {
-	if (!r_rgbscale->value || !glConfig.mtexcombine)
+	if (!r_rgbscale->integer)
 		return;
 
 	if (toggle) // Turn on
 	{
-		qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, r_rgbscale->integer);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_MODULATE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, r_rgbscale->integer);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 		
-		GL_TexEnv(GL_COMBINE_ARB);
+		GL_TexEnv(GL_COMBINE);
 	}
 	else // Turn off
 	{
 		GL_TexEnv(GL_MODULATE);
-		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
+		qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 1);
 	}
 }
 

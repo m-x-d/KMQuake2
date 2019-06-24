@@ -104,7 +104,6 @@ cvar_t *r_vertex_arrays;
 
 cvar_t *r_ext_swapinterval;
 cvar_t *r_ext_compiled_vertex_array;
-cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 cvar_t *r_arb_fragment_program;
 cvar_t *r_arb_vertex_program;
@@ -722,8 +721,6 @@ static void R_Register(void)
 	r_ext_swapinterval = Cvar_Get("r_ext_swapinterval", "1", CVAR_ARCHIVE);
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
 
-	r_ext_mtexcombine = Cvar_Get("r_ext_mtexcombine", "1", CVAR_ARCHIVE); // added Vic's RGB brightening
-
 	// Echon's two-sided stenciling
 	r_stencilTwoSide = Cvar_Get("r_stencilTwoSide", "0", CVAR_ARCHIVE);
 
@@ -912,26 +909,6 @@ static qboolean R_CheckGLExtensions()
 		VID_Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 #endif
-
-	// GL_ARB_texture_env_combine - Vic
-	//TODO: mxd. Remove this and r_ext_mtexcombine. Part of GL 1.3 core.
-	glConfig.mtexcombine = false;
-	if (GLAD_GL_ARB_texture_env_combine)
-	{
-		if (r_ext_mtexcombine->value)
-		{
-			VID_Printf(PRINT_ALL, "...using GL_ARB_texture_env_combine\n");
-			glConfig.mtexcombine = true;
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "..ignoring GL_ARB_texture_env_combine\n");
-		}
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_ARB_texture_env_combine not found\n");
-	}
 
 	// GL_EXT_stencil_wrap
 	//TODO: mxd. Replace with qglStencilOpSeparate.
