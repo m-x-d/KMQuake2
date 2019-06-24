@@ -248,9 +248,6 @@ extern cvar_t *r_particledistance;
 extern cvar_t *r_dynamic;
 extern cvar_t *r_nobind;
 extern cvar_t *r_round_down;
-extern cvar_t *r_picmip;
-extern cvar_t *r_skymip;
-extern cvar_t *r_playermip;
 extern cvar_t *r_showtris;
 extern cvar_t *r_showbbox; // Knightmare- show model bounding box
 extern cvar_t *r_finish;

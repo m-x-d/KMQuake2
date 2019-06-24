@@ -359,9 +359,6 @@ void R_SetSky(char *name, float rotate, vec3_t axis)
 
 	for (int i = 0; i < 6; i++)
 	{
-		if (r_skymip->value) // Take less memory
-			r_picmip->value++;
-
 		Com_sprintf(pathname, sizeof(pathname), "env/%s%s.tga", skyname, suf[i]);
 		sky_images[i] = R_FindImage(pathname, it_sky, false);
 		if (!sky_images[i])
@@ -372,15 +369,7 @@ void R_SetSky(char *name, float rotate, vec3_t axis)
 		else
 			imagesize = 256.0;
 
-		if (r_skymip->value)
-		{
-			r_picmip->value--; // Take less memory
-			imagesize = min(512.0f, imagesize); // Cap at 512
-		}
-		else
-		{
-			imagesize = min(1024.0f, imagesize); // Cap at 1024
-		}
+		imagesize = min(1024.0f, imagesize); // Cap at 1024
 
 		sky_min = 1.0f / imagesize; // Was 256
 		sky_max = (imagesize - 1.0f) / imagesize;

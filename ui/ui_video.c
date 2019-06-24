@@ -33,7 +33,6 @@ static menufield_s		s_customwidth_field;
 static menufield_s		s_customheight_field;
 static menulist_s		s_fs_box;
 static menuslider_s		s_brightness_slider;
-static menulist_s		s_texqual_box;
 static menulist_s		s_texfilter_box;
 static menulist_s		s_aniso_box;
 static menulist_s		s_npot_mipmap_box;
@@ -110,9 +109,7 @@ static void ResetVideoDefaults(void *unused)
 	Cvar_SetToDefault("r_mode");
 	Cvar_SetToDefault("r_texturemode");
 	Cvar_SetToDefault("r_anisotropic");
-	Cvar_SetToDefault("r_picmip");
 	Cvar_SetToDefault("r_nonpoweroftwo_mipmaps");
-	Cvar_SetToDefault("r_ext_texture_compression"); //TODO: mxd. This doesn't have a menu item!
 	Cvar_SetToDefault("r_swapinterval");
 	Cvar_SetToDefault("cl_widescreen_fov");
 	Cvar_SetToDefault("cl_async");
@@ -174,7 +171,6 @@ static void ApplyChanges(void *unused)
 	Cvar_SetValue("vid_fullscreen", s_fs_box.curvalue);
 	// Invert sense so greater = brighter, and scale to a range of 0.3 to 1.3
 	Cvar_SetValue("vid_gamma", (1.3f - (s_brightness_slider.curvalue / 20.0f)));
-	Cvar_SetValue("r_picmip", 3 - s_texqual_box.curvalue);
 
 	Cvar_SetValue("r_nonpoweroftwo_mipmaps", s_npot_mipmap_box.curvalue);
 
@@ -246,7 +242,6 @@ void Menu_Video_Init(void)
 		#include "../qcommon/vid_resolutions.h"
 	};
 	static const char *mip_names[] = { "Nearest", "Bilinear", "Trilinear", 0 }; //mxd. Added "Nearest"
-	static const char *lmh_names[] = { "Low", "Medium", "High", "Very high", 0 };
 
 	int y = 0;
 
@@ -337,14 +332,6 @@ void Menu_Video_Init(void)
 	s_aniso_box.itemnames			= GetAnisoNames();
 	s_aniso_box.generic.statusbar	= "Changes the level of anisotropic mipmap filtering";
 
-	s_texqual_box.generic.type		= MTYPE_SPINCONTROL; //TODO: mxd. Remove? any videocard from the last 15 years supports at least 4096x4096 textures
-	s_texqual_box.generic.x			= 0;
-	s_texqual_box.generic.y			= y += MENU_LINE_SIZE;
-	s_texqual_box.generic.name		= "Texture quality";
-	s_texqual_box.curvalue			= ClampCvar(0, 3, 3 - Cvar_VariableValue("r_picmip"));
-	s_texqual_box.itemnames			= lmh_names;
-	s_texqual_box.generic.statusbar	= "Changes maximum texture size (highest = no limit)";
-
 	s_npot_mipmap_box.generic.type		= MTYPE_SPINCONTROL; //TODO: mxd. That's probably supported by every videocard
 	s_npot_mipmap_box.generic.x			= 0;
 	s_npot_mipmap_box.generic.y			= y += MENU_LINE_SIZE;
@@ -421,7 +408,6 @@ void Menu_Video_Init(void)
 	Menu_AddItem(&s_video_menu, (void *)&s_brightness_slider);
 	Menu_AddItem(&s_video_menu, (void *)&s_texfilter_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_aniso_box);
-	Menu_AddItem(&s_video_menu, (void *)&s_texqual_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_npot_mipmap_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_vsync_box);
 	Menu_AddItem(&s_video_menu, (void *)&s_adjust_fov_box);

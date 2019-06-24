@@ -155,9 +155,6 @@ cvar_t *r_dynamic;
 cvar_t *r_modulate;
 cvar_t *r_nobind;
 cvar_t *r_round_down;
-cvar_t *r_picmip;
-cvar_t *r_skymip;
-cvar_t *r_playermip;
 cvar_t *r_showtris;
 cvar_t *r_showbbox; // Show model bounding box
 cvar_t *r_ztrick;
@@ -714,8 +711,6 @@ static void R_Register(void)
 	r_dynamic = Cvar_Get("r_dynamic", "1", 0);
 	r_nobind = Cvar_Get("r_nobind", "0", CVAR_CHEAT);
 	r_round_down = Cvar_Get("r_round_down", "1", 0);
-	r_picmip = Cvar_Get("r_picmip", "0", 0);
-	r_skymip = Cvar_Get("r_skymip", "0", 0);
 	r_showtris = Cvar_Get("r_showtris", "0", CVAR_CHEAT);
 	r_showbbox = Cvar_Get("r_showbbox", "0", CVAR_CHEAT); // show model bounding box
 	r_ztrick = Cvar_Get("r_ztrick", "0", 0);
@@ -723,7 +718,6 @@ static void R_Register(void)
 	r_cull = Cvar_Get("r_cull", "1", 0);
 	r_polyblend = Cvar_Get("r_polyblend", "1", 0);
 	r_flashblend = Cvar_Get("r_flashblend", "0", 0);
-	r_playermip = Cvar_Get("r_playermip", "0", 0);
 	r_texturemode = Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_LINEAR", CVAR_ARCHIVE); //mxd. Was GL_LINEAR_MIPMAP_NEAREST
 	r_anisotropic = Cvar_Get("r_anisotropic", "16", CVAR_ARCHIVE); //mxd. Was 0
 	r_anisotropic_avail = Cvar_Get("r_anisotropic_avail", "0", 0);

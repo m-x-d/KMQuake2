@@ -446,27 +446,6 @@ static qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t t
 			scaled_height <<= 1;
 		}
 	}
-	else if (mipmap && r_picmip->integer > 0)
-	{
-		// Allow sampling down of the world textures for speed
-		int maxsize;
-
-		if (r_picmip->integer == 1)		 // Clamp to 512x512
-			maxsize = 512;
-		else if (r_picmip->integer == 2) // Clamp to 256x256
-			maxsize = 256;
-		else							 // Clamp to 128x128
-			maxsize = 128;
-
-		while (true)
-		{
-			if (scaled_width <= maxsize && scaled_height <= maxsize)
-				break;
-
-			scaled_width >>= 1;
-			scaled_height >>= 1;
-		}
-	}
 
 	// Resample texture if needed
 	if (scaled_width != width || scaled_height != height) 
