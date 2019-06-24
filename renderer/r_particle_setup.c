@@ -22,7 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 
 #define NULLTEX_SIZE	16
-#define RAWTEX_SIZE		256 //mxd
+
+#define RAWTEX_WIDTH	320 //mxd
+#define RAWTEX_HEIGHT	240 //mxd
 
 image_t *R_CreateNullTexture(void)
 {
@@ -172,9 +174,9 @@ void R_InitMedia(void)
 	memset(whitetex, 255, sizeof(whitetex));
 	glMedia.whitetexture = R_LoadPic("***whitetexture***", whitetex, NULLTEX_SIZE, NULLTEX_SIZE, it_wall, 32);
 
-	byte rawtex[RAWTEX_SIZE * RAWTEX_SIZE * 4]; // ROQ support
+	byte rawtex[RAWTEX_WIDTH * RAWTEX_HEIGHT * 4]; // ROQ support //mxd. 256x256 -> 320x240
 	memset(rawtex, 255, sizeof(rawtex));
-	glMedia.rawtexture = R_LoadPic("***rawtexture***", rawtex, RAWTEX_SIZE, RAWTEX_SIZE, it_pic, 32);
+	glMedia.rawtexture = R_LoadPic("***rawtexture***", rawtex, RAWTEX_WIDTH, RAWTEX_HEIGHT, it_pic, 32);
 	
 	glMedia.envmappic =		  LoadPartImg("gfx/effects/envmap.tga", it_wall);
 	glMedia.spheremappic =	  LoadPartImg("gfx/effects/spheremap.tga", it_skin);

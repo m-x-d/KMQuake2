@@ -719,10 +719,8 @@ int R_MarkFragments(const vec3_t origin, const vec3_t axis[3], float radius, int
 
 void R_SetFogVars(qboolean enable, int model, int density, int start, int end, int red, int green, int blue);
 
-float R_CharMapScale(void); // Knightmare added char scaling from Quake2Max
-
 // Draw images for cinematic rendering.
-void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight);
+void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int width, int height);
 
 /*
 ** video mode and refresh state management entry points

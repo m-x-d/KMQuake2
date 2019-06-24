@@ -56,12 +56,6 @@ void R_DrawInitLocal(void)
 	R_InitChars(); // Init char indexes
 }
 
-float R_CharMapScale(void)
-{
-	return draw_chars->width / 128.0f; // Current width / original width
-}
-
-
 static unsigned char_count; //mxd. +static
 
 void R_InitChars(void)
@@ -493,40 +487,29 @@ void R_DrawCameraEffect(void)
 
 #pragma region ======================= Cinematic streaming
 
-void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int rawWidth, int rawHeight)
+void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int width, int height)
 {
-	int width = 1;
-	int height = 1;
-	vec2_t texCoord[4], verts[4];
+	vec2_t texCoord[4];
+	vec2_t verts[4];
 
-	// Check the dimensions
-	if (!glConfig.arbTextureNonPowerOfTwo) // Skip if nonstandard textures sizes are supported
+	if (width == glMedia.rawtexture->upload_width && height == glMedia.rawtexture->upload_height)
 	{
-		while (width < rawWidth)
-			width <<= 1;
-
-		while (height < rawHeight)
-			height <<= 1;
-
-		if (rawWidth != width || rawHeight != height)
-			VID_Error(ERR_DROP, "R_DrawStretchRaw: size is not a power of two (%i x %i)", rawWidth, rawHeight);
-
-		if (rawWidth > glConfig.max_texsize || rawHeight > glConfig.max_texsize)
-			VID_Error(ERR_DROP, "R_DrawStretchRaw: size exceeds hardware limits (%i > %i or %i > %i)", rawWidth, glConfig.max_texsize, rawHeight, glConfig.max_texsize);
-	}
-
-	// Update the texture as appropriate
-	GL_Bind(glMedia.rawtexture->texnum);
-	
-	if (rawWidth == glMedia.rawtexture->upload_width && rawHeight == glMedia.rawtexture->upload_height)
-	{
-		qglTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rawWidth, rawHeight, GL_RGBA, GL_UNSIGNED_BYTE, raw);
+		// Update existing texture data
+		GL_Bind(glMedia.rawtexture->texnum);
+		qglTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, raw);
 	}
 	else
 	{
-		glMedia.rawtexture->upload_width = rawWidth;
-		glMedia.rawtexture->upload_height = rawHeight;
-		qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, rawWidth, rawHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw);
+		//mxd. Delete the old texture
+		qglDeleteTextures(1, (const GLuint*)&glMedia.rawtexture->texnum);
+
+		// Store new texture size
+		glMedia.rawtexture->upload_width = width;
+		glMedia.rawtexture->upload_height = height;
+
+		// Re-create texture using new size and data
+		GL_Bind(glMedia.rawtexture->texnum);
+		qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw);
 	}
 
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

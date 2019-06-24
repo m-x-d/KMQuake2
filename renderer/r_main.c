@@ -106,8 +106,6 @@ cvar_t *r_ext_swapinterval;
 cvar_t *r_ext_multitexture;
 cvar_t *r_ext_draw_range_elements;
 cvar_t *r_ext_compiled_vertex_array;
-cvar_t *r_arb_texturenonpoweroftwo; // Knightmare- non-power-of-two texture support
-cvar_t *r_nonpoweroftwo_mipmaps;  // Knightmare- non-power-of-two texture support
 cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 cvar_t *r_arb_fragment_program;
@@ -729,8 +727,6 @@ static void R_Register(void)
 	r_ext_multitexture = Cvar_Get("r_ext_multitexture", "1", CVAR_ARCHIVE);
 	r_ext_draw_range_elements = Cvar_Get("r_ext_draw_range_elements", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
-	r_arb_texturenonpoweroftwo = Cvar_Get("r_arb_texturenonpoweroftwo", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
-	r_nonpoweroftwo_mipmaps = Cvar_Get("r_nonpoweroftwo_mipmaps", "1", CVAR_ARCHIVE /*| CVAR_LATCH*/);
 
 	r_ext_mtexcombine = Cvar_Get("r_ext_mtexcombine", "1", CVAR_ARCHIVE); // added Vic's RGB brightening
 
@@ -956,11 +952,6 @@ static qboolean R_CheckGLExtensions()
 			VID_Printf(PRINT_ALL, "...ignoring glDrawRangeElements\n");
 		}
 	}
-
-	// GL_ARB_texture_non_power_of_two
-
-	//TODO: mxd. Remove this and r_arb_texturenonpoweroftwo. part of GL 2.0 core.
-	glConfig.arbTextureNonPowerOfTwo = true;
 
 #ifdef _WIN32
 	// WGL_EXT_swap_control

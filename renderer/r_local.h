@@ -205,8 +205,6 @@ extern cvar_t *r_ext_swapinterval;
 extern cvar_t *r_ext_multitexture;
 extern cvar_t *r_ext_draw_range_elements;
 extern cvar_t *r_ext_compiled_vertex_array;
-extern cvar_t *r_arb_texturenonpoweroftwo;
-extern cvar_t *r_nonpoweroftwo_mipmaps;
 extern cvar_t *r_ext_mtexcombine; // Vic's RGB brightening
 extern cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 extern cvar_t *r_arb_vertex_buffer_object;
@@ -525,7 +523,6 @@ void R_InitChars();
 void R_FlushChars();
 void R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
-float R_CharMapScale();
 
 
 //
@@ -600,9 +597,6 @@ typedef struct
 	// Max texture size
 	int max_texsize;
 	int max_texunits;
-
-	// Non-power of two texture support
-	qboolean arbTextureNonPowerOfTwo; //TODO: mxd. Remove. Part of GL 2.0 core.
 
 	qboolean multitexture; //TODO: mxd. Remove. Part of GL 1.3 core.
 	qboolean mtexcombine;	// Added Vic's RGB brightening //TODO: mxd. Remove. Part of GL 1.3 core.

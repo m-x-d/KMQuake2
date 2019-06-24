@@ -33,7 +33,7 @@ cvar_t *r_intensity;
 unsigned d_8to24table[256];
 
 qboolean GL_Upload8(const byte *data, int width, int height, imagetype_t type, qboolean mipmap);
-qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap);
+qboolean GL_Upload32(uint *data, int width, int height, imagetype_t type, qboolean mipmap);
 
 int gl_filter_min = GL_LINEAR_MIPMAP_LINEAR; //mxd. Was GL_LINEAR_MIPMAP_NEAREST
 int gl_filter_max = GL_LINEAR;
@@ -373,36 +373,10 @@ here starts modified code by Heffo/changes by Nexus
 static int upload_width; //** DMP made local to module
 static int upload_height;
 
-static int nearest_power_of_2(int size)
-{
-	int i = 2;
-
-	// NeVo - infinite loop bug-fix
-	if (size < 2)
-		return size; 
-
-	while (true) 
-	{
-		i <<= 1;
-		if (size == i)
-			return i;
-
-		if (size > i && size < (i << 1)) 
-		{
-			if (size >= (i + (i << 1)) / 2)
-				return i << 1;
-
-			return i;
-		}
-	}
-}
-
 // Returns has_alpha
-static qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t type, qboolean mipmap)
+static qboolean GL_Upload32(uint *data, int width, int height, imagetype_t type, qboolean mipmap)
 {
-	unsigned *scaled;
-	int scaled_width;
-	int scaled_height;
+	uint *scaled;
 
 	// Scan the texture for any non-255 alpha
 	const int size = width * height;
@@ -417,20 +391,8 @@ static qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t t
 		}
 	}
 
-	// Find sizes to scale to
-	if (glConfig.arbTextureNonPowerOfTwo && (!mipmap || r_nonpoweroftwo_mipmaps->value))
-	{
-		scaled_width = width;
-		scaled_height = height;
-	}
-	else
-	{
-		scaled_width =  nearest_power_of_2(width);
-		scaled_height = nearest_power_of_2(height);
-	}
-
-	scaled_width =  min(glConfig.max_texsize, scaled_width);
-	scaled_height = min(glConfig.max_texsize, scaled_height);
+	int scaled_width = min(glConfig.max_texsize, width);
+	int scaled_height = min(glConfig.max_texsize, height);
 
 	if (type == it_font)
 	{
@@ -459,8 +421,6 @@ static qboolean GL_Upload32(unsigned *data, int width, int height, imagetype_t t
 	}
 	else
 	{
-		scaled_width = width;
-		scaled_height = height;
 		scaled = data;
 	}
 
@@ -626,7 +586,7 @@ nonscrap:
 		if (bits == 8)
 			image->has_alpha = GL_Upload8(pic, width, height, image->type, image->mipmap);
 		else
-			image->has_alpha = GL_Upload32((unsigned *)pic, width, height, image->type, image->mipmap);
+			image->has_alpha = GL_Upload32((uint *)pic, width, height, image->type, image->mipmap);
 
 		image->upload_width = upload_width; // After power of 2 and scales
 		image->upload_height = upload_height;
