@@ -282,31 +282,7 @@ size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *ed
 
 // MrG - texture shader stuffs
 #define DST_SIZE 16
-unsigned int dst_texture_NV, dst_texture_ARB;
-
-// Create the texture which warps texture shaders
-static void CreateDSTTex_NV(void)
-{
-	char data[DST_SIZE][DST_SIZE][2];
-
-	for (int x = 0; x < DST_SIZE; x++)
-	{
-		for (int y = 0; y < DST_SIZE; y++)
-		{
-			data[x][y][0] = rand() % 255 - 128;
-			data[x][y][1] = rand() % 255 - 128;
-		}
-	}
-
-	qglGenTextures(1, &dst_texture_NV);
-	qglBindTexture(GL_TEXTURE_2D, dst_texture_NV);
-	qglTexImage2D(GL_TEXTURE_2D, 0, GL_DSDT8_NV, DST_SIZE, DST_SIZE, 0, GL_DSDT_NV, GL_BYTE, data);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-}
+uint dst_texture_ARB;
 
 // Create the texture which warps texture shaders
 static void CreateDSTTex_ARB(void)
@@ -340,9 +316,7 @@ static void CreateDSTTex_ARB(void)
 // Resets the texture which warps texture shaders. Needed after a vid_restart.
 void R_InitDSTTex(void)
 {
-	dst_texture_NV = 0;
 	dst_texture_ARB = 0;
-	CreateDSTTex_NV();
 	CreateDSTTex_ARB();
 }
 //end MrG
@@ -352,15 +326,9 @@ extern image_t *R_TextureAnimation(msurface_t *surf);
 // Backend for R_DrawWarpSurface
 static void RB_RenderWarpSurface(msurface_t *fa)
 {
-	float args[] = { 0.0f, 0.05f, 0.0f, 0.0f, 0.04f, 0.0f, 0.0f };
 	image_t *image = R_TextureAnimation(fa);
 	const qboolean light = r_warp_lighting->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
-	const qboolean texShaderWarpNV = glConfig.NV_texshaders && r_pixel_shader_warp->value;
-	qboolean texShaderWarpARB = glConfig.arb_fragment_program && r_pixel_shader_warp->value;
-	const qboolean texShaderWarp = (texShaderWarpNV || texShaderWarpARB);
-	
-	if (texShaderWarpNV && texShaderWarpARB)
-		texShaderWarpARB = (r_pixel_shader_warp->value == 1.0f);
+	const qboolean texShaderWarp = glConfig.arb_fragment_program && r_pixel_shader_warp->value;
 
 	if (rb_vertex == 0 || rb_index == 0) // Nothing to render
 		return;
@@ -376,7 +344,7 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 	}
 
 	// Texture Shader waterwarp - MrG
-	if (texShaderWarpARB)
+	if (texShaderWarp)
 	{
 		GL_SelectTexture(0);
 		GL_MBind(0, image->texnum);
@@ -388,28 +356,6 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 		qglBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragment_programs[F_PROG_WARP]);
 		qglProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, r_rgbscale->value, r_rgbscale->value, r_rgbscale->value, 1.0f);
 	}
-	else if (texShaderWarpNV)
-	{
-		GL_SelectTexture(0);
-		GL_MBind(0, dst_texture_NV);
-		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_2D);
-
-		GL_EnableTexture(1);
-		GL_MBind(1, image->texnum);
-		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_2D);
-		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_OFFSET_TEXTURE_2D_NV);
-		qglTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0);
-		qglTexEnvfv(GL_TEXTURE_SHADER_NV, GL_OFFSET_TEXTURE_MATRIX_NV, &args[1]);
-
-		// Psychospaz's lighting
-		// Use this so that the new water isnt so bright anymore.
-		// We won't bother check for the extensions availabiliy, as the hardware required
-		// to make it this far definately supports this as well.
-		if (light)
-			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-
-		GL_Enable(GL_TEXTURE_SHADER_NV);
-	}
 	else
 	{
 		GL_Bind(image->texnum);
@@ -418,20 +364,11 @@ static void RB_RenderWarpSurface(msurface_t *fa)
 	RB_DrawArrays();
 
 	// MrG - texture shader waterwarp
-	if (texShaderWarpARB)
+	if (texShaderWarp)
 	{
 		GL_Disable(GL_FRAGMENT_PROGRAM_ARB);
 		GL_DisableTexture(1);
 		GL_SelectTexture(0);
-	}
-	else if (texShaderWarpNV)
-	{ 
-		GL_DisableTexture(1);
-		if (light)
-			qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // Psychospaz's lighting
-
-		GL_SelectTexture(0);
-		GL_Disable(GL_TEXTURE_SHADER_NV);
 	}
 
 	// Psychospaz's vertex lighting
@@ -456,9 +393,6 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 	const float rdt = r_newrefdef.time;
 	vec3_t point;
 	const qboolean light = r_warp_lighting->value && !r_fullbright->value && !(fa->texinfo->flags & SURF_NOLIGHTENV);
-	const qboolean texShaderNV = glConfig.NV_texshaders
-								&& ( (!glConfig.arb_fragment_program && r_pixel_shader_warp->value)
-									|| (glConfig.arb_fragment_program && r_pixel_shader_warp->value > 1) );
 
 	c_brush_surfs++;
 
@@ -505,17 +439,8 @@ void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render)
 			}
 //=============== End water waves ====================
 
-			// MrG - texture shader waterwarp
-			if (texShaderNV)
-			{
-				VA_SetElem2(texCoordArray[0][rb_vertex], (v[3] + dstscroll) * DIV64, v[4] * DIV64);
-				VA_SetElem2(texCoordArray[1][rb_vertex], s, t);
-			}
-			else
-			{
-				VA_SetElem2(texCoordArray[0][rb_vertex], s, t);
-				VA_SetElem2(texCoordArray[1][rb_vertex], (v[3] + dstscroll) * DIV64, v[4] * DIV64);
-			}
+			VA_SetElem2(texCoordArray[0][rb_vertex], s, t);
+			VA_SetElem2(texCoordArray[1][rb_vertex], (v[3] + dstscroll) * DIV64, v[4] * DIV64);
 
 			if (light && p->vertexlight && p->vertexlightset)
 			{

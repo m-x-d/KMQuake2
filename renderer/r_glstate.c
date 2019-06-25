@@ -38,12 +38,6 @@ void GL_Enable(GLenum cap)
 			glState.polygonOffsetFill = true;
 			break;
 
-		case GL_TEXTURE_SHADER_NV: 
-			if (!glConfig.NV_texshaders || glState.TexShaderNV)
-				return;
-			glState.TexShaderNV = true;
-			break;
-
 		case GL_VERTEX_PROGRAM_ARB:
 			if (!glConfig.arb_vertex_program || glState.vertexProgram)
 				return;
@@ -108,12 +102,6 @@ void GL_Disable(GLenum cap)
 			if (!glState.polygonOffsetFill)
 				return;
 			glState.polygonOffsetFill = false;
-			break;
-
-		case GL_TEXTURE_SHADER_NV: 
-			if (!glConfig.NV_texshaders || !glState.TexShaderNV)
-				return;
-			glState.TexShaderNV = false;
 			break;
 
 		case GL_VERTEX_PROGRAM_ARB:
@@ -181,12 +169,6 @@ void GL_Set(GLenum cap, qboolean enable)
 			if (glState.polygonOffsetFill == enable)
 				return;
 			glState.polygonOffsetFill = enable;
-			break;
-
-		case GL_TEXTURE_SHADER_NV:
-			if (!glConfig.NV_texshaders || glState.TexShaderNV == enable)
-				return;
-			glState.TexShaderNV = enable;
 			break;
 
 		case GL_VERTEX_PROGRAM_ARB:
@@ -553,7 +535,6 @@ void GL_SetDefaultState(void)
 	glState.texgen = false;
 	glState.cullFace = false;
 	glState.polygonOffsetFill = false;
-	glState.TexShaderNV = false;
 	glState.vertexProgram = false;
 	glState.fragmentProgram = false;
 	glState.alphaTest = false;

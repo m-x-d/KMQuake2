@@ -602,7 +602,6 @@ typedef struct
 	// Texture shader support
 	qboolean arb_fragment_program;
 	qboolean arb_vertex_program;
-	qboolean NV_texshaders;
 
 	// Anisotropic filtering
 	qboolean anisotropic;
@@ -633,7 +632,6 @@ typedef struct
 
 	qboolean cullFace;
 	qboolean polygonOffsetFill; // Knightmare added
-	qboolean TexShaderNV;
 	qboolean vertexProgram;
 	qboolean fragmentProgram;
 	qboolean alphaTest;

@@ -1049,18 +1049,6 @@ static qboolean R_CheckGLExtensions()
 
 	R_Compile_ARB_Programs();
 
-	// GL_NV_texture_shader - MrG
-	if (GLAD_GL_NV_texture_shader)
-	{
-		VID_Printf(PRINT_ALL, "...using GL_NV_texture_shader\n");
-		glConfig.NV_texshaders = true;
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_NV_texture_shader not found\n");
-		glConfig.NV_texshaders = false;
-	}
-
 	// GL_EXT_texture_filter_anisotropic - NeVo
 	glConfig.anisotropic = false;
 	if (GLAD_GL_EXT_texture_filter_anisotropic)
