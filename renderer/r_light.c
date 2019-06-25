@@ -238,7 +238,7 @@ int RecursiveLightPoint(vec3_t color, mnode_t *node, vec3_t start, vec3_t end)
 			{
 				vec3_t scale;
 				for (int c = 0; c < 3; c++) //mxd. V535 The variable 'i' is being used for this loop and for the outer loop.
-					scale[c] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[c];
+					scale[c] = r_newrefdef.lightstyles[surf->styles[maps]].rgb[c];
 
 				r00 += (float)lightmap[0] * scale[0];
 				g00 += (float)lightmap[1] * scale[1];
@@ -731,7 +731,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 		{
 			// Single lightstyle...
 			for (int i = 0; i < 3; i++)
-				scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[0]].rgb[i];
+				scale[i] = r_newrefdef.lightstyles[surf->styles[0]].rgb[i];
 
 			if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f)
 			{
@@ -755,7 +755,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			for (int maps = 0; maps < nummaps; maps++)
 			{
 				for (int i = 0; i < 3; i++)
-					scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+					scale[i] = r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
 				if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f)
 				{

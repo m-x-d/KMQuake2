@@ -247,7 +247,6 @@ extern cvar_t *r_ztrick;
 extern cvar_t *r_cull;
 extern cvar_t *r_polyblend;
 extern cvar_t *r_flashblend;
-extern cvar_t *r_modulate;
 extern cvar_t *r_drawbuffer;
 extern cvar_t *r_swapinterval;
 extern cvar_t *r_anisotropic;
@@ -255,7 +254,6 @@ extern cvar_t *r_anisotropic_avail;
 extern cvar_t *r_texturemode;
 extern cvar_t *r_saturatelighting;
 extern cvar_t *r_lockpvs;
-extern cvar_t *r_intensity;
 
 extern cvar_t *r_skydistance; //Knightmare- variable sky range
 extern cvar_t *r_fog_skyratio; //Knightmare- variable sky fog ratio
@@ -602,7 +600,6 @@ typedef struct
 // Knightmare- OpenGL state manager
 typedef struct
 {
-	float inverse_intensity;
 	qboolean fullscreen;
 
 	int prev_mode;

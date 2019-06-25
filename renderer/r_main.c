@@ -144,7 +144,6 @@ cvar_t *r_particle_overdraw;
 cvar_t *r_mode;
 cvar_t *r_dynamic;
 
-cvar_t *r_modulate;
 cvar_t *r_nobind;
 cvar_t *r_round_down;
 cvar_t *r_showtris;
@@ -349,18 +348,6 @@ void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble z
 
 void R_SetupGL(void)
 {
-	// Knightmare- update r_modulate in real time
-	if (r_modulate->modified && r_worldmodel) // Don't do this if no map is loaded
-	{
-		msurface_t *surf;
-		int i;
-		
-		for (i = 0, surf = r_worldmodel->surfaces; i < r_worldmodel->numsurfaces; i++, surf++)
-			surf->cached_light[0] = 0; 
-
-		r_modulate->modified = 0; 
-	}
-
 	// Set up viewport
 	const int x = floor(r_newrefdef.x * vid.width / vid.width);
 	const int x2 = ceil((r_newrefdef.x + r_newrefdef.width) * vid.width / vid.width);
@@ -684,7 +671,6 @@ static void R_Register(void)
 	r_particle_max = Cvar_Get("r_particle_max", "0", CVAR_ARCHIVE);
 	r_particle_mode = Cvar_Get("r_particle_mode", "1", CVAR_ARCHIVE); //mxd. 0 - Vanilla, 1 - KMQ2
 
-	r_modulate = Cvar_Get("r_modulate", "1", CVAR_ARCHIVE);
 	r_log = Cvar_Get("r_log", "0", 0);
 	r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = Cvar_Get("r_lightmap", "0", 0);

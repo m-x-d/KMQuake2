@@ -25,10 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 image_t	gltextures[MAX_GLTEXTURES];
 int		numgltextures;
 
-static byte			 intensitytable[256];
-static unsigned char gammatable[256];
-
-cvar_t *r_intensity;
+static byte gammatable[256];
 
 unsigned d_8to24table[256];
 
@@ -345,23 +342,14 @@ static void R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 #pragma endregion
 
 // Scale up the pixel values in a texture to increase the lighting range
-static void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight, qboolean only_gamma)
+static void GL_LightScaleTexture(unsigned *in, int inwidth, int inheight)
 {
 	byte *p = (byte *)in;
 	const int size = inwidth * inheight;
 	
-	if (only_gamma)
-	{
-		for (int i = 0; i < size; i++, p += 4)
-			for(int c = 0; c < 3; c++)
-				p[c] = gammatable[p[c]];
-	}
-	else
-	{
-		for (int i = 0 ; i < size; i++, p += 4)
-			for (int c = 0; c < 3; c++)
-				p[c] = gammatable[intensitytable[p[c]]];
-	}
+	for (int i = 0; i < size; i++, p += 4)
+		for(int c = 0; c < 3; c++)
+			p[c] = gammatable[p[c]];
 }
 
 /*
@@ -425,7 +413,7 @@ static qboolean GL_Upload32(uint *data, int width, int height, imagetype_t type,
 	}
 
 	if (!glState.gammaRamp)
-		GL_LightScaleTexture(scaled, scaled_width, scaled_height, !mipmap);
+		GL_LightScaleTexture(scaled, scaled_width, scaled_height);
 
 	// Generate mipmaps and upload
 	if (mipmap)
@@ -815,14 +803,6 @@ void R_InitImages(void)
 {
 	registration_sequence = 1;
 
-	// Knightmare- added Vic's RGB brightening
-	r_intensity = Cvar_Get("r_intensity", "1", 0);
-
-	if (r_intensity->value <= 1)
-		Cvar_Set("r_intensity", "1");
-
-	glState.inverse_intensity = 1 / r_intensity->value;
-
 	R_InitFailedImgList(); // Knightmare added
 	Draw_GetPalette();
 
@@ -839,12 +819,6 @@ void R_InitImages(void)
 			const float inf = 255 * powf((i + 0.5f) / 255.5f, g) + 0.5f;
 			gammatable[i] = clamp(inf, 0, 255);
 		}
-	}
-
-	for (int i = 0; i < 256; i++)
-	{
-		const int intensity = i * r_intensity->value;
-		intensitytable[i] = min(intensity, 255);
 	}
 
 	R_InitBloomTextures(); // BLOOMS

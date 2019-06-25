@@ -25,12 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ui_local.h"
 
 extern cvar_t *vid_ref;
-extern cvar_t *r_intensity; // This cvar is needed for checking if it's been modified
 
 static menuframework_s	s_video_advanced_menu;
 static menuseparator_s	s_options_advanced_header;
-static menuslider_s		s_lightmapscale_slider;
-static menuslider_s		s_textureintensity_slider;
 static menulist_s		s_rgbscale_box;
 static menulist_s		s_trans_lighting_box;
 static menulist_s		s_warp_lighting_box;
@@ -56,12 +53,6 @@ static menuaction_s		s_back_action;
 
 static void Video_Advanced_MenuSetValues(void)
 {
-	Cvar_SetValue("r_modulate", ClampCvar(1, 2, Cvar_VariableValue("r_modulate")));
-	s_lightmapscale_slider.curvalue = (Cvar_VariableValue("r_modulate") - 1) * 10;
-
-	Cvar_SetValue("r_intensity", ClampCvar(1, 2, Cvar_VariableValue("r_intensity")));
-	s_textureintensity_slider.curvalue = (Cvar_VariableValue("r_intensity") - 1) * 10;
-
 	Cvar_SetValue("r_rgbscale", ClampCvar(1, 2, Cvar_VariableValue("r_rgbscale")));
 	if (Cvar_VariableValue("r_rgbscale") == 1)
 		s_rgbscale_box.curvalue = 0;
@@ -136,17 +127,6 @@ static void Video_Advanced_MenuSetValues(void)
 }
 
 #pragma region ======================= Menu item callbacks
-
-static void LightMapScaleCallback(void *unused)
-{
-	Cvar_SetValue("r_modulate", s_lightmapscale_slider.curvalue / 10 + 1);
-}
-
-static void TextureIntensCallback(void *unused)
-{
-	Cvar_SetValue("r_intensity", s_textureintensity_slider.curvalue / 10 + 1);
-	vid_ref->modified = true;
-}
 
 static void RGBSCaleCallback(void *unused)
 {
@@ -279,7 +259,6 @@ void Menu_Video_Advanced_Init(void)
 	static const char *dlight_shadowmap_quality_names[] = { "Disabled", "Very low", "Low", "Medium", "High", "Very high", 0 }; //mxd
 
 	int y = 0;
-	r_intensity = Cvar_Get("r_intensity", "1", 0);
 
 	s_video_advanced_menu.x = SCREEN_WIDTH * 0.5f;
 	s_video_advanced_menu.y = DEFAULT_MENU_Y; //mxd. Was SCREEN_HEIGHT * 0.5f - 100;
@@ -290,31 +269,9 @@ void Menu_Video_Advanced_Init(void)
 	s_options_advanced_header.generic.x			= MENU_FONT_SIZE / 2 * strlen(s_options_advanced_header.generic.name);
 	s_options_advanced_header.generic.y			= y;
 
-	s_lightmapscale_slider.generic.type			= MTYPE_SLIDER; //TODO: mxd. remove
-	s_lightmapscale_slider.generic.x			= 0;
-	s_lightmapscale_slider.generic.y			= y += 2 * MENU_LINE_SIZE;
-	s_lightmapscale_slider.generic.name			= "Lightmap scale";
-	s_lightmapscale_slider.generic.callback		= LightMapScaleCallback;
-	s_lightmapscale_slider.minvalue				= 0;
-	s_lightmapscale_slider.maxvalue				= 10;
-	s_lightmapscale_slider.numdecimals			= 1; //mxd
-	s_lightmapscale_slider.generic.statusbar	= "Leave at minimum, washes out textures";
-	s_lightmapscale_slider.cvar					= Cvar_FindVar("r_modulate"); //mxd
-
-	s_textureintensity_slider.generic.type		= MTYPE_SLIDER; //TODO: mxd. remove
-	s_textureintensity_slider.generic.x			= 0;
-	s_textureintensity_slider.generic.y			= y += MENU_LINE_SIZE;
-	s_textureintensity_slider.generic.name		= "Texture intensity";
-	s_textureintensity_slider.generic.callback	= TextureIntensCallback;
-	s_textureintensity_slider.minvalue			= 0;
-	s_textureintensity_slider.maxvalue			= 10;
-	s_textureintensity_slider.numdecimals		= 1; //mxd
-	s_textureintensity_slider.generic.statusbar	= "Leave at minimum, washes out textures";
-	s_textureintensity_slider.cvar				= Cvar_FindVar("r_intensity"); //mxd
-
 	s_rgbscale_box.generic.type				= MTYPE_SPINCONTROL;
 	s_rgbscale_box.generic.x				= 0;
-	s_rgbscale_box.generic.y				= y += MENU_LINE_SIZE;
+	s_rgbscale_box.generic.y				= y += 2 * MENU_LINE_SIZE;
 	s_rgbscale_box.generic.name				= "RGB enhance";
 	s_rgbscale_box.generic.callback			= RGBSCaleCallback;
 	s_rgbscale_box.itemnames				= yesno_names;
@@ -492,8 +449,6 @@ void Menu_Video_Advanced_Init(void)
 	Video_Advanced_MenuSetValues();
 
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_options_advanced_header);
-	Menu_AddItem(&s_video_advanced_menu, (void *)&s_lightmapscale_slider);
-	Menu_AddItem(&s_video_advanced_menu, (void *)&s_textureintensity_slider);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_rgbscale_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_trans_lighting_box);
 	Menu_AddItem(&s_video_advanced_menu, (void *)&s_warp_lighting_box);

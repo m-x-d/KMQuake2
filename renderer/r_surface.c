@@ -295,7 +295,7 @@ static void R_DrawGLPoly(msurface_t *surf, qboolean render)
 			}
 			else
 			{
-				VA_SetElem4(colorArray[rb_vertex], glState.inverse_intensity, glState.inverse_intensity, glState.inverse_intensity, alpha);
+				VA_SetElem4(colorArray[rb_vertex], 1.0f, 1.0f, 1.0f, alpha);
 			}
 
 			VA_SetElem2(texCoordArray[0][rb_vertex], v[3] + scroll, v[4]);
