@@ -127,7 +127,6 @@ static void ResetVideoDefaults(void *unused)
 	Cvar_SetToDefault("r_bloom");
 	Cvar_SetToDefault("r_model_shading");
 	Cvar_SetToDefault("r_shadows");
-	Cvar_SetToDefault("r_stencilTwoSide");
 	Cvar_SetToDefault("r_shelltype");
 	Cvar_SetToDefault("r_screenshot_format");
 	Cvar_SetToDefault("r_screenshot_jpeg_quality");

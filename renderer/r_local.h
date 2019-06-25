@@ -203,7 +203,6 @@ extern cvar_t *r_vertex_arrays;
 
 extern cvar_t *r_ext_swapinterval;
 extern cvar_t *r_ext_compiled_vertex_array;
-extern cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 extern cvar_t *r_arb_vertex_buffer_object;
 extern cvar_t *r_pixel_shader_warp;	// Allow disabling the nVidia water warp
 extern cvar_t *r_trans_lighting;	// Allow disabling of lighting on trans surfaces
@@ -231,8 +230,6 @@ extern cvar_t *r_lightmap;
 extern cvar_t *r_shadows;
 extern cvar_t *r_shadowalpha;
 extern cvar_t *r_shadowrange;
-extern cvar_t *r_shadowvolumes;
-extern cvar_t *r_stencil; // Stenciling for color shells
 extern cvar_t *r_transrendersort; // Correct trasparent sorting
 extern cvar_t *r_particle_lighting; // Particle lighting
 extern cvar_t *r_particle_min;
@@ -418,10 +415,7 @@ void R_SetShellBlend(qboolean toggle);
 void R_SetVertexRGBScale(qboolean toggle);
 qboolean FlowingShell();
 float R_CalcShadowAlpha(entity_t *e);
-void R_ShadowBlend(float alpha);
 void R_FlipModel(qboolean on, qboolean cullOnly);
-//void R_SetBlendModeOn(image_t *skin); //mxd. Unused
-//void R_SetBlendModeOff(void); //mxd. Unused
 void R_SetShadeLight(void);
 void R_DrawAliasModelBBox(vec3_t bbox[8], entity_t *e, float red, float green, float blue, float alpha);
 
@@ -593,9 +587,6 @@ typedef struct
 	int max_texunits;
 
 	qboolean have_stencil;
-	qboolean extStencilWrap; //TODO: mxd. Remove. Use the below
-	qboolean atiSeparateStencil; //TODO: mxd. Replace with qglStencilOpSeparate. Part of GL 2.0 core.
-	qboolean extStencilTwoSide; //TODO: mxd. Remove. Use the above
 
 	qboolean extCompiledVertArray;
 

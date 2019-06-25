@@ -37,19 +37,6 @@ int model_dlights_num;
 float shellFlowH;
 float shellFlowV;
 
-//mxd. Unused
-/*float mirrorValue (float value, qboolean mirrormodel)
-{
-	if (mirrormodel)
-	{
-		if (value > 1) return 0;
-		if (value < 0) return 1;
-		return 1 - value;
-	}
-
-	return value;
-}*/
-
 #define SHADOW_FADE_DIST 128
 
 float R_CalcShadowAlpha(entity_t *e)
@@ -75,75 +62,6 @@ float R_CalcShadowAlpha(entity_t *e)
 
 	return outAlpha;
 }
-
-// Draws projection shadow(s) from stenciled volume
-void R_ShadowBlend(float shadowalpha)
-{
-	if (r_shadows->value != 3)
-		return;
-
-	qglPushMatrix();
-	qglLoadIdentity();
-
-	// FIXME: get rid of these
-	qglRotatef(-90, 1, 0, 0); // Put Z going up
-	qglRotatef(90,  0, 0, 1); // Put Z going up
-
-	GL_Disable(GL_ALPHA_TEST);
-	GL_Enable(GL_BLEND);
-	GL_Disable(GL_DEPTH_TEST);
-	GL_DisableTexture(0);
-
-	GL_Enable(GL_STENCIL_TEST);
-	qglStencilFunc(GL_NOTEQUAL, 0, 255);
-	qglStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-	rb_vertex = 0;
-	rb_index = 0;
-
-	indexArray[rb_index++] = rb_vertex + 0;
-	indexArray[rb_index++] = rb_vertex + 1;
-	indexArray[rb_index++] = rb_vertex + 2;
-	indexArray[rb_index++] = rb_vertex + 0;
-	indexArray[rb_index++] = rb_vertex + 2;
-	indexArray[rb_index++] = rb_vertex + 3;
-
-	VA_SetElem3(vertexArray[rb_vertex], 10, 100, 100);
-	VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, shadowalpha);
-	rb_vertex++;
-
-	VA_SetElem3(vertexArray[rb_vertex], 10, -100, 100);
-	VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, shadowalpha);
-	rb_vertex++;
-
-	VA_SetElem3(vertexArray[rb_vertex], 10, -100, -100);
-	VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, shadowalpha);
-	rb_vertex++;
-
-	VA_SetElem3(vertexArray[rb_vertex], 10, 100, -100);
-	VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, shadowalpha);
-	rb_vertex++;
-
-	RB_RenderMeshGeneric(false);
-
-	qglPopMatrix();
-
-	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GL_Disable(GL_BLEND);
-	GL_EnableTexture(0);
-	GL_Enable(GL_DEPTH_TEST);
-	GL_Disable(GL_STENCIL_TEST);
-	//GL_Enable (GL_ALPHA_TEST);
-
-	qglColor4f(1, 1, 1, 1);
-}
-
-//mxd. Unused
-/*void capColorVec(vec3_t color)
-{
-	for (int i = 0; i < 3; i++)
-		color[i] = clamp(color[i], 0.0f, 1.0f);
-}*/
 
 void R_SetVertexRGBScale(qboolean toggle)
 {
@@ -256,46 +174,6 @@ void R_FlipModel(qboolean on, qboolean cullOnly)
 		GL_CullFace(GL_FRONT);
 	}
 }
-
-//mxd. Unused
-/*void R_SetBlendModeOn(image_t *skin)
-{
-	GL_TexEnv(GL_MODULATE);
-
-	if (skin)
-		GL_Bind(skin->texnum);
-
-	GL_ShadeModel(GL_SMOOTH);
-
-	if (currententity->flags & RF_TRANSLUCENT)
-	{
-		GL_DepthMask(false);
-
-		if (currententity->flags & RF_TRANS_ADDITIVE)
-		{
-			GL_BlendFunc(GL_SRC_ALPHA, GL_ONE);
-			qglColor4ub(255, 255, 255, 255);
-			GL_ShadeModel(GL_FLAT);
-		}
-		else
-		{
-			GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-
-		GL_Enable(GL_BLEND);
-	}
-}*/
-
-//mxd. Unused
-/*void R_SetBlendModeOff(void)
-{
-	if (currententity->flags & RF_TRANSLUCENT)
-	{
-		GL_DepthMask(true);
-		GL_Disable(GL_BLEND);
-		GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
-}*/
 
 void R_SetShadeLight(void)
 {

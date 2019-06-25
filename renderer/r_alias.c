@@ -25,11 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 static vec3_t *tempVertexArray[MD3_MAX_MESHES];
 
-static float aliasShadowAlpha;
-
-static uint shadow_va;
-static uint shadow_index;
-
 static void R_LightAliasModel(vec3_t baselight, vec3_t normal, vec3_t lightOut, byte normalindex, qboolean shaded)
 {
 	if (r_fullbright->integer)
@@ -422,360 +417,6 @@ static void R_DrawAliasMeshes(maliasmodel_t *paliashdr, entity_t *e, qboolean le
 	GL_ShadeModel(GL_FLAT);
 }
 
-// Based on code from BeefQuake R6
-static void R_BuildShadowVolume(maliasmodel_t *hdr, int meshnum, vec3_t light, float projectdistance, qboolean nocap)
-{
-	vec3_t  v0, v1, v2, v3;
-
-	const maliasmesh_t mesh = hdr->meshes[meshnum];
-	const float thisAlpha = aliasShadowAlpha; // was r_shadowalpha->value
-	qboolean *triangleFacingLight = malloc(mesh.num_tris * sizeof(qboolean)); //mxd
-
-	for (int i = 0; i < mesh.num_tris; i++)
-	{
-		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 0]], v0);
-		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 1]], v1);
-		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 2]], v2);
-
-		triangleFacingLight[i] =
-			  (light[0] - v0[0]) * ((v0[1] - v1[1]) * (v2[2] - v1[2]) - (v0[2] - v1[2]) * (v2[1] - v1[1]))
-			+ (light[1] - v0[1]) * ((v0[2] - v1[2]) * (v2[0] - v1[0]) - (v0[0] - v1[0]) * (v2[2] - v1[2]))
-			+ (light[2] - v0[2]) * ((v0[0] - v1[0]) * (v2[1] - v1[1]) - (v0[1] - v1[1]) * (v2[0] - v1[0])) > 0;
-	}
-
-	shadow_va = 0;
-	shadow_index = 0;
-
-	for (int i = 0; i < mesh.num_tris; i++)
-	{
-		if (!triangleFacingLight[i])
-			continue;
-
-		for(int c = 0; c < 3; c++)
-		{
-			if (mesh.trneighbors[i * 3 + c] < 0 || !triangleFacingLight[mesh.trneighbors[i * 3 + c]])
-			{
-				for (int j = 0; j < 3; j++)
-				{
-					v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + (c + 1) % 3]][j];
-					v1[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + c]][j];
-					v2[j] = v1[j] + ((v1[j] - light[j]) * projectdistance);
-					v3[j] = v0[j] + ((v0[j] - light[j]) * projectdistance);
-				}
-
-				indexArray[shadow_index++] = shadow_va + 0;
-				indexArray[shadow_index++] = shadow_va + 1;
-				indexArray[shadow_index++] = shadow_va + 2;
-				indexArray[shadow_index++] = shadow_va + 0;
-				indexArray[shadow_index++] = shadow_va + 2;
-				indexArray[shadow_index++] = shadow_va + 3;
-
-				VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
-				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-				shadow_va++;
-
-				VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
-				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-				shadow_va++;
-
-				VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
-				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-				shadow_va++;
-
-				VA_SetElem3(vertexArray[shadow_va], v3[0], v3[1], v3[2]);
-				VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-				shadow_va++;
-			}
-		}
-	}
-
-	if (nocap)
-	{
-		free(triangleFacingLight); //mxd
-		return;
-	}
-		
-	// Cap the volume
-	for (int i = 0; i < mesh.num_tris; i++)
-	{
-		if (!triangleFacingLight[i]) // Changed to draw only front facing polys - thanx to Kirk Barnes
-			continue;
-
-		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 0]], v0);
-		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 1]], v1);
-		VectorCopy(tempVertexArray[meshnum][mesh.indexes[3 * i + 2]], v2);
-
-		VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
-		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-		indexArray[shadow_index++] = shadow_va;
-		shadow_va++;
-
-		VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
-		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-		indexArray[shadow_index++] = shadow_va;
-		shadow_va++;
-
-		VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
-		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-		indexArray[shadow_index++] = shadow_va;
-		shadow_va++;
-
-		// Rear with reverse order
-		for (int j = 0; j < 3; j++)
-		{
-			v0[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 0]][j];
-			v1[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 1]][j];
-			v2[j] = tempVertexArray[meshnum][mesh.indexes[3 * i + 2]][j];
-
-			v0[j] = v0[j] + ((v0[j] - light[j]) * projectdistance);
-			v1[j] = v1[j] + ((v1[j] - light[j]) * projectdistance);
-			v2[j] = v2[j] + ((v2[j] - light[j]) * projectdistance);
-		}
-
-		VA_SetElem3(vertexArray[shadow_va], v2[0], v2[1], v2[2]);
-		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-		indexArray[shadow_index++] = shadow_va;
-		shadow_va++;
-
-		VA_SetElem3(vertexArray[shadow_va], v1[0], v1[1], v1[2]);
-		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-		indexArray[shadow_index++] = shadow_va;
-		shadow_va++;
-
-		VA_SetElem3(vertexArray[shadow_va], v0[0], v0[1], v0[2]);
-		VA_SetElem4(colorArray[shadow_va], 0, 0, 0, thisAlpha);
-		indexArray[shadow_index++] = shadow_va;
-		shadow_va++;
-	}
-
-	free(triangleFacingLight); //mxd
-}
-
-static void R_DrawShadowVolume(void)
-{
-	qglDrawRangeElements(GL_TRIANGLES, 0, shadow_va, shadow_index, GL_UNSIGNED_INT, indexArray);
-}
-
-// Based on code from BeefQuake R6
-static void R_DrawAliasVolumeShadow(maliasmodel_t *paliashdr, vec3_t bbox[8])
-{
-	dlight_t *dl = r_newrefdef.dlights;
-	vec3_t vecAdd = { 680, 0, 1024 }; // Set base vector, was 576, 0, 1024
-
-	// Compute average light vector from dlights
-	for (int i = 0; i < r_newrefdef.num_dlights; i++, dl++)
-	{
-		if (VectorCompare(dl->origin, currententity->origin))
-			continue;
-		
-		vec3_t temp;
-		VectorSubtract(dl->origin, currententity->origin, temp);
-		const float dist = dl->intensity - VectorLength(temp);
-		if (dist <= 0)
-			continue;
-
-		// Factor in the intensity of a dlight
-		VectorScale(temp, dist * 0.25f, temp);
-		VectorAdd(vecAdd, temp, vecAdd);
-	}
-
-	VectorNormalize(vecAdd);
-	VectorScale(vecAdd, 1024, vecAdd);
-
-	// Get projection distance from lightspot height
-	float highest = bbox[0][2];
-	float lowest = highest;
-	for (int i = 0; i < 8; i++)
-	{
-		if (bbox[i][2] > highest) 
-			highest = bbox[i][2];
-
-		if (bbox[i][2] < lowest) 
-			lowest = bbox[i][2];
-	}
-
-	const float projected_distance = (fabsf(highest - lightspot[2]) + (highest - lowest)) / vecAdd[2];
-
-	vec3_t light;
-	VectorCopy(vecAdd, light);
-	
-	// Reverse-rotate light vector based on angles
-	float angle = -currententity->angles[PITCH] / 180 * M_PI;
-	const float cosp = cosf(angle);
-	const float sinp = sinf(angle);
-
-	angle = -currententity->angles[YAW] / 180 * M_PI;
-	const float cosy = cosf(angle);
-	const float siny = sinf(angle);
-
-	angle = -currententity->angles[ROLL] / 180 * M_PI * R_RollMult(); // Roll is backwards
-	const float cosr = cosf(angle);
-	const float sinr = sinf(angle);
-
-	// Rotate for yaw (z axis)
-	float ix = light[0];
-	float iy = light[1];
-	light[0] = cosy * ix - siny * iy;
-	light[1] = siny * ix + cosy * iy;
-
-	// Rotate for pitch (y axis)
-	ix = light[0];
-	float iz = light[2];
-	light[0] =  cosp * ix + sinp * iz;
-	light[2] = -sinp * ix + cosp * iz;
-
-	// Rotate for roll (x axis)
-	iy = light[1];
-	iz = light[2];
-	light[1] = cosr * iy - sinr * iz;
-	light[2] = sinr * iy + cosr * iz;
-
-	// Set up stenciling
-	if (!r_shadowvolumes->value)
-	{
-		qglPushAttrib(GL_STENCIL_BUFFER_BIT); // Save stencil buffer
-		qglClear(GL_STENCIL_BUFFER_BIT);
-
-		qglColorMask(0, 0, 0, 0);
-		GL_DepthMask(0);
-		GL_DepthFunc(GL_LESS);
-
-		GL_Enable(GL_STENCIL_TEST);
-		qglStencilFunc(GL_ALWAYS, 0, 255);
-	}
-
-	// Build shadow volumes and render each to stencil buffer
-	for (int i = 0; i < paliashdr->num_meshes; i++)
-	{
-		const int skinnum = (currententity->skinnum < paliashdr->meshes[i].num_skins ? currententity->skinnum : 0);
-		if (paliashdr->meshes[i].skins[skinnum].renderparms.noshadow)
-			continue;
-
-		R_BuildShadowVolume(paliashdr, i, light, projected_distance, r_shadowvolumes->value);
-		GL_LockArrays(shadow_va);
-
-		if (!r_shadowvolumes->value)
-		{
-			if (glConfig.atiSeparateStencil && glConfig.extStencilWrap) // Barnes ATI stenciling
-			{
-				GL_Disable(GL_CULL_FACE);
-
-				qglStencilOpSeparateATI(GL_BACK, GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP); 
-				qglStencilOpSeparateATI(GL_FRONT, GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
-
-				R_DrawShadowVolume();
-
-				GL_Enable(GL_CULL_FACE);
-			}
-			else if (glConfig.extStencilTwoSide && glConfig.extStencilWrap) // Echon's two-sided stenciling
-			{
-				GL_Disable(GL_CULL_FACE);
-				qglEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-
-				qglActiveStencilFaceEXT(GL_BACK);
-				qglStencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
-				qglActiveStencilFaceEXT(GL_FRONT);
-				qglStencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
-
-				R_DrawShadowVolume();
-
-				qglDisable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-				GL_Enable(GL_CULL_FACE);
-			}
-			else
-			{
-				// Increment stencil if backface is behind depthbuffer
-				GL_CullFace(GL_BACK); // Quake is backwards, this culls front faces
-				qglStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
-				R_DrawShadowVolume();
-
-				// Decrement stencil if frontface is behind depthbuffer
-				GL_CullFace(GL_FRONT); // Quake is backwards, this culls back faces
-				qglStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
-				R_DrawShadowVolume();
-			}
-		}
-		else
-		{
-			R_DrawShadowVolume();
-		}
-
-		GL_UnlockArrays();
-	}
-
-	// End stenciling and draw stenciled volume
-	if (!r_shadowvolumes->value)
-	{
-		GL_CullFace(GL_FRONT);
-		GL_Disable(GL_STENCIL_TEST);
-		
-		GL_DepthFunc(GL_LEQUAL);
-		GL_DepthMask(1);
-		qglColorMask(1, 1, 1, 1);
-		
-		// Draw shadows for this model now
-		R_ShadowBlend(aliasShadowAlpha * currententity->alpha); // Was r_shadowalpha->value
-		qglPopAttrib(); // Restore stencil buffer
-	}
-}
-
-static void R_DrawAliasPlanarShadow(maliasmodel_t *paliashdr)
-{
-	vec3_t shadevector;
-	R_ShadowLight(currententity->origin, shadevector);
-
-	const float lheight = currententity->origin[2] - lightspot[2];
-	const float height = -lheight + 0.1f;
-	const float thisAlpha = aliasShadowAlpha * (currententity->flags & RF_TRANSLUCENT ? currententity->alpha : 1.0f); // Was r_shadowalpha->value
-
-	// Don't draw shadows above view origin, thnx to MrG
-	if (r_newrefdef.vieworg[2] < (currententity->origin[2] + height))
-		return;
-
-	GL_Stencil(true, false);
-	GL_BlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE_MINUS_SRC_ALPHA);
-
-	rb_vertex = 0;
-	rb_index = 0;
-
-	for (int i = 0; i < paliashdr->num_meshes; i++) 
-	{
-		const maliasmesh_t mesh = paliashdr->meshes[i];
-		const int skinnum = (currententity->skinnum < mesh.num_skins ? currententity->skinnum : 0);
-
-		if (mesh.skins[skinnum].renderparms.noshadow)
-			continue;
-
-		for (int j = 0; j < mesh.num_tris; j++)
-		{
-			indexArray[rb_index++] = rb_vertex + mesh.indexes[3 * j + 0];
-			indexArray[rb_index++] = rb_vertex + mesh.indexes[3 * j + 1];
-			indexArray[rb_index++] = rb_vertex + mesh.indexes[3 * j + 2];
-		}
-
-		for (int j = 0; j < mesh.num_verts; j++)
-		{
-			vec3_t point;
-			VectorCopy(tempVertexArray[i][j], point);
-			point[0] -= shadevector[0] * (point[2] + lheight);
-			point[1] -= shadevector[1] * (point[2] + lheight);
-			point[2] = height;
-
-			VA_SetElem3(vertexArray[rb_vertex], point[0], point[1], point[2]);
-			VA_SetElem4(colorArray[rb_vertex], 0, 0, 0, thisAlpha);
-
-			rb_vertex++;
-		}
-	}
-
-	RB_DrawArrays();
-
-	rb_vertex = 0;
-	rb_index = 0;
-
-	GL_Stencil(false, false);
-}
-
 static qboolean R_CullAliasModel(vec3_t bbox[8], entity_t *e)
 {
 	maliasmodel_t *paliashdr = (maliasmodel_t *)currentmodel->extradata;
@@ -945,66 +586,41 @@ void R_DrawAliasModel(entity_t *e)
 	if (e->flags & RF_DEPTHHACK)
 		GL_DepthRange(gldepthmin, gldepthmax);
 
-	aliasShadowAlpha = R_CalcShadowAlpha(e);
+	const float shadowalpha = R_CalcShadowAlpha(e);
 
 	if (!(e->flags & (RF_WEAPONMODEL | RF_NOSHADOW))
 		&& !(e->flags & RF_MASK_SHELL && e->flags & RF_TRANSLUCENT) // No shadows from shells
-		&& r_shadows->value >= 1 && aliasShadowAlpha >= DIV255)
+		&& r_shadows->integer >= 1 && shadowalpha >= DIV255)
 	{
- 		//mxd. Simple decal shadows...
-		if(r_shadows->value == 1)
+		//mxd. Simple decal shadows...
+
+		// Lerp origin...
+		vec3_t origin, delta;
+		VectorSubtract(e->oldorigin, e->origin, delta);
+		VectorMA(e->origin, e->backlerp, delta, origin);
+
+		// Get model shading...
+		vec3_t shadecolor;
+		R_LightPoint(origin, shadecolor, false);
+		float maxlight = 0;
+		for (int i = 0; i < 3; i++)
+			maxlight = max(shadecolor[i], maxlight);
+		maxlight = min(1.0f, maxlight * 2); // Model shading is very dim...
+
+		// Scale by distance fading part of aliasShadowAlpha and entity alpha...
+		maxlight *= (shadowalpha / r_shadowalpha->value) * e->alpha;
+
+		if(maxlight > 0.25f)
 		{
-			// Lerp origin...
-			vec3_t origin, delta;
-			VectorSubtract(e->oldorigin, e->origin, delta);
-			VectorMA(e->origin, e->backlerp, delta, origin);
+			// Get model size from the first frame (which is the first frame of Idle animation for all vanilla monsters)
+			maliasframe_t *pframe = paliashdr->frames;
+			const float size = ((pframe->maxs[0] - pframe->mins[0]) + (pframe->maxs[1] - pframe->mins[1])) * 0.45f;
 
-			// Get model shading...
-			vec3_t shadecolor;
-			R_LightPoint(origin, shadecolor, false);
-			float maxlight = 0;
-			for (int i = 0; i < 3; i++)
-				maxlight = max(shadecolor[i], maxlight);
-			maxlight = min(1.0f, maxlight * 2); // Model shading is very dim...
+			// Trace from feet, not entity origin...
+			origin[2] += pframe->mins[2];
 
-			// Scale by distance fading part of aliasShadowAlpha and entity alpha...
-			maxlight *= (aliasShadowAlpha / r_shadowalpha->value) * e->alpha;
-
-			if(maxlight > 0.25f)
-			{
-				// Get model size from the first frame (which is the first frame of Idle animation for all vanilla monsters)
-				maliasframe_t *pframe = paliashdr->frames;
-				const float size = ((pframe->maxs[0] - pframe->mins[0]) + (pframe->maxs[1] - pframe->mins[1])) * 0.45f;
-
-				// Trace from feet, not entity origin...
-				origin[2] += pframe->mins[2];
-
-				// Add decal
-				CL_Shadow_Decal(origin, size, maxlight);
-			}
-		}
-		else
-		{
-			qglPushMatrix();
-			GL_DisableTexture(0);
-			GL_Enable(GL_BLEND);
-
-			if (r_shadows->value == 3)
-			{
-				e->angles[ROLL] *= R_RollMult(); // Roll is backwards
-				R_RotateForEntity(e, true);
-				e->angles[ROLL] *= R_RollMult(); // Roll is backwards
-				R_DrawAliasVolumeShadow(paliashdr, bbox);
-			}
-			else
-			{
-				R_RotateForEntity(e, false);
-				R_DrawAliasPlanarShadow(paliashdr);
-			}
-
-			GL_Disable(GL_BLEND);
-			GL_EnableTexture(0);
-			qglPopMatrix();
+			// Add decal
+			CL_Shadow_Decal(origin, size, maxlight);
 		}
 	}
 }

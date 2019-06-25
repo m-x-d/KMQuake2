@@ -468,26 +468,6 @@ void R_ShadowLight(vec3_t pos, vec3_t lightAdd)
 	
 	VectorClear(lightAdd);
 
-	// Add dynamic light shadow angles
-	if (r_shadows->value == 2)
-	{
-		dlight_t *dl = r_newrefdef.dlights;
-		for (int lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
-		{
-			if (dl->spotlight) // Skip spotlights
-				continue;
-
-			VectorSubtract(dl->origin, pos, dist);
-			const float add = 0.2f * sqrtf(dl->intensity - VectorLength(dist));
-			if (add > 0)
-			{
-				VectorNormalize(dist);
-				VectorScale(dist, add, dist);
-				VectorAdd(lightAdd, dist, lightAdd);
-			}
-		}
-	}
-
 	// Barnes improved code
 	float shadowdist = VectorNormalize(lightAdd);
 	if (shadowdist > 4)

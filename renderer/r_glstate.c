@@ -224,18 +224,14 @@ void GL_Set(GLenum cap, qboolean enable)
 // Set stencil buffer stenciling for shadows & color shells
 void GL_Stencil(qboolean enable, qboolean shell)
 {
-	if (!glConfig.have_stencil || !r_stencil->integer)
+	if (!glConfig.have_stencil)
 		return;
 
 	if (enable)
 	{
-		if (shell || r_shadows->integer == 3)
+		if (shell)
 		{
 			qglPushAttrib(GL_STENCIL_BUFFER_BIT);
-
-			if (r_shadows->integer == 3)
-				qglClearStencil(1);
-
 			qglClear(GL_STENCIL_BUFFER_BIT);
 		}
 
@@ -246,14 +242,14 @@ void GL_Stencil(qboolean enable, qboolean shell)
 	else
 	{
 		GL_Disable(GL_STENCIL_TEST);
-		if (shell || r_shadows->integer == 3)
+		if (shell)
 			qglPopAttrib();
 	}
 }
 
 qboolean GL_HasStencil(void)
 {
-	return (glConfig.have_stencil && r_stencil->integer);
+	return glConfig.have_stencil;
 }
 
 extern cvar_t *r_particle_overdraw;

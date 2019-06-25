@@ -104,7 +104,6 @@ cvar_t *r_vertex_arrays;
 
 cvar_t *r_ext_swapinterval;
 cvar_t *r_ext_compiled_vertex_array;
-cvar_t *r_stencilTwoSide; // Echon's two-sided stenciling
 cvar_t *r_arb_fragment_program;
 cvar_t *r_arb_vertex_program;
 cvar_t *r_arb_vertex_buffer_object;
@@ -133,8 +132,6 @@ cvar_t *r_lightmap;
 cvar_t *r_shadows;
 cvar_t *r_shadowalpha;
 cvar_t *r_shadowrange;
-cvar_t *r_shadowvolumes;
-cvar_t *r_stencil;
 cvar_t *r_transrendersort; // Correct trasparent sorting
 cvar_t *r_particle_lighting; // Particle lighting
 cvar_t *r_particle_min;
@@ -478,11 +475,7 @@ static void R_Clear(void)
 	// Added stencil buffer
 	if (glConfig.have_stencil)
 	{
-		if (r_shadows->value == 3) // BeefQuake R6 shadows
-			qglClearStencil(0);
-		else
-			qglClearStencil(1);
-
+		qglClearStencil(1);
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
 
@@ -698,8 +691,6 @@ static void R_Register(void)
 	r_shadows = Cvar_Get("r_shadows", "1", CVAR_ARCHIVE); //mxd. Was 0
 	r_shadowalpha = Cvar_Get("r_shadowalpha", "0.4", CVAR_ARCHIVE);
 	r_shadowrange = Cvar_Get("r_shadowrange", "768", CVAR_ARCHIVE);
-	r_shadowvolumes = Cvar_Get("r_shadowvolumes", "0", CVAR_CHEAT);
-	r_stencil = Cvar_Get("r_stencil", "1", CVAR_ARCHIVE);
 
 	r_dynamic = Cvar_Get("r_dynamic", "1", 0);
 	r_nobind = Cvar_Get("r_nobind", "0", CVAR_CHEAT);
@@ -720,9 +711,6 @@ static void R_Register(void)
 
 	r_ext_swapinterval = Cvar_Get("r_ext_swapinterval", "1", CVAR_ARCHIVE);
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
-
-	// Echon's two-sided stenciling
-	r_stencilTwoSide = Cvar_Get("r_stencilTwoSide", "0", CVAR_ARCHIVE);
 
 	r_arb_fragment_program = Cvar_Get("r_arb_fragment_program", "1", CVAR_ARCHIVE);
 	r_arb_vertex_program = Cvar_Get("_arb_vertex_program", "1", CVAR_ARCHIVE);
@@ -872,9 +860,6 @@ static qboolean R_CheckGLExtensions()
 	{
 		if (r_ext_compiled_vertex_array->value)
 		{
-			qglLockArraysEXT = (void *)qwglGetProcAddress("glLockArraysEXT");
-			qglUnlockArraysEXT = (void *)qwglGetProcAddress("glUnlockArraysEXT");
-
 			if (!qglLockArraysEXT || !qglUnlockArraysEXT)
 			{
 				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_EXT/SGI_compiled_vertex_array not properly supported!\n");
@@ -909,80 +894,6 @@ static qboolean R_CheckGLExtensions()
 		VID_Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 #endif
-
-	// GL_EXT_stencil_wrap
-	//TODO: mxd. Replace with qglStencilOpSeparate.
-	glConfig.extStencilWrap = false;
-	if (GLAD_GL_EXT_stencil_wrap)
-	{
-		VID_Printf(PRINT_ALL, "...using GL_EXT_stencil_wrap\n");
-		glConfig.extStencilWrap = true;
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_EXT_stencil_wrap not found\n");
-	}
-
-	// GL_ATI_separate_stencil - Barnes
-	glConfig.atiSeparateStencil = false;
-	//TODO: mxd. Remove this and r_stencilTwoSide. Replace with qglStencilOpSeparate.
-	/*if (StringContainsToken(glConfig.extensions_string, "GL_ATI_separate_stencil"))
-	{
-		if (r_stencilTwoSide->value)
-		{
-			qglStencilOpSeparateATI = (void *)qwglGetProcAddress("glStencilOpSeparateATI");
-			qglStencilFuncSeparateATI = (void *)qwglGetProcAddress("glStencilFuncSeparateATI");
-
-			if (!qglStencilOpSeparateATI)
-			{
-				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_ATI_separate_stencil not properly supported!\n");
-				qglStencilOpSeparateATI = NULL;
-			}
-			else
-			{
-				VID_Printf(PRINT_ALL, "...using GL_ATI_separate_stencil\n");
-				glConfig.atiSeparateStencil = true;
-			}
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_ATI_separate_stencil\n");
-		}
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...GL_ATI_separate_stencil not found\n");
-	}*/
-
-	// GL_EXT_stencil_two_side - Echon
-	//TODO: mxd. Remove this and r_stencilTwoSide.
-	glConfig.extStencilTwoSide = false;
-	if (GLAD_GL_EXT_stencil_two_side)
-	{
-		if (r_stencilTwoSide->value)
-		{
-			qglActiveStencilFaceEXT = (void *)qwglGetProcAddress("glActiveStencilFaceEXT");
-
-			if (!qglActiveStencilFaceEXT)
-			{
-				VID_Printf(PRINT_ALL, "..." S_COLOR_RED "GL_EXT_stencil_two_side not properly supported!\n");
-				qglActiveStencilFaceEXT = NULL;
-			}
-			else
-			{
-				VID_Printf(PRINT_ALL, "...using GL_EXT_stencil_two_side\n");
-				glConfig.extStencilTwoSide = true;
-			}
-		}
-		else
-		{
-			VID_Printf(PRINT_ALL, "...ignoring GL_EXT_stencil_two_side\n");
-		}
-	}
-	else
-	{
-		Com_Printf("...GL_EXT_stencil_two_side not found\n");
-	}
 
 	// GL_ARB_fragment_program
 	glConfig.arb_fragment_program = false;
@@ -1061,7 +972,6 @@ static qboolean R_CheckGLExtensions()
 	else
 	{
 		VID_Printf(PRINT_ALL, "..GL_EXT_texture_filter_anisotropic not found\n");
-		glConfig.anisotropic = false;
 		glConfig.max_anisotropy = 0.0f;
 		Cvar_SetValue("r_anisotropic_avail", 0.0f);
 	}

@@ -114,7 +114,7 @@ static void Video_Advanced_MenuSetValues(void)
 	Cvar_SetValue("r_model_shading", ClampCvar(0, 3, Cvar_VariableValue("r_model_shading")));
 	s_modelshading_box.curvalue = Cvar_VariableValue("r_model_shading");
 
-	Cvar_SetValue("r_shadows", ClampCvar(0, 3, Cvar_VariableValue("r_shadows")));
+	Cvar_SetValue("r_shadows", ClampCvar(0, 1, Cvar_VariableValue("r_shadows")));
 	s_shadows_box.curvalue = Cvar_VariableValue("r_shadows");
 
 	Cvar_SetValue("r_stencilTwoSide", ClampCvar(0, 1, Cvar_VariableValue("r_stencilTwoSide")));
@@ -271,7 +271,7 @@ void Menu_Video_Advanced_Init(void)
 {
 	static const char *lighting_names[] = { "No", "Vertex", "Lightmap (if available)", 0 };
 	static const char *shading_names[] = { "Off", "Low", "Medium", "High", 0 };
-	static const char *shadow_names[] = { "No", "Blob", "Dynamic planar", "Projection", 0 }; //mxd. "static planar" -> "blob"
+	static const char *shadow_names[] = { "No", "Blob", 0 }; //mxd. "static planar" -> "blob"
 	static const char *ifsupported_names[] = { "No", "If supported", 0 };
 	static const char *caustics_names[] = { "No", "Software warp", "Hardware warp (if supported)", 0 };
 	static const char *shell_names[] = { "Solid", "Flowing", "Envmap", 0 };
