@@ -57,9 +57,7 @@ instruct clients to write files over areas they shouldn't.
 #define MAX_WRITE		0x10000
 #define MAX_FIND_FILES	0x04000
 
-//
 // Berserk's pk3 file support
-//
 
 typedef struct
 {
@@ -105,30 +103,28 @@ typedef struct fsSearchPath_s
 } fsSearchPath_t;
 
 
-static fsHandle_t		fs_handles[MAX_HANDLES];
-static fsLink_t			*fs_links;
-static fsSearchPath_t	*fs_searchPaths;
-static fsSearchPath_t	*fs_baseSearchPaths;
+static fsHandle_t fs_handles[MAX_HANDLES];
+static fsLink_t *fs_links;
+static fsSearchPath_t *fs_searchPaths;
+static fsSearchPath_t *fs_baseSearchPaths;
 
-char			fs_gamedir[MAX_OSPATH];
-static char		fs_currentGame[MAX_QPATH];
+char fs_gamedir[MAX_OSPATH];
+static char fs_currentGame[MAX_QPATH];
 
-static char		fs_fileInPath[MAX_OSPATH];
-static qboolean	fs_fileInPack;
+static char fs_fileInPath[MAX_OSPATH];
+static qboolean fs_fileInPack;
 
 // Set by FS_FOpenFile
 qboolean file_from_pak;
 char last_pk3_name[MAX_QPATH];
 
-cvar_t	*fs_homepath;
-cvar_t	*fs_basedir;
-cvar_t	*fs_cddir;
-cvar_t	*fs_basegamedir;
-cvar_t	*fs_basegamedir2;
-cvar_t	*fs_gamedirvar;
-cvar_t	*fs_debug;
-cvar_t	*fs_roguegame;
-
+cvar_t *fs_homepath;
+cvar_t *fs_basedir;
+cvar_t *fs_basegamedir;
+cvar_t *fs_basegamedir2;
+cvar_t *fs_gamedirvar;
+cvar_t *fs_debug;
+cvar_t *fs_roguegame;
 
 // Returns the path up to, but not including the last /
 static void Com_FilePath(const char *path, char *dst, int dstSize)
@@ -1395,12 +1391,6 @@ void FS_InitFilesystem(void)
 	// Allows the game to run from outside the data tree
 	fs_basedir = Cvar_Get("basedir", ".", CVAR_NOSET);
 
-	// cddir <path>
-	// Logically concatenates the cddir after the basedir to allow the game to run from outside the data tree
-	fs_cddir = Cvar_Get("cddir", "", CVAR_NOSET);
-	if (fs_cddir->string[0])
-		FS_AddGameDirectory(va("%s/"BASEDIRNAME, fs_cddir->string));
-
 	// Start up with baseq2 by default
 	FS_AddGameDirectory(va("%s/"BASEDIRNAME, fs_basedir->string));
 
@@ -1548,27 +1538,15 @@ void FS_SetGamedir(char *dir)
 		// Check and load base game directory (so mods can be based upon other mods)
 		if (fs_basegamedir->string[0])
 		{
-			if (fs_cddir->string[0])
-				FS_AddGameDirectory(va("%s/%s", fs_cddir->string, fs_basegamedir->string));
-
 			FS_AddGameDirectory(va("%s/%s", fs_basedir->string, fs_basegamedir->string));
 			basegame1_loaded = true;
 		}
 
 		// Second basegame so mods can utilize both Rogue and Xatrix assets
 		if (basegame1_loaded && fs_basegamedir2->string[0])
-		{
-			if (fs_cddir->string[0])
-				FS_AddGameDirectory(va("%s/%s", fs_cddir->string, fs_basegamedir2->string));
-
 			FS_AddGameDirectory(va("%s/%s", fs_basedir->string, fs_basegamedir2->string));
-		}
 
 		Cvar_FullSet("gamedir", dir, CVAR_SERVERINFO | CVAR_NOSET);
-
-		if (fs_cddir->string[0])
-			FS_AddGameDirectory(va("%s/%s", fs_cddir->string, dir));
-
 		FS_AddGameDirectory(va("%s/%s", fs_basedir->string, dir));
 	}
 }

@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "winquake.h"
 
 // Console variables that we need to access from this module
-cvar_t *scanforcd; // Knightmare- just here to enable command line option without error
 cvar_t *win_alttab_restore_desktop; // Knightmare- whether to restore desktop resolution on alt-tab
 cvar_t *vid_gamma;
 cvar_t *vid_ref;	// Name of Refresh DLL loaded
@@ -477,8 +476,6 @@ void VID_Init(void)
 	win_alttab_restore_desktop = Cvar_Get("win_alttab_restore_desktop", "1", CVAR_ARCHIVE);	// Knightmare- whether to restore desktop resolution on alt-tab
 	r_customwidth = Cvar_Get("r_customwidth", "1600", CVAR_ARCHIVE);
 	r_customheight = Cvar_Get("r_customheight", "1024", CVAR_ARCHIVE);
-	// Knightmare- just here to enable command line option without error
-	scanforcd = Cvar_Get("scanforcd", "0", 0);
 
 	// Force vid_ref to gl. Older versions of Lazarus code check only vid_ref = gl for fadein effects
 	Cvar_Set("vid_ref", "gl");

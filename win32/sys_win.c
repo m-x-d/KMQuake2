@@ -37,7 +37,6 @@ unsigned sys_frame_time;
 int argc;
 char *argv[MAX_NUM_ARGVS];
 
-
 void Sys_Sleep(int msec)
 {
 	Sleep(msec);
@@ -91,7 +90,6 @@ char *Sys_GetClipboardData(void)
 	return data;
 }
 
-
 #pragma region ======================= SYSTEM IO
 
 void Sys_Quit(qboolean error) //mxd. +error
@@ -113,98 +111,7 @@ void Sys_Quit(qboolean error) //mxd. +error
 	exit(0);
 }
 
-/*void WinError(void) //mxd. Never called
-{
-	LPVOID lpMsgBuf;
-
-	FormatMessage( 
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		GetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		(LPTSTR) &lpMsgBuf,
-		0,
-		NULL 
-	);
-
-	// Display the string.
-	MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
-
-	// Free the buffer.
-	LocalFree(lpMsgBuf);
-}*/
-
 #pragma endregion
-
-
-char *Sys_ScanForCD(void)
-{
-	static char	cddir[MAX_OSPATH];
-	static qboolean	done;
-	char		drive[4];
-	char		test[MAX_QPATH];
-	qboolean	missionpack = false; // Knightmare added
-
-	if (done) // Don't re-check
-		return cddir;
-
-	// No abort/retry/fail errors
-	SetErrorMode (SEM_FAILCRITICALERRORS);
-
-	drive[0] = 'c';
-	drive[1] = ':';
-	drive[2] = '\\';
-	drive[3] = 0;
-
-	Com_Printf("\nScanning for game CD data path...");
-
-	done = true;
-
-	// Knightmare- check if mission pack gamedir is set
-	for (int i = 0; i < argc; i++)
-	{
-		if (!strcmp(argv[i], "game") && (i + 1 < argc))
-		{
-			if (!strcmp(argv[i + 1], "rogue") || !strcmp(argv[i + 1], "xatrix"))
-				missionpack = true;
-
-			break; // Game parameter only appears once in command line
-		}
-	}
-
-	// Scan the drives
-	for (drive[0] = 'c'; drive[0] <= 'z'; drive[0]++)
-	{
-		// Where activision put the stuff...
-		if (missionpack) // Knightmare- mission packs have cinematics in different path
-		{
-			sprintf(cddir, "%sdata\\max", drive);
-			sprintf(test, "%sdata\\patch\\quake2.exe", drive);
-		}
-		else
-		{
-			sprintf(cddir, "%sinstall\\data", drive);
-			sprintf(test, "%sinstall\\data\\quake2.exe", drive);
-		}
-
-		FILE *f = fopen(test, "r");
-		if (f)
-		{
-			fclose (f);
-			if (GetDriveType(drive) == DRIVE_CDROM)
-			{
-				Com_Printf(" found %s\n", cddir);
-				return cddir;
-			}
-		}
-	}
-
-	Com_Printf(" could not find %s on any CDROM drive!\n", test);
-
-	cddir[0] = 0;
-	
-	return NULL;
-}
 
 void Sys_Init(void)
 {
@@ -238,7 +145,6 @@ void Sys_AppActivate(void)
 	ShowWindow(cl_hwnd, SW_RESTORE);
 	SetForegroundWindow(cl_hwnd);
 }
-
 
 #pragma region ======================= GAME DLL
 
@@ -358,12 +264,10 @@ void ParseCommandLine(LPSTR lpCmdLine)
 	}
 }
 
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	MSG			msg;
-	int			time, newtime;
-	qboolean	cdscan = false; // Knightmare added
+	MSG msg;
+	int time, newtime;
 
 	global_hInstance = hInstance;
 
@@ -376,38 +280,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Sys_InitDedConsole();
 	Com_Printf("%s %4.2f %s %s %s\n", ENGINE_NAME, VERSION, CPUSTRING, BUILDSTRING, __DATE__); //mxd. ENGINE_NAME, Version
 
-	// Knightmare- scan for cd command line option
-	for (int i = 0; i < argc; i++)
-	{
-		if (!strcmp(argv[i], "scanforcd"))
-		{
-			cdscan = true;
-			break;
-		}
-	}
-
-	// If we find the CD, add a +set cddir xxx command line
-	if (cdscan)
-	{
-		char* cddir = Sys_ScanForCD();
-		if (cddir && argc < MAX_NUM_ARGVS - 3)
-		{
-			int i;
-
-			// Don't override a cddir on the command line
-			for (i = 0; i < argc ; i++)
-				if (!strcmp(argv[i], "cddir"))
-					break;
-
-			if (i == argc)
-			{
-				argv[argc++] = "+set";
-				argv[argc++] = "cddir";
-				argv[argc++] = cddir;
-			}
-		}
-	}
-
+	// Init engine subsystems
 	Qcommon_Init(argc, argv);
 	int oldtime = Sys_Milliseconds();
 
