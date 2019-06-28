@@ -72,9 +72,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\win32\cd_win.c">
-      <Filter>Source Files\sound</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\client\snd_dma.c">
       <Filter>Source Files\sound</Filter>
     </ClCompile>
@@ -416,9 +413,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\client\cdaudio.h">
-      <Filter>Header Files\client</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\client\client.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>

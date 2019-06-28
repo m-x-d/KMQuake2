@@ -74,7 +74,7 @@ void CL_RegisterSounds(void)
 	// Knightmare added
 	// CL_RegisterSounds is only called while the refresh is prepped
 	// during a sound resart, so we can use this to restart the music track
-	if (cls.state == ca_active && cl.refresh_prepped && !CDAudio_Active())
+	if (cls.state == ca_active && cl.refresh_prepped)
 		CL_PlayBackgroundTrack();
 }
 
@@ -331,9 +331,7 @@ void CL_PlayBackgroundTrack(void)
 		Com_sprintf(name, sizeof(name), "music/%s.ogg", cl.configstrings[CS_CDTRACK]);
 		if (FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
 		{
-			CDAudio_Stop();
 			S_StartBackgroundTrack(name, name, musictrackframe->integer); //mxd. +musictrackframe
-
 			return;
 		}
 	}
@@ -342,19 +340,14 @@ void CL_PlayBackgroundTrack(void)
 
 	if (track == 0)
 	{
-		// Stop any playing track
-		CDAudio_Stop();
 		S_StopBackgroundTrack();
-
 		return;
 	}
 
-	// If an OGG file exists play it, otherwise fall back to CD audio
+	// If an OGG file exists play it
 	Com_sprintf(name, sizeof(name), "music/track%02i.ogg", CL_MissionPackCDTrack(track));
-	if ((FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) && cl_ogg_music->value) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
+	if (FS_FileExists(name) || Sys_Access(name, ACC_EXISTS)) //mxd. FS_LoadFile -> FS_FileExists; file existance check for GOG tracks...
 		S_StartBackgroundTrack(name, name, musictrackframe->integer); //mxd. +musictrackframe
-	else
-		CDAudio_Play(track, true);
 }
 
 void CL_ParseConfigString(void)

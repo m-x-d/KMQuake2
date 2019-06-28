@@ -389,7 +389,7 @@ void InitGame (void)
 	// because some user maps have this erroneously set
 	allow_clear_inventory = gi.cvar ("allow_clear_inventory", "1", CVAR_ARCHIVE);
 
-	cd_loopcount = gi.cvar("cd_loopcount","4",0);
+	ogg_loopcount = gi.cvar("ogg_loopcount", "4", 0); //mxd. Was cd_loopcount
 	cl_gun = gi.cvar("cl_gun", "1", 0);
 	cl_thirdperson = gi.cvar(CLIENT_THIRDPERSON_CVAR, "0", 0); // Knightmare added
 	corpse_fade = gi.cvar("corpse_fade", "0", CVAR_SERVERINFO|CVAR_LATCH);
@@ -451,7 +451,7 @@ void InitGame (void)
 			gi.cvar_forceset("cl_gun",               va("%d",(int)(lazarus_cl_gun->value)));
 			gi.cvar_forceset("crosshair",            va("%d",(int)(lazarus_crosshair->value)));
 		} else {*/
-			gi.cvar_forceset("lazarus_cd_loop",        va("%d",(int)(cd_loopcount->value)));
+			gi.cvar_forceset("lazarus_cd_loop",        va("%d", (int)(ogg_loopcount->value))); //mxd. Was cd_loopcount
 #ifndef KMQUAKE2_ENGINE_MOD // engine has zoom autosensitivity
 			gi.cvar_forceset("lazarus_pitch",          va("%f",m_pitch->value));
 			gi.cvar_forceset("lazarus_yaw",            va("%f",m_yaw->value));

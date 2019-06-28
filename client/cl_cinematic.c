@@ -1021,9 +1021,8 @@ static cinHandle_t CIN_PlayCinematic(const char *name, int x, int y, int w, int 
 
 	if (cin->flags & CIN_SYSTEM)
 	{
-		CDAudio_Stop();		// Make sure CD audio isn't playing
-		S_StopAllSounds();	// Make sure sound isn't playing
-		UI_ForceMenuOff();	// Close the menu
+		S_StopAllSounds(); // Make sure sound isn't playing
+		UI_ForceMenuOff(); // Close the menu
 	}
 
 	if (!Q_stricmp(ext, "pcx"))

@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "input.h"
 #include "keys.h"
 #include "console.h"
-#include "cdaudio.h"
 
 // HTTP downloading from R1Q2
 #ifdef USE_CURL
@@ -398,10 +397,8 @@ extern	cvar_t	*alt_text_color;
 //Knightmare 12/28/2001- BramBo's FPS counter
 extern	cvar_t	*cl_drawfps;
 
-// whether to try to play OGGs instead of CD tracks
-extern	cvar_t	*cl_ogg_music;
-extern	cvar_t	*cl_rogue_music; // whether to play Rogue tracks
-extern	cvar_t	*cl_xatrix_music; // whether to play Xatrix tracks
+extern	cvar_t	*cl_rogue_music; // Whether to play Rogue tracks
+extern	cvar_t	*cl_xatrix_music; // Whether to play Xatrix tracks
 // end Knightmare
 
 extern	cvar_t	*cl_servertrick;

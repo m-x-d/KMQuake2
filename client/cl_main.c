@@ -105,8 +105,6 @@ cvar_t	*r_decal_life;	// Decal duration in seconds
 cvar_t	*con_font_size;
 cvar_t	*alt_text_color;
 
-// Whether to try to play OGGs instead of CD tracks
-cvar_t	*cl_ogg_music;
 cvar_t	*cl_rogue_music; // Whether to play Rogue tracks
 cvar_t	*cl_xatrix_music; // Whether to play Xatrix tracks
 
@@ -1205,8 +1203,6 @@ void CL_InitLocal(void)
 	//con_font_size = Cvar_Get("con_font_size", "8", CVAR_ARCHIVE); //mxd. Moved to Con_Init()
 	alt_text_color = Cvar_Get("alt_text_color", "2", CVAR_ARCHIVE);
 
-	// Whether to try to play OGGs instead of CD tracks
-	cl_ogg_music = Cvar_Get("cl_ogg_music", "1", CVAR_ARCHIVE);
 	cl_rogue_music = Cvar_Get("cl_rogue_music", "0", CVAR_ARCHIVE);
 	cl_xatrix_music = Cvar_Get("cl_xatrix_music", "0", CVAR_ARCHIVE);
 
@@ -1567,9 +1563,6 @@ void CL_Frame_Async(int msec)
 
 		// Update audio
 		S_Update(cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
-		
-		if (miscFrame)
-			CDAudio_Update();
 
 		// Advance local effects for next frame
 		CL_RunDLights();
@@ -1731,8 +1724,6 @@ void CL_Frame(int msec)
 
 	// Update audio
 	S_Update(cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
-	
-	CDAudio_Update();
 
 	// Advance local effects for next frame
 	CL_RunDLights();
@@ -1793,7 +1784,6 @@ void CL_Init(void)
 	SCR_Init();
 	cls.disable_screen = true; // Don't draw yet
 
-	CDAudio_Init();
 	CL_InitLocal();
 	IN_Init();
 
@@ -1825,7 +1815,6 @@ void CL_Shutdown(void)
 #endif	// USE_CURL
 
 	CL_WriteConfiguration("kmq2config");
-	CDAudio_Shutdown();
 
 	// Added delay
 	sec = base = Sys_Milliseconds();

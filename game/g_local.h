@@ -759,7 +759,7 @@ extern  cvar_t	*allow_clear_inventory;
 
 extern	cvar_t	*bounce_bounce;
 extern	cvar_t	*bounce_minv;
-extern	cvar_t	*cd_loopcount;
+extern	cvar_t	*ogg_loopcount; //mxd. Was cd_loopcount
 extern	cvar_t	*cl_gun;
 extern	cvar_t	*cl_thirdperson; // Knightmare added
 extern	cvar_t	*corpse_fade;

@@ -162,7 +162,6 @@ static void AppActivate(BOOL fActive, BOOL minimize)
 
 	// Minimize/restore mouse-capture on demand
 	IN_Activate(ActiveApp);
-	CDAudio_Activate(ActiveApp);
 	S_Activate(ActiveApp);
 }
 
@@ -290,13 +289,6 @@ LONG WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
 			Key_Event(MapKey(lParam), false, sys_msg_time);
-			break;
-
-		case MM_MCINOTIFY:
-			{
-				LONG CDAudio_MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-				CDAudio_MessageHandler(hWnd, uMsg, wParam, lParam);
-			}
 			break;
 
 		default: // Pass all unhandled messages to DefWindowProc

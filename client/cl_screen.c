@@ -1128,7 +1128,6 @@ void SCR_BeginLoadingPlaque(const char *mapname) //mxd. +mapname
 {
 	S_StopAllSounds();
 	cl.sound_prepped = false; // Don't play ambients
-	CDAudio_Stop();
 
 	if (developer->value)
 		return;

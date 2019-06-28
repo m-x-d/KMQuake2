@@ -3015,20 +3015,22 @@ void SP_target_attractor(edict_t *self)
  Play the CD track specified by the "sounds" value, looping the
  track "dmg" times. This does NOT override player's option to
  disable CD music, and of course does nothing if a music CD is not
- in place. If "dmg" is not specified, track is looped cd_loopcount
+ in place. If "dmg" is not specified, track is looped ogg_loopcount
  (default=4) times.
 ===================================================================*/
-void use_target_CD (edict_t *self, edict_t *other, edict_t *activator)
+void use_target_CD(edict_t *self, edict_t *other, edict_t *activator)
 {
 	if (self->musictrack && strlen(self->musictrack))
-		gi.configstring (CS_CDTRACK, self->musictrack);
+		gi.configstring(CS_CDTRACK, self->musictrack);
 	else
-		gi.configstring (CS_CDTRACK, va("%d",self->sounds));
-	if((self->dmg > 0) && (!deathmatch->value) && (!coop->value))
-		stuffcmd(&g_edicts[1],va("cd_loopcount %d\n",self->dmg));
+		gi.configstring(CS_CDTRACK, va("%d", self->sounds));
+
+	if(self->dmg > 0 && !deathmatch->value && !coop->value)
+		stuffcmd(&g_edicts[1], va("ogg_loopcount %d\n", self->dmg));
 
 	self->count--;
-	if(!self->count) {
+	if(!self->count)
+	{
 		self->think = G_FreeEdict;
 		self->nextthink = level.time + 1;
 	}

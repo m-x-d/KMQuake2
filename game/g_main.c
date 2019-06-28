@@ -90,7 +90,7 @@ cvar_t *allow_clear_inventory;
 
 cvar_t *bounce_bounce;
 cvar_t *bounce_minv;
-cvar_t *cd_loopcount;
+cvar_t *ogg_loopcount; //mxd. Was cd_loopcount
 cvar_t *cl_gun;
 cvar_t *cl_thirdperson; // Knightmare added
 cvar_t *corpse_fade;
