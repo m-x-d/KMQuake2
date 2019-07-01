@@ -33,6 +33,7 @@ static menuslider_s		s_options_screen_crosshairpulse_slider;
 static menuslider_s		s_options_screen_hudscale_slider;
 static menuslider_s		s_options_screen_hudalpha_slider;
 static menulist_s		s_options_screen_hudsqueezedigits_box;
+static menulist_s		s_options_screen_objectives_box; //mxd
 static menulist_s		s_options_screen_fps_box;
 static menuaction_s		s_options_screen_defaults_action;
 static menuaction_s		s_options_screen_back_action;
@@ -82,6 +83,12 @@ static void HudSqueezeDigitsFunc(void *unused)
 static void FPSFunc(void *unused)
 {
 	Cvar_SetValue("cl_drawfps", s_options_screen_fps_box.curvalue);
+}
+
+//mxd. Printobjectives option
+static void PrintObjectivesFunc(void *unused)
+{
+	Cvar_SetValue("printobjectives", s_options_screen_objectives_box.curvalue);
 }
 
 #pragma endregion
@@ -284,7 +291,6 @@ char **SetCrosshairNames(void)
 static void ScreenSetMenuItemValues(void)
 {
 	Cvar_SetValue("crosshair", ClampCvar(0, 100, Cvar_VariableValue("crosshair")));
-	//s_options_crosshair_box.curvalue = Cvar_VariableValue("crosshair");
 	SetCrosshairCursor();
 
 	Cvar_SetValue("crosshair_scale", ClampCvar(0.25, 3, Cvar_VariableValue("crosshair_scale")));
@@ -304,6 +310,9 @@ static void ScreenSetMenuItemValues(void)
 
 	Cvar_SetValue("hud_squeezedigits", ClampCvar(0, 1, Cvar_VariableValue("hud_squeezedigits")));
 	s_options_screen_hudsqueezedigits_box.curvalue = Cvar_VariableValue("hud_squeezedigits");
+
+	Cvar_SetValue("printobjectives", ClampCvar(0, 1, Cvar_VariableValue("printobjectives"))); //mxd
+	s_options_screen_objectives_box.curvalue = Cvar_VariableValue("printobjectives");
 
 	Cvar_SetValue("cl_drawfps", ClampCvar(0, 1, Cvar_VariableValue("cl_drawfps")));
 	s_options_screen_fps_box.curvalue = Cvar_VariableValue("cl_drawfps");
@@ -411,9 +420,18 @@ void Options_Screen_MenuInit(void)
 	s_options_screen_hudsqueezedigits_box.itemnames			= yesno_names;
 	s_options_screen_hudsqueezedigits_box.generic.statusbar	= "Enables showing of longer numbers on HUD";
 
+	//mxd. Print objectives option
+	s_options_screen_objectives_box.generic.type		= MTYPE_SPINCONTROL;
+	s_options_screen_objectives_box.generic.x			= 0;
+	s_options_screen_objectives_box.generic.y			= y += 2 * MENU_LINE_SIZE;
+	s_options_screen_objectives_box.generic.name		= "Display new objectives";
+	s_options_screen_objectives_box.generic.callback	= PrintObjectivesFunc;
+	s_options_screen_objectives_box.itemnames			= yesno_names;
+	s_options_screen_objectives_box.generic.statusbar	= "Print new objectives on screen instead of blinking the Help icon";
+
 	s_options_screen_fps_box.generic.type				= MTYPE_SPINCONTROL;
 	s_options_screen_fps_box.generic.x					= 0;
-	s_options_screen_fps_box.generic.y					= y += 2 * MENU_LINE_SIZE;
+	s_options_screen_fps_box.generic.y					= y += MENU_LINE_SIZE;
 	s_options_screen_fps_box.generic.name				= "FPS counter";
 	s_options_screen_fps_box.generic.callback			= FPSFunc;
 	s_options_screen_fps_box.itemnames					= yesno_names;
@@ -446,6 +464,7 @@ void Options_Screen_MenuInit(void)
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_hudscale_slider);
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_hudalpha_slider);
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_hudsqueezedigits_box);
+	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_objectives_box); //mxd
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_fps_box);
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_defaults_action);
 	Menu_AddItem(&s_options_screen_menu, (void *)&s_options_screen_back_action);

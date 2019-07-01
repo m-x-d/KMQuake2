@@ -739,6 +739,7 @@ void G_SetStats (edict_t *ent)
 		if (ent->client->showinventory && ent->client->pers.health > 0)
 			ent->client->ps.stats[STAT_LAYOUTS] |= 2;
 	}
+
 	if(!ent->client->ps.stats[STAT_LAYOUTS] && ent->client->whatsit)
 		ent->client->ps.stats[STAT_LAYOUTS] |= 1;
 
@@ -750,23 +751,25 @@ void G_SetStats (edict_t *ent)
 	//
 	// help icon / current weapon if not shown
 	//
-	if (ent->client->pers.helpchanged && (level.framenum&8) )
-		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex ("i_help");
-	else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91)
-		&& ent->client->pers.weapon)
-		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex (ent->client->pers.weapon->icon);
+	if (ent->client->pers.helpchanged && printobjectives->integer == 0 && (level.framenum & 8)) //mxd. +printobjectives
+		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex("i_help");
+	else if ((ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91) && ent->client->pers.weapon)
+		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex(ent->client->pers.weapon->icon);
 	else
 		ent->client->ps.stats[STAT_HELPICON] = 0;
 
 #ifdef KMQUAKE2_ENGINE_MOD	// for enhanced HUD
-	if (ent->client->pers.weapon) {
+	if (ent->client->pers.weapon)
+	{
 		if (ITEM_INDEX(ent->client->pers.weapon) == hml_index) // homing rocket launcher has no icon
-			ent->client->ps.stats[STAT_WEAPON] = gi.imageindex (GetItemByIndex(rl_index)->icon);
+			ent->client->ps.stats[STAT_WEAPON] = gi.imageindex(GetItemByIndex(rl_index)->icon);
 		else
-			ent->client->ps.stats[STAT_WEAPON] = gi.imageindex (ent->client->pers.weapon->icon);
+			ent->client->ps.stats[STAT_WEAPON] = gi.imageindex(ent->client->pers.weapon->icon);
 	}
 	else
+	{
 		ent->client->ps.stats[STAT_WEAPON] = 0;
+	}
 #endif
 
 	ent->client->ps.stats[STAT_SPECTATOR] = 0;

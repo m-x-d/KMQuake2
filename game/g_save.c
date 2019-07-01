@@ -417,6 +417,7 @@ void InitGame (void)
 	turn_rider = gi.cvar("turn_rider", "1", CVAR_SERVERINFO);
 	zoomrate = gi.cvar("zoomrate", "80", CVAR_ARCHIVE);
 	zoomsnap = gi.cvar("zoomsnap", "20", CVAR_ARCHIVE);
+	printobjectives = gi.cvar("printobjectives", "1", CVAR_ARCHIVE); //mxd. Print new objective instead of blinking the help icon.
 
 	// shift_ and rotate_distance only used for debugging stuff - this is the distance
 	// an entity will be moved by "item_left", "item_right", etc.

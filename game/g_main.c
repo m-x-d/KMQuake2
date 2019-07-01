@@ -129,6 +129,7 @@ cvar_t *turn_rider;
 cvar_t *vid_ref;
 cvar_t *zoomrate;
 cvar_t *zoomsnap;
+cvar_t *printobjectives; //mxd
 
 cvar_t *sv_stopspeed; //PGM (this was a define in g_phys.c)
 cvar_t *sv_step_fraction; // Knightmare- this was a define in p_view.c

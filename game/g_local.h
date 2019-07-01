@@ -687,8 +687,8 @@ extern int lastgibframe;
 #define MOD_TRIGGER_HURT	31
 #define MOD_HIT				32
 #define MOD_TARGET_BLASTER	33
-#define MOD_VEHICLE         34
-#define MOD_KICK            35
+#define MOD_VEHICLE			34
+#define MOD_KICK			35
 #define MOD_GRAPPLE			36
 #define MOD_FRIENDLY_FIRE	0x8000000
 
@@ -696,10 +696,10 @@ extern int meansOfDeath;
 
 extern edict_t *g_edicts;
 
-#define	FOFS(x) (size_t)&(((edict_t *)0)->x)	// Knightmare- was int
-#define	STOFS(x) (size_t)&(((spawn_temp_t *)0)->x)	// Knightmare- was int
-#define	LLOFS(x) (size_t)&(((level_locals_t *)0)->x)	// Knightmare- was int
-#define	CLOFS(x) (size_t)&(((gclient_t *)0)->x)	// Knightmare- was int
+#define FOFS(x)  (size_t)&(((edict_t *)0)->x)	// Knightmare- was int
+#define STOFS(x) (size_t)&(((spawn_temp_t *)0)->x)	// Knightmare- was int
+#define LLOFS(x) (size_t)&(((level_locals_t *)0)->x)	// Knightmare- was int
+#define CLOFS(x) (size_t)&(((gclient_t *)0)->x)	// Knightmare- was int
 
 extern	cvar_t	*maxentities;
 extern	cvar_t	*deathmatch;
@@ -751,7 +751,7 @@ extern	cvar_t	*actorjump;
 extern	cvar_t	*actorscram;
 extern	cvar_t	*alert_sounds;
 extern	cvar_t	*allow_download;
-extern  cvar_t	*allow_fog;       // Set to 0 for no fog
+extern	cvar_t	*allow_fog; // Set to 0 for no fog
 
 // set to 0 to bypass target_changelevel clear inventory flag
 // because some user maps have this erroneously set
@@ -795,12 +795,13 @@ extern	cvar_t	*rotate_distance;
 extern	cvar_t	*s_primary;
 extern	cvar_t	*shift_distance;
 extern	cvar_t	*sv_maxgibs;
-extern  cvar_t  *tpp;			  // third person perspective
+extern	cvar_t	*tpp; // Third person perspective
 extern	cvar_t	*tpp_auto;
 extern	cvar_t	*turn_rider;
 extern	cvar_t	*vid_ref;
 extern	cvar_t	*zoomrate;
 extern	cvar_t	*zoomsnap;
+extern	cvar_t	*printobjectives; //mxd
 
 extern	cvar_t	*blaster_color; // Knightmare added
 

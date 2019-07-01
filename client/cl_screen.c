@@ -396,17 +396,44 @@ static void SCR_DrawDebugGraph(void)
 #pragma region ======================= CENTER PRINTING
 
 static char scr_centerstring[1024];
-static float scr_centertime_start; // For slow victory printing
+static float scr_centertime_start;
 static float scr_centertime_off;
 static float scr_centertime_end;
 static int scr_center_lines;
+
+//mxd. Calculate time in seconds to read given string. Assumes 120 words per minute (a word per 0.5 seconds) reading speed.
+static float GetReadTime(const char *str)
+{
+	int numwords = 1;
+	
+	int c = 0;
+	qboolean prevcharwasspace = false;
+	while(str[c])
+	{
+		if (str[c] == ' ' || str[c] == '\n')
+		{
+			if (!prevcharwasspace)
+				numwords++;
+
+			prevcharwasspace = true;
+		}
+		else
+		{
+			prevcharwasspace = false;
+		}
+
+		c++;
+	}
+
+	return ceilf(numwords * 0.5f);
+}
 
 // Called for important messages that should stay in the center of the screen for a few moments
 void SCR_CenterPrint(char *str)
 {
 	strncpy(scr_centerstring, str, sizeof(scr_centerstring) - 1);
-	scr_centertime_off = scr_centertime->value;
-	scr_centertime_end = scr_centertime_off;
+	scr_centertime_off = max(GetReadTime(scr_centerstring) + 1.5f, scr_centertime->value); //mxd. +GetReadTime, +0.5 sec. fade in, +1 sec. fade out
+	scr_centertime_end = cl.time + scr_centertime_off * 1000; //mxd. Was scr_centertime_end = scr_centertime_off
 	scr_centertime_start = cl.time;
 	scr_center_lines = 1;
 
@@ -456,17 +483,23 @@ void SCR_CenterPrint(char *str)
 static void SCR_DrawCenterString(void)
 {
 	// Added Psychospaz's fading centerstrings
-	const int alpha = 255 * (1 - (cl.time + (scr_centertime->value - 1) - scr_centertime_start) / 1000.0f / scr_centertime_end);
+	//const int alpha = 255 * (1 - (cl.time + (scr_centertime->value - 1) - scr_centertime_start) / 1000.0f / scr_centertime_end);
 
-	// The finale prints the characters one at a time
-	int remaining = 9999;
+	//mxd. Fade in during the first half-second, fade out during the last second.
+	int alpha = 255;
+
+	if (cl.time - scr_centertime_start < 500)
+		alpha *= (cl.time - scr_centertime_start) / 500.0f;
+	else if (scr_centertime_end - cl.time < 1000)
+		alpha *= (scr_centertime_end - cl.time) / 1000.0f;
+
 	char *start = scr_centerstring;
 
 	int y;
 	if (scr_center_lines <= 4)
 		y = viddef.height * 0.35f;
 	else
-		y = 48;
+		y = FONT_SIZE * 6; //mxd. Was 48
 
 	do
 	{
@@ -481,10 +514,6 @@ static void SCR_DrawCenterString(void)
 			if (IsColoredString(&start[totallen]))
 				len -= 2;
 		}
-
-		remaining -= len;
-		if(remaining < 0)
-			return;
 
 		// Copy input text to line
 		char line[512];
