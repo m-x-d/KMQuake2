@@ -271,7 +271,6 @@
     <ClCompile Include="..\..\..\ui\ui_subsystem.c" />
     <ClCompile Include="..\..\..\ui\ui_video.c" />
     <ClCompile Include="..\..\..\ui\ui_video_advanced.c" />
-    <ClCompile Include="..\..\..\win32\cd_win.c" />
     <ClCompile Include="..\..\..\win32\glw_imp.c" />
     <ClCompile Include="..\..\..\win32\in_win.c" />
     <ClCompile Include="..\..\..\win32\net_wins.c" />
@@ -284,7 +283,6 @@
     <ClCompile Include="..\..\..\win32\vid_dll.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\client\cdaudio.h" />
     <ClInclude Include="..\..\..\client\client.h" />
     <ClInclude Include="..\..\..\client\console.h" />
     <ClInclude Include="..\..\..\client\input.h" />
