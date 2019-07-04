@@ -186,7 +186,10 @@ void Sys_ShowConsole(qboolean show)
 	SetFocus(sys_console.hWnd);
 
 	// Set the focus to the input edit box if possible
-	SetFocus(sys_console.hWndInput);
+	if (IsWindowVisible(sys_console.hWndInput))
+		SetFocus(sys_console.hWndInput);
+	else
+		SetFocus(sys_console.hWndOutput); //mxd. Otherwise set focus to the output control (input is hidden on error)
 
 	// Scroll down
 	SendMessage(sys_console.hWndOutput, EM_LINESCROLL, 0, 0xFFFF);
