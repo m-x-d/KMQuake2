@@ -289,7 +289,7 @@ static void CreateDSTTex_ARB(void)
 {
 	byte dist[DST_SIZE][DST_SIZE][4];
 
-	srand(GetTickCount());
+	srand(time(NULL)); //mxd. GetTickCount() -> time(NULL) (GetTickCount was the only renderer method, which required Windows.h).
 	for (int x = 0; x < DST_SIZE; x++)
 	{
 		for (int y = 0; y < DST_SIZE; y++)

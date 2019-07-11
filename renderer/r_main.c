@@ -86,7 +86,6 @@ cvar_t *r_fullbright;
 cvar_t *r_novis;
 cvar_t *r_nocull;
 cvar_t *r_lerpmodels;
-cvar_t *r_ignorehwgamma; // Hardware gamma
 cvar_t *r_lefthand;
 cvar_t *r_waterwave; // Water waves
 cvar_t *r_caustics; // Barnes water caustics
@@ -102,7 +101,6 @@ cvar_t *r_rgbscale; // Vic's RGB brightening
 
 cvar_t *r_vertex_arrays;
 
-cvar_t *r_ext_swapinterval;
 cvar_t *r_ext_compiled_vertex_array;
 cvar_t *r_arb_fragment_program;
 cvar_t *r_arb_vertex_program;
@@ -126,7 +124,6 @@ cvar_t *r_dlightshadowmapscale; //mxd. 0 - disabled, 1 - 1 ray per 1 lightmap pi
 cvar_t *r_dlightshadowrange; //mxd. Dynamic lights don't cast shadows when distance between camera and dlight is > r_dlightshadowrange.
 cvar_t *r_dlightnormalmapping; //mxd. Dynamic lights use normalmaps (1) or not (0).
 
-cvar_t *r_log;
 cvar_t *r_drawbuffer;
 cvar_t *r_lightmap;
 cvar_t *r_shadows;
@@ -144,8 +141,6 @@ cvar_t *r_particle_overdraw;
 cvar_t *r_mode;
 cvar_t *r_dynamic;
 
-cvar_t *r_nobind;
-cvar_t *r_round_down;
 cvar_t *r_showtris;
 cvar_t *r_showbbox; // Show model bounding box
 cvar_t *r_ztrick;
@@ -160,16 +155,11 @@ cvar_t *r_anisotropic;
 cvar_t *r_anisotropic_avail;
 cvar_t *r_lockpvs;
 
-cvar_t *vid_fullscreen;
-cvar_t *vid_gamma;
-cvar_t *vid_ref;
-
 cvar_t *r_bloom; // BLOOMS
 
 cvar_t *r_skydistance; //Knightmare- variable sky range
 cvar_t *r_fog_skyratio; //Knightmare- variable sky fog ratio
 cvar_t *r_saturation; //** DMP
-
 
 // Returns true if the box is completely outside the frustom
 qboolean R_CullBox(vec3_t mins, vec3_t maxs)
@@ -471,7 +461,7 @@ static void R_Clear(void)
 }
 
 // r_newrefdef must be set before the first call
-void R_RenderView(refdef_t *fd)
+static void R_RenderView(refdef_t *fd)
 {
 	if (r_norefresh->integer)
 		return;
@@ -647,22 +637,20 @@ static void R_Register(void)
 	r_nocull = Cvar_Get("r_nocull", "0", CVAR_CHEAT);
 	r_lerpmodels = Cvar_Get("r_lerpmodels", "1", 0);
 	r_speeds = Cvar_Get("r_speeds", "0", 0);
-	r_ignorehwgamma = Cvar_Get("r_ignorehwgamma", "0", CVAR_ARCHIVE);	// hardware gamma
 
-	// lerped dlights on models
+	// Lerped dlights on models
 	r_dlights_normal = Cvar_Get("r_dlights_normal", "1", CVAR_ARCHIVE);
 	r_model_shading = Cvar_Get("r_model_shading", "2", CVAR_ARCHIVE);
 	r_model_dlights = Cvar_Get("r_model_dlights", "8", CVAR_ARCHIVE);
 
 	r_lightlevel = Cvar_Get("r_lightlevel", "0", 0);
-	// added Vic's RGB brightening
-	r_rgbscale = Cvar_Get("r_rgbscale", "2", CVAR_ARCHIVE);
+	r_rgbscale = Cvar_Get("r_rgbscale", "2", CVAR_ARCHIVE); // Vic's RGB brightening
 
 	r_waterwave = Cvar_Get("r_waterwave", "0", CVAR_ARCHIVE);
 	r_caustics = Cvar_Get("r_caustics", "1", CVAR_ARCHIVE);
 	r_glows = Cvar_Get("r_glows", "1", CVAR_ARCHIVE);
 
-	// correct trasparent sorting
+	// Correct trasparent sorting
 	r_transrendersort = Cvar_Get("r_transrendersort", "1", CVAR_ARCHIVE);
 	r_particle_lighting = Cvar_Get("r_particle_lighting", "1.0", CVAR_ARCHIVE);
 	r_particledistance = Cvar_Get("r_particledistance", "0", CVAR_ARCHIVE);
@@ -671,7 +659,6 @@ static void R_Register(void)
 	r_particle_max = Cvar_Get("r_particle_max", "0", CVAR_ARCHIVE);
 	r_particle_mode = Cvar_Get("r_particle_mode", "1", CVAR_ARCHIVE); //mxd. 0 - Vanilla, 1 - KMQ2
 
-	r_log = Cvar_Get("r_log", "0", 0);
 	r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = Cvar_Get("r_lightmap", "0", 0);
 	r_shadows = Cvar_Get("r_shadows", "1", CVAR_ARCHIVE); //mxd. Was 0
@@ -679,10 +666,8 @@ static void R_Register(void)
 	r_shadowrange = Cvar_Get("r_shadowrange", "768", CVAR_ARCHIVE);
 
 	r_dynamic = Cvar_Get("r_dynamic", "1", 0);
-	r_nobind = Cvar_Get("r_nobind", "0", CVAR_CHEAT);
-	r_round_down = Cvar_Get("r_round_down", "1", 0);
 	r_showtris = Cvar_Get("r_showtris", "0", CVAR_CHEAT);
-	r_showbbox = Cvar_Get("r_showbbox", "0", CVAR_CHEAT); // show model bounding box
+	r_showbbox = Cvar_Get("r_showbbox", "0", CVAR_CHEAT); // Show model bounding box
 	r_ztrick = Cvar_Get("r_ztrick", "0", 0);
 	r_finish = Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_cull = Cvar_Get("r_cull", "1", 0);
@@ -695,7 +680,6 @@ static void R_Register(void)
 
 	r_vertex_arrays = Cvar_Get("r_vertex_arrays", "1", CVAR_ARCHIVE);
 
-	r_ext_swapinterval = Cvar_Get("r_ext_swapinterval", "1", CVAR_ARCHIVE);
 	r_ext_compiled_vertex_array = Cvar_Get("r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
 
 	r_arb_fragment_program = Cvar_Get("r_arb_fragment_program", "1", CVAR_ARCHIVE);
@@ -733,10 +717,6 @@ static void R_Register(void)
 	r_swapinterval = Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
 
 	r_saturatelighting = Cvar_Get("r_saturatelighting", "0", 0);
-
-	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE);
-	vid_gamma = Cvar_Get("vid_gamma", "0.8", CVAR_ARCHIVE); // Was 1.0
-	vid_ref = Cvar_Get("vid_ref", "gl", CVAR_ARCHIVE);
 
 	r_bloom = Cvar_Get("r_bloom", "0", CVAR_ARCHIVE); // BLOOMS
 
@@ -799,38 +779,6 @@ static qboolean R_SetMode(void)
 	return true;
 }
 
-// A non-ambiguous alternative to strstr.
-// Useful for parsing the GL extension string.
-// Similar to code in Fruitz of Dojo Quake2 MacOSX Port.
-static qboolean StringContainsToken(const char *string, const char *findToken)
-{
-	if (!string || !findToken) 
-		return false;
-
-	if (strchr(findToken, ' ') != NULL || findToken[0] == 0)
-		return false;
-
-	const char *strPos = string;
-	const int tokenLen = strlen(findToken);
-	
-	while (true)
-	{
-		char *tokPos = strstr(strPos, findToken);
-
-		if (!tokPos)
-			break;
-
-		char *terminatorPos = tokPos + tokenLen;
-
-		if ((tokPos == strPos || *(tokPos - 1) == ' ') && (*terminatorPos == ' ' || *terminatorPos == 0))
-			return true;
-
-		strPos = terminatorPos;
-	}
-
-	return false;
-}
-
 // Grabs GL extensions
 static qboolean R_CheckGLExtensions()
 {
@@ -867,19 +815,6 @@ static qboolean R_CheckGLExtensions()
 	{
 		VID_Printf(PRINT_ALL, "...GL_EXT/SGI_compiled_vertex_array not found\n");
 	}
-
-#ifdef _WIN32
-	// WGL_EXT_swap_control
-	if (StringContainsToken(glConfig.extensions_string, "WGL_EXT_swap_control"))
-	{
-		qwglSwapIntervalEXT = (BOOL(WINAPI *)(int))qwglGetProcAddress("wglSwapIntervalEXT");
-		VID_Printf(PRINT_ALL, "...enabling WGL_EXT_swap_control\n");
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
-	}
-#endif
 
 	// GL_ARB_fragment_program
 	glConfig.arb_fragment_program = false;
@@ -965,7 +900,7 @@ static qboolean R_CheckGLExtensions()
 	return true;
 }
 
-qboolean R_Init(void *hinstance, void *hWnd, char *reason)
+qboolean R_Init(char *reason)
 {	
 	Draw_GetPalette();
 	R_Register();
@@ -973,44 +908,22 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 	// Place default error
 	memcpy(reason, "Unknown failure on intialization!\0", 34);
 
-	// Initialize our QGL dynamic bindings
-	if (!QGL_Init(gl_driver->string))
-	{
-		QGL_Shutdown();
-		VID_Printf(PRINT_ALL, "R_Init() - could not load \"%s\"\n", gl_driver->string);
-		memcpy(reason, "Init of QGL dynamic bindings Failed!\0", 37);
-
-		return false;
-	}
-
-	// Initialize OS-specific parts of OpenGL
-	if (!GLimp_Init(hinstance, hWnd))
-	{
-		QGL_Shutdown();
-		memcpy(reason, "Init of OS-specific parts of OpenGL Failed!\0", 44);
-
-		return false;
-	}
-
 	// Set our "safe" modes
 	glState.prev_mode = 3;
 
 	// Create the window and set up the context
 	if (!R_SetMode())
 	{
-		QGL_Shutdown();
-		VID_Printf(PRINT_ALL, "R_Init() - could not R_SetMode()\n");
-		memcpy(reason, "Creation of the window/context set-up Failed!\0", 46);
-
+		memcpy(reason, "Creation of the window/context setup failed!\0", 45);
 		return false;
 	}
 
 	RB_InitBackend(); // Init mini-backend
 
 	//mxd. Load GL pointrs through GLAD.
-	if (!gladLoadGLLoader(&QGL_GetProcAddress))
+	if (!gladLoadGLLoader(&R_GetProcAddress))
 	{
-		VID_Printf(PRINT_ALL, S_COLOR_RED"%s: loading OpenGL function pointers failed!\n", __func__);
+		VID_Printf(PRINT_ALL, S_COLOR_RED"%s: failed to load OpenGL function pointers!\n", __func__);
 		return false;
 	}
 
@@ -1059,22 +972,11 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 			VID_Printf(PRINT_DEVELOPER, "\n");
 	}
 
-	Cvar_Set("scr_drawall", "0");
-
-#ifdef __linux__
-	Cvar_SetValue("r_finish", 1);
-#else
-	Cvar_SetValue("r_finish", 0);
-#endif
-
 	r_swapinterval->modified = true; // Force swapinterval update
 
 	// Grab extensions
 	if (!R_CheckGLExtensions())
-	{
-		QGL_Shutdown(); //mxd
 		return false;
-	}
 
 	GL_SetDefaultState();
 
@@ -1089,7 +991,7 @@ qboolean R_Init(void *hinstance, void *hWnd, char *reason)
 
 	const int err = qglGetError();
 	if (err != GL_NO_ERROR)
-		VID_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
+		VID_Printf(PRINT_ALL, S_COLOR_RED"%s: OpenGL initialization failed with error 0x%x!\n", __func__, err);
 
 	return true;
 }
@@ -1148,12 +1050,8 @@ void R_Shutdown(void)
 
 	// Shut down OS-specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
-
-	// Shutdown our QGL subsystem
-	QGL_Shutdown();
 }
 
-extern void UpdateGammaRamp(void); //Knightmare added
 extern void RefreshFont(void);
 
 void R_BeginFrame(float camera_separation)
@@ -1183,20 +1081,11 @@ void R_BeginFrame(float camera_separation)
 		ref->modified = true;
 	}
 
-	if (r_log->modified)
-	{
-		GLimp_EnableLogging(r_log->integer);
-		r_log->modified = false;
-	}
-
-	if (r_log->integer)
-		GLimp_LogNewFrame();
-
 	// Update gamma
 	if (vid_gamma->modified)
 	{
 		vid_gamma->modified = false;
-		UpdateGammaRamp();
+		R_UpdateGammaRamp();
 	}
 
 	GLimp_BeginFrame(camera_separation);

@@ -475,13 +475,8 @@ void GL_SelectTexture(unsigned tmu)
 	qglClientActiveTexture(GL_TEXTURE0 + tmu);
 }
 
-extern image_t *draw_chars;
-
 void GL_Bind(int texnum)
 {
-	if (r_nobind->value && draw_chars) // Performance evaluation option
-		texnum = draw_chars->texnum;
-
 	if (glState.currenttextures[glState.currenttmu] == texnum)
 		return;
 
@@ -516,12 +511,7 @@ void GL_UpdateSwapInterval(void)
 		registering = registration_active;
 
 		if (!glState.stereo_enabled)
-		{
-#ifdef _WIN32
-			if (qwglSwapIntervalEXT)
-				qwglSwapIntervalEXT(registration_active ? 0 : r_swapinterval->value);
-#endif
-		}
+			R_SetVsync(r_swapinterval->integer); //mxd
 	}
 }
 

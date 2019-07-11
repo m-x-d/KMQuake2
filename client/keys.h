@@ -20,18 +20,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-#define NUM_KEYBINDINGS 256 //mxd
-
 // These are the key numbers that should be passed to Key_Event
 typedef enum
 {
-	K_TAB		= 9,
-	K_ENTER		= 13,
-	K_ESCAPE	= 27,
-	K_SPACE		= 32,
+	K_TAB = 9,
+	K_ENTER = 13,
+	K_ESCAPE = 27,
+	K_SPACE = 32,
 
-	// Normal keys should be passed as lowercased ascii
-	K_BACKSPACE	= 127,
+	K_BACKSPACE = 127,
+
+	K_COMMAND = 128,
+	K_CAPSLOCK,
+	K_POWER,
+	K_PAUSE,
+
 	K_UPARROW,
 	K_DOWNARROW,
 	K_LEFTARROW,
@@ -40,6 +43,13 @@ typedef enum
 	K_ALT,
 	K_CTRL,
 	K_SHIFT,
+	K_INS,
+	K_DEL,
+	K_PGDN,
+	K_PGUP,
+	K_HOME,
+	K_END,
+
 	K_F1,
 	K_F2,
 	K_F3,
@@ -52,18 +62,11 @@ typedef enum
 	K_F10,
 	K_F11,
 	K_F12,
-	K_INS,
-	K_DEL,
-	K_PGDN,
-	K_PGUP,
-	K_HOME,
-	K_END,
+	K_F13,
+	K_F14,
+	K_F15,
 
-	K_NUMLOCK,
-	K_CAPSLOCK,
-	K_SCROLLOCK,
-
-	K_KP_HOME	= 160,
+	K_KP_HOME,
 	K_KP_UPARROW,
 	K_KP_PGUP,
 	K_KP_LEFTARROW,
@@ -78,25 +81,64 @@ typedef enum
 	K_KP_SLASH,
 	K_KP_MINUS,
 	K_KP_PLUS,
+	K_KP_NUMLOCK,
 	K_KP_MULT,
+	K_KP_EQUALS,
 
-	K_PAUSE		= 255,
-
-	// Mouse buttons generate virtual keys
-	K_MOUSE1	= 200,
+	K_MOUSE1,
 	K_MOUSE2,
 	K_MOUSE3,
 	K_MOUSE4,
 	K_MOUSE5,
 
-	// Joystick buttons
+	K_MWHEELDOWN,
+	K_MWHEELUP,
+
 	K_JOY1,
 	K_JOY2,
 	K_JOY3,
 	K_JOY4,
+	K_JOY5,
+	K_JOY6,
+	K_JOY7,
+	K_JOY8,
+	K_JOY9,
+	K_JOY10,
+	K_JOY11,
+	K_JOY12,
+	K_JOY13,
+	K_JOY14,
+	K_JOY15,
+	K_JOY16,
+	K_JOY17,
+	K_JOY18,
+	K_JOY19,
+	K_JOY20,
+	K_JOY21,
+	K_JOY22,
+	K_JOY23,
+	K_JOY24,
+	K_JOY25,
+	K_JOY26,
+	K_JOY27,
+	K_JOY28,
+	K_JOY29,
+	K_JOY30,
+	K_JOY31,
+	K_JOY32,
 
-	// Aux keys are for multi-buttoned joysticks to generate so they can use the normal binding process
-	K_AUX1,	
+	K_HAT_UP,
+	K_HAT_RIGHT,
+	K_HAT_DOWN,
+	K_HAT_LEFT,
+
+	K_TRIG_LEFT,
+	K_TRIG_RIGHT,
+
+	// Can't be mapped to any action
+	K_JOY_BACK,
+
+	K_AUX1,
 	K_AUX2,
 	K_AUX3,
 	K_AUX4,
@@ -129,12 +171,21 @@ typedef enum
 	K_AUX31,
 	K_AUX32,
 
-	K_MWHEELDOWN,
-	K_MWHEELUP,
+	K_SUPER,
+	K_COMPOSE,
+	K_MODE,
+	K_HELP,
+	K_PRINT,
+	K_SYSREQ,
+	K_SCROLLOCK,
+	K_MENU,
+	K_UNDO,
+
+	K_LAST
 } keynum_t;
 
-extern char *keybindings[NUM_KEYBINDINGS];
-extern int key_repeats[NUM_KEYBINDINGS];
+extern char *keybindings[K_LAST];
+extern int key_repeats[K_LAST];
 
 extern int anykeydown;
 extern char chat_buffer[];
@@ -142,11 +193,10 @@ extern int chat_bufferlen;
 extern int chat_backedit;
 extern qboolean chat_team;
 
-void Key_Event(int key, qboolean down, unsigned time);
+void Key_Event(int key, qboolean down);
 void Key_Init(void);
 void Key_WriteBindings(FILE *f);
 void Key_SetBinding(int keynum, char *binding);
 qboolean Key_IsDown(int key); //mxd
 void Key_ClearStates(void);
-int Key_GetKey(void);
 int Key_ConvertNumPadKey(int key); //mxd

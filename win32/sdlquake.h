@@ -17,25 +17,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+// sdlquake.h: SDL2-specific Quake 2 header file
 
 #pragma once
 
-#ifndef _WIN32
-	#error You should not be including this file on this platform
-#endif
+#include <SDL2/SDL.h>
 
-typedef struct
-{
-	HINSTANCE hInstance;
-	void *wndproc;
+// Application state
+extern qboolean activeapp; //mxd. int -> qboolean
+extern qboolean minimized;
 
-	HDC hDC;		// Handle to device context
-	HWND hWnd;		// Handle to window
-	HGLRC hGLRC;	// Handle to GL rendering context
+extern SDL_Window *window;
 
-	HINSTANCE hinstOpenGL; // HINSTANCE for the OpenGL library
-
-	FILE *log_fp;
-} glwstate_t;
-
-extern glwstate_t glw_state;
+extern int R_InitContext();
+extern qboolean VID_AppActivate(qboolean active, qboolean minimize);
+extern void GLimp_WindowEvent(SDL_Event *event);

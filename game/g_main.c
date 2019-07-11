@@ -122,7 +122,6 @@ cvar_t *monsterjump;
 cvar_t *readout;
 cvar_t *rocket_strafe;
 cvar_t *rotate_distance;
-cvar_t *s_primary;
 cvar_t *shift_distance;
 cvar_t *sv_maxgibs;
 cvar_t *turn_rider;

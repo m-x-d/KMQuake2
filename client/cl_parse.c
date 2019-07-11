@@ -65,7 +65,7 @@ void CL_RegisterSounds(void)
 			break;
 
 		cl.sound_precache[i] = S_RegisterSound(cl.configstrings[cs_sounds + i]);
-		Sys_SendKeyEvents(); // Pump message loop
+		IN_Update(); // Pump message loop
 	}
 
 	//end Knightmare

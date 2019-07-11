@@ -1,5 +1,6 @@
 /*
 Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 2001-2003 pat@aftermoon.net for modif flanked by <serverping>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,15 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-// Copyright (C) 2001-2003 pat@aftermoon.net for modif flanked by <serverping>
-
 // cl_main.c  -- client main loop
 
 #include "client.h"
-
-#ifdef _WIN32
-	#include "../win32/winquake.h"
-#endif
 
 cvar_t	*freelook;
 
@@ -826,7 +821,7 @@ void CL_Skins_f(void)
 
 		Com_Printf("client %i: %s\n", i, cl.configstrings[csplayerskins + i]);
 		SCR_UpdateScreen();
-		Sys_SendKeyEvents(); // Pump message loop
+		IN_Update(); // Pump message loop
 		CL_ParseClientinfo(i);
 	}
 }
@@ -905,7 +900,7 @@ void CL_ConnectionlessPacket(void)
 			return;
 		}
 
-		Sys_AppActivate();
+		GLimp_AppActivate(); //mxd
 		s = MSG_ReadString(&net_message);
 		Cbuf_AddText(s);
 		Cbuf_AddText("\n");
@@ -1400,10 +1395,7 @@ static void CL_RefreshInputs(void)
 	CL_ReadPackets();
 
 	// Get new key events
-	Sys_SendKeyEvents();
-
-	// Allow mice or other external controllers to add commands
-	IN_Commands();
+	IN_Update();
 
 	// Process console commands
 	Cbuf_Execute();
@@ -1540,7 +1532,7 @@ void CL_Frame_Async(int msec)
 			miscDelta = 0;
 
 			// Let the mouse activate or deactivate
-			IN_Frame();
+			IN_Update();
 
 			// Allow rendering DLL change
 			VID_CheckChanges();
@@ -1563,7 +1555,7 @@ void CL_Frame_Async(int msec)
 
 		// Update audio
 		S_Update(cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
-
+		
 		// Advance local effects for next frame
 		CL_RunDLights();
 		CL_RunLightStyles();
@@ -1599,10 +1591,7 @@ void CL_Frame_Async(int msec)
 void CL_SendCommand(void)
 {
 	// Get new key events
-	Sys_SendKeyEvents();
-
-	// Allow mice or other external controllers to add commands
-	IN_Commands();
+	IN_Update();
 
 	// Process console commands
 	Cbuf_Execute();
@@ -1665,7 +1654,7 @@ void CL_Frame(int msec)
 	}
 
 	// Let the mouse activate or deactivate
-	IN_Frame();
+	IN_Update();
 
 	// Decide the simulation time
 	cls.netFrameTime = extratime / 1000.0f;
@@ -1724,7 +1713,7 @@ void CL_Frame(int msec)
 
 	// Update audio
 	S_Update(cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
-
+	
 	// Advance local effects for next frame
 	CL_RunDLights();
 	CL_RunLightStyles();
@@ -1760,27 +1749,20 @@ void CL_Frame(int msec)
 
 void CL_Init(void)
 {
-	if (dedicated->value)
+	if (dedicated->integer)
 		return; // Nothing running on the client
 
 	// All archived variables will now be loaded
-
 	Con_Init();	
-#if defined __linux__
 	S_Init();
 	VID_Init();
-#else
-	VID_Init();
-	S_Init(); // Sound must be initialized after window is created
-#endif
-	
 	V_Init();
 	
 	net_message.data = net_message_buffer;
 	net_message.maxsize = sizeof(net_message_buffer);
 
 	UI_Init();
-	
+
 	SCR_Init();
 	cls.disable_screen = true; // Don't draw yet
 

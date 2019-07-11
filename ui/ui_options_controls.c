@@ -31,12 +31,13 @@ static menulist_s		s_options_controls_alwaysrun_box;
 static menulist_s		s_options_controls_thirdperson_box;
 static menuslider_s		s_options_controls_thirdperson_distance_slider;
 static menuslider_s		s_options_controls_thirdperson_angle_slider;
+static menulist_s		s_options_controls_mouseacceleration_box; //mxd
+static menulist_s		s_options_controls_mousesmoothing_box; //mxd
 static menulist_s		s_options_controls_invertmouse_box;
 static menulist_s		s_options_controls_autosensitivity_box;
 static menulist_s		s_options_controls_lookspring_box;
 static menulist_s		s_options_controls_lookstrafe_box;
 static menulist_s		s_options_controls_freelook_box;
-static menulist_s		s_options_controls_joystick_box;
 static menuaction_s		s_options_controls_customize_keys_action;
 static menuaction_s		s_options_controls_defaults_action;
 static menuaction_s		s_options_controls_back_action;
@@ -74,6 +75,16 @@ static void FreeLookFunc(void *unused)
 	Cvar_SetValue("freelook", s_options_controls_freelook_box.curvalue);
 }
 
+static void MouseAccelerationFunc(void *unused) //mxd
+{
+	Cvar_SetValue("m_acceleration", s_options_controls_mouseacceleration_box.curvalue);
+}
+
+static void MouseSmoothingFunc(void *unused) //mxd
+{
+	Cvar_SetValue("m_filter", s_options_controls_mousesmoothing_box.curvalue);
+}
+
 static void InvertMouseFunc(void *unused)
 {
 	Cvar_SetValue("m_pitch", -m_pitch->value);
@@ -94,11 +105,6 @@ static void LookstrafeFunc(void *unused)
 	Cvar_SetValue("lookstrafe", !lookstrafe->value);
 }
 
-static void JoystickFunc(void *unused)
-{
-	Cvar_SetValue("in_joystick", s_options_controls_joystick_box.curvalue);
-}
-
 static void CustomizeControlsFunc(void *unused)
 {
 	M_Menu_Keys_f();
@@ -108,8 +114,12 @@ static void CustomizeControlsFunc(void *unused)
 
 static void ControlsSetMenuItemValues(void)
 {
-	s_options_controls_sensitivity_slider.curvalue	= Cvar_VariableValue("sensitivity") * 2;
-	s_options_controls_invertmouse_box.curvalue		= Cvar_VariableValue("m_pitch") < 0;
+	s_options_controls_sensitivity_slider.curvalue = Cvar_VariableValue("sensitivity") * 2;
+	Cvar_SetValue("m_acceleration", ClampCvar(0, 1, Cvar_VariableValue("m_acceleration"))); //mxd
+	s_options_controls_mouseacceleration_box.curvalue = Cvar_VariableValue("m_acceleration");
+	Cvar_SetValue("m_filter", ClampCvar(0, 1, Cvar_VariableValue("m_filter"))); //mxd
+	s_options_controls_mousesmoothing_box.curvalue = Cvar_VariableValue("m_filter");
+	s_options_controls_invertmouse_box.curvalue = Cvar_VariableValue("m_pitch") < 0;
 
 	Cvar_SetValue("autosensitivity", ClampCvar(0, 1, Cvar_VariableValue("autosensitivity")));
 	s_options_controls_autosensitivity_box.curvalue = Cvar_VariableValue("autosensitivity");
@@ -130,9 +140,6 @@ static void ControlsSetMenuItemValues(void)
 
 	Cvar_SetValue("freelook", ClampCvar(0, 1, Cvar_VariableValue("freelook")));
 	s_options_controls_freelook_box.curvalue = Cvar_VariableValue("freelook");
-
-	Cvar_SetValue("in_joystick", ClampCvar(0, 1, Cvar_VariableValue("in_joystick")));
-	s_options_controls_joystick_box.curvalue = Cvar_VariableValue("in_joystick");
 }
 
 static void ControlsResetDefaultsFunc(void *unused)
@@ -140,6 +147,8 @@ static void ControlsResetDefaultsFunc(void *unused)
 	//Cvar_SetToDefault("sensitivity");
 	//Cvar_SetToDefault("m_pitch");
 	Cvar_SetToDefault("autosensitivity");
+	Cvar_SetToDefault("m_filter"); //mxd
+	Cvar_SetToDefault("m_acceleration"); //mxd
 
 	Cvar_SetToDefault("cg_thirdperson");
 	Cvar_SetToDefault("cg_thirdperson_dist");
@@ -148,7 +157,6 @@ static void ControlsResetDefaultsFunc(void *unused)
 	//Cvar_SetToDefault("lookspring");
 	//Cvar_SetToDefault("lookstrafe");
 	//Cvar_SetToDefault("freelook");
-	Cvar_SetToDefault("in_joystick");
 
 	Cbuf_AddText("exec defaultbinds.cfg\n"); // Reset keybindings 
 	Cbuf_Execute();
@@ -179,6 +187,22 @@ void Options_Controls_MenuInit(void)
 	s_options_controls_sensitivity_slider.numdecimals		= 1; //mxd
 	s_options_controls_sensitivity_slider.generic.statusbar	= "Changes sensitivity of mouse for looking around";
 	s_options_controls_sensitivity_slider.cvar				= sensitivity; //mxd
+
+	s_options_controls_mouseacceleration_box.generic.type		= MTYPE_SPINCONTROL;
+	s_options_controls_mouseacceleration_box.generic.x			= 0;
+	s_options_controls_mouseacceleration_box.generic.y			= y += MENU_LINE_SIZE;
+	s_options_controls_mouseacceleration_box.generic.name		= "Mouse acceleration";
+	s_options_controls_mouseacceleration_box.generic.callback	= MouseAccelerationFunc;
+	s_options_controls_mouseacceleration_box.itemnames			= yesno_names;
+	s_options_controls_mouseacceleration_box.generic.statusbar	= "Enables SDL2 mouse acceleration";
+
+	s_options_controls_mousesmoothing_box.generic.type		= MTYPE_SPINCONTROL;
+	s_options_controls_mousesmoothing_box.generic.x			= 0;
+	s_options_controls_mousesmoothing_box.generic.y			= y += MENU_LINE_SIZE;
+	s_options_controls_mousesmoothing_box.generic.name		= "Mouse smoothing";
+	s_options_controls_mousesmoothing_box.generic.callback	= MouseSmoothingFunc;
+	s_options_controls_mousesmoothing_box.itemnames			= yesno_names;
+	s_options_controls_mousesmoothing_box.generic.statusbar	= "Interpolates mouse movement";
 
 	s_options_controls_invertmouse_box.generic.type			= MTYPE_SPINCONTROL;
 	s_options_controls_invertmouse_box.generic.x			= 0;
@@ -256,14 +280,6 @@ void Options_Controls_MenuInit(void)
 	s_options_controls_freelook_box.itemnames			= yesno_names;
 	s_options_controls_freelook_box.generic.statusbar	= "Enables free head movement with mouse";
 
-	s_options_controls_joystick_box.generic.type		= MTYPE_SPINCONTROL;
-	s_options_controls_joystick_box.generic.x			= 0;
-	s_options_controls_joystick_box.generic.y			= y += MENU_LINE_SIZE;
-	s_options_controls_joystick_box.generic.name		= "Use joystick";
-	s_options_controls_joystick_box.generic.callback	= JoystickFunc;
-	s_options_controls_joystick_box.itemnames			= yesno_names;
-	s_options_controls_joystick_box.generic.statusbar	= "Enables use of joystick";
-
 	s_options_controls_customize_keys_action.generic.type		= MTYPE_ACTION;
 	s_options_controls_customize_keys_action.generic.flags		= QMF_LEFT_JUSTIFY; //mxd
 	s_options_controls_customize_keys_action.generic.name		= "Customize controls";
@@ -288,6 +304,8 @@ void Options_Controls_MenuInit(void)
 
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_header);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_sensitivity_slider);
+	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_mouseacceleration_box); //mxd
+	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_mousesmoothing_box); //mxd
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_invertmouse_box);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_autosensitivity_box);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_thirdperson_box);
@@ -297,7 +315,6 @@ void Options_Controls_MenuInit(void)
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_lookspring_box);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_lookstrafe_box);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_freelook_box);
-	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_joystick_box);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_customize_keys_action);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_defaults_action);
 	Menu_AddItem(&s_options_controls_menu, (void *)&s_options_controls_back_action);

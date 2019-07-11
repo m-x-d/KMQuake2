@@ -334,7 +334,7 @@ void CL_PrepRefresh(void)
 		}
 
 		SCR_UpdateScreen();
-		Sys_SendKeyEvents(); // Pump message loop
+		IN_Update(); // Pump message loop
 		if (pname[0] == '#')
 		{
 			// Special player weapon model
@@ -378,7 +378,7 @@ void CL_PrepRefresh(void)
 	for (int i = 1; i < maximages && cl.configstrings[csimages + i][0]; i++)
 	{
 		cl.image_precache[i] = R_DrawFindPic(cl.configstrings[csimages + i]);
-		Sys_SendKeyEvents(); // Pump message loop
+		IN_Update(); // Pump message loop
 		
 		// Knightmare- for Psychospaz's map loading screen
 		loadingPercent += 20.0f / (float)max;
@@ -404,7 +404,7 @@ void CL_PrepRefresh(void)
 		
 		Com_Printf("client %i\r", i);
 		SCR_UpdateScreen();
-		Sys_SendKeyEvents(); // Pump message loop
+		IN_Update(); // Pump message loop
 		CL_ParseClientinfo(i);
 		Com_Printf("                                     \r");
 

@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DEFAULTMODEL	"male"
 #define DEFAULTSKIN		"grunt"
 
-#ifdef WIN32
+#ifdef _WIN32
 	#ifdef NDEBUG
 		#define BUILDSTRING "Win32 RELEASE"
 	#else
@@ -870,18 +870,14 @@ void SCR_DebugGraph(float value, int color);
 */
 
 void Sys_Init(void);
-
-void Sys_AppActivate(void);
-
 void Sys_UnloadGame(void);
+
+// Loads the game dll and calls the api init function
 void *Sys_GetGameAPI(void *parms);
-// loads the game dll and calls the api init function
 
 char *Sys_ConsoleInput(void);
 void Sys_ConsoleOutput(char *text);
-void Sys_SendKeyEvents(void);
 void Sys_Quit(qboolean error); //mxd. +error
-char *Sys_GetClipboardData(void);
 
 
 /*

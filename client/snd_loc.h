@@ -21,23 +21,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
+#pragma region ======================= Sound backend structs
+
+// Holds one sample with 2 channels
 typedef struct
 {
 	int left;
 	int right;
 } portable_samplepair_t;
 
+// Holds a cached SFX and it's meta data
 typedef struct
 {
 	int length;
 	int loopstart;
-	int speed; // Not needed, because converted on load?
 	int width;
 	int stereo;
-	qboolean music;
 	byte data[1]; // Variable sized
 } sfxcache_t;
 
+// Holds a SFX
 typedef struct sfx_s
 {
 	char name[MAX_QPATH];
@@ -50,7 +53,8 @@ typedef struct sfx_s
 // when the mixer reaches playsound->begin, the playsound will be assigned to a channel.
 typedef struct playsound_s
 {
-	struct playsound_s *prev, *next;
+	struct playsound_s *prev;
+	struct playsound_s *next;
 	sfx_t *sfx;
 	float volume;
 	float attenuation;
@@ -58,20 +62,22 @@ typedef struct playsound_s
 	int entchannel;
 	qboolean fixed_origin; // Use origin field instead of entnum's origin
 	vec3_t origin;
-	unsigned begin; // Begin on this sample
+	uint begin; // Begin on this sample
 } playsound_t;
 
+// Interface to pass data and metadata between the frontend and the backend.
 typedef struct
 {
 	int channels;
-	int samples; // Mono samples in buffer. Don't mix less than this # in mono samples
-	int submission_chunk;
+	int samples; // Mono samples in buffer
+	int submission_chunk; // Don't mix less than this in mono samples
 	int samplepos;
 	int samplebits;
 	int speed;
 	byte *buffer;
-} dma_t;
+} sound_t;
 
+// Holds all information for one playback channel.
 typedef struct
 {
 	sfx_t *sfx;		// sfx number
@@ -79,17 +85,17 @@ typedef struct
 	int rightvol;	// 0-255 volume
 	int end;		// End time in global paintsamples
 	int pos;		// Sample position in sfx
-	int looping;	// Where to loop, -1 = no looping OBSOLETE?
 	int entnum;		// To allow overriding a specific sound
 	int entchannel;
-	vec3_t origin;			// only use if fixed_origin is set
-	vec_t dist_mult;		// distance multiplier (attenuation/clipK)
+	vec3_t origin;			// Only use if fixed_origin is set
+	vec_t dist_mult;		// Distance multiplier (attenuation/clipK)
 	int master_vol;			// 0-255 master volume
 	qboolean fixed_origin;	// Use origin instead of fetching entnum's origin
 	qboolean autosound;		// From an entity->sound, cleared each frame
 	qboolean streaming;		// If true, OGG track is streamed using this channel
 } channel_t;
 
+// Information read from wave file header.
 typedef struct
 {
 	int rate;
@@ -100,51 +106,57 @@ typedef struct
 	int dataofs; // Chunk starts this many bytes from file start
 } wavinfo_t;
 
-#pragma region ======================= SYSTEM SPECIFIC FUNCTIONS
+#pragma endregion
 
-// Initializes cycling through a DMA buffer and returns information on it
-int SNDDMA_Init(void); //mxd. qboolean -> int
-
-// Gets the current DMA position
-int SNDDMA_GetDMAPos(void);
-
-// Shutdown the DMA xfer.
-void SNDDMA_Shutdown(void);
-void SNDDMA_BeginPainting (void);
-void SNDDMA_Submit(void);
-
-//====================================================================
+#pragma region ======================= Sound backend variables
 
 #define	MAX_CHANNELS	64	//<- CDawg changed, was 32
 extern channel_t channels[MAX_CHANNELS];
+extern int s_numchannels; //mxd
 
 extern int paintedtime;
 extern int s_rawend;
-extern dma_t dma;
+extern sound_t sound; //mxd
+extern qboolean sound_started; //mxd
 extern playsound_t s_pendingplays;
 
-#define	MAX_RAW_SAMPLES 8192
+extern vec3_t listener_origin; //mxd
+extern vec3_t listener_right; //mxd
+
+#define	MAX_RAW_SAMPLES	8192
 extern portable_samplepair_t s_rawsamples[MAX_RAW_SAMPLES];
 
 extern cvar_t *s_volume;
-extern cvar_t *s_nosound;
 extern cvar_t *s_loadas8bit;
 extern cvar_t *s_khz;
 extern cvar_t *s_show;
 extern cvar_t *s_mixahead;
 extern cvar_t *s_testsound;
-extern cvar_t *s_primary;
 extern cvar_t *s_musicvolume; // Q2E
+extern cvar_t *s_sndbits; //mxd
+extern cvar_t *s_sndchannels; //mxd
 
-void S_InitScaletable(void);
+#pragma endregion
+
+#pragma region ======================= Sound backend functions
+
 sfxcache_t *S_LoadSound(sfx_t *s);
+wavinfo_t S_GetWavInfo(char *name, byte *wav, int wavlength); //mxd
 void S_IssuePlaysound(playsound_t *ps);
-void S_PaintChannels(int endtime);
 
 // Picks a channel based on priorities, empty slots, number of channels
 channel_t *S_PickChannel(int entnum, int entchannel);
 
-// Spatializes a channel
-void S_Spatialize(channel_t *ch);
+#pragma endregion
+
+#pragma region ======================= SDL2 sound functions
+
+qboolean SDL_BackendInit();
+void SDL_BackendShutdown();
+void SDL_Update();
+qboolean SDL_Cache(sfx_t *sfx, const wavinfo_t *info, const byte *data);
+void SDL_RawSamples(const int samples, const int rate, const int width, const int channels, const byte *data, const float volume);
+void SDL_Spatialize(channel_t *ch);
+void SDL_ClearBuffer();
 
 #pragma endregion

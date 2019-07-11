@@ -23,12 +23,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef struct vrect_s
 {
-	int	x, y, width, height;
+	int x;
+	int y;
+	int width;
+	int height;
 } vrect_t;
 
 typedef struct
 {
-	int width, height;	// Coordinates from main game
+	int width; // Coordinates from main game
+	int height;
 } viddef_t;
 
 extern viddef_t viddef; // Global video state
@@ -37,3 +41,10 @@ extern viddef_t viddef; // Global video state
 void VID_Init(void);
 void VID_Shutdown(void);
 void VID_CheckChanges(void);
+
+// Stuff provided by platform backend.
+qboolean GLimp_Init();
+void GLimp_GrabInput(qboolean grab);
+qboolean GLimp_GetWindowPosition(int *x, int *y);
+qboolean GLimp_SetWindowPosition(const int x, const int y);
+void GLimp_AppActivate();

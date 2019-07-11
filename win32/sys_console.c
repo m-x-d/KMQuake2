@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define MAX_OUTPUT		32768
 #define MAX_INPUT		256
 
+static HINSTANCE hinstance; //mxd. Made much less global...
+
 typedef struct
 {
 	int			outLen;					// To keep track of output buffer len
@@ -347,7 +349,7 @@ void Sys_ShutdownConsole(void)
 
 	ShowWindow(sys_console.hWnd, SW_HIDE);
 	DestroyWindow(sys_console.hWnd);
-	UnregisterClass(CONSOLE_WINDOW_CLASS_NAME, global_hInstance);
+	UnregisterClass(CONSOLE_WINDOW_CLASS_NAME, hinstance);
 }
 
 #define LOGO_OFFSET 125
@@ -360,6 +362,9 @@ void Sys_InitDedConsole(void)
 	//mxd. Ensure that the common control DLL is loaded... 
 	INITCOMMONCONTROLSEX icex = { sizeof(INITCOMMONCONTROLSEX), ICC_STANDARD_CLASSES };
 	InitCommonControlsEx(&icex);
+
+	//mxd. Get module hinstance.
+	hinstance = GetModuleHandle(NULL);
 
 	// Center the window in the desktop
 	HDC hDC = GetDC(0);
@@ -383,8 +388,8 @@ void Sys_InitDedConsole(void)
 	wc.lpfnWndProc		= (WNDPROC)Sys_ConsoleProc;
 	wc.cbClsExtra		= 0;
 	wc.cbWndExtra		= 0;
-	wc.hInstance		= global_hInstance;
-	wc.hIcon			= LoadIcon(global_hInstance, MAKEINTRESOURCE(IDI_ICON1));
+	wc.hInstance		= hinstance;
+	wc.hIcon			= LoadIcon(hinstance, MAKEINTRESOURCE(IDI_ICON1));
 	wc.hIconSm			= 0;
 	wc.hCursor			= LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground	= (HBRUSH)COLOR_WINDOW;
@@ -398,25 +403,25 @@ void Sys_InitDedConsole(void)
 		exit(0);
 	}
 
-	sys_console.hWnd = CreateWindowEx(0, CONSOLE_WINDOW_CLASS_NAME, CONSOLE_WINDOW_NAME, CONSOLE_WINDOW_STYLE, x, y, w, h, NULL, NULL, global_hInstance, NULL);
+	sys_console.hWnd = CreateWindowEx(0, CONSOLE_WINDOW_CLASS_NAME, CONSOLE_WINDOW_NAME, CONSOLE_WINDOW_STYLE, x, y, w, h, NULL, NULL, hinstance, NULL);
 	if (!sys_console.hWnd)
 	{
-		UnregisterClass(CONSOLE_WINDOW_CLASS_NAME, global_hInstance);
+		UnregisterClass(CONSOLE_WINDOW_CLASS_NAME, hinstance);
 
 		MessageBox(NULL, "Could not create console window", "ERROR", MB_OK | MB_ICONERROR | MB_TASKMODAL);
 		exit(0);
 	}
 
-	sys_console.hWndMsg = CreateWindowEx(0, "STATIC", "", WS_CHILD | SS_SUNKEN, 5, 5, 530, 30, sys_console.hWnd, NULL, global_hInstance, NULL); // was 5, 5, 530, 30
-	sys_console.hWndOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE, 5, 40 + LOGO_OFFSET, 530, 350, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndInput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 5, 395 + LOGO_OFFSET, 530, 20, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndCopy = CreateWindowEx(0, "BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 422 + LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 422 + LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hWndQuit = CreateWindowEx(0, "BUTTON", "Quit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 445, 422 + LOGO_OFFSET, 90, 28, sys_console.hWnd, NULL, global_hInstance, NULL);
+	sys_console.hWndMsg = CreateWindowEx(0, "STATIC", "", WS_CHILD | SS_SUNKEN, 5, 5, 530, 30, sys_console.hWnd, NULL, hinstance, NULL); // was 5, 5, 530, 30
+	sys_console.hWndOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE, 5, 40 + LOGO_OFFSET, 530, 350, sys_console.hWnd, NULL, hinstance, NULL);
+	sys_console.hWndInput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 5, 395 + LOGO_OFFSET, 530, 20, sys_console.hWnd, NULL, hinstance, NULL);
+	sys_console.hWndCopy = CreateWindowEx(0, "BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 422 + LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, hinstance, NULL);
+	sys_console.hWndClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 422 + LOGO_OFFSET, 80, 28, sys_console.hWnd, NULL, hinstance, NULL);
+	sys_console.hWndQuit = CreateWindowEx(0, "BUTTON", "Quit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 445, 422 + LOGO_OFFSET, 90, 28, sys_console.hWnd, NULL, hinstance, NULL);
 
 	// splash logo
-	sys_console.hWndLogo = CreateWindowEx(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_CENTERIMAGE, 0, 0, 540, 160, sys_console.hWnd, NULL, global_hInstance, NULL);
-	sys_console.hLogoImage = (HBITMAP)LoadImage(global_hInstance, MAKEINTRESOURCE(IDB_BITMAP1),IMAGE_BITMAP,0,0,LR_LOADMAP3DCOLORS);
+	sys_console.hWndLogo = CreateWindowEx(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_BITMAP | SS_CENTERIMAGE, 0, 0, 540, 160, sys_console.hWnd, NULL, hinstance, NULL);
+	sys_console.hLogoImage = (HBITMAP)LoadImage(hinstance, MAKEINTRESOURCE(IDB_BITMAP1),IMAGE_BITMAP,0,0,LR_LOADMAP3DCOLORS);
 
 	// Create and set fonts
 	sys_console.hFont =		   CreateFont(18, 0, 0, 0, FW_LIGHT,    FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Segoe UI");

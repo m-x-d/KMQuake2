@@ -78,12 +78,6 @@
     <ClCompile Include="..\..\..\client\snd_mem.c">
       <Filter>Source Files\sound</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\client\snd_mix.c">
-      <Filter>Source Files\sound</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\win32\snd_win.c">
-      <Filter>Source Files\sound</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\client\cl_cinematic.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
@@ -226,9 +220,6 @@
       <Filter>Source Files\system</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\win32\glw_imp.c">
-      <Filter>Source Files\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\win32\qgl_win.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\renderer\r_alias.c">
@@ -411,6 +402,12 @@
     <ClCompile Include="..\..\..\include\glad\glad.c">
       <Filter>Include files\glad</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\renderer\r_sdl2.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\client\snd_sdl2.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\client.h">
@@ -461,9 +458,6 @@
     <ClInclude Include="..\..\..\game\q_shared.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\renderer\qgl.h">
-      <Filter>Header Files\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\game\game.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
@@ -491,7 +485,7 @@
     <ClInclude Include="..\..\..\win32\resource.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\win32\glw_win.h">
+    <ClInclude Include="..\..\..\win32\sdlquake.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
   </ItemGroup>

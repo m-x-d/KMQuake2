@@ -17,186 +17,251 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+
 /*
-** GLW_IMP.C
-**
-** This file contains ALL Win32 specific stuff having to do with the
-** OpenGL refresh.  When a port is being made the following functions
-** must be implemented by the port:
-**
-** GLimp_EndFrame
-** GLimp_Init
-** GLimp_Shutdown
-** GLimp_SwitchFullscreen
-**
-*/
-#include <assert.h>
-#include <windows.h>
+This is the client side of the render backend, implemented trough SDL.
+The SDL window and related functrion (mouse grap, fullscreen switch)
+are implemented here, everything else is in the r_sdl2.c.
+ */
+
+#include <SDL2/SDL_video.h>
 #include "../renderer/r_local.h"
-#include "resource.h"
-#include "glw_win.h"
-#include "winquake.h"
+#include "../win32/sdlquake.h" //mxd
 
-qboolean GLimp_InitGL(void);
-
-glwstate_t glw_state;
+#define WINDOW_TITLE		ENGINE_NAME
+#define WINDOW_TITLE_MP1	ENGINE_NAME" - The Reckoning"
+#define WINDOW_TITLE_MP2	ENGINE_NAME" - Ground Zero"
 
 extern cvar_t *vid_ref;
 
-// Knightmare- added Vic's hardware gammaramp
-static WORD original_ramp[3][256];
-static WORD gamma_ramp[3][256];
+SDL_Window *window = NULL;
+static qboolean initSuccessful = false;
 
-static void InitGammaRamp(void)
+// (Un)grab Input
+void GLimp_GrabInput(qboolean grab)
 {
-	if (!r_ignorehwgamma->value)
-		glState.gammaRamp = GetDeviceGammaRamp(glw_state.hDC, original_ramp);
-	else
-		glState.gammaRamp = false;
+	const SDL_bool dograb = (grab ? SDL_TRUE : SDL_FALSE);
+	
+	if (window != NULL)
+		SDL_SetWindowGrab(window, dograb);
 
-	if (glState.gammaRamp)
-		vid_gamma->modified = true;
+	if (SDL_SetRelativeMouseMode(dograb) < 0)
+		Com_Printf(S_COLOR_YELLOW"WARNING: setting relative mouse mode failed: %s\n", SDL_GetError());
 }
 
-static void ShutdownGammaRamp(void)
+// Shuts the SDL render backend down
+static void ShutdownGraphics(void)
 {
-	if (!glState.gammaRamp)
-		return;
-	
-	SetDeviceGammaRamp(glw_state.hDC, original_ramp);
-}
-
-void UpdateGammaRamp(void)
-{
-	if (!glState.gammaRamp)
-		return;
-	
-	memcpy(gamma_ramp, original_ramp, sizeof(original_ramp));
-
-	for (int o = 0; o < 3; o++) 
+	if (window)
 	{
-		for (int i = 0; i < 256; i++) 
-		{
-			int v = 255 * powf((i + 0.5f) / 255.5f, vid_gamma->value) + 0.5f;
-			v = clamp(v, 0, 255); //mxd
-			gamma_ramp[o][i] = (WORD)v << 8;
-		}
+		// Cleanly ungrab input (needs window)
+		GLimp_GrabInput(false);
+		SDL_DestroyWindow(window);
+
+		window = NULL;
 	}
 
-	SetDeviceGammaRamp(glw_state.hDC, gamma_ramp);
+	initSuccessful = false; // Not initialized anymore
 }
-
-static void ToggleGammaRamp(qboolean enable)
-{
-	if (!glState.gammaRamp)
-		return;
-
-	SetDeviceGammaRamp(glw_state.hDC, (enable ? gamma_ramp : original_ramp));
-}
-// end Vic's hardware gammaramp
 
 extern qboolean FS_ModType(char *name);
 
-#define WINDOW_CLASS_NAME	ENGINE_NAME // changed
-#define WINDOW_CLASS_NAME2	ENGINE_NAME" - The Reckoning" // changed
-#define WINDOW_CLASS_NAME3	ENGINE_NAME" - Ground Zero" // changed
-
-static qboolean VID_CreateWindow(int width, int height, qboolean fullscreen)
+static qboolean CreateSDLWindow(int flags, int x, int y, int w, int h)
 {
-	WNDCLASS wc;
-	int stylebits;
-	int x, y;
-	int exstyle;
-
-	/* Register the frame class */
-	wc.style = 0;
-	wc.lpfnWndProc = (WNDPROC)glw_state.wndproc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = glw_state.hInstance;
-
+	char *title;
 	if (FS_ModType("xatrix")) // q2mp1
-		wc.hIcon = LoadIcon(glw_state.hInstance, MAKEINTRESOURCE(IDI_ICON2));
+		title = WINDOW_TITLE_MP1;
 	else if (FS_ModType("rogue")) // q2mp2
-		wc.hIcon = LoadIcon(glw_state.hInstance, MAKEINTRESOURCE(IDI_ICON3));
-	else 
-		wc.hIcon = LoadIcon(glw_state.hInstance, MAKEINTRESOURCE(IDI_ICON1));
-
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (void *)COLOR_GRAYTEXT;
-	wc.lpszMenuName = 0;
-	wc.lpszClassName = WINDOW_CLASS_NAME;
-
-	if (!RegisterClass(&wc))
-		VID_Error(ERR_FATAL, "Couldn't register window class");
-
-	if (fullscreen)
-	{
-		exstyle = WS_EX_TOPMOST;
-		//stylebits = WS_POPUP|WS_VISIBLE;
-		stylebits = WS_POPUP | WS_SYSMENU | WS_VISIBLE;
-	}
+		title = WINDOW_TITLE_MP2;
 	else
-	{
-		exstyle = 0;
-		//stylebits = WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE;
-		stylebits = WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
-	}
-
-	RECT r = {
-		.left = 0,
-		.top = 0,
-		.right = width,
-		.bottom = height
-	};
-
-	AdjustWindowRect(&r, stylebits, FALSE);
-
-	const int w = r.right - r.left;
-	const int h = r.bottom - r.top;
-
-	if (fullscreen)
-	{
-		x = 0;
-		y = 0;
-	}
-	else
-	{
-		cvar_t *vid_xpos = Cvar_Get("vid_xpos", "0", 0);
-		cvar_t *vid_ypos = Cvar_Get("vid_ypos", "0", 0);
-		x = vid_xpos->integer;
-		y = vid_ypos->integer;
-	}
-
-	glw_state.hWnd = CreateWindowEx(
-		 exstyle, 
-		 WINDOW_CLASS_NAME,
-		 ENGINE_NAME, //mxd. Changed to ENGINE_NAME
-		 stylebits,
-		 x, y, w, h,
-		 NULL,
-		 NULL,
-		 glw_state.hInstance,
-		 NULL);
-
-	if (!glw_state.hWnd)
-		VID_Error(ERR_FATAL, "Couldn't create window");
+		title = WINDOW_TITLE;
 	
-	ShowWindow(glw_state.hWnd, SW_SHOW);
-	UpdateWindow(glw_state.hWnd);
+	window = SDL_CreateWindow(title, x, y, w, h, flags);
 
-	// Init all the gl stuff for the window
-	if (!GLimp_InitGL())
+	return window != NULL;
+}
+
+static qboolean GLimp_GetWindowSize(int *w, int *h)
+{
+	if (window == NULL || w == NULL || h == NULL)
+		return false;
+
+	SDL_DisplayMode m;
+
+	if (SDL_GetWindowDisplayMode(window, &m) != 0)
 	{
-		VID_Printf(PRINT_ALL, "VID_CreateWindow() - GLimp_InitGL failed\n");
+		VID_Printf(PRINT_ALL, "Can't get display mode: %s\n", SDL_GetError());
 		return false;
 	}
 
-	SetForegroundWindow(glw_state.hWnd);
-	SetFocus(glw_state.hWnd);
+	*w = m.w;
+	*h = m.h;
 
-	// Let the sound and input subsystems know about the new window
-	VID_NewWindow(width, height);
+	return true;
+}
+
+qboolean GLimp_GetWindowPosition(int *x, int *y) //mxd
+{
+	if (window == NULL)
+		return false;
+	
+	SDL_GetWindowPosition(window, x, y);
+	return true;
+}
+
+qboolean GLimp_SetWindowPosition(const int x, const int y) //mxd
+{
+	if (window == NULL)
+		return false;
+	
+	SDL_SetWindowPosition(window, x, y);
+	return true;
+}
+
+void GLimp_AppActivate() //mxd
+{
+	SDL_ShowWindow(window);
+	SDL_RaiseWindow(window);
+}
+
+//mxd. Process SDL_WINDOWEVENT
+void GLimp_WindowEvent(SDL_Event *event)
+{
+	switch (event->window.event)
+	{
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+		{	
+			const Uint32 flags = SDL_GetWindowFlags(window);
+			const qboolean appactive = (event->window.event == SDL_WINDOWEVENT_FOCUS_GAINED);
+			const qboolean isminimized = (flags & SDL_WINDOW_MINIMIZED);
+
+			if (VID_AppActivate(appactive, isminimized)) // Let the input know...
+				GLimp_AppActivate();
+		} break;
+
+		case SDL_WINDOWEVENT_MOVED:
+			if (window != NULL)
+			{
+				int x, y;
+				SDL_GetWindowPosition(window, &x, &y);
+				Cvar_SetValue("vid_xpos", x);
+				Cvar_SetValue("vid_ypos", y);
+				vid_xpos->modified = false;
+				vid_ypos->modified = false;
+			}
+			break;
+
+		case SDL_WINDOWEVENT_SIZE_CHANGED:
+			//TODO: mxd. Update custom window size
+			break;
+	}
+}
+
+static int GetFullscreenType()
+{
+	if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP)
+		return 1;
+
+	if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN)
+		return 2;
+
+	return 0;
+}
+
+// (Re)initializes the actual window
+qboolean GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
+{
+	uint flags = SDL_WINDOW_OPENGL | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+
+	// Only do this if we already have a working window and a fully	initialized rendering backend
+	// GLimp_InitGraphics() is also	called when recovering if creating GL context fails or the one we got is unusable.
+	int curWidth, curHeight;
+	if (initSuccessful && GLimp_GetWindowSize(&curWidth, &curHeight) && (curWidth == *pwidth) && (curHeight == *pheight))
+	{
+		// If we want fullscreen, but aren't
+		if (GetFullscreenType())
+		{
+			SDL_SetWindowFullscreen(window, flags);
+			Cvar_SetValue("vid_fullscreen", fullscreen);
+		}
+
+		// Are we now?
+		if (GetFullscreenType())
+			return true;
+	}
+
+	// Is the surface used?
+	if (window)
+	{
+		R_ShutdownContext();
+		ShutdownGraphics();
+
+		window = NULL;
+	}
+
+	// We need the window size for the menu, the HUD, etc.
+	VID_NewWindow(*pwidth, *pheight);
+
+	// Reset SDL
+	SDL_GL_ResetAttributes();
+
+	// Let renderer prepare things (set OpenGL attributes).
+	if (!R_PrepareForWindow())
+		return false; // It's PrepareForWindow() job to log an error
+
+	//mxd. Check window position cvars
+	const int wx = (!Q_stricmp(vid_xpos->string, "centered") ? SDL_WINDOWPOS_CENTERED : vid_xpos->integer);
+	const int wy = (!Q_stricmp(vid_ypos->string, "centered") ? SDL_WINDOWPOS_CENTERED : vid_ypos->integer);
+
+	// Create the window
+	while (true)
+	{
+		if (!CreateSDLWindow(flags, wx, wy, *pwidth, *pheight))
+		{
+			if (*pwidth != 640 || *pheight != 480 || (flags & SDL_WINDOW_FULLSCREEN_DESKTOP))
+			{
+				Com_Printf(S_COLOR_RED"SDL SetVideoMode failed: %s\n", SDL_GetError());
+				Com_Printf(S_COLOR_RED"Reverting to windowed r_mode 4 (640x480).\n");
+
+				// Try to recover
+				Cvar_SetValue("r_mode", 4);
+				Cvar_SetValue("vid_fullscreen", 0);
+
+				*pwidth = 640;
+				*pheight = 480;
+
+				flags &= ~SDL_WINDOW_FULLSCREEN_DESKTOP;
+			}
+			else
+			{
+				Com_Error(ERR_FATAL, "Failed to revert to r_mode 4. Exiting...\n");
+				return false;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	//mxd. Window position was applied
+	vid_xpos->modified = false;
+	vid_ypos->modified = false;
+
+	if (!R_InitContext())
+	{
+		window = NULL;
+		return false; // InitContext() should have logged an error.
+	}
+
+	//TODO: Set the window icon - For SDL2, this must be done after creating the window
+	//SetSDLIcon();
+
+	// No cursor
+	SDL_ShowCursor(0);
+
+	initSuccessful = true;
 
 	return true;
 }
@@ -206,295 +271,51 @@ rserr_t GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen)
 	VID_Printf(PRINT_ALL, "Initializing OpenGL display\n");
 	VID_Printf(PRINT_ALL, "...setting mode %d:", mode);
 
-	int width, height;
-	if (!VID_GetModeInfo(&width, &height, mode))
+	if (!VID_GetModeInfo(pwidth, pheight, mode))
 	{
-		VID_Printf(PRINT_ALL, " invalid mode\n" );
+		VID_Printf(PRINT_ALL, " invalid mode\n");
 		return rserr_invalid_mode;
 	}
 
-	VID_Printf(PRINT_ALL, " %dx%d %s\n", width, height, (fullscreen ? "FS" : "W"));
+	VID_Printf(PRINT_ALL, " %dx%d %s\n", *pwidth, *pheight, (fullscreen ? "FS" : "W"));
 
-	// Destroy the existing window
-	if (glw_state.hWnd)
-		GLimp_Shutdown();
-
-	// Do a CDS if needed
-	if (fullscreen) //TODO: mxd. ditch fullscreen, use borderless window
-	{
-		DEVMODE dm;
-
-		VID_Printf(PRINT_ALL, "...attempting fullscreen\n");
-
-		memset(&dm, 0, sizeof(dm));
-
-		dm.dmSize = sizeof(dm);
-
-		dm.dmPelsWidth  = width;
-		dm.dmPelsHeight = height;
-		dm.dmFields	 = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-		VID_Printf(PRINT_ALL, "...calling CDS: ");
-		if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
-		{
-			*pwidth = width;
-			*pheight = height;
-
-			glState.fullscreen = true;
-
-			VID_Printf(PRINT_ALL, "ok\n");
-
-			if (!VID_CreateWindow(width, height, true))
-				return rserr_invalid_mode;
-
-			return rserr_ok;
-		}
-		else
-		{
-			*pwidth = width;
-			*pheight = height;
-
-			VID_Printf(PRINT_ALL, "failed\n");
-			VID_Printf(PRINT_ALL, "...calling CDS assuming dual monitors:");
-
-			dm.dmPelsWidth = width * 2;
-			dm.dmPelsHeight = height;
-			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-			// Our first CDS failed, so maybe we're running on some weird dual monitor system 
-			if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
-			{
-				VID_Printf(PRINT_ALL, " failed\n");
-				VID_Printf(PRINT_ALL, "...setting windowed mode\n");
-
-				ChangeDisplaySettings(0, 0);
-
-				*pwidth = width;
-				*pheight = height;
-				glState.fullscreen = false;
-
-				if (!VID_CreateWindow(width, height, false))
-					return rserr_invalid_mode;
-
-				return rserr_invalid_fullscreen;
-			}
-			else
-			{
-				VID_Printf(PRINT_ALL, " ok\n");
-				if (!VID_CreateWindow(width, height, true))
-					return rserr_invalid_mode;
-
-				glState.fullscreen = true;
-				return rserr_ok;
-			}
-		}
-	}
-	else
-	{
-		VID_Printf(PRINT_ALL, "...setting windowed mode\n");
-
-		ChangeDisplaySettings(0, 0);
-
-		*pwidth = width;
-		*pheight = height;
-		glState.fullscreen = false;
-
-		if (!VID_CreateWindow(width, height, false))
-			return rserr_invalid_mode;
-	}
+	if (!GLimp_InitGraphics(fullscreen, pwidth, pheight))
+		return rserr_invalid_mode;
 
 	return rserr_ok;
 }
 
-// This routine does all OS specific shutdown procedures for the OpenGL subsystem.
-// Under OpenGL this means NULLing out the current DC and HGLRC, deleting 
-// the rendering context, and releasing the DC acquired for the window.
-// The state structure is also nulled out.
+// Shuts the SDL video subsystem down. Must be called after evrything's finished and clean up.
 void GLimp_Shutdown(void)
 {
-	// Knightmare- added Vic's hardware gamma ramp
-	ShutdownGammaRamp();
+	SDL_GL_ResetAttributes();
+	ShutdownGraphics();
 
-	if (qwglMakeCurrent && !qwglMakeCurrent(NULL, NULL))
-		VID_Printf(PRINT_ALL, "%s: wglMakeCurrent failed\n", __func__);
-
-	if (glw_state.hGLRC)
-	{
-		if (qwglDeleteContext && !qwglDeleteContext(glw_state.hGLRC))
-			VID_Printf(PRINT_ALL, "%s: wglDeleteContext failed\n", __func__);
-
-		glw_state.hGLRC = NULL;
-	}
-
-	if (glw_state.hDC)
-	{
-		if (!ReleaseDC(glw_state.hWnd, glw_state.hDC))
-			VID_Printf(PRINT_ALL, "%s: ReleaseDC failed\n", __func__);
-
-		glw_state.hDC = NULL;
-	}
-
-	if (glw_state.hWnd)
-	{	
-		ShowWindow(glw_state.hWnd, SW_HIDE); //Knightmare- remove leftover button on taskbar
-		DestroyWindow(glw_state.hWnd);
-		glw_state.hWnd = NULL;
-	}
-
-	if (glw_state.log_fp)
-	{
-		fclose(glw_state.log_fp);
-		glw_state.log_fp = 0;
-	}
-
-	UnregisterClass(WINDOW_CLASS_NAME, glw_state.hInstance);
-
-	if (glState.fullscreen)
-	{
-		ChangeDisplaySettings(0, 0);
-		glState.fullscreen = false;
-	}
+	if (SDL_WasInit(SDL_INIT_EVERYTHING) == SDL_INIT_VIDEO)
+		SDL_Quit();
+	else
+		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-// This routine is responsible for initializing the OS specific portions of OpenGL.
-// Under Win32 this means dealing with the pixelformats and doing the wgl interface stuff.
-qboolean GLimp_Init(void *hinstance, void *wndproc)
+// Initializes the SDL video subsystem. Must be called before anything else.
+qboolean GLimp_Init()
 {
-	glw_state.hInstance = (HINSTANCE)hinstance;
-	glw_state.wndproc = wndproc;
+	if (!SDL_WasInit(SDL_INIT_VIDEO))
+	{
+		if (SDL_Init(SDL_INIT_VIDEO) == -1)
+		{
+			VID_Printf(PRINT_ALL, S_COLOR_RED"Couldn't init SDL video: %s.\n", SDL_GetError());
+			return false;
+		}
+
+		SDL_version version;
+
+		SDL_GetVersion(&version);
+		Com_Printf("SDL version is: %i.%i.%i\n", (int)version.major, (int)version.minor, (int)version.patch);
+		Com_Printf("SDL video driver is \"%s\".\n", SDL_GetCurrentVideoDriver());
+	}
 
 	return true;
-}
-
-static qboolean GLimp_InitGL(void)
-{
-	PIXELFORMATDESCRIPTOR pfd = 
-	{
-		sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd
-		1,								// version number
-		PFD_DRAW_TO_WINDOW |			// support window
-		PFD_SUPPORT_OPENGL |			// support OpenGL
-		PFD_DOUBLEBUFFER,				// double buffered
-		PFD_TYPE_RGBA,					// RGBA type
-		32,								// 32-bit color depth // was 24
-		0, 0, 0, 0, 0, 0,				// color bits ignored
-		0,								// no alpha buffer
-		0,								// shift bit ignored
-		0,								// no accumulation buffer
-		0, 0, 0, 0, 					// accum bits ignored
-		//Knightmare 12/24/2001- stencil buffer
-		24,								// 24-bit z-buffer, was 32	
-		8,								// 8-bit stencil buffer
-		//end Knightmare
-		0,								// no auxiliary buffer
-		PFD_MAIN_PLANE,					// main layer
-		0,								// reserved
-		0, 0, 0							// layer masks ignored
-	};
-
-	cvar_t *stereo = Cvar_Get("cl_stereo", "0", 0);
-
-	// Set PFD_STEREO if necessary
-	glState.stereo_enabled = (stereo->integer != 0);
-	if (glState.stereo_enabled)
-	{
-		VID_Printf(PRINT_ALL, "...attempting to use stereo\n");
-		pfd.dwFlags |= PFD_STEREO;
-	}
-
-	// Get a DC for the specified window
-	if (glw_state.hDC != NULL)
-		VID_Printf(PRINT_ALL, "%s: non-NULL DC exists\n", __func__);
-
-	glw_state.hDC = GetDC(glw_state.hWnd);
-	if (glw_state.hDC == NULL)
-	{
-		VID_Printf(PRINT_ALL, "%s: GetDC failed\n", __func__);
-		return false;
-	}
-
-	const int pixelformat = ChoosePixelFormat(glw_state.hDC, &pfd);
-	if (pixelformat == 0)
-	{
-		VID_Printf(PRINT_ALL, "%s: ChoosePixelFormat failed\n", __func__);
-		return false;
-	}
-
-	if (!SetPixelFormat(glw_state.hDC, pixelformat, &pfd))
-	{
-		VID_Printf(PRINT_ALL, "%s: SetPixelFormat failed\n", __func__);
-		return false;
-	}
-
-	DescribePixelFormat(glw_state.hDC, pixelformat, sizeof(pfd), &pfd);
-
-	// Report if stereo is desired but unavailable
-	if (!(pfd.dwFlags & PFD_STEREO) && (stereo->integer != 0))
-	{
-		VID_Printf(PRINT_ALL, "...failed to select stereo pixel format\n");
-		Cvar_SetValue("cl_stereo", 0);
-		glState.stereo_enabled = false;
-	}
-
-	// Startup the OpenGL subsystem by creating a context and making it current
-	if ((glw_state.hGLRC = qwglCreateContext(glw_state.hDC)) == 0)
-	{
-		VID_Printf(PRINT_ALL, "%s: qwglCreateContext failed\n", __func__);
-		goto fail;
-	}
-
-	if (!qwglMakeCurrent(glw_state.hDC, glw_state.hGLRC))
-	{
-		VID_Printf(PRINT_ALL, "%s: qwglMakeCurrent failed\n", __func__);
-		goto fail;
-	}
-
-	// Print out PFD specifics 
-	VID_Printf(PRINT_ALL, "PIXELFORMAT: color(%d-bits) Z(%d-bit)\n", (int)pfd.cColorBits, (int)pfd.cDepthBits);
-
-	// Knightmare- Vic's hardware gamma stuff
-	InitGammaRamp();
-
-	// Moved these to GL_SetDefaultState
-	//glState.blend = false;
-	//glState.alphaTest = false;
-	//end Knightmare
-
-	if (pfd.cStencilBits)
-	{
-		VID_Printf(PRINT_ALL, "...using stencil buffer\n");
-		glConfig.have_stencil = true;
-	}
-
-/*	Moved to GL_SetDefaultState in r_glstate.c
-	// Vertex arrays
-	qglEnableClientState (GL_TEXTURE_COORD_ARRAY);
-	qglEnableClientState (GL_VERTEX_ARRAY);
-	qglEnableClientState (GL_COLOR_ARRAY);
-
-	qglTexCoordPointer (2, GL_FLOAT, sizeof(texCoordArray[0][0]), texCoordArray[0][0]);
-	qglVertexPointer (3, GL_FLOAT, sizeof(vertexArray[0]), vertexArray[0]);
-	qglColorPointer (4, GL_FLOAT, sizeof(colorArray[0]), colorArray[0]);
-	//glState.activetmu[0] = true;
-	// end vertex arrays
-*/
-
-	return true;
-
-fail:
-	if (glw_state.hGLRC)
-	{
-		qwglDeleteContext(glw_state.hGLRC);
-		glw_state.hGLRC = NULL;
-	}
-
-	if (glw_state.hDC)
-	{
-		ReleaseDC(glw_state.hWnd, glw_state.hDC);
-		glw_state.hDC = NULL;
-	}
-
-	return false;
 }
 
 void GLimp_BeginFrame(float camera_separation)
@@ -507,81 +328,8 @@ void GLimp_BeginFrame(float camera_separation)
 		qglDrawBuffer(GL_BACK);
 }
 
-// Responsible for doing a swapbuffers and possibly for other stuff as yet to be determined.
-// Probably better not to make this a GLimp function and instead do a call to GLimp_SwapBuffers.
+// Swaps the buffers and shows the next frame.
 void GLimp_EndFrame(void)
 {
-	const int err = qglGetError();
-	if (err != GL_NO_ERROR)	// Output error code instead
-		VID_Printf(PRINT_DEVELOPER, "OpenGL Error %i\n", err);
-
-	if (!stricmp(r_drawbuffer->string, "GL_BACK") && !qwglSwapBuffers(glw_state.hDC))
-		VID_Error(ERR_FATAL, "%s: SwapBuffers() failed!\n", __func__);
-}
-
-void GLimp_AppActivate(qboolean active)
-{
-	static qboolean	desktop_restored;
-	cvar_t *restore_desktop = Cvar_Get("win_alttab_restore_desktop", "1", CVAR_ARCHIVE);
-
-	if (active)
-	{
-		ToggleGammaRamp(true);
-		SetForegroundWindow(glw_state.hWnd);
-		ShowWindow(glw_state.hWnd, SW_RESTORE);
-
-		// Knightmare- restore desktop settings on alt-tabbing from fullscreen
-		if (vid_fullscreen->value && desktop_restored && glw_state.hGLRC != NULL) //TODO: mxd. not needed?
-		{
-			int width, height;
-			DEVMODE	dm;
-
-			if (!VID_GetModeInfo(&width, &height, r_mode->integer))
-			{
-				VID_Printf(PRINT_ALL, "invalid mode\n");
-				return;
-			}
-			
-			memset(&dm, 0, sizeof(dm));
-			dm.dmSize = sizeof(dm);
-			dm.dmPelsWidth = width;
-			dm.dmPelsHeight = height;
-			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-			VID_Printf(PRINT_ALL, "...calling CDS: ");
-			if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
-			{
-				VID_Printf(PRINT_ALL, "ok\n");
-			}
-			else
-			{
-				// Our first CDS failed, so maybe we're running on some weird dual monitor system 
-				VID_Printf(PRINT_ALL, "failed\n");
-				VID_Printf(PRINT_ALL, "...calling CDS assuming dual monitors: ");
-
-				dm.dmPelsWidth = width * 2;
-				dm.dmPelsHeight = height;
-				dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-				if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
-					VID_Printf(PRINT_ALL, "ok\n");
-			}
-
-			desktop_restored = false;
-		}
-	}
-	else
-	{
-		ToggleGammaRamp(false);
-
-		if (vid_fullscreen->integer)
-		{
-			ShowWindow(glw_state.hWnd, SW_MINIMIZE);
-
-			// Knightmare- restore desktop settings on alt-tabbing from fullscreen
-			desktop_restored = (restore_desktop->integer != 0);
-			if (desktop_restored)
-				ChangeDisplaySettings(0, 0);
-		}
-	}
+	SDL_GL_SwapWindow(window);
 }

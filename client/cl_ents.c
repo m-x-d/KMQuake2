@@ -2002,13 +2002,26 @@ CL_GetEntitySoundOrigin
 Called to get the sound spatialization origin
 ===============
 */
-void CL_GetEntitySoundOrigin(int ent, vec3_t org)
+void CL_GetEntitySoundOrigin(int entindex, vec3_t org)
 {
-	if (ent < 0 || ent >= MAX_EDICTS)
+	if (entindex < 0 || entindex >= MAX_EDICTS)
 		Com_Error(ERR_DROP, "CL_GetEntitySoundOrigin: bad ent");
 
-	centity_t *old = &cl_entities[ent];
-	VectorCopy(old->lerp_origin, org);
+	
+	centity_t *ent = &cl_entities[entindex];
 
-	// FIXME: bmodel issues...
+	//mxd. Find correct origin for bmodels without origin brushes
+	if(ent->current.solid == 31)
+	{
+		cmodel_t* cmodel = cl.model_clip[ent->current.modelindex];
+		if (cmodel)
+		{
+			for (int i = 0; i < 3; i++)
+				org[i] = ent->current.origin[i] + 0.5f * (cmodel->mins[i] + cmodel->maxs[i]);
+
+			return;
+		}
+	}
+
+	VectorCopy(ent->lerp_origin, org);
 }

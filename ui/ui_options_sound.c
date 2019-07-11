@@ -29,7 +29,6 @@ static menuseparator_s	s_options_sound_header;
 static menuslider_s		s_options_sound_sfxvolume_slider;
 static menuslider_s		s_options_sound_musicvolume_slider;
 static menulist_s		s_options_sound_quality_list;
-static menulist_s		s_options_sound_compatibility_list;
 static menuaction_s		s_options_sound_defaults_action;
 static menuaction_s		s_options_sound_back_action;
 
@@ -87,8 +86,6 @@ static void UpdateSoundQualityFunc(void *unused)
 	}
 	//** DMP end sound menu changes
 
-	Cvar_SetValue("s_primary", s_options_sound_compatibility_list.curvalue);
-
 	RestartSound(); //mxd
 }
 
@@ -105,18 +102,15 @@ static void SoundSetMenuItemValues(void)
 		case 22: s_options_sound_quality_list.curvalue = 1;  break;
 		default: s_options_sound_quality_list.curvalue = 0;  break;
 	}
-	//** DMP end sound menu changes
-
-	s_options_sound_compatibility_list.curvalue = Cvar_VariableInteger("s_primary");
 }
 
 static void SoundResetDefaultsFunc(void *unused)
 {
 	Cvar_SetToDefault("s_volume");
+	Cvar_SetToDefault("s_musicvolume"); //mxd
 	Cvar_SetToDefault("ogg_loopcount"); //mxd. Was cd_loopcount
 	Cvar_SetToDefault("s_khz");
 	Cvar_SetToDefault("s_loadas8bit");
-	Cvar_SetToDefault("s_primary");
 
 	SoundSetMenuItemValues();
 	RestartSound(); //mxd
@@ -126,7 +120,6 @@ static void SoundResetDefaultsFunc(void *unused)
 
 void Options_Sound_MenuInit(void)
 {
-	static const char *compatibility_items[] = { "Maximum compatibility", "Maximum performance", 0 };
 	static const char *quality_items[] =
 	{
 		"Low (11KHz / 8-bit)",			//** DMP - changed text
@@ -154,7 +147,6 @@ void Options_Sound_MenuInit(void)
 	s_options_sound_sfxvolume_slider.generic.callback	= UpdateVolumeFunc;
 	s_options_sound_sfxvolume_slider.minvalue			= 0;
 	s_options_sound_sfxvolume_slider.maxvalue			= 10;
-	s_options_sound_sfxvolume_slider.curvalue			= Cvar_VariableValue("s_volume") * 10;
 	s_options_sound_sfxvolume_slider.numdecimals		= 1; //mxd
 	s_options_sound_sfxvolume_slider.generic.statusbar	= "Volume of sound effects";
 	s_options_sound_sfxvolume_slider.cvar				= Cvar_FindVar("s_volume"); //mxd
@@ -167,7 +159,6 @@ void Options_Sound_MenuInit(void)
 	s_options_sound_musicvolume_slider.minvalue				= 0;
 	s_options_sound_musicvolume_slider.maxvalue				= 10;
 	s_options_sound_musicvolume_slider.numdecimals			= 1; //mxd
-	s_options_sound_musicvolume_slider.curvalue				= Cvar_VariableValue("s_musicvolume") * 10;
 	s_options_sound_musicvolume_slider.generic.statusbar	= "Volume of ogg vorbis music";
 	s_options_sound_musicvolume_slider.cvar					= Cvar_FindVar("s_musicvolume"); //mxd
 
@@ -177,17 +168,7 @@ void Options_Sound_MenuInit(void)
 	s_options_sound_quality_list.generic.name				= "Sound quality";
 	s_options_sound_quality_list.generic.callback			= UpdateSoundQualityFunc;
 	s_options_sound_quality_list.itemnames					= quality_items;
-	s_options_sound_quality_list.curvalue					= !Cvar_VariableValue("s_loadas8bit");
 	s_options_sound_quality_list.generic.statusbar			= "Changes quality of sound effects";
-
-	s_options_sound_compatibility_list.generic.type			= MTYPE_SPINCONTROL;
-	s_options_sound_compatibility_list.generic.x			= 0;
-	s_options_sound_compatibility_list.generic.y			= y += MENU_LINE_SIZE;
-	s_options_sound_compatibility_list.generic.name			= "Sound compatibility";
-	s_options_sound_compatibility_list.generic.callback		= UpdateSoundQualityFunc;
-	s_options_sound_compatibility_list.itemnames			= compatibility_items;
-	s_options_sound_compatibility_list.curvalue				= Cvar_VariableValue("s_primary");
-	s_options_sound_compatibility_list.generic.statusbar	= "Changes the buffering mode of the sound system";
 
 	s_options_sound_defaults_action.generic.type		= MTYPE_ACTION;
 	s_options_sound_defaults_action.generic.flags		= QMF_LEFT_JUSTIFY; //mxd
@@ -208,7 +189,6 @@ void Options_Sound_MenuInit(void)
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_sfxvolume_slider);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_musicvolume_slider);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_quality_list);
-	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_compatibility_list);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_defaults_action);
 	Menu_AddItem(&s_options_sound_menu, (void *)&s_options_sound_back_action);
 

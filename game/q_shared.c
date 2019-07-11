@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "q_shared.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 	#include "../win32/winquake.h"
 #endif
 
@@ -1155,7 +1155,7 @@ char *COM_ParseExt(char **data_p, qboolean allowNewLines)
 // FIXME: replace all Q_stricmp with Q_strcasecmp
 int Q_stricmp(const char *s1, const char *s2)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	return _stricmp(s1, s2);
 #else
 	return strcasecmp(s1, s2);
@@ -1165,7 +1165,7 @@ int Q_stricmp(const char *s1, const char *s2)
 //mxd. Case-insensitive version of strstr. https://stackoverflow.com/questions/27303062/strstr-function-like-that-ignores-upper-or-lower-case
 char *Q_strcasestr(const char *haystack, const char *needle)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	const int c = tolower((unsigned char)*needle);
 
 	if (c == '\0')

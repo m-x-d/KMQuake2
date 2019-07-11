@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-// winquake.h: Win32-specific Quake header file
+// winquake.h: Win32-specific Quake 2 header file
 
 #pragma once
 
@@ -25,15 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define MAXPRINTMSG		8192 // was 4096, fix for nVidia 191.xx crash //mxd. Moved from common.c / sys_console.c
 
-extern HINSTANCE global_hInstance;
-
-extern HWND cl_hwnd;
-extern qboolean ActiveApp;
-extern qboolean Minimized;
-
-void IN_MouseEvent(int mstate);
-
-// Console window
+// Dedicated console window
 void Sys_ShowConsole(qboolean show);
 void Sys_ShutdownConsole(void);
 void Sys_InitDedConsole(void);

@@ -687,8 +687,8 @@ extern int lastgibframe;
 #define MOD_TRIGGER_HURT	31
 #define MOD_HIT				32
 #define MOD_TARGET_BLASTER	33
-#define MOD_VEHICLE			34
-#define MOD_KICK			35
+#define MOD_VEHICLE         34
+#define MOD_KICK            35
 #define MOD_GRAPPLE			36
 #define MOD_FRIENDLY_FIRE	0x8000000
 
@@ -696,10 +696,10 @@ extern int meansOfDeath;
 
 extern edict_t *g_edicts;
 
-#define FOFS(x)  (size_t)&(((edict_t *)0)->x)	// Knightmare- was int
-#define STOFS(x) (size_t)&(((spawn_temp_t *)0)->x)	// Knightmare- was int
-#define LLOFS(x) (size_t)&(((level_locals_t *)0)->x)	// Knightmare- was int
-#define CLOFS(x) (size_t)&(((gclient_t *)0)->x)	// Knightmare- was int
+#define	FOFS(x) (size_t)&(((edict_t *)0)->x)	// Knightmare- was int
+#define	STOFS(x) (size_t)&(((spawn_temp_t *)0)->x)	// Knightmare- was int
+#define	LLOFS(x) (size_t)&(((level_locals_t *)0)->x)	// Knightmare- was int
+#define	CLOFS(x) (size_t)&(((gclient_t *)0)->x)	// Knightmare- was int
 
 extern	cvar_t	*maxentities;
 extern	cvar_t	*deathmatch;
@@ -773,8 +773,6 @@ extern	cvar_t	*gl_clear;
 extern	cvar_t	*gl_driver;
 extern	cvar_t	*info_hand;
 extern	cvar_t	*jetpack_weenie;
-extern	cvar_t	*joy_pitchsensitivity;
-extern	cvar_t	*joy_yawsensitivity;
 extern	cvar_t	*jump_kick;
 extern	cvar_t	*lazarus_cd_loop;
 extern	cvar_t	*lazarus_cl_gun;
@@ -792,7 +790,6 @@ extern	cvar_t	*monsterjump;
 extern	cvar_t	*readout;
 extern	cvar_t	*rocket_strafe;
 extern	cvar_t	*rotate_distance;
-extern	cvar_t	*s_primary;
 extern	cvar_t	*shift_distance;
 extern	cvar_t	*sv_maxgibs;
 extern	cvar_t	*tpp; // Third person perspective

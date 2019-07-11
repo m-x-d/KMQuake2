@@ -95,7 +95,7 @@ void CL_DrawInventory(void)
 		Com_sprintf(binding, sizeof(binding), "use %s", cl.configstrings[cs_items + item]);
 
 		char *bind = "";
-		for (int j = 0; j < NUM_KEYBINDINGS; j++)
+		for (int j = 0; j < K_LAST; j++)
 		{
 			if (keybindings[j] && !Q_stricmp(keybindings[j], binding))
 			{

@@ -170,7 +170,7 @@ qboolean Field_Key(menufield_s *f, int key)
 	if ((toupper(key) == 'V' && keydown[K_CTRL]) || ((key == K_INS || key == K_KP_INS) && keydown[K_SHIFT]))
 	{
 		//TODO: (mxd) paste at cursor position, update text instead of replacing it?
-		char *cbd = Sys_GetClipboardData();
+		char *cbd = IN_GetClipboardData();
 		if (cbd)
 		{
 			strtok(cbd, "\n\r\b");

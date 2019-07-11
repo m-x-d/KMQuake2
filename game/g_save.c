@@ -399,8 +399,6 @@ void InitGame (void)
 	info_fov = gi.cvar("fov", "90", 0);
 	info_hand = gi.cvar("hand", "0", 0);
 	jetpack_weenie = gi.cvar("jetpack_weenie", "0", CVAR_SERVERINFO);
-	joy_pitchsensitivity = gi.cvar("joy_pitchsensitivity", "1", 0);
-	joy_yawsensitivity = gi.cvar("joy_yawsensitivity", "-1", 0);
 	jump_kick = gi.cvar("jump_kick", "0", CVAR_SERVERINFO|CVAR_LATCH);
 	lights = gi.cvar("lights", "1", 0);
 	lightsmin = gi.cvar("lightsmin", "a", CVAR_SERVERINFO);
@@ -408,7 +406,6 @@ void InitGame (void)
 	m_yaw = gi.cvar("m_yaw", "0.022", 0);
 	monsterjump = gi.cvar("monsterjump", "1", CVAR_SERVERINFO|CVAR_LATCH);
 	rocket_strafe = gi.cvar("rocket_strafe", "0", 0);
-	s_primary = gi.cvar("s_primary", "0", 0);
 #ifdef KMQUAKE2_ENGINE_MOD
 	sv_maxgibs = gi.cvar("sv_maxgibs", "160", CVAR_SERVERINFO);
 #else

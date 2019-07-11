@@ -22,72 +22,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../qcommon/qcommon.h"
 #include "winquake.h"
+#include "sdlquake.h" //mxd
 #include <stdio.h>
-#include <direct.h>
-
-qboolean ActiveApp; //mxd. int -> qboolean
-qboolean Minimized;
-
-HINSTANCE global_hInstance;
-
-unsigned sys_msg_time;
-unsigned sys_frame_time;
-
-#define	MAX_NUM_ARGVS 128
-int argc;
-char *argv[MAX_NUM_ARGVS];
+#include <SDL2/SDL_main.h>
 
 void Sys_Sleep(int msec)
 {
-	Sleep(msec);
+	SDL_Delay(msec); //mxd. Was Sleep(msec);
 }
 
 unsigned Sys_TickCount(void)
 {
-	return GetTickCount();
-}
-
-// Send Key_Event calls
-void Sys_SendKeyEvents(void)
-{
-	MSG msg;
-
-	while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-	{
-		if (!GetMessage(&msg, NULL, 0, 0))
-			Sys_Quit(false);
-
-		sys_msg_time = msg.time;
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-
-	// Grab frame time 
-	sys_frame_time = timeGetTime();	// FIXME: should this be at start?
-}
-
-char *Sys_GetClipboardData(void)
-{
-	char *data = NULL;
-
-	if (OpenClipboard(NULL) != 0)
-	{
-		HANDLE hClipboardData = GetClipboardData(CF_TEXT);
-		if (hClipboardData)
-		{
-			char *cliptext = GlobalLock(hClipboardData);
-			if (cliptext)
-			{
-				data = malloc(GlobalSize(hClipboardData) + 1);
-				Q_strncpyz(data, cliptext, GlobalSize(hClipboardData) + 1);
-				GlobalUnlock(hClipboardData);
-			}
-		}
-
-		CloseClipboard();
-	}
-
-	return data;
+	return SDL_GetTicks(); //mxd. Was GetTickCount();
 }
 
 #pragma region ======================= SYSTEM IO
@@ -102,7 +48,7 @@ void Sys_Quit(qboolean error) //mxd. +error
 		Qcommon_Shutdown();
 	}
 
-	if (dedicated && dedicated->value)
+	if (dedicated && dedicated->integer)
 		FreeConsole();
 
 	Sys_ShutdownConsole();
@@ -140,12 +86,6 @@ void Sys_Init(void)
 	Com_Printf("-------------------------------------\n\n"); //mxd
 }
 
-void Sys_AppActivate(void)
-{
-	ShowWindow(cl_hwnd, SW_RESTORE);
-	SetForegroundWindow(cl_hwnd);
-}
-
 #pragma region ======================= GAME DLL
 
 static HINSTANCE game_library;
@@ -171,7 +111,7 @@ void *Sys_GetGameAPI(void *parms)
 	{
 		path = FS_NextPath(path);
 		if (!path)
-			return NULL; // couldn't find one anywhere
+			return NULL; // Couldn't find one anywhere
 
 		Com_sprintf(name, sizeof(name), "%s/%s", path, "kmq2gamex86.dll");
 		game_library = LoadLibrary(name);
@@ -237,42 +177,8 @@ static void Sys_SetHighDPIMode(void)
 
 #pragma endregion
 
-void ParseCommandLine(LPSTR lpCmdLine)
+int main(int argc, char **argv)
 {
-	argc = 1;
-	argv[0] = "exe";
-
-	while (*lpCmdLine && argc < MAX_NUM_ARGVS)
-	{
-		while (*lpCmdLine && (*lpCmdLine <= 32 || *lpCmdLine > 126))
-			lpCmdLine++;
-
-		if (*lpCmdLine)
-		{
-			argv[argc] = lpCmdLine;
-			argc++;
-
-			while (*lpCmdLine && (*lpCmdLine > 32 && *lpCmdLine <= 126))
-				lpCmdLine++;
-
-			if (*lpCmdLine)
-			{
-				*lpCmdLine = 0;
-				lpCmdLine++;
-			}
-		}
-	}
-}
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	MSG msg;
-	int time, newtime;
-
-	global_hInstance = hInstance;
-
-	ParseCommandLine(lpCmdLine);
-
 	// Setup DPI awareness
 	Sys_SetHighDPIMode();
 
@@ -285,21 +191,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int oldtime = Sys_Milliseconds();
 
 	// Main window message loop
+	int time, newtime;
 	while (true)
 	{
 		// If at a full screen console, don't update unless needed
-		if (Minimized || (dedicated && dedicated->integer))
-			Sleep(1);
-
-		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-		{
-			if (!GetMessage(&msg, NULL, 0, 0))
-				Com_Quit();
-
-			sys_msg_time = msg.time;
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		if (minimized || (dedicated && dedicated->integer))
+			SDL_Delay(1); //mxd. Was Sleep(1);
 
 		// DarkOne's CPU usage fix
 		while (true)
@@ -307,7 +204,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			newtime = Sys_Milliseconds();
 			time = newtime - oldtime;
 			if (time > 0) break;
-			Sleep(0); // may also use Speep(1); to free more CPU, but it can lower your fps
+			SDL_Delay(0); //mxd. Was Sleep(0); // may also use Sleep(1); to free more CPU, but it can lower your fps
 		}
 
 		Qcommon_Frame(time);

@@ -21,13 +21,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
+// The last time input events were processed.
+extern int sys_frame_time;
+
 void IN_Init(void);
 void IN_Shutdown(void);
-void IN_Commands(void);
+void IN_Activate(qboolean active);
+char* IN_GetClipboardData(); //mxd
 
 // Oportunity for devices to stick commands on the script buffer
-void IN_Frame(void);
+void IN_Update(void);
 void IN_Move(usercmd_t *cmd);
-
-// Add additional movement on top of the keyboard move cmd
-void IN_Activate(qboolean active);

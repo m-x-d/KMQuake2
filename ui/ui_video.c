@@ -56,8 +56,7 @@ static void VidModeCallback(void *unused)
 
 static void BrightnessCallback(void *s)
 {
-	// Invert sense so greater = brighter, and scale to a range of 0.3 to 1.3
-	Cvar_SetValue("vid_gamma", (1.3f - (s_brightness_slider.curvalue / 20.0f)));
+	Cvar_SetValue("vid_gamma", s_brightness_slider.curvalue / 10.0f);
 }
 
 static void AnisotropicCallback(void *s) //mxd
@@ -164,9 +163,6 @@ static void ApplyChanges(void *unused)
 	}
 
 	Cvar_SetValue("vid_fullscreen", s_fs_box.curvalue);
-	// Invert sense so greater = brighter, and scale to a range of 0.3 to 1.3
-	Cvar_SetValue("vid_gamma", (1.3f - (s_brightness_slider.curvalue / 20.0f)));
-
 	Cvar_SetValue("r_swapinterval", s_vsync_box.curvalue);
 	Cvar_SetValue("cl_widescreen_fov", s_adjust_fov_box.curvalue);
 
@@ -300,9 +296,9 @@ void Menu_Video_Init(void)
 	s_brightness_slider.generic.y			= y += MENU_LINE_SIZE;
 	s_brightness_slider.generic.name		= "Brightness";
 	s_brightness_slider.generic.callback	= BrightnessCallback;
-	s_brightness_slider.minvalue			= 0;
+	s_brightness_slider.minvalue			= 1;
 	s_brightness_slider.maxvalue			= 20;
-	s_brightness_slider.curvalue			= (1.3f - Cvar_VariableValue("vid_gamma")) * 20;
+	s_brightness_slider.curvalue			= ClampCvar(1, 20, Cvar_VariableValue("vid_gamma") * 10);
 	s_brightness_slider.numdecimals			= 1; //mxd
 	s_brightness_slider.generic.statusbar	= "Changes display brightness";
 	s_brightness_slider.cvar				= Cvar_FindVar("vid_gamma"); //mxd

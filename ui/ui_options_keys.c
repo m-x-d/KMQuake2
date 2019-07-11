@@ -70,7 +70,7 @@ static menuaction_s *bind_target = NULL; //mxd
 
 static void M_UnbindCommand(char *command)
 {
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 	{
 		char* binding = keybindings[i];
 
@@ -86,7 +86,7 @@ static void M_FindKeysForCommand(char *command, int *twokeys)
 	twokeys[0] = -1;
 	twokeys[1] = -1;
 
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 	{
 		char* binding = keybindings[i];
 

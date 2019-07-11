@@ -26,15 +26,13 @@ void S_Init(void);
 void S_Shutdown(void);
 
 // If origin is NULL, the sound will be dynamically sourced from the entity
-void S_StartSound(vec3_t origin, int entnum, int entchannel, struct sfx_s *sfx, float fvol,  float attenuation, float timeofs);
+void S_StartSound(const vec3_t origin, int entnum, int entchannel, struct sfx_s *sfx, float fvol,  float attenuation, float timeofs);
 void S_StartLocalSound(char *s);
 
-void S_RawSamples(int samples, int rate, int width, int channels, byte *data, float volume); //mxd. -music, +volume
+void S_RawSamples(const int samples, const int rate, const int width, const int channels, const byte *data, const float volume); //mxd. -music, +volume
 
 void S_StopAllSounds(void);
-void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up);
-
-void S_Activate(qboolean active);
+void S_Update(const vec3_t origin, const vec3_t forward, const vec3_t right, const vec3_t up); //mxd. Only origin and up are actually used
 
 void S_BeginRegistration(void);
 struct sfx_s *S_RegisterSound(char *name);
@@ -44,4 +42,4 @@ struct sfx_s *S_FindName(char *name, qboolean create);
 
 // The sound code makes callbacks to the client for entitiy position
 // information, so entities can be dynamically re-spatialized.
-void CL_GetEntitySoundOrigin(int ent, vec3_t org);
+void CL_GetEntitySoundOrigin(int entindex, vec3_t org);

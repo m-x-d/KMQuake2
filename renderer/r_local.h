@@ -20,14 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-#ifdef _WIN32
-	#include <Windows.h>
-#endif
-
 #include <stdio.h>
 #include <glad/glad.h> //mxd
 #include "../client/ref.h"
-#include "qgl.h"
 
 #define PITCH	0 // up / down
 #define YAW		1 // left / right
@@ -37,7 +32,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __VIDDEF_T
 typedef struct
 {
-	int width, height; // Coordinates from main game
+	int width; // Coordinates from main game
+	int height;
 } viddef_t;
 #endif
 
@@ -105,13 +101,13 @@ typedef enum
 
 extern void GL_UpdateSwapInterval();
 
-extern float gldepthmin, gldepthmax;
+extern float gldepthmin;
+extern float gldepthmax;
 
 //====================================================
 
 extern image_t gltextures[MAX_GLTEXTURES];
 extern int numgltextures;
-
 
 #define PARTICLE_TYPES 256
 
@@ -146,12 +142,19 @@ extern model_t *currentmodel;
 extern int r_visframecount;
 extern int r_framecount;
 extern cplane_t frustum[4];
-extern int c_brush_calls, c_brush_surfs, c_brush_polys, c_alias_polys, c_part_polys;
+
+// Debug statistics vars
+extern int c_brush_calls;
+extern int c_brush_surfs;
+extern int c_brush_polys;
+extern int c_alias_polys;
+extern int c_part_polys;
 
 // Knightmare- saveshot buffer
 extern byte *saveshotdata;
 
-extern int gl_filter_min, gl_filter_max;
+extern int gl_filter_min;
+extern int gl_filter_max;
 
 //
 // View origin
@@ -167,7 +170,10 @@ extern GLdouble r_farz; // Knightmare- variable sky range, made this a global va
 // Screen size info
 //
 extern refdef_t r_newrefdef;
-extern int r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
+extern int r_viewcluster;
+extern int r_viewcluster2;
+extern int r_oldviewcluster;
+extern int r_oldviewcluster2;
 
 extern cvar_t *gl_clear;
 extern cvar_t *gl_driver;
@@ -181,7 +187,6 @@ extern cvar_t *r_fullbright;
 extern cvar_t *r_novis;
 extern cvar_t *r_nocull;
 extern cvar_t *r_lerpmodels;
-extern cvar_t *r_ignorehwgamma; // Knightmare- hardware gamma
 
 extern cvar_t *r_waterwave; // Knightmare- water waves
 extern cvar_t *r_caustics; // Barnes water caustics
@@ -201,7 +206,6 @@ extern cvar_t *con_font_size;
 
 extern cvar_t *r_vertex_arrays;
 
-extern cvar_t *r_ext_swapinterval;
 extern cvar_t *r_ext_compiled_vertex_array;
 extern cvar_t *r_arb_vertex_buffer_object;
 extern cvar_t *r_pixel_shader_warp;	// Allow disabling the nVidia water warp
@@ -225,7 +229,6 @@ extern cvar_t *r_screenshot_format; // Determines screenshot format
 extern cvar_t *r_screenshot_jpeg_quality; // Heffo - JPEG Screenshots
 
 extern cvar_t *r_mode;
-extern cvar_t *r_log;
 extern cvar_t *r_lightmap;
 extern cvar_t *r_shadows;
 extern cvar_t *r_shadowalpha;
@@ -238,8 +241,6 @@ extern cvar_t *r_particle_mode; //mxd
 extern cvar_t *r_particledistance;
 
 extern cvar_t *r_dynamic;
-extern cvar_t *r_nobind;
-extern cvar_t *r_round_down;
 extern cvar_t *r_showtris;
 extern cvar_t *r_showbbox; // Knightmare- show model bounding box
 extern cvar_t *r_finish;
@@ -263,6 +264,10 @@ extern cvar_t *r_bloom;
 
 extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_gamma;
+
+//mxd. Made global...
+extern cvar_t *vid_xpos; // X coordinate of window position
+extern cvar_t *vid_ypos; // Y coordinate of window position
 
 extern float r_world_matrix[16];
 
@@ -367,15 +372,6 @@ extern unsigned d_8to24table[256];
 extern int registration_sequence;
 
 //
-// r_main.c
-//
-qboolean R_Init(void *hinstance, void *hWnd, char *reason);
-void R_ClearState();
-void R_Shutdown();
-void R_RenderView(refdef_t *fd);
-void R_BeginFrame(float camera_separation);
-
-//
 // r_model.c
 //
 void R_DrawAliasModel(entity_t *e); // Harven MD3
@@ -407,7 +403,8 @@ extern int model_dlights_num;
 
 extern vec3_t shadelight;
 extern vec3_t lightspot;
-extern float shellFlowH, shellFlowV;
+extern float shellFlowH;
+extern float shellFlowV;
 
 void R_SetShellBlend(qboolean toggle);
 void R_SetVertexRGBScale(qboolean toggle);
@@ -480,7 +477,6 @@ void R_InitDSTTex();
 void R_DrawWarpSurface(msurface_t *fa, float alpha, qboolean render);
 size_t R_GetWarpSurfaceVertsSize(dface_t *face, dvertex_t *vertexes, dedge_t *edges, int *surfedges); //mxd
 
-
 //
 // r_sky.c
 //
@@ -488,13 +484,11 @@ void R_AddSkySurface(msurface_t *fa);
 void R_ClearSkyBox();
 void R_DrawSkyBox();
 
-
 // 
 // r_bloom.c 
 // 
 void R_BloomBlend(refdef_t *fd); 
 void R_InitBloomTextures(); 
-
 
 //
 // r_draw.c
@@ -509,7 +503,6 @@ void R_InitChars();
 void R_FlushChars();
 void R_DrawChar(float x, float y, int num, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last);
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
-
 
 //
 // r_image.c
@@ -527,20 +520,17 @@ void R_ShutdownImages();
 void R_FreeUnusedImages();
 void R_LoadNormalmap(const char *texture, mtexinfo_t *tex); //mxd
 
-
 //
 // r_image_pcx.c
 //
 void LoadPCX(char *filename, byte **pic, byte **palette, int *width, int *height);
 void GetPCXInfo(char *filename, int *width, int *height); //mxd. From YQ2
 
-
 //
 // r_image_wal.c
 //
 image_t *R_LoadWal(char *name, imagetype_t type); //mxd
 void GetWalInfo(char *name, int *width, int *height); //mxd
-
 
 //
 // r_image_stb.c (mxd)
@@ -552,7 +542,6 @@ qboolean STBSaveJPG(const char *filename, byte* source, int width, int height, i
 qboolean STBSavePNG(const char *filename, byte* source, int width, int height);
 qboolean STBSaveTGA(const char *filename, byte* source, int width, int height);
 
-
 //
 // r_fog.c
 //
@@ -563,6 +552,15 @@ void R_ResumeFog(void);
 //void R_InitFogVars(); //mxd. Disabled
 void R_SetFogVars(qboolean enable, int model, int density, int start, int end, int red, int green, int blue);
 void R_UpdateFogVars(); //mxd
+
+//
+// r_sdl2.c (mxd)
+//
+void R_SetVsync(qboolean enable);
+void R_UpdateGammaRamp();
+void R_ShutdownContext();
+void *R_GetProcAddress(const char* proc);
+qboolean R_PrepareForWindow();
 
 /*
 ** GL config stuff
@@ -684,15 +682,9 @@ void VID_Printf(int print_level, char *str, ...);
 
 qboolean VID_GetModeInfo(int *width, int *height, int mode);
 void VID_NewWindow(int width, int height);
-// Knightmare- added import of text color for renderer
-//void TextColor(int colornum, int *red, int *green, int *blue);
 
 // IMPLEMENTATION-SPECIFIC FUNCTIONS
 void GLimp_BeginFrame(float camera_separation);
 void GLimp_EndFrame();
-qboolean GLimp_Init(void *hinstance, void *wndproc); //mxd. int -> qboolean
 void GLimp_Shutdown();
 rserr_t GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen); //mxd. int -> rserr_t
-void GLimp_AppActivate(qboolean active);
-void GLimp_EnableLogging(qboolean enable);
-void GLimp_LogNewFrame();

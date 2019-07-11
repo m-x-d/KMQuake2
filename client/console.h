@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define CON_MAXCMDS		1024 //mxd
 #define MAXCMDLINE		1024 // Max length of console command line
 							 // Increased from 256, fixes buffer overflow if vert res > 2048
-							 // Allows max vert res of 8192 for fullscreen console 
+							 // Allows max vert res of 8192 for fullscreen console
 
 enum commandtype_t //mxd
 {
@@ -71,14 +71,12 @@ typedef struct
 } console_t;
 
 extern console_t con;
-//extern qboolean halfconback;	// whether to draw Q3-style console //mxd. Unused
 
 void Con_CheckResize(void);
 void Con_Init(void);
 void Con_Shutdown(void); //mxd. From Q2E
 void Con_DrawConsole(float heightratio, qboolean transparent); //Knightmare changed
 void Con_KeyDown(int key); //mxd
-//void Con_CenteredPrint(char *text); //mxd. Never used
 void Con_Clear_f(void);
 void Con_DrawNotify(void);
 void Con_ClearNotify(void);

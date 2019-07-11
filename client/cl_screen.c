@@ -47,7 +47,6 @@ cvar_t		*scr_letterbox;
 cvar_t		*scr_centertime;
 cvar_t		*scr_showturtle;
 cvar_t		*scr_showpause;
-cvar_t		*scr_printspeed;
 
 cvar_t		*scr_netgraph;
 cvar_t		*scr_netgraph_pos;
@@ -56,7 +55,6 @@ cvar_t		*scr_debuggraph;
 cvar_t		*scr_graphheight;
 cvar_t		*scr_graphscale;
 cvar_t		*scr_graphshift;
-cvar_t		*scr_drawall;
 
 cvar_t		*scr_simple_loadscreen; // Whether to use reduced load screen
 
@@ -772,7 +770,6 @@ void SCR_Init(void)
 	scr_showpause = Cvar_Get("scr_showpause", "1", 0);
 	// Knightmare- increased for fade
 	scr_centertime = Cvar_Get("scr_centertime", "3.5", 0);
-	scr_printspeed = Cvar_Get("scr_printspeed", "8", 0);
 	scr_netgraph = Cvar_Get("netgraph", "0", 0);
 	scr_netgraph_pos = Cvar_Get("netgraph_pos", "0", CVAR_ARCHIVE);
 	scr_timegraph = Cvar_Get("timegraph", "0", 0);
@@ -780,7 +777,6 @@ void SCR_Init(void)
 	scr_graphheight = Cvar_Get("graphheight", "32", 0);
 	scr_graphscale = Cvar_Get("graphscale", "1", 0);
 	scr_graphshift = Cvar_Get("graphshift", "0", 0);
-	scr_drawall = Cvar_Get("scr_drawall", "0", 0);
 
 	crosshair = Cvar_Get("crosshair", "1", CVAR_ARCHIVE);
 	crosshair_scale = Cvar_Get("crosshair_scale", "1", CVAR_ARCHIVE);

@@ -163,7 +163,6 @@ typedef struct
 
 	int			parse_entities;		// index (not anded off) into cl_parse_entities[]
 
-	//usercmd_t	cmd; //mxd. Never used
 	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmd_time[CMD_BACKUP];	// time sent, for calculating pings
 
@@ -670,13 +669,13 @@ void CL_Quit_f(void);
 ====================================================================
 */
 
-// called when the renderer is loaded
-qboolean R_Init(void *hinstance, void *wndproc, char *reason);
+// Called when the renderer is loaded
+qboolean R_Init(char *reason);
 
-// called to clear rendering state (error recovery, etc.)
+// Called to clear rendering state (error recovery, etc.)
 void R_ClearState(void);
 
-// called before the renderer is unloaded
+// Called before the renderer is unloaded
 void R_Shutdown(void);
 
 // All data that will be used in a level should be registered before rendering any frames to prevent disk hits,
@@ -724,7 +723,6 @@ void R_DrawStretchRaw(int x, int y, int w, int h, const byte *raw, int width, in
 */
 void R_BeginFrame(float camera_separation);
 void GLimp_EndFrame(void);
-void GLimp_AppActivate(qboolean activate);
 
 
 //====================================================================

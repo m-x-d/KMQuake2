@@ -17,143 +17,179 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-#include "client.h"
 
-#ifdef _WIN32
-	#include "../win32/winquake.h"
-#endif
+#include "client.h"
 
 // Key up events are sent even if in console mode
 
-int			anykeydown;
+int anykeydown;
 
-int			key_waiting;
-char		*keybindings[NUM_KEYBINDINGS];
-qboolean	consolekeys[NUM_KEYBINDINGS];	// If true, can't be rebound while in console
-qboolean	menubound[NUM_KEYBINDINGS];		// If true, can't be rebound while in menu
-int			keyshift[NUM_KEYBINDINGS];		// Key to map to if shift held down in console
-int			key_repeats[NUM_KEYBINDINGS];	// If > 1, it's autorepeating
-qboolean	keydown[NUM_KEYBINDINGS];
+int key_waiting;
+char *keybindings[K_LAST];
+qboolean consolekeys[K_LAST];	// If true, can't be rebound while in console
+qboolean menubound[K_LAST];		// If true, can't be rebound while in menu
+int keyshift[K_LAST];		// Key to map to if shift held down in console
+int key_repeats[K_LAST];	// If > 1, it's autorepeating
+qboolean keydown[K_LAST];
 
 #pragma region ======================= KEYNAMES
 
 typedef struct
 {
-	char	*name;
-	int		keynum;
+	char *name;
+	int keynum;
 } keyname_t;
 
+// Translates internal key representations into human readable strings.
 keyname_t keynames[] =
 {
 	{"TAB", K_TAB},
-	{"ENTER", K_ENTER},
-	{"ESCAPE", K_ESCAPE},
-	{"SPACE", K_SPACE},
-	{"BACKSPACE", K_BACKSPACE},
-	{"UPARROW", K_UPARROW},
-	{"DOWNARROW", K_DOWNARROW},
-	{"LEFTARROW", K_LEFTARROW},
-	{"RIGHTARROW", K_RIGHTARROW},
+	{ "ENTER", K_ENTER },
+	{ "ESCAPE", K_ESCAPE },
+	{ "SPACE", K_SPACE },
+	{ "BACKSPACE", K_BACKSPACE },
 
-	{"ALT", K_ALT},
-	{"CTRL", K_CTRL},
-	{"SHIFT", K_SHIFT},
-	
-	{"F1", K_F1},
-	{"F2", K_F2},
-	{"F3", K_F3},
-	{"F4", K_F4},
-	{"F5", K_F5},
-	{"F6", K_F6},
-	{"F7", K_F7},
-	{"F8", K_F8},
-	{"F9", K_F9},
-	{"F10", K_F10},
-	{"F11", K_F11},
-	{"F12", K_F12},
+	{ "COMMAND", K_COMMAND },
+	{ "CAPSLOCK", K_CAPSLOCK },
+	{ "POWER", K_POWER },
+	{ "PAUSE", K_PAUSE },
 
-	{"INS", K_INS},
-	{"DEL", K_DEL},
-	{"PGDN", K_PGDN},
-	{"PGUP", K_PGUP},
-	{"HOME", K_HOME},
-	{"END", K_END},
+	{ "UPARROW", K_UPARROW },
+	{ "DOWNARROW", K_DOWNARROW },
+	{ "LEFTARROW", K_LEFTARROW },
+	{ "RIGHTARROW", K_RIGHTARROW },
 
-	{"NUMLOCK", K_NUMLOCK},
-	{"CAPSLOCK", K_CAPSLOCK},
-	{"SCROLLOCK", K_SCROLLOCK},
+	{ "ALT", K_ALT },
+	{ "CTRL", K_CTRL },
+	{ "SHIFT", K_SHIFT },
 
-	{"MOUSE1", K_MOUSE1},
-	{"MOUSE2", K_MOUSE2},
-	{"MOUSE3", K_MOUSE3},
-	//Knightmare 12/22/2001
-	{"MOUSE4", K_MOUSE4},
-	{"MOUSE5", K_MOUSE5},
-	//end Knightmare
+	{ "F1", K_F1 },
+	{ "F2", K_F2 },
+	{ "F3", K_F3 },
+	{ "F4", K_F4 },
+	{ "F5", K_F5 },
+	{ "F6", K_F6 },
+	{ "F7", K_F7 },
+	{ "F8", K_F8 },
+	{ "F9", K_F9 },
+	{ "F10", K_F10 },
+	{ "F11", K_F11 },
+	{ "F12", K_F12 },
 
-	{"JOY1", K_JOY1},
-	{"JOY2", K_JOY2},
-	{"JOY3", K_JOY3},
-	{"JOY4", K_JOY4},
+	{ "INS", K_INS },
+	{ "DEL", K_DEL },
+	{ "PGDN", K_PGDN },
+	{ "PGUP", K_PGUP },
+	{ "HOME", K_HOME },
+	{ "END", K_END },
 
-	{"AUX1", K_AUX1},
-	{"AUX2", K_AUX2},
-	{"AUX3", K_AUX3},
-	{"AUX4", K_AUX4},
-	{"AUX5", K_AUX5},
-	{"AUX6", K_AUX6},
-	{"AUX7", K_AUX7},
-	{"AUX8", K_AUX8},
-	{"AUX9", K_AUX9},
-	{"AUX10", K_AUX10},
-	{"AUX11", K_AUX11},
-	{"AUX12", K_AUX12},
-	{"AUX13", K_AUX13},
-	{"AUX14", K_AUX14},
-	{"AUX15", K_AUX15},
-	{"AUX16", K_AUX16},
-	{"AUX17", K_AUX17},
-	{"AUX18", K_AUX18},
-	{"AUX19", K_AUX19},
-	{"AUX20", K_AUX20},
-	{"AUX21", K_AUX21},
-	{"AUX22", K_AUX22},
-	{"AUX23", K_AUX23},
-	{"AUX24", K_AUX24},
-	{"AUX25", K_AUX25},
-	{"AUX26", K_AUX26},
-	{"AUX27", K_AUX27},
-	{"AUX28", K_AUX28},
-	{"AUX29", K_AUX29},
-	{"AUX30", K_AUX30},
-	{"AUX31", K_AUX31},
-	{"AUX32", K_AUX32},
+	{ "MOUSE1", K_MOUSE1 },
+	{ "MOUSE2", K_MOUSE2 },
+	{ "MOUSE3", K_MOUSE3 },
+	{ "MOUSE4", K_MOUSE4 },
+	{ "MOUSE5", K_MOUSE5 },
 
-	{"KP_HOME", K_KP_HOME},
-	{"KP_UPARROW", K_KP_UPARROW},
-	{"KP_PGUP", K_KP_PGUP},
-	{"KP_LEFTARROW", K_KP_LEFTARROW},
-	{"KP_5", K_KP_5},
-	{"KP_RIGHTARROW", K_KP_RIGHTARROW},
-	{"KP_END", K_KP_END},
-	{"KP_DOWNARROW", K_KP_DOWNARROW},
-	{"KP_PGDN", K_KP_PGDN},
-	{"KP_ENTER", K_KP_ENTER},
-	{"KP_INS", K_KP_INS},
-	{"KP_DEL", K_KP_DEL},
-	{"KP_SLASH", K_KP_SLASH},
-	{"KP_MINUS", K_KP_MINUS},
-	{"KP_PLUS", K_KP_PLUS},
-	{"KP_MULT", K_KP_MULT},
+	{ "JOY1", K_JOY1 },
+	{ "JOY2", K_JOY2 },
+	{ "JOY3", K_JOY3 },
+	{ "JOY4", K_JOY4 },
+	{ "JOY5", K_JOY5 },
+	{ "JOY6", K_JOY6 },
+	{ "JOY7", K_JOY7 },
+	{ "JOY8", K_JOY8 },
+	{ "JOY9", K_JOY9 },
+	{ "JOY10", K_JOY10 },
+	{ "JOY11", K_JOY11 },
+	{ "JOY12", K_JOY12 },
+	{ "JOY13", K_JOY13 },
+	{ "JOY14", K_JOY14 },
+	{ "JOY15", K_JOY15 },
+	{ "JOY16", K_JOY16 },
+	{ "JOY17", K_JOY17 },
+	{ "JOY18", K_JOY18 },
+	{ "JOY19", K_JOY19 },
+	{ "JOY20", K_JOY20 },
+	{ "JOY21", K_JOY21 },
+	{ "JOY22", K_JOY22 },
+	{ "JOY23", K_JOY23 },
+	{ "JOY24", K_JOY24 },
+	{ "JOY25", K_JOY25 },
+	{ "JOY26", K_JOY26 },
+	{ "JOY27", K_JOY27 },
+	{ "JOY28", K_JOY28 },
+	{ "JOY29", K_JOY29 },
+	{ "JOY30", K_JOY30 },
+	{ "JOY31", K_JOY31 },
+	{ "JOY32", K_JOY32 },
 
-	{"MWHEELUP", K_MWHEELUP},
-	{"MWHEELDOWN", K_MWHEELDOWN},
+	{ "HAT_UP", K_HAT_UP },
+	{ "HAT_RIGHT", K_HAT_RIGHT },
+	{ "HAT_DOWN", K_HAT_DOWN },
+	{ "HAT_LEFT", K_HAT_LEFT },
 
-	{"PAUSE", K_PAUSE},
+	{ "TRIG_LEFT", K_TRIG_LEFT },
+	{ "TRIG_RIGHT", K_TRIG_RIGHT },
 
-	{"SEMICOLON", ';'}, // Because a raw semicolon seperates commands
+	{ "JOY_BACK", K_JOY_BACK },
 
-	{NULL, 0}
+	{ "AUX1", K_AUX1 },
+	{ "AUX2", K_AUX2 },
+	{ "AUX3", K_AUX3 },
+	{ "AUX4", K_AUX4 },
+	{ "AUX5", K_AUX5 },
+	{ "AUX6", K_AUX6 },
+	{ "AUX7", K_AUX7 },
+	{ "AUX8", K_AUX8 },
+	{ "AUX9", K_AUX9 },
+	{ "AUX10", K_AUX10 },
+	{ "AUX11", K_AUX11 },
+	{ "AUX12", K_AUX12 },
+	{ "AUX13", K_AUX13 },
+	{ "AUX14", K_AUX14 },
+	{ "AUX15", K_AUX15 },
+	{ "AUX16", K_AUX16 },
+	{ "AUX17", K_AUX17 },
+	{ "AUX18", K_AUX18 },
+	{ "AUX19", K_AUX19 },
+	{ "AUX20", K_AUX20 },
+	{ "AUX21", K_AUX21 },
+	{ "AUX22", K_AUX22 },
+	{ "AUX23", K_AUX23 },
+	{ "AUX24", K_AUX24 },
+	{ "AUX25", K_AUX25 },
+	{ "AUX26", K_AUX26 },
+	{ "AUX27", K_AUX27 },
+	{ "AUX28", K_AUX28 },
+	{ "AUX29", K_AUX29 },
+	{ "AUX30", K_AUX30 },
+	{ "AUX31", K_AUX31 },
+	{ "AUX32", K_AUX32 },
+
+	{ "KP_HOME", K_KP_HOME },
+	{ "KP_UPARROW", K_KP_UPARROW },
+	{ "KP_PGUP", K_KP_PGUP },
+	{ "KP_LEFTARROW", K_KP_LEFTARROW },
+	{ "KP_5", K_KP_5 },
+	{ "KP_RIGHTARROW", K_KP_RIGHTARROW },
+	{ "KP_END", K_KP_END },
+	{ "KP_DOWNARROW", K_KP_DOWNARROW },
+	{ "KP_PGDN", K_KP_PGDN },
+	{ "KP_ENTER", K_KP_ENTER },
+	{ "KP_INS", K_KP_INS },
+	{ "KP_DEL", K_KP_DEL },
+	{ "KP_SLASH", K_KP_SLASH },
+	{ "KP_MINUS", K_KP_MINUS },
+	{ "KP_PLUS", K_KP_PLUS },
+	{ "KP_MULT", K_KP_MULT },
+
+	{ "MWHEELUP", K_MWHEELUP },
+	{ "MWHEELDOWN", K_MWHEELDOWN },
+
+	{ "PAUSE", K_PAUSE },
+
+	{ "SEMICOLON", ';' }, // Because a raw semicolon seperates commands
+
+	{ NULL, 0 }
 };
 
 #pragma endregion
@@ -346,7 +382,7 @@ void Key_Unbind_f(void)
 
 void Key_Unbindall_f(void)
 {
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 		if (keybindings[i])
 			Key_SetBinding(i, "");
 }
@@ -393,7 +429,7 @@ void Key_Bind_f(void)
 // Writes lines containing "bind key value"
 void Key_WriteBindings(FILE *f)
 {
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 		if (keybindings[i] && keybindings[i][0])
 			fprintf(f, "bind %s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
 }
@@ -403,7 +439,7 @@ void Key_Bindlist_f(void)
 	Com_Printf(S_COLOR_GREEN"Assigned keybinds:\n"); //mxd
 	
 	int numbinds = 0; //mxd
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 	{
 		if (keybindings[i] && keybindings[i][0])
 		{
@@ -455,11 +491,13 @@ void Key_Init(void)
 
 	consolekeys[K_MWHEELUP] = true;
 	consolekeys[K_MWHEELDOWN] = true;
+	consolekeys[K_MOUSE4] = true; //mxd
+	consolekeys[K_MOUSE5] = true; //mxd
 
 	consolekeys[(int)'`'] = false;
 	consolekeys[(int)'~'] = false;
 
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 		keyshift[i] = i;
 	for (int i = 'a'; i <= 'z'; i++)
 		keyshift[i] = i - 'a' + 'A';
@@ -502,10 +540,10 @@ void Key_Init(void)
 // Should NOT be called during an interrupt!
 extern int scr_draw_loading;
 
-void Key_Event(int key, qboolean down, unsigned time)
+void Key_Event(int key, qboolean down)
 {
 	static qboolean shift_down = false; //mxd. Made local
-	
+
 	// Hack for modal presses
 	if (key_waiting == -1)
 	{
@@ -631,6 +669,8 @@ void Key_Event(int key, qboolean down, unsigned time)
 	// Key up events only generate commands if the game key binding is a button command (leading + sign).
 	// These will occur even in console mode, to keep the character from continuing an action started before a console switch.
 	// Button commands include the kenum as a parameter, so multiple downs can be matched with ups.
+	const uint time = Sys_Milliseconds(); //mxd
+
 	if (!down)
 	{
 		char cmd[1024];
@@ -715,24 +755,14 @@ void Key_ClearStates(void)
 {
 	anykeydown = false;
 
-	for (int i = 0; i < NUM_KEYBINDINGS; i++)
+	for (int i = 0; i < K_LAST; i++)
 	{
 		if (keydown[i] || key_repeats[i])
-			Key_Event(i, false, 0);
+			Key_Event(i, false);
 
 		keydown[i] = 0;
 		key_repeats[i] = 0;
 	}
-}
-
-int Key_GetKey(void)
-{
-	key_waiting = -1;
-
-	while (key_waiting == -1)
-		Sys_SendKeyEvents();
-
-	return key_waiting;
 }
 
 //mxd. Converts numpad keys to input chars regardless fo NumLock state.

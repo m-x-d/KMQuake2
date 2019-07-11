@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../client/console.h" //mxd
 
 #ifdef _WIN32
-#include "../win32/winquake.h"
+	#include "../win32/winquake.h"
 #endif
 
 #define MAX_NUM_ARGVS	50
@@ -1698,7 +1698,7 @@ void Qcommon_Init(int argc, char **argv)
 	s = va("%4.2f %s %s %s", VERSION, CPUSTRING, __DATE__, BUILDSTRING);
 	Cvar_Get("version", s, CVAR_SERVERINFO | CVAR_NOSET);
 
-	if (dedicated->value)
+	if (dedicated->integer)
 		Cmd_AddCommand("quit", Com_Quit);
 
 	Sys_Init();

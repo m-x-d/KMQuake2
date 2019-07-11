@@ -924,7 +924,7 @@ void Con_KeyDown(int key) //mxd. Was Key_Console in cl_keys.c
 	// Clipboard paste
 	if ((toupper(key) == 'V' && Key_IsDown(K_CTRL)) || ((key == K_INS || key == K_KP_INS) && Key_IsDown(K_SHIFT)))
 	{
-		char *cbd = Sys_GetClipboardData();
+		char *cbd = IN_GetClipboardData();
 		if (cbd)
 		{
 			Con_ClearAutocompleteList(); //mxd
