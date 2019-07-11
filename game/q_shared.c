@@ -19,11 +19,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
+#include <ctype.h>
 #include "q_shared.h"
-
-#ifdef _WIN32
-	#include "../win32/winquake.h"
-#endif
 
 vec2_t vec2_origin = { 0, 0 };
 vec3_t vec3_origin = { 0, 0, 0 };

@@ -198,9 +198,6 @@
     <ClCompile Include="..\..\..\win32\net_wins.c">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\win32\q_shwin.c">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\win32\sys_console.c">
       <Filter>Source Files\system</Filter>
     </ClCompile>
@@ -407,6 +404,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\client\cl_input_sdl2.c">
       <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\win32\sys_main.c">
+      <Filter>Source Files\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

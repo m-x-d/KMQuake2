@@ -28,14 +28,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define MAX_NUM_ARGVS	50
 
+static int com_argc;
+static char *com_argv[MAX_NUM_ARGVS + 1];
 
-int com_argc;
-char *com_argv[MAX_NUM_ARGVS + 1];
-
-int realtime;
-
-jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
-
+static jmp_buf abortframe; // An ERR_DROP occured, exit the entire frame
 
 FILE *log_stats_file;
 
@@ -52,9 +48,9 @@ cvar_t *dedicated;
 cvar_t *sv_engine;
 cvar_t *sv_engine_version;
 
-FILE *logfile;
+static FILE *logfile;
 
-int server_state;
+static int server_state;
 
 // host_speeds times
 int time_before_game;
@@ -117,7 +113,7 @@ static void FreeEarlyMessages()
 
 void Com_Printf(char *fmt, ...)
 {
-	va_list	argptr;
+	va_list argptr;
 	static char msg[MAXPRINTMSG]; //mxd. +static
 	static qboolean earlymessagesaddedtoconsole = false; //mxd
 
@@ -230,7 +226,11 @@ void Com_CPrintf(char *fmt, ...)
 	Q_vsnprintf(msg, sizeof(msg), fmt, argptr); // fix for nVidia 191.xx crash
 	va_end(argptr);
 
+#if defined(_WIN32)
 	OutputDebugString(msg);
+#else
+	Com_Printf(S_COLOR_MAGENTA"%s", msg);
+#endif
 }
 
 // Both client and server can use this, and it will do the apropriate things.

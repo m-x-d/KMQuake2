@@ -275,9 +275,9 @@
     <ClCompile Include="..\..\..\ui\ui_video_advanced.c" />
     <ClCompile Include="..\..\..\win32\glimp_sdl2.c" />
     <ClCompile Include="..\..\..\win32\net_wins.c" />
-    <ClCompile Include="..\..\..\win32\q_shwin.c" />
     <ClCompile Include="..\..\..\win32\sys_console.c" />
     <ClCompile Include="..\..\..\win32\sys_info.c" />
+    <ClCompile Include="..\..\..\win32\sys_main.c" />
     <ClCompile Include="..\..\..\win32\sys_win.c" />
     <ClCompile Include="..\..\..\win32\vid_dll.c" />
   </ItemGroup>

@@ -23,13 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <Windows.h>
 
-#define MAXPRINTMSG		8192 // was 4096, fix for nVidia 191.xx crash //mxd. Moved from common.c / sys_console.c
-
 // Dedicated console window
 void Sys_ShowConsole(qboolean show);
 void Sys_ShutdownConsole(void);
 void Sys_InitDedConsole(void);
-
-//mxd. CPU and OS name detection
-qboolean Sys_GetOsName(char* result);
-void Sys_GetCpuName(char *cpuString, int maxSize);

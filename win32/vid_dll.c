@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // This module is used for both the software and OpenGL rendering versions of the Quake refresh engine.
 
 #include "..\client\client.h"
-#include "winquake.h"
 
 // Console variables that we need to access from this module
 cvar_t *vid_gamma;

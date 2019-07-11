@@ -440,6 +440,10 @@ enum accessmode_t //mxd
 
 extern int curtime; // Time returned by last Sys_Milliseconds
 
+//mxd. Application state
+extern qboolean activeapp;
+extern qboolean minimized;
+
 int Sys_Milliseconds(void);
 void Sys_Mkdir(char *path);
 void Sys_Rmdir(char *path);

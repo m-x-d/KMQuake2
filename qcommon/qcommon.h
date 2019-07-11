@@ -804,6 +804,8 @@ void FS_FreeFile(void *buffer);
 #define PRINT_ALL		0
 #define PRINT_DEVELOPER	1	// only print when "developer 1"
 
+#define MAXPRINTMSG		8192 // was 4096, fix for nVidia 191.xx crash //mxd. Moved from common.c / sys_console.c
+
 void Com_BeginRedirect(int target, char *buffer, int buffersize, void(*flush));
 void Com_EndRedirect(void);
 void Com_DPrintf(char *fmt, ...);
@@ -878,7 +880,11 @@ void *Sys_GetGameAPI(void *parms);
 char *Sys_ConsoleInput(void);
 void Sys_ConsoleOutput(char *text);
 void Sys_Quit(qboolean error); //mxd. +error
+void Sys_SetHighDPIMode(void); //mxd
 
+//mxd. CPU and OS name detection
+qboolean Sys_GetOsName(char* result);
+void Sys_GetCpuName(char *cpuString, int maxSize);
 
 /*
 ==============================================================

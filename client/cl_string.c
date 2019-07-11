@@ -22,10 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-#ifdef _WIN32
-	#include "../win32/winquake.h" //mxd
-#endif
-
 // This sets the actual text color, can be called from anywhere
 void TextColor(int colornum, int *red, int *green, int *blue)
 {
