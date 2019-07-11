@@ -176,6 +176,7 @@
     <ClCompile Include="..\..\..\client\cl_event.c" />
     <ClCompile Include="..\..\..\client\cl_http.c" />
     <ClCompile Include="..\..\..\client\cl_input.c" />
+    <ClCompile Include="..\..\..\client\cl_input_sdl2.c" />
     <ClCompile Include="..\..\..\client\cl_inv.c" />
     <ClCompile Include="..\..\..\client\cl_keys.c" />
     <ClCompile Include="..\..\..\client\cl_lights.c" />
@@ -189,8 +190,8 @@
     <ClCompile Include="..\..\..\client\cl_tempent.c" />
     <ClCompile Include="..\..\..\client\cl_utils.c" />
     <ClCompile Include="..\..\..\client\cl_view.c" />
-    <ClCompile Include="..\..\..\client\snd_dma.c" />
-    <ClCompile Include="..\..\..\client\snd_mem.c" />
+    <ClCompile Include="..\..\..\client\snd_main.c" />
+    <ClCompile Include="..\..\..\client\snd_wav.c" />
     <ClCompile Include="..\..\..\client\snd_ogg.c" />
     <ClCompile Include="..\..\..\client\snd_sdl2.c" />
     <ClCompile Include="..\..\..\game\m_flash.c" />
@@ -272,8 +273,7 @@
     <ClCompile Include="..\..\..\ui\ui_subsystem.c" />
     <ClCompile Include="..\..\..\ui\ui_video.c" />
     <ClCompile Include="..\..\..\ui\ui_video_advanced.c" />
-    <ClCompile Include="..\..\..\win32\glw_imp.c" />
-    <ClCompile Include="..\..\..\win32\in_win.c" />
+    <ClCompile Include="..\..\..\win32\glimp_sdl2.c" />
     <ClCompile Include="..\..\..\win32\net_wins.c" />
     <ClCompile Include="..\..\..\win32\q_shwin.c" />
     <ClCompile Include="..\..\..\win32\sys_console.c" />

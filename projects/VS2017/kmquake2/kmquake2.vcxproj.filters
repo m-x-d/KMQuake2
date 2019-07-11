@@ -72,12 +72,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\client\snd_dma.c">
-      <Filter>Source Files\sound</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\client\snd_mem.c">
-      <Filter>Source Files\sound</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\client\cl_cinematic.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
@@ -201,9 +195,6 @@
     <ClCompile Include="..\..\..\server\sv_world.c">
       <Filter>Source Files\server</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\win32\in_win.c">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\win32\net_wins.c">
       <Filter>Source Files\system</Filter>
     </ClCompile>
@@ -218,9 +209,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\win32\vid_dll.c">
       <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\win32\glw_imp.c">
-      <Filter>Source Files\renderer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\renderer\r_alias.c">
       <Filter>Source Files\renderer</Filter>
@@ -407,6 +395,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\client\snd_sdl2.c">
       <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\client\snd_wav.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\client\snd_main.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\win32\glimp_sdl2.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\client\cl_input_sdl2.c">
+      <Filter>Source Files\client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

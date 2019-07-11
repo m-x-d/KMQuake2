@@ -17,9 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-// in_sdl2.c -- SDL2 mouse and gamepad code
+// cl_input_sdl2.c -- SDL2 mouse and gamepad code
 
-#include "../client/client.h"
+#include "client.h"
 #include "../win32/sdlquake.h" //mxd
 
 // The last time input events were processed. Used throughout the client.
