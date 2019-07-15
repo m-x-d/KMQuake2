@@ -97,7 +97,8 @@ void Com_EndRedirect(void)
 extern char *CL_UnformattedString(const char *string); //mxd
 
 //mxd. Store early Com_Printf messages added before logfile_active is initialized and loaded from config.cfg / autoexec.cfg.
-static char *earlymsg[512];
+#define MAX_EARLY_MESSAGES	256
+static char *earlymsg[MAX_EARLY_MESSAGES];
 static int earlymsgcount = 0;
 
 static void FreeEarlyMessages()
@@ -107,7 +108,7 @@ static void FreeEarlyMessages()
 		for (int i = 0; i < earlymsgcount; i++)
 			free(earlymsg[i]);
 
-		earlymsgcount = -1;
+		earlymsgcount = 0;
 	}
 }
 
@@ -116,9 +117,10 @@ void Com_Printf(char *fmt, ...)
 	va_list argptr;
 	static char msg[MAXPRINTMSG]; //mxd. +static
 	static qboolean earlymessagesaddedtoconsole = false; //mxd
+	static qboolean earlymessagesaddedtolog = false; //mxd
 
 	va_start(argptr, fmt);
-	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);	// fix for nVidia 191.xx crash
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr); // Fix for nVidia 191.xx crash
 	va_end(argptr);
 
 	if (rd_target)
@@ -146,11 +148,11 @@ void Com_Printf(char *fmt, ...)
 
 	//mxd. Skip colored text marker
 	char *text = msg;
-	if (text[0] == 1 || text[0] == 2) 
+	if (text[0] == 1 || text[0] == 2)
 		text++;
 
-	//mxd. If logfile isn't initialized yet, store in temporary buffer...
-	if (earlymsgcount != -1 && logfile_active == NULL)
+	//mxd. If logfile or console isn't initialized yet, store in temporary buffer...
+	if ((!earlymessagesaddedtoconsole || !earlymessagesaddedtolog) && earlymsgcount < MAX_EARLY_MESSAGES)
 	{
 		const int textsize = strlen(text) * sizeof(char);
 		earlymsg[earlymsgcount] = malloc(textsize);
@@ -179,12 +181,12 @@ void Com_Printf(char *fmt, ...)
 		}
 
 		//mxd. Add early messages?
-		if (logfile && earlymsgcount > 0)
+		if (logfile && !earlymessagesaddedtolog)
 		{
 			for (int i = 0; i < earlymsgcount; i++)
 				fprintf(logfile, "%s\n", CL_UnformattedString(earlymsg[i]));
 
-			FreeEarlyMessages(); // Also sets earlymsgcount to -1
+			earlymessagesaddedtolog = true;
 		}
 
 		if (logfile)
