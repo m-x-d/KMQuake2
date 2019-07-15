@@ -227,7 +227,7 @@ void S_Init(void)
 	}
 
 	s_volume = Cvar_Get("s_volume", "1.0", CVAR_ARCHIVE);
-	s_khz = Cvar_Get("s_khz", "48", CVAR_ARCHIVE); //mxd. Was 22
+	s_khz = Cvar_Get("s_khz", "44", CVAR_ARCHIVE); //mxd. Was 22
 	s_loadas8bit = Cvar_Get("s_loadas8bit", "0", CVAR_ARCHIVE);
 	s_mixahead = Cvar_Get("s_mixahead", "0.2", CVAR_ARCHIVE);
 	s_show = Cvar_Get("s_show", "0", 0);
@@ -249,9 +249,7 @@ void S_Init(void)
 	num_sfx = 0;
 	paintedtime = 0;
 
-	Com_Printf("Sound sampling rate: %i\n", sound.speed);
 	S_StopAllSounds();
-
 	S_OGG_Init();
 
 	Com_Printf("------------------------------------\n\n");
