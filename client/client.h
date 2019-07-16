@@ -908,13 +908,12 @@ void CL_ClearLightStyles(void);
 //
 // cl_particle.c
 //
-extern cparticle_t	*active_particles, *free_particles;
-extern cparticle_t	particles[MAX_PARTICLES];
-extern int			cl_numparticles;
+extern cparticle_t *active_particles;
+extern cparticle_t *free_particles;
 
-int CL_GetRandomBloodParticle(void);
+int CL_GetRandomBloodParticle();
 void CL_ClipDecal(cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir);
-float CL_NewParticleTime(void);
+float CL_NewParticleTime();
 
 /*color = 255, 255, 255
 image = particle_generic
@@ -925,7 +924,7 @@ p->size = 1
 p->time = cl.time
 The rest is 0 (mxd). */
 cparticle_t *CL_InitParticle();
-cparticle_t *CL_InitParticle2(int flags);
+cparticle_t *CL_InitParticle2(const int flags);
 
 //TODO: (mxd) get rid of this abomination
 /*angle X Y Z
@@ -955,16 +954,16 @@ cparticle_t *CL_SetupParticle (
 			void (*think)(cparticle_t *p, vec3_t p_org, vec3_t p_angle, float *p_alpha, float *p_size, int *p_image, float *p_time),
 			qboolean thinknext);
 
-void CL_AddParticleLight(cparticle_t *p, float light, float lightvel, float lcol0, float lcol1, float lcol2);
+void CL_AddParticleLight(cparticle_t *p, const float light, const float lightvel, const float lcol0, const float lcol1, const float lcol2);
 
 void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, vec3_t velocity);
 void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
-void CL_AddParticles(void);
-void CL_ClearEffects(void);
+void CL_AddParticles();
+void CL_ClearEffects();
 qboolean CL_UnclipDecals(); //mxd. void -> qboolean
-void CL_ReclipDecals(void);
+void CL_ReclipDecals();
 
 
 //

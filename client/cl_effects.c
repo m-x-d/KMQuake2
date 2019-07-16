@@ -1306,19 +1306,19 @@ Wall impact puffs
 #define pBlasterMinSize 1.0
 #define pBlasterMaxSize 5.0
 
-void CL_ParticleBlasterThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+void CL_ParticleBlasterThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
 	vec3_t len;
-	float clipsize = 1.0;
+	float clipsize = 1.0f;
 	VectorSubtract(p->angle, org, len);
 
-	*size *= (float)(pBlasterMaxSize / VectorLength(len)) * 1.0 / (4 - *size);
+	*size *= (float)(pBlasterMaxSize / VectorLength(len)) * 1.0f / (4 - *size);
 	*size += *time * p->sizevel;
 	*size = clamp(*size, pBlasterMinSize, pBlasterMaxSize); //mxd
 
 	CL_ParticleBounceThink(p, org, angle, alpha, &clipsize, image, time); // was size
 
-	vec_t length = VectorNormalize(p->vel);
+	float length = VectorNormalize(p->vel);
 	length = min(pBlasterMaxVelocity, length); //mxd. Passing VectorNormalize to min() was not such a great idea (because it's evaluated twice)...
 	VectorScale(p->vel, length, p->vel);
 }

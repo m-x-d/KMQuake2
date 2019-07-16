@@ -23,15 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "client.h"
 #include "particles.h"
 
-/*
-===============
-CL_SetParticleImages
-This initializes all particle images - mods play with this...
-===============
-*/
+// Initializes all particle images
 void CL_SetParticleImages(void)
 {
-	R_SetParticlePicture(particle_solid,		"***whitetexture***");		// only used for sparks
+	R_SetParticlePicture(particle_solid,		"***whitetexture***"); // Only used for sparks
 	R_SetParticlePicture(particle_generic,		"gfx/particles/basic.tga");
 	R_SetParticlePicture(particle_smoke,		"gfx/particles/smoke.tga");
 	R_SetParticlePicture(particle_blood,		"gfx/particles/blood.tga");
@@ -42,14 +37,12 @@ void CL_SetParticleImages(void)
 	R_SetParticlePicture(particle_blaster,		"gfx/particles/blaster.tga");
 	R_SetParticlePicture(particle_blasterblob,	"gfx/particles/blaster_blob.tga");
 	R_SetParticlePicture(particle_beam,			"gfx/particles/beam.tga");
-	R_SetParticlePicture(particle_beam2,		"gfx/particles/beam2.tga"); // only used for railgun
+	R_SetParticlePicture(particle_beam2,		"gfx/particles/beam2.tga"); // Only used for railgun
 	R_SetParticlePicture(particle_lightning,	"gfx/particles/lightning.tga");
 	R_SetParticlePicture(particle_inferno,		"gfx/particles/inferno.tga");
-//	R_SetParticlePicture(particle_lensflare,	"gfx/particles/lensflare.tga");
-//	R_SetParticlePicture(particle_lightflare,	"gfx/particles/lightflare.jpg");
-//	R_SetParticlePicture(particle_shield,		"gfx/particles/shield.jpg");
-	//animations
-	//rocket explosion
+	
+	// Animations
+	// Rocket explosion
 	R_SetParticlePicture(particle_rflash,		"gfx/particles/r_flash.tga");
 	R_SetParticlePicture(particle_rexplosion1,	"gfx/particles/r_explod_1.tga");
 	R_SetParticlePicture(particle_rexplosion2,	"gfx/particles/r_explod_2.tga");
@@ -58,10 +51,6 @@ void CL_SetParticleImages(void)
 	R_SetParticlePicture(particle_rexplosion5,	"gfx/particles/r_explod_5.tga");
 	R_SetParticlePicture(particle_rexplosion6,	"gfx/particles/r_explod_6.tga");
 	R_SetParticlePicture(particle_rexplosion7,	"gfx/particles/r_explod_7.tga");
-	//disruptor explosion		
-//	R_SetParticlePicture(particle_dexplosion1,	"gfx/particles/d_explod_1.tga");
-//	R_SetParticlePicture(particle_dexplosion2,	"gfx/particles/d_explod_2.tga");
-//	R_SetParticlePicture(particle_dexplosion3,	"gfx/particles/d_explod_3.tga");
 
 	R_SetParticlePicture(particle_bfgmark,		"gfx/decals/bfgmark.tga");
 	R_SetParticlePicture(particle_burnmark,		"gfx/decals/burnmark.tga");
@@ -73,51 +62,32 @@ void CL_SetParticleImages(void)
 	R_SetParticlePicture(particle_shadow,		"gfx/decals/shadow.tga");
 	R_SetParticlePicture(particle_bulletmark,	"gfx/decals/bulletmark.tga");
 	R_SetParticlePicture(particle_trackermark,	"gfx/decals/trackermark.tga");
-//	R_SetParticlePicture(particle_footprint,	"gfx/decals/footprint.tga");
 
 	//mxd. Classic particles...
 	R_SetParticlePicture(particle_classic, "***particle***");
 }
 
-
-/*
-===============
-CL_GetRandomBloodParticle
-===============
-*/
-int CL_GetRandomBloodParticle (void)
+int CL_GetRandomBloodParticle()
 {
 	return particle_blooddecal1 + rand() % 5;
 }
 
+#pragma region ======================= Particle management
 
-/*
-==============================================================
+cparticle_t *active_particles;
+cparticle_t *free_particles;
+static cparticle_t particles[MAX_PARTICLES];
 
-PARTICLE MANAGEMENT
+static decalpolys_t *active_decals;
+static decalpolys_t *free_decals;
+static decalpolys_t decalfrags[MAX_DECAL_FRAGS];
 
-==============================================================
-*/
-
-cparticle_t	*active_particles, *free_particles;
-cparticle_t	particles[MAX_PARTICLES];
-int			cl_numparticles = MAX_PARTICLES;
-
-decalpolys_t	*active_decals, *free_decals;
-decalpolys_t	decalfrags[MAX_DECAL_FRAGS];
-int				cl_numdecalfrags = MAX_DECAL_FRAGS;
-
-
-/*
-===============
-CL_CleanDecalPolys
-Cleans up the active_particles linked list
-===============
-*/
-void CL_CleanDecalPolys (void)
+// Cleans up the active_particles linked list
+static void CL_CleanDecalPolys()
 {
 	decalpolys_t *next;
-	decalpolys_t *active = NULL, *tail = NULL;
+	decalpolys_t *active = NULL;
+	decalpolys_t *tail = NULL;
 
 	for (decalpolys_t *d = active_decals; d; d = next)
 	{
@@ -149,14 +119,8 @@ void CL_CleanDecalPolys (void)
 	active_decals = active;
 }
 
-
-/*
-===============
-CL_ClearDecalPoly
-Recursively flags a decal poly chain for cleaning
-===============
-*/
-void CL_ClearDecalPoly (decalpolys_t *decal)
+// Recursively flags a decal poly chain for cleaning
+static void CL_ClearDecalPoly(decalpolys_t *decal)
 {
 	if (!decal)
 		return;
@@ -164,41 +128,29 @@ void CL_ClearDecalPoly (decalpolys_t *decal)
 	if (decal->nextpoly)
 		CL_ClearDecalPoly(decal->nextpoly);
 
-	decal->clearflag = true; // tell cleaning loop to clean this up
+	decal->clearflag = true; // Tell cleaning loop to clean this up
 }
 
-
-/*
-===============
-CL_ClearAllDecalPolys
-Clears all decal polys
-===============
-*/
-void CL_ClearAllDecalPolys (void)
+// Clears all decal polys
+static void CL_ClearAllDecalPolys()
 {
 	free_decals = &decalfrags[0];
 	active_decals = NULL;
 
-	for (int i = 0; i < cl_numdecalfrags; i++)
+	for (int i = 0; i < MAX_DECAL_FRAGS; i++)
 	{
-		decalfrags[i].next = &decalfrags[i+1];
+		decalfrags[i].next = &decalfrags[i + 1];
 		decalfrags[i].clearflag = false;
 		decalfrags[i].numpolys = 0;
 		decalfrags[i].nextpoly = NULL;
 		decalfrags[i].node = NULL; // vis node
 	}
 
-	decalfrags[cl_numdecalfrags - 1].next = NULL;
+	decalfrags[MAX_DECAL_FRAGS - 1].next = NULL;
 }
 
-
-/*
-===============
-CL_NumFreeDecalPolys
-Retuns number of available decalpoly_t fields
-===============
-*/
-int CL_NumFreeDecalPolys (void)
+// Retuns number of available decalpoly_t fields
+static int CL_NumFreeDecalPolys()
 {
 	int count = 0;
 	for (decalpolys_t *d = free_decals; d; d = d->next)
@@ -207,14 +159,8 @@ int CL_NumFreeDecalPolys (void)
 	return count;
 }
 
-
-/*
-===============
-CL_NewDecalPoly
-Retuns first free decal poly
-===============
-*/
-decalpolys_t *CL_NewDecalPoly(void)
+// Retuns first free decal poly
+static decalpolys_t *CL_NewDecalPoly()
 {
 	if (!free_decals)
 		return NULL;
@@ -227,38 +173,33 @@ decalpolys_t *CL_NewDecalPoly(void)
 	return d;
 }
 
-
-/*
-===============
-CL_ClipDecal
-===============
-*/
-void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir)
+void CL_ClipDecal(cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir)
 {
-	vec3_t axis[3], verts[MAX_DECAL_VERTS];
-	int i;
-	markFragment_t *fr, fragments[MAX_FRAGMENTS_PER_DECAL];
-	
-	// invalid decal
+	// Invalid decal
 	if (radius <= 0 || VectorCompare(dir, vec3_origin)) 
 		return;
 
-	// calculate orientation matrix
+	// Calculate orientation matrix
+	vec3_t axis[3];
 	VectorNormalize2(dir, axis[0]);
 	PerpendicularVector(axis[1], axis[0]);
 	RotatePointAroundVector(axis[2], axis[0], axis[1], orient);
 	CrossProduct(axis[0], axis[2], axis[1]);
 
+	vec3_t verts[MAX_DECAL_VERTS];
+	markFragment_t fragments[MAX_FRAGMENTS_PER_DECAL];
 	const int numfragments = R_MarkFragments(origin, axis, radius, MAX_DECAL_VERTS, verts, MAX_FRAGMENTS_PER_DECAL, fragments);
 	
-	if (numfragments == 0 || numfragments > CL_NumFreeDecalPolys()) // nothing to display / not enough decalpolys free
+	if (numfragments == 0 || numfragments > CL_NumFreeDecalPolys()) // Nothing to display / not enough decalpolys free
 		return;
 	
 	VectorScale(axis[1], 0.5f / radius, axis[1]);
 	VectorScale(axis[2], 0.5f / radius, axis[2]);
 
 	part->decalnum = numfragments;
-	for (i = 0, fr = fragments; i < numfragments; i++, fr++)
+
+	markFragment_t *fr = fragments;
+	for (int i = 0; i < numfragments; i++, fr++)
 	{
 		decalpolys_t *decal = CL_NewDecalPoly();
 		vec3_t v;
@@ -281,23 +222,11 @@ void CL_ClipDecal (cparticle_t *part, float radius, float orient, vec3_t origin,
 	}
 }
 
-
-/*
-===============
-CL_NewParticleTime
-===============
-*/
-float CL_NewParticleTime(void)
+float CL_NewParticleTime()
 {
 	return (float)cl.time;
 }
 
-
-/*
-===============
-CL_SetupParticle
-===============
-*/
 cparticle_t *CL_SetupParticle (
 			float angle0,		float angle1,		float angle2,
 			float org0,			float org1,			float org2,
@@ -391,12 +320,8 @@ cparticle_t *CL_SetupParticle (
 	return p;
 }
 
-/*
-===============
-CL_InitParticle (mxd)
-===============
-*/
-cparticle_t *CL_InitParticle2(int flags)
+//mxd
+cparticle_t *CL_InitParticle2(const int flags)
 {
 	if (!free_particles)
 		return NULL;
@@ -452,7 +377,7 @@ cparticle_t *CL_InitParticle2(int flags)
 		VectorNegate(dir, dir);
 		CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);
 
-		if (!p->decalnum) // kill on viewframe
+		if (!p->decalnum) // Kill on viewframe
 			p->alpha = 0;
 	}
 
@@ -465,13 +390,7 @@ cparticle_t *CL_InitParticle()
 	return p;
 }
 
-
-/*
-===============
-CL_AddParticleLight
-===============
-*/
-void CL_AddParticleLight (cparticle_t *p, float light, float lightvel, float lcol0, float lcol1, float lcol2)
+void CL_AddParticleLight(cparticle_t *p, const float light, const float lightvel, const float lcol0, const float lcol1, const float lcol2)
 {
 	for (int i = 0; i < P_LIGHTS_MAX; i++)
 	{
@@ -488,41 +407,27 @@ void CL_AddParticleLight (cparticle_t *p, float light, float lightvel, float lco
 	}
 }
 
-
-/*
-===============
-CL_ClearParticles
-===============
-*/
-void CL_ClearParticles (void)
+static void CL_ClearParticles()
 {
 	free_particles = &particles[0];
 	active_particles = NULL;
 
-	for (int i = 0; i < cl_numparticles; i++)
+	for (int i = 0; i < MAX_PARTICLES; i++)
 	{
 		particles[i].next = &particles[i+1];
 		particles[i].decalnum = 0; // Knightmare added
 		particles[i].decal = NULL; // Knightmare added
 	}
 
-	particles[cl_numparticles-1].next = NULL;
+	particles[MAX_PARTICLES - 1].next = NULL;
 }
 
+#pragma endregion
 
-/*
-======================================
-	GENERIC PARTICLE THINKING ROUTINES
-======================================
-*/
+#pragma region ======================= Generic particle thinking routines
 
-#define	STOP_EPSILON	0.1
+#define	STOP_EPSILON	0.1f
 
-/*
-===============
-CL_CalcPartVelocity
-===============
-*/
 void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, vec3_t velocity)
 {
 	const float timesq = time * time;
@@ -533,14 +438,9 @@ void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, ve
 	velocity[2] = scale * (p->vel[2] * time + (p->accel[2] - gravity) * timesq);
 }
 
-/*
-===============
-CL_ClipParticleVelocity
-===============
-*/
-void CL_ClipParticleVelocity (vec3_t in, vec3_t normal, vec3_t out)
+static void CL_ClipParticleVelocity(vec3_t in, const vec3_t normal, vec3_t out)
 {
-	const float backoff = VectorLength(in) * 0.25 + DotProduct(in, normal) * 3.0f;
+	const float backoff = VectorLength(in) * 0.25f + DotProduct(in, normal) * 3.0f;
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -551,15 +451,10 @@ void CL_ClipParticleVelocity (vec3_t in, vec3_t normal, vec3_t out)
 	}
 }
 
-/*
-===============
-CL_ParticleBounceThink
-===============
-*/
-void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	const float clipsize = max(*size * 0.5, 0.25);
-	trace_t tr = CL_BrushTrace(p->oldorg, org, clipsize, MASK_SOLID); // was 1
+	const float clipsize = max(*size * 0.5f, 0.25f);
+	const trace_t tr = CL_BrushTrace(p->oldorg, org, clipsize, MASK_SOLID); // Was 1
 	
 	if (tr.fraction < 1)
 	{
@@ -584,37 +479,21 @@ void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *al
 	p->thinknext = true;
 }
 
-/*
-===============
-CL_ParticleRotateThink
-===============
-*/
-void CL_ParticleRotateThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
 	angle[2] = angle[0] + *time * angle[1] + *time * *time * angle[2];
-	p->thinknext=true;
-}
-
-/*
-===============
-CL_DecalAlphaThink
-===============
-*/
-void CL_DecalAlphaThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
-{
-	*alpha = pow(*alpha, 0.1);
 	p->thinknext = true;
 }
 
+void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+{
+	*alpha = powf(*alpha, 0.1f);
+	p->thinknext = true;
+}
 
-//===================================================================
+#pragma endregion
 
-/*
-===============
-CL_AddParticles
-===============
-*/
-void CL_AddParticles (void)
+void CL_AddParticles()
 {
 	float alpha;
 	vec3_t org, color, angle;
@@ -633,16 +512,16 @@ void CL_AddParticles (void)
 		// PMM - added INSTANT_PARTICLE handling for heat beam
 		if (p->alphavel != INSTANT_PARTICLE)
 		{
-			time = (cl.time - p->time) * 0.001;
+			time = (cl.time - p->time) * 0.001f;
 			alpha = p->alpha + time * p->alphavel;
 			if (flags & PART_DECAL)
 			{
 				if (decals >= r_decals->value || alpha <= 0)
 				{
-					// faded out
+					// Faded out
 					p->alpha = 0;
 					p->flags = 0;
-					CL_ClearDecalPoly(p->decal); // flag decal chain for cleaning
+					CL_ClearDecalPoly(p->decal); // Flag decal chain for cleaning
 					p->decalnum = 0;
 					p->decal = NULL;
 					p->next = free_particles;
@@ -653,7 +532,7 @@ void CL_AddParticles (void)
 			}
 			else if (alpha <= 0)
 			{
-				// faded out
+				// Faded out
 				p->alpha = 0;
 				p->flags = 0;
 				p->next = free_particles;
@@ -678,7 +557,7 @@ void CL_AddParticles (void)
 			tail = p;
 		}
 
-		alpha = clamp(alpha, 0.0, 1.0); //mxd
+		alpha = clamp(alpha, 0.0f, 1.0f); //mxd
 
 		const float time2 = time * time;
 		int image = p->image;
@@ -734,8 +613,8 @@ void CL_AddParticles (void)
 		
 		if (p->alphavel == INSTANT_PARTICLE)
 		{
-			p->alphavel = 0.0;
-			p->alpha = 0.0;
+			p->alphavel = 0.0f;
+			p->alpha = 0.0f;
 		}
 
 		VectorCopy(org, p->oldorg);
@@ -743,16 +622,10 @@ void CL_AddParticles (void)
 
 	active_particles = active;
 
-	CL_CleanDecalPolys(); // clean up active_decals linked list
+	CL_CleanDecalPolys(); // Clean up active_decals linked list
 }
 
-
-/*
-==============
-CL_ClearEffects
-==============
-*/
-void CL_ClearEffects(void)
+void CL_ClearEffects()
 {
 	CL_ClearParticles();
 	CL_ClearAllDecalPolys();
@@ -795,7 +668,7 @@ void CL_ReclipDecals()
 			VectorNegate(dir, dir);
 			CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);
 
-			if (!p->decalnum) // kill on viewframe
+			if (!p->decalnum) // Kill on viewframe
 				p->alpha = 0;
 		}
 	}
