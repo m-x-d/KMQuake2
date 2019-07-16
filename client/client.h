@@ -487,8 +487,7 @@ typedef struct
 	float	minlight;			// don't add when contributing less
 } cdlight_t;
 
-extern	centity_t	cl_entities[MAX_EDICTS];
-extern	cdlight_t	cl_dlights[MAX_DLIGHTS];
+extern centity_t cl_entities[MAX_EDICTS];
 
 // the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of entities,
 // so that when a delta compressed message arives from the server it can be un-deltad from the original
@@ -545,12 +544,14 @@ typedef struct cl_sustain
 void CL_ParticleSteamEffect2(cl_sustain_t *self);
 
 void CL_TeleporterParticles(entity_state_t *ent);
-void CL_ParticleEffect(vec3_t org, vec3_t dir, int color8, int count);
-void CL_ParticleEffect2(vec3_t org, vec3_t dir, int color8, int count);
-void CL_ParticleEffect3(vec3_t org, vec3_t dir, int color8, int count); // RAFAEL
+void CL_ParticleEffect(const vec3_t org, const vec3_t dir, const int color8, const int count);
+void CL_ParticleEffect2(const vec3_t org, const vec3_t dir, const int color8, const int count);
+void CL_ParticleEffect3(const vec3_t org, const vec3_t dir, const int color8, const int count); // RAFAEL
 
 void CL_ParticleEffectSplash(vec3_t org, vec3_t dir, int color8, int count);
 void CL_ElectricParticles(vec3_t org, vec3_t dir, int count);
+void CL_GunSmokeEffect(const vec3_t org, const vec3_t dir);
+void CL_LogoutEffect(const vec3_t org, const int type);
 
 // Psychospaz's mod detector
 qboolean FS_ModType(char *name);
@@ -640,18 +641,18 @@ void CL_ParseFrame(void);
 void CL_ParseTEnt();
 void CL_ParseConfigString(void);
 void CL_PlayBackgroundTrack(void); // Knightmare added
-void CL_ParseMuzzleFlash(void);
-void CL_ParseMuzzleFlash2(void);
+void CL_ParseMuzzleFlash();
+void CL_ParseMuzzleFlash2();
 
 void CL_SetLightstyle(const int i);
 
-void CL_RunDLights(void);
-void CL_RunLightStyles(void);
+void CL_RunDLights();
+void CL_RunLightStyles();
 
 void CL_AddEntities(void);
-void CL_AddDLights(void);
+void CL_AddDLights();
 void CL_AddTEnts();
-void CL_AddLightStyles(void);
+void CL_AddLightStyles();
 
 //=================================================
 
@@ -898,9 +899,9 @@ trace_t CL_PMSurfaceTrace(int playernum, vec3_t start, vec3_t mins, vec3_t maxs,
 //
 // cl_lights.c
 //
-cdlight_t *CL_AllocDlight(int key);
-void CL_ClearDlights(void);
-void CL_ClearLightStyles(void);
+cdlight_t *CL_AllocDlight(const int key);
+void CL_ClearDlights();
+void CL_ClearLightStyles();
 
 
 //
@@ -1021,12 +1022,12 @@ void vectoangles(vec3_t vec, vec3_t angles);
 //
 // cl_loc.c
 //
-void CL_LoadLoc(void);
-void CL_LocPlace(void);
-void CL_AddViewLocs(void);
-void CL_LocDelete(void);
+void CL_LoadLoc();
+void CL_LocPlace();
+void CL_AddViewLocs();
+void CL_LocDelete();
 void CL_LocAdd(char *name);
-void CL_LocWrite(void);
+void CL_LocWrite();
 void CL_LocHelp_f(void);
 
 #endif	// LOC_SUPPORT

@@ -603,7 +603,7 @@ void CL_GunSmokeEffect(const vec3_t org, const vec3_t dir)
 }
 
 //mxd
-void CL_AllocClassicExplosion(const vec3_t pos, const qboolean grenade, const qboolean big)
+static void CL_AllocClassicExplosion(const vec3_t pos, const qboolean grenade, const qboolean big)
 {
 	explosion_t	*ex = CL_AllocExplosion();
 	VectorCopy(pos, ex->ent.origin);

@@ -701,7 +701,7 @@ CL_ParticleEffect
 Wall impact puffs
 ===============
 */
-void CL_ParticleEffect (vec3_t org, vec3_t dir, int color8, int count)
+void CL_ParticleEffect(const vec3_t org, const vec3_t dir, const int color8, const int count)
 {
 	for (int i = 0; i < count; i++)
 	{
@@ -709,17 +709,17 @@ void CL_ParticleEffect (vec3_t org, vec3_t dir, int color8, int count)
 		cparticle_t *p = CL_InitParticle();
 		if (!p) return;
 
-		color8_to_vec3(color8 + (rand()&7), p->color);
+		color8_to_vec3(color8 + (rand() & 7), p->color);
 
-		const float d = rand()&31;
+		const float d = rand() & 31;
 		for (int j = 0; j < 3; j++)
 		{
-			p->org[j] = org[j] + ((rand()&7) - 4) + d * dir[j];
+			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
 			p->vel[j] = crand() * 20;
 		}
 
 		p->accel[2] = -PARTICLE_GRAVITY;
-		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
 		p->flags = PART_GRAVITY;
 	}
 }
@@ -731,7 +731,7 @@ CL_ParticleEffect2
 */
 
 #define colorAdd 25
-void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color8, int count)
+void CL_ParticleEffect2(const vec3_t org, const vec3_t dir, const int color8, const int count)
 {
 	for (int i = 0; i < count; i++)
 	{
@@ -741,10 +741,10 @@ void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color8, int count)
 
 		color8_to_vec3(color8, p->color);
 
-		const float d = rand()&7;
+		const float d = rand() & 7;
 		for (int j = 0; j < 3; j++)
 		{
-			p->org[j] = org[j] + ((rand()&7) - 4) + d * dir[j];
+			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
 			p->vel[j] = crand() * 20;
 
 			if (r_particle_mode->integer != 0)
@@ -752,7 +752,7 @@ void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color8, int count)
 		}
 
 		p->accel[2] = -PARTICLE_GRAVITY;
-		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
 		p->flags = PART_GRAVITY;
 	}
 }
@@ -764,7 +764,7 @@ CL_ParticleEffect3
 ===============
 */
 
-void CL_ParticleEffect3 (vec3_t org, vec3_t dir, int color8, int count)
+void CL_ParticleEffect3(const vec3_t org, const vec3_t dir, const int color8, const int count)
 {
 	for (int i = 0; i < count; i++)
 	{
@@ -774,10 +774,10 @@ void CL_ParticleEffect3 (vec3_t org, vec3_t dir, int color8, int count)
 
 		color8_to_vec3(color8, p->color);
 
-		const float d = rand()&7;
+		const float d = rand() & 7;
 		for (int j = 0; j < 3; j++)
 		{
-			p->org[j] = org[j] + ((rand()&7) - 4) + d * dir[j];
+			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
 			p->vel[j] = crand() * 20;
 
 			if (r_particle_mode->integer != 0)
@@ -785,7 +785,7 @@ void CL_ParticleEffect3 (vec3_t org, vec3_t dir, int color8, int count)
 		}
 
 		p->accel[2] = PARTICLE_GRAVITY; //mxd. The only difference between this and CL_ParticleEffect2...
-		p->alphavel = -1.0 / (0.5 + frand()*0.3);
+		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
 		p->flags = PART_GRAVITY;
 	}
 }
@@ -1198,9 +1198,9 @@ void CL_TeleporterParticles (entity_state_t *ent)
 CL_LogoutEffect
 ===============
 */
-void CL_LogoutEffect (vec3_t org, int type)
+void CL_LogoutEffect(const vec3_t org, const int type)
 {
-	vec3_t	color;
+	vec3_t color;
 
 	switch (type) //mxd
 	{

@@ -26,17 +26,16 @@ Edited and Fixed by Xile and FourthX
 
 typedef struct
 {
-	vec3_t		origin;
-	char		name[64];
-	qboolean	used;
+	vec3_t origin;
+	char name[64];
+	qboolean used;
 } loc_t;
 
 #define MAX_LOCATIONS 768
 
-loc_t locations[MAX_LOCATIONS];
+static loc_t locations[MAX_LOCATIONS];
 
-
-int CL_FreeLoc(void)
+static int CL_FreeLoc()
 {
 	for (int i = 0; i < MAX_LOCATIONS; i++)
 		if (!locations[i].used)
@@ -46,7 +45,7 @@ int CL_FreeLoc(void)
 	return MAX_LOCATIONS - 1;
 }
 
-void CL_LoadLoc(void)
+void CL_LoadLoc()
 {
 	char mapname[MAX_QPATH];
 	char filename[MAX_OSPATH];
@@ -60,16 +59,16 @@ void CL_LoadLoc(void)
 	Com_sprintf(filename, sizeof(filename), "locs/%s.loc", mapname);
 	
 	// Load file and check buffer and size
-	const int fSize = FS_LoadFile(filename, &buf);
+	const int fSize = FS_LoadFile(filename, (void**)&buf);
 	if (!buf)
 	{
-		Com_DPrintf("CL_LoadLoc: Couldn't load %s\n", filename);
+		Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: couldn't load '%s'!\n", filename);
 		return;
 	}
 
 	if (fSize < 7)
 	{
-		Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: Loc file %s is too small: %d\n", filename, fSize);
+		Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: loc file '%s' is too small (%d bytes)!\n", filename, fSize);
 		FS_FreeFile(buf);
 
 		return;
@@ -103,7 +102,7 @@ void CL_LoadLoc(void)
 			char *token2 = strchr(token1, ' ');
 			if (token2 == NULL)
 			{
-				Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: Line %d is incomplete in %s\n", nLines, filename);
+				Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: line %d is incomplete in '%s'!\n", nLines, filename);
 				continue;
 			}
 
@@ -113,7 +112,7 @@ void CL_LoadLoc(void)
 			char *token3 = strchr(token2, ' ');
 			if (token3 == NULL)
 			{
-				Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: Line %d is incomplete in %s\n", nLines, filename);
+				Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: line %d is incomplete in '%s'!\n", nLines, filename);
 				continue;
 			}
 
@@ -123,7 +122,7 @@ void CL_LoadLoc(void)
 			char *token4 = strchr(token3, ' ');
 			if (token4 == NULL)
 			{
-				Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: Line %d is incomplete in %s\n", nLines, filename);
+				Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: line %d is incomplete in '%s'!\n", nLines, filename);
 				continue;
 			}
 
@@ -137,7 +136,7 @@ void CL_LoadLoc(void)
 				token4 = strchr(tok, ' ');
 				if (token4 == NULL)
 				{
-					Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: Line %d is incomplete in %s\n", nLines, filename);
+					Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: line %d is incomplete in '%s'!\n", nLines, filename);
 					continue;
 				}
 
@@ -162,14 +161,14 @@ void CL_LoadLoc(void)
 	}
 
 	FS_FreeFile(buf);
-	Com_Printf("CL_LoadLoc: Loaded %d locations from %s.\n", nLines, filename);
+	Com_Printf("CL_LoadLoc: loaded %d locations from '%s'.\n", nLines, filename);
 }
 
-int CL_LocIndex(const vec3_t origin)
+static int CL_LocIndex(const vec3_t origin)
 {
-	vec3_t	diff; // FourthX fix
-	float	minDist = 999999;
-	int		locIndex = -1;
+	vec3_t diff; // FourthX fix
+	float minDist = 999999;
+	int locIndex = -1;
 
 	for (int i = 0; i < MAX_LOCATIONS; i++)
 	{
@@ -189,7 +188,7 @@ int CL_LocIndex(const vec3_t origin)
 	return locIndex;
 }
 
-void CL_LocDelete(void)
+void CL_LocDelete()
 {
 	vec3_t point;
 
@@ -205,7 +204,7 @@ void CL_LocDelete(void)
 	}
 	else
 	{
-		Com_Printf("Warning: No location to delete!\n");
+		Com_Printf(S_COLOR_YELLOW"Warning: no location to delete!\n");
 	}
 }
 
@@ -226,7 +225,7 @@ void CL_LocAdd(char *name)
 		index);
 }
 
-void CL_LocWrite(void)
+void CL_LocWrite()
 {
 	char mapname[MAX_QPATH];
 	char filename[MAX_OSPATH];
@@ -241,7 +240,7 @@ void CL_LocWrite(void)
 	FILE *f = fopen(filename, "w");
 	if (f == NULL)
 	{
-		Com_Printf(S_COLOR_YELLOW"Unable to open locs/%s.loc for writing.\n", mapname);
+		Com_Printf(S_COLOR_YELLOW"Unable to open 'locs/%s.loc' for writing.\n", mapname);
 		return;
 	}
 
@@ -261,10 +260,10 @@ void CL_LocWrite(void)
 
 	fclose(f);
 
-	Com_Printf("Saved location data to locs/%s.loc.\n", mapname);
+	Com_Printf("Saved location data to 'locs/%s.loc'.\n", mapname);
 }
 
-void CL_LocPlace(void)
+void CL_LocPlace()
 {
 	vec3_t point, end;
 
@@ -288,7 +287,7 @@ void CL_LocPlace(void)
 		Cvar_ForceSet("loc_there", "");
 }
 
-void CL_AddViewLocs(void)
+void CL_AddViewLocs()
 {
 	vec3_t point, diff;
 
