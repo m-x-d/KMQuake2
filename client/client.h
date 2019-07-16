@@ -1048,8 +1048,8 @@ void M_Menu_Main_f(void);
 //
 // cl_inv.c
 //
-void CL_ParseInventory(void);
-void CL_DrawInventory(void);
+void CL_ParseInventory();
+void CL_DrawInventory();
 
 //
 // cl_pred.c

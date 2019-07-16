@@ -21,33 +21,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-void CL_ParseInventory(void)
+void CL_ParseInventory()
 {
 	for (int i = 0; i < MAX_ITEMS; i++)
 		cl.inventory[i] = MSG_ReadShort(&net_message);
 }
 
+#define DISPLAY_ITEMS	17
 
-extern void Hud_DrawString(int x, int y, const char *string, int alpha, qboolean isStatusBar);
-
-void Inv_DrawString(int x, int y, char *string)
+void CL_DrawInventory()
 {
-	Hud_DrawString(x, y, string, 255, false);
-}
-
-void SetStringHighBit(char *s)
-{
-	while (*s)
-		*s++ |= 128;
-}
-
-#define DISPLAY_ITEMS 17
-
-void CL_DrawInventory(void)
-{
-	int		index[MAX_ITEMS];
-	char	string[1024];
-	char	binding[1024];
+	int index[MAX_ITEMS];
+	char string[1024];
+	char binding[1024];
 
 	const int selected = cl.frame.playerstate.stats[STAT_SELECTED_ITEM];
 
