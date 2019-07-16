@@ -1008,8 +1008,8 @@ static void R_DrawInlineBModel(entity_t *e, int causticflag)
 	}
 }
 
-extern int CL_PMpointcontents(vec3_t point);
-extern int CL_PMpointcontents2(vec3_t point, model_t *ignore);
+extern int CL_PMpointcontents(const vec3_t point);
+extern int CL_PMpointcontents2(const vec3_t point, const model_t *ignore);
 
 void R_DrawBrushModel(entity_t *e)
 {

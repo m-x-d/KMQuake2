@@ -753,7 +753,7 @@ int	CM_BoxLeafnums(vec3_t mins, vec3_t maxs, int *list, const int listsize, int 
 	return CM_BoxLeafnums_headnode(mins, maxs, list, listsize, map_cmodels[0].headnode, topnode);
 }
 
-int CM_PointContents(vec3_t p, const int headnode)
+int CM_PointContents(const vec3_t p, const int headnode)
 {
 	if (!numnodes)	// Map not loaded
 		return 0;
@@ -983,7 +983,7 @@ static void CM_TestInLeaf(const int leafnum)
 	}
 }
 
-static void CM_RecursiveHullCheck(const int num, const float p1f, const float p2f, vec3_t p1, vec3_t p2)
+static void CM_RecursiveHullCheck(const int num, const float p1f, const float p2f, const vec3_t p1, const vec3_t p2)
 {
 	float t1, t2, offset;
 	float frac, frac2;
@@ -1082,7 +1082,7 @@ static void CM_RecursiveHullCheck(const int num, const float p1f, const float p2
 
 //======================================================================
 
-trace_t CM_BoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, const int headnode, const int brushmask)
+trace_t CM_BoxTrace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const int headnode, const int brushmask)
 {
 	checkcount++; // For multi-check avoidance
 	c_traces++; // For statistics, may be zeroed
@@ -1158,7 +1158,7 @@ trace_t CM_BoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, const in
 }
 
 // Handles offseting and rotation of the end points for moving and rotating entities
-trace_t CM_TransformedBoxTrace(const vec3_t start, const vec3_t end, vec3_t mins, vec3_t maxs, const int headnode, const int brushmask, const vec3_t origin, vec3_t angles)
+trace_t CM_TransformedBoxTrace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const int headnode, const int brushmask, const vec3_t origin, const vec3_t angles)
 {
 	vec3_t start_l, end_l;
 	vec3_t a;

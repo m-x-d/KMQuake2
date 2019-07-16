@@ -281,8 +281,8 @@ void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out);
 void _VectorCopy(vec3_t in, vec3_t out);
 
 void ClearBounds(vec3_t mins, vec3_t maxs);
-void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs);
-int VectorCompare(vec3_t v1, vec3_t v2);
+void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs);
+int VectorCompare(const vec3_t v1, const vec3_t v2);
 vec_t VectorLength(const vec3_t v);
 void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
 vec_t VectorNormalize(vec3_t v); // returns vector length

@@ -888,12 +888,12 @@ void CL_SmokeAndFlash(const vec3_t origin);
 //
 // cl_pred.c
 //
-void CL_CheckPredictionError(void);
+void CL_CheckPredictionError();
 //Knightmare added
-trace_t CL_Trace(vec3_t start, vec3_t end, float size, int contentmask);
-trace_t CL_BrushTrace(vec3_t start, vec3_t end, float size, int contentmask);
+trace_t CL_Trace(const vec3_t start, const vec3_t end, const float size, const int contentmask);
+trace_t CL_BrushTrace(const vec3_t start, const vec3_t end, const float size, const int contentmask);
 trace_t CL_PMTrace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-trace_t CL_PMSurfaceTrace(int playernum, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask);
+trace_t CL_PMSurfaceTrace(const int playernum, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, const int contentmask);
 
 
 //
@@ -1052,6 +1052,6 @@ void CL_DrawInventory();
 //
 // cl_pred.c
 //
-void CL_PredictMovement(void);
+void CL_PredictMovement();
 
 #endif // CLIENT_H

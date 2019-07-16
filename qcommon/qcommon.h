@@ -669,11 +669,11 @@ int CM_HeadnodeForBox(const vec3_t mins, const vec3_t maxs);
 
 
 // returns an ORed contents mask
-int CM_PointContents(vec3_t p, const int headnode);
+int CM_PointContents(const vec3_t p, const int headnode);
 int CM_TransformedPointContents(const vec3_t p, const int headnode, const vec3_t origin, vec3_t angles);
 
-trace_t CM_BoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, const int headnode, const int brushmask);
-trace_t CM_TransformedBoxTrace(const vec3_t start, const vec3_t end, vec3_t mins, vec3_t maxs, const int headnode, const int brushmask, const vec3_t origin, vec3_t angles);
+trace_t CM_BoxTrace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const int headnode, const int brushmask);
+trace_t CM_TransformedBoxTrace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const int headnode, const int brushmask, const vec3_t origin, const vec3_t angles);
 
 byte *CM_ClusterPVS(const int cluster);
 byte *CM_ClusterPHS(const int cluster);

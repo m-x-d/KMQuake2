@@ -499,7 +499,7 @@ void ClearBounds(vec3_t mins, vec3_t maxs)
 	VectorSetAll(maxs, -99999);
 }
 
-void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
+void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -508,7 +508,7 @@ void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
 	}
 }
 
-int VectorCompare(vec3_t v1, vec3_t v2)
+int VectorCompare(const vec3_t v1, const vec3_t v2)
 {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2])
 		return 0;

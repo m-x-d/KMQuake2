@@ -20,56 +20,43 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-/*
-===================
-CL_CheckPredictionError
-===================
-*/
-void CL_CheckPredictionError(void)
+void CL_CheckPredictionError()
 {
-	int delta[3];
-
-	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
+	if (!cl_predict->integer || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 		return;
 
-	// calculate the last usercmd_t we sent that the server has processed
+	// Calculate the last usercmd_t we sent that the server has processed
 	int frame = cls.netchan.incoming_acknowledged;
 	frame &= (CMD_BACKUP - 1);
 
-	// compare what the server returned with what we had predicted it to be
+	// Compare what the server returned with what we had predicted it to be
+	int delta[3];
 	VectorSubtract(cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame], delta);
 
-	// save the prediction error for interpolation
+	// Save the prediction error for interpolation
 	const int len = abs(delta[0]) + abs(delta[1]) + abs(delta[2]);
-	if (len > 640)	// 80 world units
+	if (len > 640) // 80 world units
 	{
-		// a teleport or something
+		// A teleport or something
 		VectorClear(cl.prediction_error);
 	}
 	else
 	{
-		if (cl_showmiss->value && (delta[0] || delta[1] || delta[2]))
+		if (cl_showmiss->integer && (delta[0] || delta[1] || delta[2]))
 			Com_Printf("prediction miss on %i: %i\n", cl.frame.serverframe, delta[0] + delta[1] + delta[2]);
 
 		VectorCopy(cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
-		// save for error itnerpolation
+		// Save for error itnerpolation
 		for (int i = 0; i < 3; i++)
 			cl.prediction_error[i] = delta[i] * 0.125f;
 	}
 }
 
-
-/*
-====================
-CL_ClipMoveToEntities
-====================
-*/
-void CL_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr)
+static void CL_ClipMoveToEntities(const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, trace_t *tr)
 {
-	int		headnode;
-	float	*angles;
-	vec3_t	bmins, bmaxs;
+	int headnode;
+	float *angles;
 
 	for (int i = 0; i < cl.frame.num_entities; i++)
 	{
@@ -84,7 +71,7 @@ void CL_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, t
 
 		if (ent->solid == 31)
 		{
-			// special value for bmodel
+			// Special value for bmodel
 			cmodel_t *cmodel = cl.model_clip[ent->modelindex];
 			if (!cmodel)
 				continue;
@@ -94,18 +81,19 @@ void CL_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, t
 		}
 		else
 		{
-			// encoded bbox
+			// Encoded bbox
 			const int x =  8 * (ent->solid & 31);
 			const int zd = 8 * ((ent->solid >> 5) & 31);
 			const int zu = 8  *((ent->solid >> 10) & 63) - 32;
 
+			vec3_t bmins, bmaxs;
 			bmins[0] = bmins[1] = -x;
 			bmaxs[0] = bmaxs[1] = x;
 			bmins[2] = -zd;
 			bmaxs[2] = zu;
 
 			headnode = CM_HeadnodeForBox(bmins, bmaxs);
-			angles = vec3_origin;	// boxes don't rotate
+			angles = vec3_origin; // Boxes don't rotate
 		}
 
 		if (tr->allsolid)
@@ -121,22 +109,14 @@ void CL_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, t
 
 			*tr = trace;
 		}
-		//else if (trace.startsolid) //mxd. Never triggered, right?
-			//tr->startsolid = true;
 	}
 }
 
-/*
-====================
-CL_ClipMoveToEntities2
-Similar to above, but uses entnum as reference.
-====================
-*/
-void CL_ClipMoveToEntities2(int entnum, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr)
+// Similar to above, but uses entnum as reference.
+static void CL_ClipMoveToEntities2(const int entnum, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, trace_t *tr)
 {
-	int		headnode;
-	float	*angles;
-	vec3_t	bmins, bmaxs;
+	int headnode;
+	float *angles;
 
 	for (int i = 0; i < cl.frame.num_entities ; i++)
 	{
@@ -152,7 +132,7 @@ void CL_ClipMoveToEntities2(int entnum, vec3_t start, vec3_t mins, vec3_t maxs, 
 
 		if (ent->solid == 31)
 		{
-			// special value for bmodel
+			// Special value for bmodel
 			cmodel_t *cmodel = cl.model_clip[ent->modelindex];
 			if (!cmodel)
 				continue;
@@ -162,18 +142,19 @@ void CL_ClipMoveToEntities2(int entnum, vec3_t start, vec3_t mins, vec3_t maxs, 
 		}
 		else
 		{
-			// encoded bbox
+			// Encoded bbox
 			const int x =  8 * (ent->solid & 31);
 			const int zd = 8 * ((ent->solid >> 5) & 31);
 			const int zu = 8 * ((ent->solid >> 10) & 63) - 32;
 
+			vec3_t bmins, bmaxs;
 			bmins[0] = bmins[1] = -x;
 			bmaxs[0] = bmaxs[1] = x;
 			bmins[2] = -zd;
 			bmaxs[2] = zu;
 
 			headnode = CM_HeadnodeForBox(bmins, bmaxs);
-			angles = vec3_origin;	// boxes don't rotate
+			angles = vec3_origin; // Boxes don't rotate
 		}
 
 		if (tr->allsolid)
@@ -189,28 +170,21 @@ void CL_ClipMoveToEntities2(int entnum, vec3_t start, vec3_t mins, vec3_t maxs, 
 
 			*tr = trace;
 		}
-		//else if (trace.startsolid) //mxd. Never triggered, right?
-			//tr->startsolid = true;
 	}
 }
 
-/*
-====================
-CL_ClipMoveToBrushEntities
-Similar to CL_ClipMoveToEntities, but only checks against brush models.
-====================
-*/
-void CL_ClipMoveToBrushEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr)
+// Similar to CL_ClipMoveToEntities, but only checks against brush models.
+static void CL_ClipMoveToBrushEntities(const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, trace_t *tr)
 {
 	for (int i = 0; i < cl.frame.num_entities; i++)
 	{
 		const int num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		entity_state_t *ent = &cl_parse_entities[num];
 
-		if (ent->solid != 31) // brush models only
+		if (ent->solid != 31) // Brush models only
 			continue;
 
-		// special value for bmodel
+		// Special value for bmodel
 		cmodel_t *cmodel = cl.model_clip[ent->modelindex];
 		if (!cmodel)
 			continue;
@@ -231,35 +205,21 @@ void CL_ClipMoveToBrushEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t e
 
 			*tr = trace;
 		}
-		//else if (trace.startsolid) //mxd. Never triggered, right?
-			//tr->startsolid = true;
 	}
 }
 
-
-/*
-====================
-CL_Trace
-====================
-*/
-trace_t CL_Trace(vec3_t start, vec3_t end, float size,  int contentmask)
+trace_t CL_Trace(const vec3_t start, const vec3_t end, const float size, const int contentmask)
 {
 	vec3_t maxs, mins;
 
 	VectorSet(maxs, size, size, size);
 	VectorSet(mins, -size, -size, -size);
 
-	return CM_BoxTrace (start, end, mins, maxs, 0, contentmask);
+	return CM_BoxTrace(start, end, mins, maxs, 0, contentmask);
 }
 
-
-/*
-====================
-CL_BrushTrace
-Similar to CL_Trace, but also clips against brush models.
-====================
-*/
-trace_t CL_BrushTrace(vec3_t start, vec3_t end, float size,  int contentmask)
+// Similar to CL_Trace, but also clips against brush models.
+trace_t CL_BrushTrace(const vec3_t start, const vec3_t end, const float size, const int contentmask)
 {
 	vec3_t maxs, mins;
 
@@ -267,64 +227,53 @@ trace_t CL_BrushTrace(vec3_t start, vec3_t end, float size,  int contentmask)
 	VectorSet(mins, -size, -size, -size);
 
 	trace_t t = CM_BoxTrace(start, end, mins, maxs, 0, contentmask);
-	if (t.fraction < 1.0)
+	if (t.fraction < 1.0f)
 		t.ent = (struct edict_s *)1;
 
-	// check all solid brush models
+	// Check all solid brush models
 	CL_ClipMoveToBrushEntities(start, mins, maxs, end, &t);
 
 	return t;
 }
 
-/*
-================
-CL_PMTrace
-================
-*/
-trace_t CL_PMTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+trace_t CL_PMTrace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 {
 	if (!mins)
 		mins = vec3_origin;
 	if (!maxs)
 		maxs = vec3_origin;
 
-	// check against world
-	trace_t t = CM_BoxTrace (start, end, mins, maxs, 0, MASK_PLAYERSOLID);
-	if (t.fraction < 1.0)
+	// Check against world
+	trace_t t = CM_BoxTrace(start, end, mins, maxs, 0, MASK_PLAYERSOLID);
+	if (t.fraction < 1.0f)
 		t.ent = (struct edict_s *)1;
 
-	// check all other solid models
+	// Check all other solid models
 	CL_ClipMoveToEntities(start, mins, maxs, end, &t);
 
 	return t;
 }
 
-//Knightmare added- this can check using masks, good for checking surface flags
-//	also checks for bmodels
-/*
-================
-CL_PMSurfaceTrace
-================
-*/
-trace_t CL_PMSurfaceTrace(int playernum, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask)
+//Knightmare added- this can check using masks, good for checking surface flags. Also checks for bmodels
+trace_t CL_PMSurfaceTrace(const int playernum, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, const int contentmask)
 {
 	if (!mins)
 		mins = vec3_origin;
 	if (!maxs)
 		maxs = vec3_origin;
 
-	// check against world
+	// Check against world
 	trace_t t = CM_BoxTrace(start, end, mins, maxs, 0, contentmask);
-	if (t.fraction < 1.0)
+	if (t.fraction < 1.0f)
 		t.ent = (struct edict_s *)1;
 
-	// check all other solid models
+	// Check all other solid models
 	CL_ClipMoveToEntities2(playernum, start, mins, maxs, end, &t);
 
 	return t;
 }
 
-int CL_PMpointcontents(vec3_t point)
+int CL_PMpointcontents(const vec3_t point)
 {
 	int contents = CM_PointContents(point, 0);
 
@@ -333,7 +282,7 @@ int CL_PMpointcontents(vec3_t point)
 		const int num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		entity_state_t *ent = &cl_parse_entities[num];
 
-		if (ent->solid != 31) // special value for bmodel
+		if (ent->solid != 31) // Special value for bmodel
 			continue;
 
 		cmodel_t *cmodel = cl.model_clip[ent->modelindex];
@@ -348,7 +297,7 @@ int CL_PMpointcontents(vec3_t point)
 
 // Modified version of above for ignoring bmodels by Berserker
 typedef struct model_s model_t;
-int CL_PMpointcontents2(vec3_t point, model_t *ignore)
+int CL_PMpointcontents2(const vec3_t point, const model_t *ignore)
 {
 	int contents = CM_PointContents(point, 0);
 
@@ -357,7 +306,7 @@ int CL_PMpointcontents2(vec3_t point, model_t *ignore)
 		const int num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		entity_state_t *ent = &cl_parse_entities[num];
 
-		if (ent->solid != 31) // special value for bmodel
+		if (ent->solid != 31) // Special value for bmodel
 			continue;
 
 		if (cl.model_draw[ent->modelindex] == ignore)
@@ -373,56 +322,39 @@ int CL_PMpointcontents2(vec3_t point, model_t *ignore)
 	return contents;
 }
 
-
-/*
-=================
-CL_PredictMovement
-
-Sets cl.predicted_origin and cl.predicted_angles
-=================
-*/
-void CL_PredictMovement (void)
+// Sets cl.predicted_origin and cl.predicted_angles
+void CL_PredictMovement()
 {
-	int			ack, current;
-	int			frame;
-	int			oldframe;
-	usercmd_t	*cmd;
-	pmove_t		pm;
-	int			step;
-	int			oldz;
-
 #ifdef CLIENT_SPLIT_NETFRAME
-	static int	last_step_frame = 0;
+	static int last_step_frame = 0;
 #endif
 
-	if (cls.state != ca_active)
+	if (cls.state != ca_active || cl_paused->integer)
 		return;
 
-	if (cl_paused->value)
-		return;
-
-	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
+	if (!cl_predict->integer || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 	{
-		// just set angles
+		// Just set angles
 		for (int i = 0; i < 3; i++)
 			cl.predicted_angles[i] = cl.viewangles[i] + SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[i]);
 
 		return;
 	}
 
-	ack = cls.netchan.incoming_acknowledged;
-	current = cls.netchan.outgoing_sequence;
+	int ack = cls.netchan.incoming_acknowledged;
+	const int current = cls.netchan.outgoing_sequence;
 
-	// if we are too far out of date, just freeze
+	// If we are too far out of date, just freeze
 	if (current - ack >= CMD_BACKUP)
 	{
-		if (cl_showmiss->value)
+		if (cl_showmiss->integer)
 			Com_Printf("exceeded CMD_BACKUP\n");
 
-		return;	
+		return;
 	}
 
-	// copy current state to pmove
+	// Copy current state to pmove
+	pmove_t pm;
 	memset(&pm, 0, sizeof(pm));
 	pm.trace = CL_PMTrace;
 	pm.pointcontents = CL_PMpointcontents;
@@ -432,13 +364,13 @@ void CL_PredictMovement (void)
 	pm.s = cl.frame.playerstate.pmove;
 
 #ifdef CLIENT_SPLIT_NETFRAME
-	if (cl_async->value)
+	if (cl_async->integer)
 	{
-		// run frames
+		// Run frames
 		while (++ack <= current) // Changed '<' to '<=' cause current is our pending cmd
 		{
-			frame = ack & (CMD_BACKUP - 1);
-			cmd = &cl.cmds[frame];
+			const int frame = ack & (CMD_BACKUP - 1);
+			usercmd_t *cmd = &cl.cmds[frame];
 
 			if (!cmd->msec) // Ignore 'null' usercmd entries
 				continue;
@@ -446,18 +378,18 @@ void CL_PredictMovement (void)
 			pm.cmd = *cmd;
 			Pmove(&pm);
 
-			// save for debug checking
+			// Save for debug checking
 			VectorCopy(pm.s.origin, cl.predicted_origins[frame]);
 		}
 
-		oldframe = (ack - 2) & (CMD_BACKUP - 1);
-		oldz = cl.predicted_origins[oldframe][2];
-		step = pm.s.origin[2] - oldz;
+		const int oldframe = (ack - 2) & (CMD_BACKUP - 1);
+		const int oldz = cl.predicted_origins[oldframe][2];
+		const int step = pm.s.origin[2] - oldz;
 
 		// TODO: Add Paril's step down fix here
 		if (last_step_frame != current && step > 63 && step < 160 && (pm.s.pm_flags & PMF_ON_GROUND))
 		{
-			cl.predicted_step = step * 0.125;
+			cl.predicted_step = step * 0.125f;
 			cl.predicted_step_time = cls.realtime - cls.netFrameTime * 500;
 			last_step_frame = current;
 		}
@@ -465,35 +397,35 @@ void CL_PredictMovement (void)
 	else
 	{
 #endif // CLIENT_SPLIT_NETFRAME
-		// run frames
+		// Run frames
 		while (++ack < current)
 		{
-			frame = ack & (CMD_BACKUP - 1);
-			cmd = &cl.cmds[frame];
+			const int frame = ack & (CMD_BACKUP - 1);
+			usercmd_t *cmd = &cl.cmds[frame];
 
 			pm.cmd = *cmd;
 			Pmove(&pm);
 
-			// save for debug checking
+			// Save for debug checking
 			VectorCopy(pm.s.origin, cl.predicted_origins[frame]);
 		}
 
-		oldframe = (ack - 2) & (CMD_BACKUP - 1);
-		oldz = cl.predicted_origins[oldframe][2];
-		step = pm.s.origin[2] - oldz;
+		const int oldframe = (ack - 2) & (CMD_BACKUP - 1);
+		const int oldz = cl.predicted_origins[oldframe][2];
+		const int step = pm.s.origin[2] - oldz;
 
 		if (step > 63 && step < 160 && (pm.s.pm_flags & PMF_ON_GROUND))
 		{
-			cl.predicted_step = step * 0.125;
+			cl.predicted_step = step * 0.125f;
 			cl.predicted_step_time = cls.realtime - cls.netFrameTime * 500;
 		}
 #ifdef CLIENT_SPLIT_NETFRAME
 	}
 #endif // CLIENT_SPLIT_NETFRAME
 
-	// copy results out for rendering
+	// Copy results out for rendering
 	for(int i = 0; i < 3; i++)
-		cl.predicted_origin[i] = pm.s.origin[i] * 0.125;
+		cl.predicted_origin[i] = pm.s.origin[i] * 0.125f;
 
 	VectorCopy(pm.viewangles, cl.predicted_angles);
 }
