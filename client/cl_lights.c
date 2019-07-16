@@ -23,8 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-void CL_LogoutEffect(vec3_t org, int type);
-void CL_GunSmokeEffect(vec3_t org, vec3_t dir);
+extern void CL_LogoutEffect(vec3_t org, int type);
+extern void CL_GunSmokeEffect(const vec3_t org, const vec3_t dir);
 
 /*
 ==============================================================

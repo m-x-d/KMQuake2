@@ -542,8 +542,6 @@ typedef struct cl_sustain
 	void		(*think)(struct cl_sustain *self);
 } cl_sustain_t;
 
-#define MAX_SUSTAINS	32
-
 void CL_ParticleSteamEffect2(cl_sustain_t *self);
 
 void CL_TeleporterParticles(entity_state_t *ent);
@@ -631,7 +629,7 @@ typedef struct particle_s
 
 //=================================================
 
-void CL_ClearTEnts(void);
+void CL_ClearTEnts();
 
 //=================================================
 
@@ -639,7 +637,7 @@ int CL_ParseEntityBits(unsigned *bits);
 void CL_ParseDelta(entity_state_t *from, entity_state_t *to, int number, uint bits);
 void CL_ParseFrame(void);
 
-void CL_ParseTEnt(void);
+void CL_ParseTEnt();
 void CL_ParseConfigString(void);
 void CL_PlayBackgroundTrack(void); // Knightmare added
 void CL_ParseMuzzleFlash(void);
@@ -652,7 +650,7 @@ void CL_RunLightStyles(void);
 
 void CL_AddEntities(void);
 void CL_AddDLights(void);
-void CL_AddTEnts(void);
+void CL_AddTEnts();
 void CL_AddLightStyles(void);
 
 //=================================================
@@ -881,9 +879,9 @@ typedef struct
 
 extern clientMedia_t clMedia;
 
-void CL_RegisterTEntSounds(void);
-void CL_RegisterTEntModels(void);
-void CL_SmokeAndFlash(vec3_t origin);
+void CL_RegisterTEntSounds();
+void CL_RegisterTEntModels();
+void CL_SmokeAndFlash(const vec3_t origin);
 
 
 //
