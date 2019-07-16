@@ -239,7 +239,65 @@ void Con_CheckResize(void)
 	con.displayline = con.currentline;
 }
 
-static void Con_Linefeed(void)
+static qboolean Con_StringSetParams(char modifier, char *colorcode, qboolean *bold, qboolean *shadow, qboolean *italic, qboolean *alt)
+{
+	// Sanity check
+	if (!colorcode || !bold || !shadow || !italic || !alt)
+		return false;
+
+	switch (modifier)
+	{
+		case 'R': case 'r':
+			*colorcode = 0;
+			*bold = false;
+			*shadow = false;
+			*italic = false;
+			*alt = false;
+			return true;
+
+		case 'B': case 'b':
+			*bold = !*bold;
+			return true;
+
+		case 'S': case 's':
+			*shadow = !*shadow;
+			return true;
+
+		case 'I': case 'i':
+			*italic = !*italic;
+			return true;
+
+		case COLOR_RED:
+		case COLOR_GREEN:
+		case COLOR_YELLOW:
+		case COLOR_BLUE:
+		case COLOR_CYAN:
+		case COLOR_MAGENTA:
+		case COLOR_WHITE:
+		case COLOR_BLACK:
+		case COLOR_ORANGE:
+		case COLOR_GRAY:
+			*colorcode = modifier;
+			return true;
+
+		case 'A': case 'a': // Alt text color
+			*alt = true;
+			return true;
+	}
+
+	return false;
+}
+
+//mxd
+static void Con_AddFormattingSequence(const char c)
+{
+	const int linestart = (con.currentline % con.totallines) * con.linewidth;
+
+	con.text[linestart + (con.offsetx++)] = Q_COLOR_ESCAPE;
+	con.text[linestart + (con.offsetx++)] = c;
+}
+
+static void Con_Linefeed(const char colorcode, const qboolean bold, const qboolean shadow, const qboolean italic, const qboolean alt)
 {
 	con.offsetx = 0;
 	if (con.displayline == con.currentline)
@@ -247,6 +305,22 @@ static void Con_Linefeed(void)
 
 	con.currentline++;
 	memset(&con.text[(con.currentline % con.totallines) * con.linewidth], ' ', con.linewidth);
+
+	// Add any wrapped formatting
+	if (colorcode != 0)
+		Con_AddFormattingSequence(colorcode);
+
+	if (bold)
+		Con_AddFormattingSequence('b');
+
+	if (shadow)
+		Con_AddFormattingSequence('s');
+
+	if (italic)
+		Con_AddFormattingSequence('i');
+
+	if (alt)
+		Con_AddFormattingSequence('a');
 }
 
 // Handles cursor positioning, line wrapping, etc.
@@ -255,9 +329,17 @@ static void Con_Linefeed(void)
 void Con_Print(char *text)
 {
 	static qboolean carriage_return;
-	
+
 	if (!con.initialized)
 		return;
+
+	// Vars for format wrapping
+	char colorcode = 0;
+	qboolean checkmodifier = false;
+	qboolean bold = false;
+	qboolean shadow = false;
+	qboolean italic = false;
+	qboolean alt = false;
 
 	int mask = 0;
 	if (text[0] == 1 || text[0] == 2)
@@ -267,7 +349,6 @@ void Con_Print(char *text)
 	}
 
 	// Add to con.text[], char by char
-	char colorchar = 0; //mxd. Last encountered COLOR_ char
 	while (*text)
 	{
 		// Count word length
@@ -275,10 +356,6 @@ void Con_Print(char *text)
 		for (len = 0; len < con.linewidth; len++)
 			if (text[len] <= ' ')
 				break;
-
-		//mxd. Store current coloring char...
-		if (IsColoredString(text))
-			colorchar = text[1];
 
 		// Word wrap
 		if (len < con.linewidth && con.offsetx + len > con.linewidth)
@@ -293,32 +370,38 @@ void Con_Print(char *text)
 
 		if (con.offsetx == 0)
 		{
-			Con_Linefeed();
+			Con_Linefeed(colorcode, bold, shadow, italic, alt);
 
-			//mxd. Add last used color from previous line
-			if (colorchar && text[0] != Q_COLOR_ESCAPE && text[1] && text[1] != colorchar)
-			{
-				const int pos = (con.currentline % con.totallines) * con.linewidth;
-				con.text[pos + (con.offsetx++)] = Q_COLOR_ESCAPE | mask | con.ormask;
-				con.text[pos + (con.offsetx++)] = colorchar | mask | con.ormask;
-			}
-			
 			// Mark time for transparent overlay
 			if (con.currentline >= 0)
 				con.notifytimes[con.currentline % NUM_CON_TIMES] = (float)cls.realtime;
 		}
 
+		// Track formatting codes for word wrap
+		const char modifier = (text[0] & ~128);
+		if (checkmodifier) // Last char was a ^
+		{
+			Con_StringSetParams(modifier, &colorcode, &bold, &shadow, &italic, &alt);
+			checkmodifier = false;
+		}
+		else
+		{
+			checkmodifier = (modifier == Q_COLOR_ESCAPE);
+		}
+
 		switch (*text)
 		{
+			case '\r':
+				carriage_return = true;
+				//mxd. Intentional fallthrough
+			
 			case '\n':
 				con.offsetx = 0;
-				colorchar = 0; //mxd
-				break;
-
-			case '\r':
-				con.offsetx = 0;
-				colorchar = 0; //mxd
-				carriage_return = true;
+				colorcode = 0;
+				bold = false;
+				shadow = false;
+				italic = false;
+				alt = false;
 				break;
 
 			default: // Display character and advance
@@ -335,21 +418,6 @@ void Con_Print(char *text)
 		text++;
 	}
 }
-
-//mxd. Never used
-/*void Con_CenteredPrint(char *text)
-{
-	char buffer[1024];
-
-	int len = strlen(text);
-	len = (con.linewidth - len) / 2;
-	len = max(len, 0); //mxd
-
-	memset(buffer, ' ', len);
-	Q_strncpyz(buffer + len, text, sizeof(buffer) - 1);
-	Q_strncatz(buffer, "\n", sizeof(buffer));
-	Con_Print(buffer);
-}*/
 
 static int Con_LinesOnScreen() //mxd
 {
