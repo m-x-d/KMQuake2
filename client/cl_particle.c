@@ -761,16 +761,12 @@ void CL_ClearEffects(void)
 	CL_ClearLightStyles();
 }
 
-
-/*
-==============
-CL_UnclipDecals
-Removes decal fragment pointers and resets decal fragment data
-Called during a vid_restart
-==============
-*/
-void CL_UnclipDecals (void)
+// Removes decal fragment pointers and resets decal fragment data. Called during vid_restart
+qboolean CL_UnclipDecals()
 {
+	if (!active_decals) //mxd
+		return false;
+	
 	for (cparticle_t *p = active_particles; p; p = p->next)
 	{
 		p->decalnum = 0;
@@ -778,18 +774,16 @@ void CL_UnclipDecals (void)
 	}
 
 	CL_ClearAllDecalPolys();
+
+	return true; //mxd
 }
 
-
-/*
-==============
-CL_ReclipDecals
-Re-clips all decals
-Called during a vid_restart
-==============
-*/
-void CL_ReclipDecals (void)
+// Re-clips all decals. Called during vid_restart
+void CL_ReclipDecals()
 {
+	if (!active_decals) //mxd
+		return;
+	
 	for (cparticle_t *p = active_particles; p; p = p->next)
 	{
 		p->decalnum = 0;

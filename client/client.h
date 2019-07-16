@@ -963,7 +963,7 @@ void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_AddParticles(void);
 void CL_ClearEffects(void);
-void CL_UnclipDecals(void);
+qboolean CL_UnclipDecals(); //mxd. void -> qboolean
 void CL_ReclipDecals(void);
 
 

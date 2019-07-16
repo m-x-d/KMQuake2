@@ -150,11 +150,9 @@ void VID_NewWindow(int width, int height)
 	cl.force_refdef = true; // Can't use a paused refdef
 }
 
-static void UpdateVideoRef(void)
+static void UpdateVideoRef()
 {
-	extern decalpolys_t *active_decals;
-	static qboolean reclip_decals = false;
-
+	qboolean reclip_decals = false;
 	qboolean vid_reloading = false; // Knightmare- flag to not unnecessarily drop console
 	char reason[128];
 
@@ -164,11 +162,7 @@ static void UpdateVideoRef(void)
 		S_StopAllSounds();
 
 		// Unclip decals
-		if (active_decals)
-		{
-			CL_UnclipDecals();
-			reclip_decals = true;
-		}
+		reclip_decals = CL_UnclipDecals();
 	}
 
 	while (vid_ref->modified)
@@ -208,10 +202,7 @@ static void UpdateVideoRef(void)
 
 	// Re-clip decals
 	if (cl.refresh_prepped && reclip_decals)
-	{
 		CL_ReclipDecals();
-		reclip_decals = false;
-	}
 }
 
 // This function gets called once just before drawing each frame, and it's sole purpose in life
