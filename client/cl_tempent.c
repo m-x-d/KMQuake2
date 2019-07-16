@@ -75,9 +75,6 @@ static laser_t cl_lasers[MAX_LASERS];
 
 static cl_sustain_t cl_sustains[MAX_SUSTAINS]; //ROGUE
 
-extern void CL_TeleportParticles(vec3_t org); //PGM
-extern void CL_ExplosionParticles(const vec3_t org); //mxd. Vanilla particles
-
 // Psychospaz's enhanced particle code
 clientMedia_t clMedia;
 
@@ -93,7 +90,7 @@ extern void CL_Explosion_Decal(vec3_t org, float size, int decalnum);
 extern void CL_Explosion_Sparks(vec3_t org, int size, int count);
 extern void CL_BFGExplosionParticles(vec3_t org);
 
-extern void ReadTextureSurfaceAssignments();
+extern void CL_ReadTextureSurfaceAssignments();
 
 void CL_RegisterTEntSounds()
 {
@@ -147,7 +144,7 @@ void CL_RegisterTEntSounds()
 
 	// Read footstep defintion file
 	if (cl_footstep_override->integer)
-		ReadTextureSurfaceAssignments();
+		CL_ReadTextureSurfaceAssignments();
 
 	S_RegisterSound("player/land1.wav");
 	S_RegisterSound("player/fall2.wav");

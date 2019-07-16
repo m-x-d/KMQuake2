@@ -1235,7 +1235,7 @@ void CL_LogoutEffect(const vec3_t org, const int type)
 CL_ItemRespawnParticles
 ===============
 */
-void CL_ItemRespawnParticles (vec3_t org)
+void CL_ItemRespawnParticles(const vec3_t org)
 {
 	for (int i = 0; i < 64; i++)
 	{
@@ -2907,7 +2907,7 @@ void CL_BFGExplosionParticles (vec3_t org)
 CL_TeleportParticles
 ===============
 */
-void CL_TeleportParticles (vec3_t org)
+void CL_TeleportParticles(const vec3_t org)
 {
 	vec3_t dir, color;
 

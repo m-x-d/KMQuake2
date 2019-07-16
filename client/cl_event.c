@@ -23,9 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-void CL_ItemRespawnParticles(vec3_t org);
-void CL_TeleportParticles(vec3_t org);
-
 #define MAX_TEX_SURF 2048 // Was 256
 
 struct texsurf_s
@@ -35,10 +32,10 @@ struct texsurf_s
 };
 
 typedef struct texsurf_s texsurf_t;
-texsurf_t tex_surf[MAX_TEX_SURF];
-int	num_texsurfs;
+static texsurf_t tex_surf[MAX_TEX_SURF];
+static int num_texsurfs;
 
-qboolean buf_gets(char *dest, int destsize, char **f)
+static qboolean buf_gets(char *dest, const int destsize, char **f)
 {
 	char *old = *f;
 	*f = strchr(old, '\n');
@@ -59,7 +56,7 @@ qboolean buf_gets(char *dest, int destsize, char **f)
 }
 
 // Reads in defintions for footsteps based on texture name.
-void ReadTextureSurfaceAssignments()
+void CL_ReadTextureSurfaceAssignments()
 {
 	char filename[MAX_OSPATH];
 	char *footstep_data;
@@ -86,7 +83,7 @@ void ReadTextureSurfaceAssignments()
 
 // Plays appropriate footstep sound depending on surface flags of the ground surface.
 // Since this is a replacement for plain Jane EV_FOOTSTEP, we already know the player is definitely on the ground when this is called.
-void CL_FootSteps(entity_state_t *ent, qboolean loud)
+static void CL_FootSteps(entity_state_t *ent, const qboolean loud)
 {
 	vec3_t end;
 	struct sfx_s *stepsound;
@@ -103,81 +100,81 @@ void CL_FootSteps(entity_state_t *ent, qboolean loud)
 
 	switch (surface)
 	{
-	case SURF_METAL:
-		stepsound = clMedia.sfx_metal_footsteps[r];
-		break;
+		case SURF_METAL:
+			stepsound = clMedia.sfx_metal_footsteps[r];
+			break;
 
-	case SURF_DIRT:
-		stepsound = clMedia.sfx_dirt_footsteps[r];
-		break;
+		case SURF_DIRT:
+			stepsound = clMedia.sfx_dirt_footsteps[r];
+			break;
 
-	case SURF_VENT:
-		stepsound = clMedia.sfx_vent_footsteps[r];
-		break;
+		case SURF_VENT:
+			stepsound = clMedia.sfx_vent_footsteps[r];
+			break;
 
-	case SURF_GRATE:
-		stepsound = clMedia.sfx_grate_footsteps[r];
-		break;
+		case SURF_GRATE:
+			stepsound = clMedia.sfx_grate_footsteps[r];
+			break;
 
-	case SURF_TILE:
-		stepsound = clMedia.sfx_tile_footsteps[r];
-		break;
+		case SURF_TILE:
+			stepsound = clMedia.sfx_tile_footsteps[r];
+			break;
 
-	case SURF_GRASS:
-		stepsound = clMedia.sfx_grass_footsteps[r];
-		break;
+		case SURF_GRASS:
+			stepsound = clMedia.sfx_grass_footsteps[r];
+			break;
 
-	case SURF_SNOW:
-		stepsound = clMedia.sfx_snow_footsteps[r];
-		break;
+		case SURF_SNOW:
+			stepsound = clMedia.sfx_snow_footsteps[r];
+			break;
 
-	case SURF_CARPET:
-		stepsound = clMedia.sfx_carpet_footsteps[r];
-		break;
+		case SURF_CARPET:
+			stepsound = clMedia.sfx_carpet_footsteps[r];
+			break;
 
-	case SURF_FORCE:
-		stepsound = clMedia.sfx_force_footsteps[r];
-		break;
+		case SURF_FORCE:
+			stepsound = clMedia.sfx_force_footsteps[r];
+			break;
 
-	case SURF_GRAVEL:
-		stepsound = clMedia.sfx_gravel_footsteps[r];
-		break;
+		case SURF_GRAVEL:
+			stepsound = clMedia.sfx_gravel_footsteps[r];
+			break;
 
-	case SURF_ICE:
-		stepsound = clMedia.sfx_ice_footsteps[r];
-		break;
+		case SURF_ICE:
+			stepsound = clMedia.sfx_ice_footsteps[r];
+			break;
 
-	case SURF_SAND:
-		stepsound = clMedia.sfx_sand_footsteps[r];
-		break;
+		case SURF_SAND:
+			stepsound = clMedia.sfx_sand_footsteps[r];
+			break;
 
-	case SURF_WOOD:
-		stepsound = clMedia.sfx_wood_footsteps[r];
-		break;
+		case SURF_WOOD:
+			stepsound = clMedia.sfx_wood_footsteps[r];
+			break;
 
-	case SURF_STANDARD:
-		stepsound = clMedia.sfx_footsteps[r];
-		volume = 1.0f;
-		break;
+		case SURF_STANDARD:
+			stepsound = clMedia.sfx_footsteps[r];
+			volume = 1.0f;
+			break;
 
-	default:
-		if (cl_footstep_override->value && num_texsurfs)
-		{
-			for (int i = 0; i < num_texsurfs; i++)
+		default:
+			if (cl_footstep_override->integer && num_texsurfs)
 			{
-				if (strstr(tr.surface->name, tex_surf[i].texture) && tex_surf[i].step_id > 0)
+				for (int i = 0; i < num_texsurfs; i++)
 				{
-					tr.surface->flags |= (SURF_METAL << (tex_surf[i].step_id - 1));
-					CL_FootSteps(ent, loud); // Start over
+					if (strstr(tr.surface->name, tex_surf[i].texture) && tex_surf[i].step_id > 0)
+					{
+						tr.surface->flags |= (SURF_METAL << (tex_surf[i].step_id - 1));
+						CL_FootSteps(ent, loud); // Start over
 
-					return;
+						return;
+					}
 				}
 			}
-		}
 
-		tr.surface->flags |= SURF_STANDARD;
-		CL_FootSteps(ent, loud); // Start over
-		return;
+			tr.surface->flags |= SURF_STANDARD;
+			CL_FootSteps(ent, loud); // Start over
+			return;
 	}
 
 	if (loud)
@@ -187,7 +184,8 @@ void CL_FootSteps(entity_state_t *ent, qboolean loud)
 		else
 			volume = 1.0f;
 	}
-	//TODO: mxd. Is S_StartSound() supposed to be called twice when loud = true and volume < 1?
+
+	//mxd. Intentionally played twice when loud && volume == 1 for extra LOUDS.
 	S_StartSound(NULL, ent->number, CHAN_BODY, stepsound, volume, ATTN_NORM, 0);
 }
 //end Knightmare
@@ -197,49 +195,49 @@ void CL_EntityEvent(entity_state_t *ent)
 {
 	switch (ent->event)
 	{
-	case EV_ITEM_RESPAWN:
-		S_StartSound(NULL, ent->number, CHAN_WEAPON, S_RegisterSound("items/respawn1.wav"), 1, ATTN_IDLE, 0);
-		CL_ItemRespawnParticles(ent->origin);
-		break;
+		case EV_ITEM_RESPAWN:
+			S_StartSound(NULL, ent->number, CHAN_WEAPON, S_RegisterSound("items/respawn1.wav"), 1, ATTN_IDLE, 0);
+			CL_ItemRespawnParticles(ent->origin);
+			break;
 
-	case EV_PLAYER_TELEPORT:
-		S_StartSound(NULL, ent->number, CHAN_WEAPON, S_RegisterSound("misc/tele1.wav"), 1, ATTN_IDLE, 0);
-		CL_TeleportParticles(ent->origin);
-		break;
+		case EV_PLAYER_TELEPORT:
+			S_StartSound(NULL, ent->number, CHAN_WEAPON, S_RegisterSound("misc/tele1.wav"), 1, ATTN_IDLE, 0);
+			CL_TeleportParticles(ent->origin);
+			break;
 
-	case EV_FALLSHORT:
-		S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("player/land1.wav"), 1, ATTN_NORM, 0);
-		break;
+		case EV_FALLSHORT:
+			S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("player/land1.wav"), 1, ATTN_NORM, 0);
+			break;
 
-	case EV_FALL:
-		S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("*fall2.wav"), 1, ATTN_NORM, 0);
-		break;
+		case EV_FALL:
+			S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("*fall2.wav"), 1, ATTN_NORM, 0);
+			break;
 
-	case EV_FALLFAR:
-		S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("*fall1.wav"), 1, ATTN_NORM, 0);
-		break;
+		case EV_FALLFAR:
+			S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("*fall1.wav"), 1, ATTN_NORM, 0);
+			break;
 
-	//Knightmare- Lazarus footsteps
-	case EV_FOOTSTEP:
-	case EV_LOUDSTEP:
-		if (cl_footsteps->value)
-			CL_FootSteps(ent, (ent->event == EV_LOUDSTEP));
-		break;
+		//Knightmare- Lazarus footsteps
+		case EV_FOOTSTEP:
+		case EV_LOUDSTEP:
+			if (cl_footsteps->integer)
+				CL_FootSteps(ent, (ent->event == EV_LOUDSTEP));
+			break;
 
-	case EV_SLOSH:
-		S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_slosh[rand() & 3], 0.5f, ATTN_NORM, 0);
-		break;
+		case EV_SLOSH:
+			S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_slosh[rand() & 3], 0.5f, ATTN_NORM, 0);
+			break;
 
-	case EV_WADE:
-		S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_wade[rand() & 3], 0.5f, ATTN_NORM, 0);
-		break;
+		case EV_WADE:
+			S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_wade[rand() & 3], 0.5f, ATTN_NORM, 0);
+			break;
 
-	case EV_WADE_MUD:
-		S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_mud_wade[rand() & 1], 0.5f, ATTN_NORM, 0);
-		break;
+		case EV_WADE_MUD:
+			S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_mud_wade[rand() & 1], 0.5f, ATTN_NORM, 0);
+			break;
 
-	case EV_CLIMB_LADDER:
-		S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_ladder[rand() & 3], 0.5f, ATTN_NORM, 0);
-		break;
+		case EV_CLIMB_LADDER:
+			S_StartSound(NULL, ent->number, CHAN_BODY, clMedia.sfx_ladder[rand() & 3], 0.5f, ATTN_NORM, 0);
+			break;
 	}
 }

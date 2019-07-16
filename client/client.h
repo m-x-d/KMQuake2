@@ -985,6 +985,10 @@ void CL_RailTrail(vec3_t start, vec3_t end, qboolean isRed);
 void CL_BubbleTrail(vec3_t start, vec3_t end);
 void CL_FlagTrail(vec3_t start, vec3_t end, qboolean isred, qboolean isgreen);
 void CL_IonripperTrail(vec3_t start, vec3_t end); // RAFAEL
+
+void CL_TeleportParticles(const vec3_t org);
+void CL_ItemRespawnParticles(const vec3_t org);
+void CL_ExplosionParticles(const vec3_t org);
 // ========
 // PGM
 void CL_DebugTrail(vec3_t start, vec3_t end);
