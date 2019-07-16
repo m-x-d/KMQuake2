@@ -440,7 +440,7 @@ CL_ParticleBloodDropThink
 */
 void CL_ParticleBloodDropThink (cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
 {
-	CL_CalcPartVelocity(p, 0.2, time, angle);
+	CL_CalcPartVelocity(p, 0.2f, *time, angle);
 
 	float length = VectorNormalize(angle);
 	if (length > MAXBLEEDSIZE) length = MAXBLEEDSIZE;

@@ -957,7 +957,7 @@ cparticle_t *CL_SetupParticle (
 
 void CL_AddParticleLight(cparticle_t *p, float light, float lightvel, float lcol0, float lcol1, float lcol2);
 
-void CL_CalcPartVelocity(cparticle_t *p, float scale, float *time, vec3_t velocity);
+void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, vec3_t velocity);
 void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);

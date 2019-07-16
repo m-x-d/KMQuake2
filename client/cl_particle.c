@@ -523,15 +523,14 @@ void CL_ClearParticles (void)
 CL_CalcPartVelocity
 ===============
 */
-void CL_CalcPartVelocity (cparticle_t *p, float scale, float *time, vec3_t velocity)
+void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, vec3_t velocity)
 {
-	const float time1 = *time;
-	const float time2 = time1 * time1;
+	const float timesq = time * time;
 	const int gravity = (p->flags & PART_GRAVITY ? PARTICLE_GRAVITY : 0); //mxd
 
 	for (int i = 0; i < 2; i++)
-		velocity[i] = scale * (p->vel[i] * time1 + p->accel[i] * time2);
-	velocity[2] = scale * (p->vel[2] * time1 + (p->accel[2] - gravity) * time2);
+		velocity[i] = scale * (p->vel[i] * time + p->accel[i] * timesq);
+	velocity[2] = scale * (p->vel[2] * time + (p->accel[2] - gravity) * timesq);
 }
 
 /*
@@ -565,7 +564,7 @@ void CL_ParticleBounceThink (cparticle_t *p, vec3_t org, vec3_t angle, float *al
 	if (tr.fraction < 1)
 	{
 		vec3_t velocity;
-		CL_CalcPartVelocity(p, 1, time, velocity);
+		CL_CalcPartVelocity(p, 1.0f, *time, velocity);
 		CL_ClipParticleVelocity(velocity, tr.plane.normal, p->vel);
 
 		VectorCopy(vec3_origin, p->accel);
