@@ -191,7 +191,7 @@ __inline int Q_vsnprintf(char *Dest, size_t Count, const char *Format, va_list A
 #define PRINT_ALERT			2
 
 //mxd. Client-side Cmd_AddCommand support (moved from qcommon.h).
-typedef void(*xcommand_t) (void);
+typedef void(*xcommand_t)();
 
 // Destination class for gi.multicast()
 typedef enum

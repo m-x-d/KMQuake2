@@ -57,12 +57,12 @@ void CL_LoadLoc()
 	Q_strncpyz(mapname, cl.configstrings[CS_MODELS + 1] + 5, sizeof(mapname)); // Skip "maps/"
 	mapname[strlen(mapname) - 4] = 0; // Remove ".bsp"
 	Com_sprintf(filename, sizeof(filename), "locs/%s.loc", mapname);
-	
+
 	// Load file and check buffer and size
 	const int fSize = FS_LoadFile(filename, (void**)&buf);
 	if (!buf)
 	{
-		Com_Printf(S_COLOR_YELLOW"CL_LoadLoc: couldn't load '%s'!\n", filename);
+		Com_DPrintf(S_COLOR_YELLOW"CL_LoadLoc: couldn't load '%s'!\n", filename);
 		return;
 	}
 
@@ -325,7 +325,7 @@ void CL_AddViewLocs()
 	}
 }
 
-void CL_LocHelp_f(void)
+void CL_LocHelp_f()
 {
 	// Xile/jitspoe - simple help cmd for reference
 	Com_Printf("Loc Commands:\n"

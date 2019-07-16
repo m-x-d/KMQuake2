@@ -1028,7 +1028,7 @@ void CL_AddViewLocs();
 void CL_LocDelete();
 void CL_LocAdd(char *name);
 void CL_LocWrite();
-void CL_LocHelp_f(void);
+void CL_LocHelp_f();
 
 #endif	// LOC_SUPPORT
 

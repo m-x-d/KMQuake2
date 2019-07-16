@@ -1086,7 +1086,7 @@ void CL_Precache_f(void)
 }
 
 #ifdef LOC_SUPPORT // Xile/NiceAss LOC
-void CL_AddLoc_f(void)
+void CL_AddLoc_f()
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -1097,12 +1097,12 @@ void CL_AddLoc_f(void)
 	CL_LocAdd(Cmd_Argv(1));
 }
 
-void CL_DeleteLoc_f(void)
+void CL_DeleteLoc_f()
 {
 	CL_LocDelete();
 }
 
-void CL_SaveLoc_f(void)
+void CL_SaveLoc_f()
 {
 	CL_LocWrite();
 }
