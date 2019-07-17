@@ -279,7 +279,7 @@ void VectorsToAngles(const vec3_t forward, const vec3_t right, const vec3_t up, 
 	}
 }
 
-void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
+void MakeNormalVectors(const vec3_t forward, vec3_t right, vec3_t up)
 {
 	// This rotate and negate guarantees a vector not colinear with the original
 	right[1] = -forward[0];
@@ -516,7 +516,7 @@ int VectorCompare(const vec3_t v1, const vec3_t v2)
 	return 1;
 }
 
-vec_t VectorNormalize(vec3_t v)
+float VectorNormalize(vec3_t v)
 {
 	const float length = VectorLength(v);
 
@@ -529,7 +529,7 @@ vec_t VectorNormalize(vec3_t v)
 	return length;
 }
 
-vec_t VectorNormalize2(vec3_t v, vec3_t out)
+float VectorNormalize2(const vec3_t v, vec3_t out)
 {
 	const float length = VectorLength(v);
 
@@ -551,43 +551,43 @@ void VectorNormalizeFast(vec3_t v)
 	v[2] *= ilength;
 }
 
-void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
+void VectorMA(const vec3_t veca, const float scale, const vec3_t vecb, vec3_t vecc)
 {
 	for(int c = 0; c < 3; c++)
 		vecc[c] = veca[c] + scale * vecb[c];
 }
 
-vec_t _DotProduct(vec3_t v1, vec3_t v2)
+float _DotProduct(const vec3_t v1, const vec3_t v2)
 {
 	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
-void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out)
+void _VectorSubtract(const vec3_t veca, const vec3_t vecb, vec3_t out)
 {
 	for (int c = 0; c < 3; c++)
 		out[c] = veca[c] - vecb[c];
 }
 
-void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out)
+void _VectorAdd(const vec3_t veca, const vec3_t vecb, vec3_t out)
 {
 	for (int c = 0; c < 3; c++)
 		out[c] = veca[c] + vecb[c];
 }
 
-void _VectorCopy(vec3_t in, vec3_t out)
+void _VectorCopy(const vec3_t in, vec3_t out)
 {
 	for (int c = 0; c < 3; c++)
 		out[c] = in[c];
 }
 
-void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross)
+void CrossProduct(const vec3_t v1, const vec3_t v2, vec3_t cross)
 {
 	cross[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	cross[1] = v1[2] * v2[0] - v1[0] * v2[2];
 	cross[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-vec_t VectorLength(const vec3_t v)
+float VectorLength(const vec3_t v)
 {
 	float length = 0;
 	for (int i = 0; i < 3; i++)

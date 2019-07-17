@@ -272,21 +272,21 @@ extern vec4_t vec4_origin;
 #define Vector4Negate(a, b)			(b[0] = -a[0], b[1] = -a[1], b[2] = -a[2], b[3] = -a[3])
 #define Vector4Set(v, w, x, y, z)	(v[0] = (w), v[1] = (x), v[2] = (y), v[3] = (z))
 
-void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
+void VectorMA(const vec3_t veca, const float scale, const vec3_t vecb, vec3_t vecc);
 
-// just in case you do't want to use the macros //TODO: mxd. Errr... remove?..
-vec_t _DotProduct(vec3_t v1, vec3_t v2);
-void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out);
-void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out);
-void _VectorCopy(vec3_t in, vec3_t out);
+// Just in case you do't want to use the macros //TODO: mxd. Errr... remove?..
+float _DotProduct(const vec3_t v1, const vec3_t v2);
+void _VectorSubtract(const vec3_t veca, const vec3_t vecb, vec3_t out);
+void _VectorAdd(const vec3_t veca, const vec3_t vecb, vec3_t out);
+void _VectorCopy(const vec3_t in, vec3_t out);
 
 void ClearBounds(vec3_t mins, vec3_t maxs);
 void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs);
 int VectorCompare(const vec3_t v1, const vec3_t v2);
-vec_t VectorLength(const vec3_t v);
-void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
-vec_t VectorNormalize(vec3_t v); // returns vector length
-vec_t VectorNormalize2(vec3_t v, vec3_t out);
+float VectorLength(const vec3_t v);
+void CrossProduct(const vec3_t v1, const vec3_t v2, vec3_t cross);
+float VectorNormalize(vec3_t v); // Returns vector length
+float VectorNormalize2(const vec3_t v, vec3_t out);
 void VectorNormalizeFast(vec3_t v);	// From Q2E
 void VectorInverse(vec3_t v);
 void VectorScale(const vec3_t in, const vec_t scale, vec3_t out);
@@ -311,7 +311,7 @@ void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4]);
 void RotateAngles(const vec3_t in, const vec3_t delta, vec3_t out); //mxd. Moved from g_cmds.c
 void AngleVectors(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 void VectorsToAngles(const vec3_t forward, const vec3_t right, const vec3_t up, vec3_t ang); //mxd
-void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
+void MakeNormalVectors(const vec3_t forward, vec3_t right, vec3_t up);
 void VecToAngleRolled(vec3_t value1, float angleyaw, vec3_t angles);
 int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *plane);
 float anglemod(float a);

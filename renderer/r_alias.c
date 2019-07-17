@@ -498,7 +498,7 @@ static qboolean R_CullAliasModel(vec3_t bbox[8], entity_t *e)
 	return (aggregatemask > 0);
 }
 
-void CL_Shadow_Decal(vec3_t org, float size, float alpha); //mxd
+extern void CL_Shadow_Decal(const vec3_t org, float size, float alpha); //mxd
 
 void R_DrawAliasModel(entity_t *e)
 {

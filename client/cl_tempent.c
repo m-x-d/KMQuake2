@@ -80,15 +80,15 @@ clientMedia_t clMedia;
 
 extern void CL_Explosion_Particle(vec3_t org, float scale, qboolean rocket);
 extern void CL_Explosion_FlashParticle(vec3_t org, float size, qboolean large);
-extern void CL_BloodHit(vec3_t org, vec3_t dir);
-extern void CL_GreenBloodHit(vec3_t org, vec3_t dir);
-extern void CL_ParticleEffectSparks(vec3_t org, vec3_t dir, vec3_t color, int count);
-extern void CL_ParticleBulletDecal(vec3_t org, vec3_t dir, float size);
-extern void CL_ParticlePlasmaBeamDecal(vec3_t org, vec3_t dir, float size);
-extern void CL_ParticleBlasterDecal(vec3_t org, vec3_t dir, float size, int red, int green, int blue);
+extern void CL_BloodHit(const vec3_t org, const vec3_t dir);
+extern void CL_GreenBloodHit(const vec3_t org, const vec3_t dir);
+extern void CL_ParticleEffectSparks(const vec3_t org, const vec3_t dir, const vec3_t color, const int count);
+extern void CL_ParticleBulletDecal(const vec3_t org, const vec3_t dir, const float size);
+extern void CL_ParticlePlasmaBeamDecal(const vec3_t org, const vec3_t dir, const float size);
+extern void CL_ParticleBlasterDecal(const vec3_t org, const vec3_t dir, const float size, const int red, const int green, const int blue);
 extern void CL_Explosion_Decal(vec3_t org, float size, int decalnum);
 extern void CL_Explosion_Sparks(vec3_t org, int size, int count);
-extern void CL_BFGExplosionParticles(vec3_t org);
+extern void CL_BFGExplosionParticles(const vec3_t org);
 
 extern void CL_ReadTextureSurfaceAssignments();
 
@@ -756,7 +756,7 @@ void CL_ParseTEnt()
 			MSG_ReadPos(&net_message, pos);
 			MSG_ReadDir(&net_message, dir);
 			const int color = MSG_ReadByte(&net_message);
-			CL_ParticleEffect2(pos, dir, color, cnt);
+			CL_ParticleEffect2(pos, dir, color, cnt, false);
 		} break;
 
 		// Railgun / red railgun effect
@@ -959,7 +959,7 @@ void CL_ParseTEnt()
 			}
 			else //mxd. Classic particles
 			{
-				CL_ParticleEffect2(pos, dir, color, cnt);
+				CL_ParticleEffect2(pos, dir, color, cnt, false);
 			}
 
 			explosion_t	*ex = CL_AllocExplosion();
@@ -983,7 +983,7 @@ void CL_ParseTEnt()
 			if (r_particle_mode->integer == 1)
 				CL_GreenBloodHit(pos, dir);
 			else //mxd. Classic particles
-				CL_ParticleEffect2(pos, dir, 0xdf, 30);
+				CL_ParticleEffect2(pos, dir, 0xdf, 30, false);
 		} break;
 
 		// RAFAEL
@@ -993,7 +993,7 @@ void CL_ParseTEnt()
 			MSG_ReadPos(&net_message, pos);
 			MSG_ReadDir(&net_message, dir);
 			const int color = MSG_ReadByte(&net_message);
-			CL_ParticleEffect3(pos, dir, color, cnt);
+			CL_ParticleEffect2(pos, dir, color, cnt, true);
 		} break;
 
 		// PMM -following code integrated for flechette (different color)

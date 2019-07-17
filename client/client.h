@@ -545,11 +545,10 @@ void CL_ParticleSteamEffect2(cl_sustain_t *self);
 
 void CL_TeleporterParticles(entity_state_t *ent);
 void CL_ParticleEffect(const vec3_t org, const vec3_t dir, const int color8, const int count);
-void CL_ParticleEffect2(const vec3_t org, const vec3_t dir, const int color8, const int count);
-void CL_ParticleEffect3(const vec3_t org, const vec3_t dir, const int color8, const int count); // RAFAEL
+void CL_ParticleEffect2(const vec3_t org, const vec3_t dir, const int color8, const int count, const qboolean invertgravity); //mxd. +invertgravity
 
-void CL_ParticleEffectSplash(vec3_t org, vec3_t dir, int color8, int count);
-void CL_ElectricParticles(vec3_t org, vec3_t dir, int count);
+void CL_ParticleEffectSplash(const vec3_t org, const vec3_t dir, const int color8, const int count);
+void CL_ElectricParticles(const vec3_t org, const vec3_t dir, const int count);
 void CL_GunSmokeEffect(const vec3_t org, const vec3_t dir);
 void CL_LogoutEffect(const vec3_t org, const int type);
 
@@ -968,48 +967,48 @@ void CL_ReclipDecals();
 //
 // cl_effects.c
 //
-void CL_BigTeleportParticles(vec3_t org);
-void CL_RocketTrail(vec3_t start, vec3_t end, centity_t *old);
-void CL_DiminishingTrail(vec3_t start, vec3_t end, centity_t *old, int flags);
+void CL_BigTeleportParticles(const vec3_t org);
+void CL_RocketTrail(const vec3_t start, const vec3_t end, centity_t *old);
+void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, const int flags);
 void CL_FlyEffect(centity_t *ent, vec3_t origin);
-void CL_BfgParticles(entity_t *ent);
+void CL_BfgParticles(const entity_t *ent);
 void CL_EntityEvent(entity_state_t *ent);
-void CL_TrapParticles(entity_t *ent);	// RAFAEL
-void CL_BlasterTrail(vec3_t start, vec3_t end, int red, int green, int blue, int reddelta, int greendelta, int bluedelta);
-void CL_HyperBlasterEffect(vec3_t start, vec3_t end, vec3_t angle, int red, int green, int blue, int reddelta, int greendelta, int bluedelta, float len, float size);
-void CL_BlasterTracer(vec3_t origin, vec3_t angle, int red, int green, int blue, float len, float size);
-void CL_BlasterParticles(vec3_t org, vec3_t dir, int count, float size,	int red, int green, int blue, int reddelta, int greendelta, int bluedelta);
+void CL_TrapParticles(entity_t *ent); // RAFAEL
+void CL_BlasterTrail(const vec3_t start, const vec3_t end, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta);
+void CL_HyperBlasterEffect(const vec3_t start, const vec3_t end, const vec3_t angle, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta, const float len, const float size);
+void CL_BlasterTracer(const vec3_t origin, const vec3_t angle, const int red, const int green, const int blue, const float len, const float size);
+void CL_BlasterParticles(const vec3_t org, const vec3_t dir, const int count, const float size, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta);
 
-void CL_QuadTrail(vec3_t start, vec3_t end);
-void CL_RailTrail(vec3_t start, vec3_t end, qboolean isRed);
-void CL_BubbleTrail(vec3_t start, vec3_t end);
-void CL_FlagTrail(vec3_t start, vec3_t end, qboolean isred, qboolean isgreen);
-void CL_IonripperTrail(vec3_t start, vec3_t end); // RAFAEL
+void CL_QuadTrail(const vec3_t start, const vec3_t end);
+void CL_RailTrail(const vec3_t start, const vec3_t end, const qboolean isred);
+void CL_BubbleTrail(const vec3_t start, const vec3_t end);
+void CL_FlagTrail(const vec3_t start, const vec3_t end, const qboolean isred, const qboolean isgreen);
+void CL_IonripperTrail(const vec3_t start, const vec3_t end); // RAFAEL
 
 void CL_TeleportParticles(const vec3_t org);
 void CL_ItemRespawnParticles(const vec3_t org);
 void CL_ExplosionParticles(const vec3_t org);
 // ========
 // PGM
-void CL_DebugTrail(vec3_t start, vec3_t end);
-void CL_Flashlight(int ent, vec3_t pos);
-void CL_ForceWall(vec3_t start, vec3_t end, int color);
-void CL_BubbleTrail2(vec3_t start, vec3_t end, int dist);
-void CL_HeatbeamParticles(vec3_t start, vec3_t forward);
-void CL_ParticleSteamEffect(vec3_t org, vec3_t dir, int red, int green, int blue, int reddelta, int greendelta, int bluedelta, int count, int magnitude);
+void CL_DebugTrail(const vec3_t start, const vec3_t end);
+void CL_Flashlight(const int ent, const vec3_t pos);
+void CL_ForceWall(const vec3_t start, const vec3_t end, const int color);
+void CL_BubbleTrail2(const vec3_t start, const vec3_t end, const int dist);
+void CL_HeatbeamParticles(const vec3_t start, const vec3_t forward);
+void CL_ParticleSteamEffect(const vec3_t org, const vec3_t dir, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta, const int count, const int magnitude);
 
-void CL_TrackerTrail(vec3_t start, vec3_t end);
-void CL_Tracker_Explode(vec3_t origin);
-void CL_TagTrail(vec3_t start, vec3_t end, int color8);
-void CL_ColorFlash(vec3_t pos, int ent, int intensity, float r, float g, float b);
-void CL_Tracker_Shell(vec3_t origin);
-void CL_MonsterPlasma_Shell(vec3_t origin);
-void CL_ColorExplosionParticles(vec3_t org, int color8, int run);
-void CL_ParticleSmokeEffect(vec3_t org, vec3_t dir, float size);
-void CL_ClassicParticleSmokeEffect(vec3_t org, vec3_t dir, int color, int count, int magnitude); //mxd
-void CL_Widowbeamout(cl_sustain_t *self);
-void CL_Nukeblast(cl_sustain_t *self);
-void CL_WidowSplash(vec3_t org);
+void CL_TrackerTrail(const vec3_t start, const vec3_t end);
+void CL_Tracker_Explode(const vec3_t origin);
+void CL_TagTrail(const vec3_t start, const vec3_t end, const int color8);
+void CL_ColorFlash(const vec3_t pos, const int ent, const int intensity, const float r, const float g, const float b);
+void CL_Tracker_Shell(const vec3_t origin);
+void CL_MonsterPlasma_Shell(const vec3_t origin);
+void CL_ColorExplosionParticles(const vec3_t org, const int color8, const int run);
+void CL_ParticleSmokeEffect(const vec3_t org, const vec3_t dir, const float size);
+void CL_ClassicParticleSmokeEffect(const vec3_t org, const vec3_t dir, const int color, const int count, const int magnitude); //mxd
+void CL_Widowbeamout(const cl_sustain_t *self);
+void CL_Nukeblast(const cl_sustain_t *self);
+void CL_WidowSplash(const vec3_t org);
 // PGM
 // ========
 
