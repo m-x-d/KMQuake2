@@ -633,9 +633,9 @@ void CL_ClearTEnts();
 
 //=================================================
 
-int CL_ParseEntityBits(unsigned *bits);
-void CL_ParseDelta(entity_state_t *from, entity_state_t *to, int number, uint bits);
-void CL_ParseFrame(void);
+int CL_ParseEntityBits(uint *bits);
+void CL_ParseDelta(entity_state_t *from, entity_state_t *to, const int number, const uint bits);
+void CL_ParseFrame();
 
 void CL_ParseTEnt();
 void CL_ParseConfigString(void);
@@ -648,7 +648,7 @@ void CL_SetLightstyle(const int i);
 void CL_RunDLights();
 void CL_RunLightStyles();
 
-void CL_AddEntities(void);
+void CL_AddEntities();
 void CL_AddDLights();
 void CL_AddTEnts();
 void CL_AddLightStyles();

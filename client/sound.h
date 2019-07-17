@@ -40,6 +40,5 @@ void S_EndRegistration(void);
 
 struct sfx_s *S_FindName(char *name, qboolean create);
 
-// The sound code makes callbacks to the client for entitiy position
-// information, so entities can be dynamically re-spatialized.
-void CL_GetEntitySoundOrigin(int entindex, vec3_t org);
+// The sound code makes callbacks to the client for entitiy position information, so entities can be dynamically re-spatialized.
+void CL_GetEntitySoundOrigin(const int entindex, vec3_t org);
