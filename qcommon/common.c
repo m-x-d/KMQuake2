@@ -484,7 +484,7 @@ Handles byte ordering and avoids alignment errors
 // Writing functions
 //
 
-void MSG_WriteChar(sizebuf_t *sb, int c)
+void MSG_WriteChar(sizebuf_t *sb, const int c)
 {
 #ifdef PARANOID
 	if (c < -128 || c > 127)
@@ -495,7 +495,7 @@ void MSG_WriteChar(sizebuf_t *sb, int c)
 	buf[0] = c;
 }
 
-void MSG_WriteByte(sizebuf_t *sb, int c)
+void MSG_WriteByte(sizebuf_t *sb, const int c)
 {
 #ifdef PARANOID
 	if (c < 0 || c > 255)
@@ -506,7 +506,7 @@ void MSG_WriteByte(sizebuf_t *sb, int c)
 	buf[0] = c;
 }
 
-void MSG_WriteShort(sizebuf_t *sb, int c)
+void MSG_WriteShort(sizebuf_t *sb, const int c)
 {
 #ifdef PARANOID
 	if (c < ((short)0x8000) || c > (short)0x7fff)
@@ -518,7 +518,7 @@ void MSG_WriteShort(sizebuf_t *sb, int c)
 	buf[1] = c >> 8;
 }
 
-void MSG_WriteLong(sizebuf_t *sb, int c)
+void MSG_WriteLong(sizebuf_t *sb, const int c)
 {
 	byte *buf = SZ_GetSpace(sb, 4);
 	buf[0] = c & 0xff;
@@ -527,7 +527,7 @@ void MSG_WriteLong(sizebuf_t *sb, int c)
 	buf[3] = c >> 24;
 }
 
-void MSG_WriteFloat(sizebuf_t *sb, float f)
+void MSG_WriteFloat(sizebuf_t *sb, const float f)
 {
 	union
 	{
@@ -541,7 +541,7 @@ void MSG_WriteFloat(sizebuf_t *sb, float f)
 	SZ_Write(sb, &dat.l, 4);
 }
 
-void MSG_WriteString(sizebuf_t *sb, char *s)
+void MSG_WriteString(sizebuf_t *sb, const char *s)
 {
 	if (!s)
 		SZ_Write(sb, "", 1);
@@ -554,9 +554,10 @@ void MSG_WriteString(sizebuf_t *sb, char *s)
 
 #define BIT_23	0x00800000
 #define UPRBITS	0xFF000000
-qboolean LegacyProtocol(void);
 
-void MSG_WriteCoordNew(sizebuf_t *sb, float f)
+extern qboolean LegacyProtocol();
+
+static void MSG_WriteCoordNew(sizebuf_t *sb, const float f)
 {
 	const int tmp = f * 8;				// 1/8 granulation, leaves bounds of +/-1M in signed 24-bit form
 	const byte trans1 = tmp >> 16;		// bits 16-23
@@ -567,10 +568,10 @@ void MSG_WriteCoordNew(sizebuf_t *sb, float f)
 	MSG_WriteShort(sb, trans2);
 }
 
-float MSG_ReadCoordNew(sizebuf_t *msg_read)
+static float MSG_ReadCoordNew(sizebuf_t *msg_read)
 {
 	const byte trans1 = MSG_ReadByte(msg_read);
-	const unsigned short trans2 = MSG_ReadShort(msg_read);
+	const ushort trans2 = MSG_ReadShort(msg_read);
 
 	int tmp = trans1 << 16;	// bits 16-23
 	tmp += trans2;			// bits 0-15
@@ -584,7 +585,7 @@ float MSG_ReadCoordNew(sizebuf_t *msg_read)
 }
 
 // Player movement coords are already in 1/8 precision integer form
-void MSG_WritePMCoordNew(sizebuf_t *sb, int in)
+void MSG_WritePMCoordNew(sizebuf_t *sb, const int in)
 {
 	const byte trans1 = in >> 16;	  // bits 16-23
 	const unsigned short trans2 = in; // bits 0-15
@@ -612,14 +613,14 @@ int MSG_ReadPMCoordNew(sizebuf_t *msg_read)
 
 #ifdef LARGE_MAP_SIZE
 
-void MSG_WriteCoord(sizebuf_t *sb, float f)
+void MSG_WriteCoord(sizebuf_t *sb, const float f)
 {
 	MSG_WriteCoordNew(sb, f);
 }
 
 #else // LARGE_MAP_SIZE
 
-void MSG_WriteCoord(sizebuf_t *sb, float f)
+void MSG_WriteCoord(sizebuf_t *sb, const float f)
 {
 	MSG_WriteShort(sb, (int)(f * 8));
 }
@@ -628,7 +629,7 @@ void MSG_WriteCoord(sizebuf_t *sb, float f)
 
 #ifdef LARGE_MAP_SIZE
 
-void MSG_WritePos(sizebuf_t *sb, vec3_t pos)
+void MSG_WritePos(sizebuf_t *sb, const vec3_t pos)
 {
 	MSG_WriteCoordNew(sb, pos[0]);
 	MSG_WriteCoordNew(sb, pos[1]);
@@ -646,12 +647,12 @@ void MSG_WritePos(sizebuf_t *sb, vec3_t pos)
 
 #endif // LARGE_MAP_SIZE
 
-void MSG_WriteAngle(sizebuf_t *sb, float f)
+void MSG_WriteAngle(sizebuf_t *sb, const float f)
 {
 	MSG_WriteByte(sb, (int)(f * 256 / 360) & 255);
 }
 
-void MSG_WriteAngle16(sizebuf_t *sb, float f)
+void MSG_WriteAngle16(sizebuf_t *sb, const float f)
 {
 	MSG_WriteShort(sb, ANGLE2SHORT(f));
 }
@@ -702,7 +703,7 @@ void MSG_WriteDeltaUsercmd(sizebuf_t *sb, usercmd_t *from, usercmd_t *cmd)
 	MSG_WriteByte(sb, cmd->lightlevel);
 }
 
-void MSG_WriteDir(sizebuf_t *sb, vec3_t dir)
+void MSG_WriteDir(sizebuf_t *sb, const vec3_t dir)
 {
 	if (!dir)
 	{
@@ -735,7 +736,7 @@ void MSG_ReadDir(sizebuf_t *sb, vec3_t dir)
 
 // Writes part of a packetentities message.
 // Can delta from either a baseline or a previous packet_entity
-void MSG_WriteDeltaEntity(entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity)
+void MSG_WriteDeltaEntity(entity_state_t *from, entity_state_t *to, sizebuf_t *msg, const qboolean force, const qboolean newentity)
 {
 	if (!to->number)
 		Com_Error(ERR_FATAL, "Unset entity number");
@@ -1266,7 +1267,7 @@ void *SZ_GetSpace(sizebuf_t *buf, int length)
 	return data;
 }
 
-void SZ_Write(sizebuf_t *buf, void *data, int length)
+void SZ_Write(sizebuf_t *buf, const void *data, const int length)
 {
 	memcpy(SZ_GetSpace(buf, length), data, length);
 }

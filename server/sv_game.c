@@ -26,7 +26,7 @@ game_export_t *ge;
 #pragma region ======================= GAME.DLL SUPPORT FUNCTIONS
 
 // Sends the contents of the mutlicast buffer to a single client
-void PF_Unicast(edict_t *ent, qboolean reliable)
+static void PF_Unicast(edict_t *ent, const qboolean reliable)
 {
 	if (!ent)
 		return;
@@ -46,7 +46,7 @@ void PF_Unicast(edict_t *ent, qboolean reliable)
 }
 
 // Debug print to server console
-void PF_dprintf(char *fmt, ...)
+static void PF_dprintf(char *fmt, ...)
 {
 	char msg[1024];
 	va_list	argptr;
@@ -59,7 +59,7 @@ void PF_dprintf(char *fmt, ...)
 }
 
 // Print to a single client
-void PF_cprintf(edict_t *ent, int level, char *fmt, ...)
+static void PF_cprintf(edict_t *ent, const int level, char *fmt, ...)
 {
 	char msg[1024];
 	va_list	argptr;
@@ -83,7 +83,7 @@ void PF_cprintf(edict_t *ent, int level, char *fmt, ...)
 }
 
 // centerprint to a single client
-void PF_centerprintf(edict_t *ent, char *fmt, ...)
+static void PF_centerprintf(edict_t *ent, char *fmt, ...)
 {
 	char msg[1024];
 	va_list	argptr;
@@ -102,7 +102,7 @@ void PF_centerprintf(edict_t *ent, char *fmt, ...)
 }
 
 // Abort the server with a game error
-void PF_error(char *fmt, ...)
+static void PF_error(char *fmt, ...)
 {
 	char msg[1024];
 	va_list	argptr;
@@ -115,7 +115,7 @@ void PF_error(char *fmt, ...)
 }
 
 // Also sets mins and maxs for inline bmodels
-void PF_setmodel(edict_t *ent, char *name)
+static void PF_setmodel(edict_t *ent, char *name)
 {
 	if (!name)
 		Com_Error(ERR_DROP, "PF_setmodel: NULL");
@@ -132,7 +132,7 @@ void PF_setmodel(edict_t *ent, char *name)
 	}
 }
 
-void PF_Configstring(int index, char *val)
+static void PF_Configstring(const int index, char *val)
 {
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
 		Com_Error(ERR_DROP, "PF_Configstring: bad index: %i\n", index);
@@ -167,18 +167,18 @@ void PF_Configstring(int index, char *val)
 	}
 }
 
-void PF_WriteChar(int c) { MSG_WriteChar(&sv.multicast, c); }
-void PF_WriteByte(int c) { MSG_WriteByte(&sv.multicast, c); }
-void PF_WriteShort(int c) { MSG_WriteShort(&sv.multicast, c); }
-void PF_WriteLong(int c) { MSG_WriteLong(&sv.multicast, c); }
-void PF_WriteFloat(float f) { MSG_WriteFloat(&sv.multicast, f); }
-void PF_WriteString(char *s) { MSG_WriteString(&sv.multicast, s); }
-void PF_WritePos(vec3_t pos) { MSG_WritePos(&sv.multicast, pos); }
-void PF_WriteDir(vec3_t dir) { MSG_WriteDir(&sv.multicast, dir); }
-void PF_WriteAngle(float f) { MSG_WriteAngle(&sv.multicast, f); }
+static void PF_WriteChar(const int c) { MSG_WriteChar(&sv.multicast, c); }
+static void PF_WriteByte(const int c) { MSG_WriteByte(&sv.multicast, c); }
+static void PF_WriteShort(const int c) { MSG_WriteShort(&sv.multicast, c); }
+static void PF_WriteLong(const int c) { MSG_WriteLong(&sv.multicast, c); }
+static void PF_WriteFloat(const float f) { MSG_WriteFloat(&sv.multicast, f); }
+static void PF_WriteString(char *s) { MSG_WriteString(&sv.multicast, s); }
+static void PF_WritePos(const vec3_t pos) { MSG_WritePos(&sv.multicast, pos); }
+static void PF_WriteDir(const vec3_t dir) { MSG_WriteDir(&sv.multicast, dir); }
+static void PF_WriteAngle(const float f) { MSG_WriteAngle(&sv.multicast, f); }
 
 // Also checks portalareas so that doors block sight
-qboolean PF_inPVS(vec3_t p1, vec3_t p2)
+static qboolean PF_inPVS(const vec3_t p1, const vec3_t p2)
 {
 	int leafnum = CM_PointLeafnum(p1);
 	int cluster = CM_LeafCluster(leafnum);
@@ -199,7 +199,7 @@ qboolean PF_inPVS(vec3_t p1, vec3_t p2)
 }
 
 // Also checks portalareas so that doors block sound
-qboolean PF_inPHS(vec3_t p1, vec3_t p2)
+static qboolean PF_inPHS(const vec3_t p1, const vec3_t p2)
 {
 	int leafnum = CM_PointLeafnum(p1);
 	int cluster = CM_LeafCluster(leafnum);
@@ -219,7 +219,7 @@ qboolean PF_inPHS(vec3_t p1, vec3_t p2)
 	return true;
 }
 
-void PF_StartSound(edict_t *entity, int channel, int sound_num, float volume, float attenuation, float timeofs)
+static void PF_StartSound(edict_t *entity, const int channel, const int sound_num, const float volume, const float attenuation, const float timeofs)
 {
 	if (entity)
 		SV_StartSound(NULL, entity, channel, sound_num, volume, attenuation, timeofs);
@@ -230,7 +230,7 @@ void PF_StartSound(edict_t *entity, int channel, int sound_num, float volume, fl
 #pragma region ======================= GAME.DLL LOAD/UNLOAD
 
 // Called when either the entire server is being killed, or it is changing to a different game directory.
-void SV_ShutdownGameProgs(void)
+void SV_ShutdownGameProgs()
 {
 	if (ge)
 	{
@@ -241,7 +241,7 @@ void SV_ShutdownGameProgs(void)
 }
 
 // Init the game subsystem for a new map
-void SV_InitGameProgs(void)
+void SV_InitGameProgs()
 {
 	game_import_t import;
 
