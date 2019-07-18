@@ -764,6 +764,7 @@ void CL_ParseFrame()
 
 // Knightmare- save off current player weapon model for player config menu
 extern char *currentweaponmodel;
+extern vec3_t clientorigin;
 
 static void CL_AddPacketEntities(frame_t *frame)
 {
@@ -779,7 +780,7 @@ static void CL_AddPacketEntities(frame_t *frame)
 	memset(&ent, 0, sizeof(ent));
 
 	// Knightmare added
-	VectorCopy(vec3_origin, clientOrg);
+	VectorCopy(vec3_origin, clientorigin);
 
 	// Knightmare- reset current weapon model
 	currentweaponmodel = NULL;

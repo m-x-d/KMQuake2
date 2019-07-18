@@ -25,6 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int gun_frame;
 struct model_s *gun_model;
 
+// Added for Psychospaz's chasecam
+vec3_t clientorigin; // Lerped org of client for server->client side effects
+
 cvar_t *cl_testparticles;
 cvar_t *cl_testentities;
 cvar_t *cl_testlights;
@@ -97,7 +100,7 @@ void V_AddEntity(entity_t *ent)
 	{
 		// What was i thinking before!?
 		for (int i = 0; i < 3; i++)
-			clientOrg[i] = ent->oldorigin[i] = ent->origin[i] = cl.predicted_origin[i];
+			clientorigin[i] = ent->oldorigin[i] = ent->origin[i] = cl.predicted_origin[i];
 
 		if (info_hand->value == 1) // Lefthanded
 			ent->flags |= RF_MIRRORMODEL;
@@ -272,7 +275,7 @@ static void V_TestLights(void)
 extern int scr_draw_loading; //mxd
 
 // Called before entering a new level, or after changing dlls
-void CL_PrepRefresh(void)
+void CL_PrepRefresh()
 {
 	char mapname[64];
 	char pname[MAX_QPATH];

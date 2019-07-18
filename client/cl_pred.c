@@ -348,7 +348,7 @@ void CL_PredictMovement()
 	if (current - ack >= CMD_BACKUP)
 	{
 		if (cl_showmiss->integer)
-			Com_Printf("exceeded CMD_BACKUP\n");
+			Com_Printf(S_COLOR_YELLOW"Exceeded CMD_BACKUP\n");
 
 		return;
 	}

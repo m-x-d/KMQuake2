@@ -138,47 +138,47 @@ static void KeyUp(kbutton_t *b)
 	b->state |= KEYSTATE_IMPULSE_UP; // Impulse up
 }
 
-static void IN_KLookDown(void) { KeyDown(&in_klook); }
-static void IN_KLookUp(void) { KeyUp(&in_klook); }
-static void IN_UpDown(void) { KeyDown(&in_up); }
-static void IN_UpUp(void) { KeyUp(&in_up); }
-static void IN_DownDown(void) { KeyDown(&in_down); }
-static void IN_DownUp(void) { KeyUp(&in_down); }
-static void IN_LeftDown(void) { KeyDown(&in_left); }
-static void IN_LeftUp(void) { KeyUp(&in_left); }
-static void IN_RightDown(void) { KeyDown(&in_right); }
-static void IN_RightUp(void) { KeyUp(&in_right); }
-static void IN_ForwardDown(void) { KeyDown(&in_forward); }
-static void IN_ForwardUp(void) { KeyUp(&in_forward); }
-static void IN_BackDown(void) { KeyDown(&in_back); }
-static void IN_BackUp(void) { KeyUp(&in_back); }
-static void IN_LookupDown(void) { KeyDown(&in_lookup); }
-static void IN_LookupUp(void) { KeyUp(&in_lookup); }
-static void IN_LookdownDown(void) { KeyDown(&in_lookdown); }
-static void IN_LookdownUp(void) { KeyUp(&in_lookdown); }
-static void IN_MoveleftDown(void) { KeyDown(&in_moveleft); }
-static void IN_MoveleftUp(void) { KeyUp(&in_moveleft); }
-static void IN_MoverightDown(void) { KeyDown(&in_moveright); }
-static void IN_MoverightUp(void) { KeyUp(&in_moveright); }
+static void IN_KLookDown() { KeyDown(&in_klook); }
+static void IN_KLookUp() { KeyUp(&in_klook); }
+static void IN_UpDown() { KeyDown(&in_up); }
+static void IN_UpUp() { KeyUp(&in_up); }
+static void IN_DownDown() { KeyDown(&in_down); }
+static void IN_DownUp() { KeyUp(&in_down); }
+static void IN_LeftDown() { KeyDown(&in_left); }
+static void IN_LeftUp() { KeyUp(&in_left); }
+static void IN_RightDown() { KeyDown(&in_right); }
+static void IN_RightUp() { KeyUp(&in_right); }
+static void IN_ForwardDown() { KeyDown(&in_forward); }
+static void IN_ForwardUp() { KeyUp(&in_forward); }
+static void IN_BackDown() { KeyDown(&in_back); }
+static void IN_BackUp() { KeyUp(&in_back); }
+static void IN_LookupDown() { KeyDown(&in_lookup); }
+static void IN_LookupUp() { KeyUp(&in_lookup); }
+static void IN_LookdownDown() { KeyDown(&in_lookdown); }
+static void IN_LookdownUp() { KeyUp(&in_lookdown); }
+static void IN_MoveleftDown() { KeyDown(&in_moveleft); }
+static void IN_MoveleftUp() { KeyUp(&in_moveleft); }
+static void IN_MoverightDown() { KeyDown(&in_moveright); }
+static void IN_MoverightUp() { KeyUp(&in_moveright); }
 
-static void IN_SpeedDown(void) { KeyDown(&in_speed); }
-static void IN_SpeedUp(void) { KeyUp(&in_speed); }
-static void IN_StrafeDown(void) { KeyDown(&in_strafe); }
-static void IN_StrafeUp(void) { KeyUp(&in_strafe); }
+static void IN_SpeedDown() { KeyDown(&in_speed); }
+static void IN_SpeedUp() { KeyUp(&in_speed); }
+static void IN_StrafeDown() { KeyDown(&in_strafe); }
+static void IN_StrafeUp() { KeyUp(&in_strafe); }
 
-static void IN_AttackDown(void) { KeyDown(&in_attack); }
-static void IN_AttackUp(void) { KeyUp(&in_attack); }
+static void IN_AttackDown() { KeyDown(&in_attack); }
+static void IN_AttackUp() { KeyUp(&in_attack); }
 
 //Knightmare added
-static void IN_Attack2Down(void) { KeyDown(&in_attack2); }
-static void IN_Attack2Up(void) { KeyUp(&in_attack2); }
+static void IN_Attack2Down() { KeyDown(&in_attack2); }
+static void IN_Attack2Up() { KeyUp(&in_attack2); }
 
-static void IN_UseDown(void) { KeyDown(&in_use); }
-static void IN_UseUp(void) { KeyUp(&in_use); }
+static void IN_UseDown() { KeyDown(&in_use); }
+static void IN_UseUp() { KeyUp(&in_use); }
 
-static void IN_Impulse(void) { in_impulse = atoi(Cmd_Argv(1)); }
+static void IN_Impulse() { in_impulse = atoi(Cmd_Argv(1)); }
 
-void IN_CenterView(void)
+void IN_CenterView()
 {
 	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[PITCH]);
 }
@@ -329,7 +329,7 @@ static void CL_FinishMove(usercmd_t *cmd)
 	cmd->lightlevel = (byte)cl_lightlevel->value;
 }
 
-void CL_InitInput(void)
+void CL_InitInput()
 {
 	Cmd_AddCommand("centerview", IN_CenterView);
 
@@ -390,7 +390,7 @@ static usercmd_t CL_CreateCmd(void)
 #ifdef CLIENT_SPLIT_NETFRAME
 
 // jec - Adds any new input changes to usercmd that occurred since last Init or RefreshCmd.
-void CL_RefreshCmd(void)
+void CL_RefreshCmd()
 {
 	usercmd_t *cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
 
@@ -435,7 +435,7 @@ void CL_RefreshCmd(void)
 }
 
 // Just updates movement, such as when disconnected.
-void CL_RefreshMove(void)
+void CL_RefreshMove()
 {	
 	usercmd_t *cmd = &cl.cmds[cls.netchan.outgoing_sequence & (CMD_BACKUP - 1)];
 

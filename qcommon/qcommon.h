@@ -435,7 +435,7 @@ void Cmd_TokenizeString(char *text, qboolean macroExpand);
 void Cmd_ExecuteString(char *text);
 // Parses a single line of text into arguments and tries to execute it as if it was typed at the console
 
-void Cmd_ForwardToServer(void);
+void Cmd_ForwardToServer();
 // Adds the current command line as a clc_stringcmd to the client message.
 // Things like godmode, noclip, etc, are commands directed to the server, so when they are typed in at the console, they will need to be forwarded.
 
@@ -892,10 +892,10 @@ void Sys_GetCpuName(char *cpuString, int maxSize);
 ==============================================================
 */
 
-void CL_Init(void);
+void CL_Init();
 void CL_Drop(void);
-void CL_Shutdown(void);
-void CL_Frame(int msec);
+void CL_Shutdown();
+void CL_Frame(const int msec);
 void Con_Print(char *text);
 void SCR_BeginLoadingPlaque(const char *mapname); //mxd. +mapname
 

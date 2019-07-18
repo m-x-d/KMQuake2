@@ -477,3 +477,11 @@ int UI_MenuDepth()
 {
 	return m_menudepth;
 }
+
+//mxd. Moved from cl_main.c
+float ClampCvar(const float min, const float max, const float value) //TODO: mxd. Replace with clamp()?
+{
+	if (value < min) return min;
+	if (value > max) return max;
+	return value;
+}

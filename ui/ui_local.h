@@ -201,6 +201,7 @@ void UI_Draw_Cursor(void);
 
 int UI_CenteredX(const menucommon_s *generic, const int menux); //mxd
 int UI_MenuDepth(); //mxd. Returns current menu depth
+float ClampCvar(const float min, const float max, const float value); //mxd. Moved from client.h
 
 //=======================================================
 

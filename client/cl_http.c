@@ -325,7 +325,7 @@ void CL_SetHTTPServer (const char *URL)
 }
 
 // Cancel all downloads and nuke the queue.
-extern void CL_ResetPrecacheCheck(void);
+extern void CL_ResetPrecacheCheck();
 
 void CL_CancelHTTPDownloads(qboolean permKill)
 {

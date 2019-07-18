@@ -49,7 +49,7 @@ char *svc_strings[256] =
 	"svc_frame"
 };
 
-void CL_RegisterSounds(void)
+void CL_RegisterSounds()
 {
 	S_BeginRegistration();
 	CL_RegisterTEntSounds();
@@ -81,7 +81,7 @@ void CL_RegisterSounds(void)
 #pragma region ======================= SERVER CONNECTING MESSAGES
 
 // A utility function that determines if parsing of old protocol should be used.
-qboolean LegacyProtocol(void)
+qboolean LegacyProtocol()
 {
 	return ((Com_ServerState() && cls.serverProtocol <= OLD_PROTOCOL_VERSION) || cls.serverProtocol == OLD_PROTOCOL_VERSION);
 }
@@ -318,7 +318,7 @@ static int CL_MissionPackCDTrack(int tracknum)
 	return tracknum;
 }
 
-void CL_PlayBackgroundTrack(void)
+void CL_PlayBackgroundTrack()
 {
 	char name[MAX_QPATH];
 
@@ -350,7 +350,7 @@ void CL_PlayBackgroundTrack(void)
 		S_StartBackgroundTrack(name, name, musictrackframe->integer); //mxd. +musictrackframe
 }
 
-void CL_ParseConfigString(void)
+void CL_ParseConfigString()
 {
 	int max_models, max_sounds, max_images, cs_lights, cs_sounds, cs_images, cs_playerskins;
 	char olds[MAX_QPATH];

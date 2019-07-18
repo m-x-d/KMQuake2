@@ -293,7 +293,7 @@ static void SCR_ShowFPS(void)
 // A new packet was just parsed
 static int currentping;
 
-void CL_AddNetgraph(void)
+void CL_AddNetgraph()
 {
 	const int in = cls.netchan.incoming_acknowledged & (CMD_BACKUP - 1);
 	currentping = cls.realtime - cl.cmd_time[in];
@@ -1301,14 +1301,14 @@ float ScaledHud(float param)
 	return param * hudScale.avg;
 }
 
-float HudScale(void)
+float HudScale()
 {
 	return hudScale.avg;
 }
 
-void InitHudScale(void)
+void InitHudScale()
 {
-	switch ((int)hud_scale->value)
+	switch (hud_scale->integer)
 	{
 		case 0:
 			Cvar_SetValue("hud_width", 0);
@@ -1326,6 +1326,7 @@ void InitHudScale(void)
 			break;
 
 		case 3:
+		default:
 			Cvar_SetValue("hud_width", 640);
 			Cvar_SetValue("hud_height", 480);
 			break;
@@ -1343,11 +1344,6 @@ void InitHudScale(void)
 		case 6:
 			Cvar_SetValue("hud_width", 320);
 			Cvar_SetValue("hud_height", 240);
-			break;
-
-		default:
-			Cvar_SetValue("hud_width", 640);
-			Cvar_SetValue("hud_height", 480);
 			break;
 	}
 
@@ -1447,7 +1443,7 @@ void SCR_DrawField(int x, int y, int color, int width, int value, qboolean flash
 	char num[16];
 	int frame;
 	float (*scaleForScreen)(float in);
-	float (*getScreenScale)(void);
+	float (*getScreenScale)();
 
 	if (width < 1)
 		return;
@@ -1523,7 +1519,7 @@ void SCR_ExecuteLayoutString(char *s, qboolean isStatusBar)
 	clientinfo_t *ci;
 
 	float (*scaleForScreen)(float in);
-	float (*getScreenScale)(void);
+	float (*getScreenScale)();
 
 	if (cls.state != ca_active || !cl.refresh_prepped || !s[0])
 		return;

@@ -23,159 +23,152 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
-cvar_t	*freelook;
+#pragma region ======================= cvars
 
-cvar_t	*adr0;
-cvar_t	*adr1;
-cvar_t	*adr2;
-cvar_t	*adr3;
-cvar_t	*adr4;
-cvar_t	*adr5;
-cvar_t	*adr6;
-cvar_t	*adr7;
-cvar_t	*adr8;
-cvar_t	*adr9;
-cvar_t	*adr10;
-cvar_t	*adr11;
+cvar_t *freelook;
 
-cvar_t	*cl_stereo_separation;
-cvar_t	*cl_stereo;
+cvar_t *adr0;
+cvar_t *adr1;
+cvar_t *adr2;
+cvar_t *adr3;
+cvar_t *adr4;
+cvar_t *adr5;
+cvar_t *adr6;
+cvar_t *adr7;
+cvar_t *adr8;
+cvar_t *adr9;
+cvar_t *adr10;
+cvar_t *adr11;
 
-cvar_t	*rcon_client_password;
-cvar_t	*rcon_address;
+cvar_t *cl_stereo_separation;
+cvar_t *cl_stereo;
 
-cvar_t	*cl_noskins;
-cvar_t	*cl_autoskins;
-cvar_t	*cl_footsteps;
-cvar_t	*cl_timeout;
-cvar_t	*cl_predict;
-cvar_t	*cl_maxfps;
+cvar_t *rcon_client_password;
+cvar_t *rcon_address;
+
+cvar_t *cl_noskins;
+cvar_t *cl_footsteps;
+cvar_t *cl_timeout;
+cvar_t *cl_predict;
+cvar_t *cl_maxfps;
 
 #ifdef CLIENT_SPLIT_NETFRAME
-cvar_t	*cl_async;
-cvar_t	*net_maxfps;
-cvar_t	*r_maxfps;
+cvar_t *cl_async;
+cvar_t *net_maxfps;
+cvar_t *r_maxfps;
 #endif
 
-cvar_t	*cl_sleep;
-// Whether to trick version 34 servers that this is a version 34 client
-cvar_t	*cl_servertrick;
+cvar_t *cl_sleep;
 
-cvar_t	*cl_gun;
-cvar_t	*cl_weapon_shells;
+// Whether to trick version 34 servers that this is a version 34 client
+cvar_t *cl_servertrick;
+
+cvar_t *cl_gun;
+cvar_t *cl_weapon_shells;
 
 // Reduction factor for particle effects
-cvar_t	*cl_particle_scale;
+cvar_t *cl_particle_scale;
 
 // Whether to adjust fov for wide aspect rattio
-cvar_t	*cl_widescreen_fov;
+cvar_t *cl_widescreen_fov;
 
 // Psychospaz's chasecam
-cvar_t	*cg_thirdperson;
-cvar_t	*cg_thirdperson_angle;
-cvar_t	*cg_thirdperson_chase;
-cvar_t	*cg_thirdperson_dist;
-cvar_t	*cg_thirdperson_alpha;
-cvar_t	*cg_thirdperson_adjust;
+cvar_t *cg_thirdperson;
+cvar_t *cg_thirdperson_angle;
+cvar_t *cg_thirdperson_chase;
+cvar_t *cg_thirdperson_dist;
+cvar_t *cg_thirdperson_alpha;
+cvar_t *cg_thirdperson_adjust;
 
-cvar_t	*cl_blood;
-cvar_t	*cl_old_explosions;	// Option for old explosions
-cvar_t	*cl_plasma_explo_sound;	// Option for unique plasma explosion sound
-cvar_t	*cl_item_bobbing;	// Option for bobbing items
+cvar_t *cl_blood;
+cvar_t *cl_old_explosions; // Option for old explosions
+cvar_t *cl_plasma_explo_sound; // Option for unique plasma explosion sound
+cvar_t *cl_item_bobbing; // Option for bobbing items
 
 // Psychospaz's rail code
-cvar_t	*cl_railred;
-cvar_t	*cl_railgreen;
-cvar_t	*cl_railblue;
-cvar_t	*cl_railtype;
-cvar_t	*cl_rail_length;
-cvar_t	*cl_rail_space;
+cvar_t *cl_railred;
+cvar_t *cl_railgreen;
+cvar_t *cl_railblue;
+cvar_t *cl_railtype;
+cvar_t *cl_rail_length;
+cvar_t *cl_rail_space;
 
 // Whether to use texsurfs.txt footstep sounds
-cvar_t	*cl_footstep_override;
+cvar_t *cl_footstep_override;
 
-cvar_t	*r_decals;		// Decal quantity
-cvar_t	*r_decal_life;	// Decal duration in seconds
+cvar_t *r_decals; // Decal quantity
+cvar_t *r_decal_life; // Decal duration in seconds
 
-cvar_t	*con_font_size;
-cvar_t	*alt_text_color;
+cvar_t *con_font_size;
+cvar_t *alt_text_color;
 
-cvar_t	*cl_rogue_music; // Whether to play Rogue tracks
-cvar_t	*cl_xatrix_music; // Whether to play Xatrix tracks
-
-
-cvar_t	*cl_add_particles;
-cvar_t	*cl_add_lights;
-cvar_t	*cl_add_entities;
-cvar_t	*cl_add_blend;
-
-cvar_t	*cl_shownet;
-cvar_t	*cl_showmiss;
-cvar_t	*cl_showclamp;
-
-cvar_t	*cl_paused;
-cvar_t	*cl_timedemo;
+cvar_t *cl_rogue_music; // Whether to play Rogue tracks
+cvar_t *cl_xatrix_music; // Whether to play Xatrix tracks
 
 
-cvar_t	*lookspring;
-cvar_t	*lookstrafe;
-cvar_t	*sensitivity;
-cvar_t	*menu_sensitivity;
-cvar_t	*menu_rotate;
-cvar_t	*menu_alpha;
+cvar_t *cl_add_particles;
+cvar_t *cl_add_lights;
+cvar_t *cl_add_entities;
+cvar_t *cl_add_blend;
 
-cvar_t	*m_pitch;
-cvar_t	*m_yaw;
-cvar_t	*m_forward;
-cvar_t	*m_side;
+cvar_t *cl_shownet;
+cvar_t *cl_showmiss;
+cvar_t *cl_showclamp;
 
-cvar_t	*cl_lightlevel;
+cvar_t *cl_paused;
+cvar_t *cl_timedemo;
 
-//
-// userinfo
-//
-cvar_t	*info_password;
-cvar_t	*info_spectator;
-cvar_t	*info_name;
-cvar_t	*info_skin;
-cvar_t	*info_rate;
-cvar_t	*info_fov;
-cvar_t	*info_msg;
-cvar_t	*info_hand;
-cvar_t	*info_gender;
-cvar_t	*info_gender_auto;
 
-cvar_t	*cl_vwep;
+cvar_t *lookspring;
+cvar_t *lookstrafe;
+cvar_t *sensitivity;
+cvar_t *menu_sensitivity;
+cvar_t *menu_rotate;
+cvar_t *menu_alpha;
+
+cvar_t *m_pitch;
+cvar_t *m_yaw;
+cvar_t *m_forward;
+cvar_t *m_side;
+
+cvar_t *cl_lightlevel;
+
+// Userinfo
+cvar_t *info_password;
+cvar_t *info_spectator;
+cvar_t *info_name;
+cvar_t *info_skin;
+cvar_t *info_rate;
+cvar_t *info_fov;
+cvar_t *info_msg;
+cvar_t *info_hand;
+cvar_t *info_gender;
+cvar_t *info_gender_auto;
+
+cvar_t *cl_vwep;
 
 // For the server to tell which version the client is
 cvar_t *cl_engine;
 cvar_t *cl_engine_version;
 
 #ifdef LOC_SUPPORT	// Xile/NiceAss LOC
-cvar_t	*cl_drawlocs;
-cvar_t	*loc_here;
-cvar_t	*loc_there;
+cvar_t *cl_drawlocs;
+cvar_t *loc_here;
+cvar_t *loc_there;
 #endif
 
+#pragma endregion
+
 client_static_t	cls;
-client_state_t	cl;
+client_state_t cl;
 
 centity_t cl_entities[MAX_EDICTS];
-
 entity_state_t cl_parse_entities[MAX_PARSE_ENTITIES];
 
-
-float ClampCvar(float min, float max, float value) //TODO: mxd. Replace with clamp()
-{
-	if (value < min) return min;
-	if (value > max) return max;
-	return value;
-}
-
-//======================================================================
+#pragma region ======================= Demo recording
 
 // Dumps the current net message, prefixed by the length
-void CL_WriteDemoMessage(void)
+void CL_WriteDemoMessage()
 {
 	// The first eight bytes are just packet sequencing stuff
 	const int len = net_message.cursize - 8;
@@ -184,7 +177,7 @@ void CL_WriteDemoMessage(void)
 }
 
 // Stop recording a demo
-void CL_Stop_f(void)
+void CL_Stop_f()
 {
 	if (!cls.demorecording)
 	{
@@ -203,7 +196,7 @@ void CL_Stop_f(void)
 
 // record <demoname>
 // Begins recording a demo from the current position
-void CL_Record_f(void)
+void CL_Record_f()
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -223,9 +216,7 @@ void CL_Record_f(void)
 		return;
 	}
 
-	//
 	// Open the demo file
-	//
 	char name[MAX_OSPATH];
 	Com_sprintf(name, sizeof(name), "%s/demos/%s.dm2", FS_Gamedir(), Cmd_Argv(1));
 
@@ -244,9 +235,7 @@ void CL_Record_f(void)
 	// Don't start saving messages until a non-delta compressed message is received
 	cls.demowaiting = true;
 
-	//
 	// Write out messages to hold the startup information
-	//
 	sizebuf_t buf;
 	char buf_data[MAX_MSGLEN];
 	SZ_Init(&buf, buf_data, sizeof(buf_data));
@@ -311,11 +300,11 @@ void CL_Record_f(void)
 	// The rest of the demo file will be individual frames
 }
 
-//======================================================================
+#pragma endregion 
 
 // Adds the current command line as a clc_stringcmd to the client message.
 // Things like godmode, noclip, etc, are commands directed to the server, so when they are typed in at the console, they will need to be forwarded.
-void Cmd_ForwardToServer(void)
+void Cmd_ForwardToServer()
 {
 	char *cmd = Cmd_Argv(0);
 	if (cls.state <= ca_connected || *cmd == '-' || *cmd == '+')
@@ -336,7 +325,7 @@ void Cmd_ForwardToServer(void)
 	cls.forcePacket = true;
 }
 
-void CL_Setenv_f(void)
+static void CL_Setenv_f()
 {
 	const int argc = Cmd_Argc();
 
@@ -366,7 +355,7 @@ void CL_Setenv_f(void)
 	}
 }
 
-void CL_ForwardToServer_f(void)
+static void CL_ForwardToServer_f()
 {
 	if (cls.state != ca_connected && cls.state != ca_active)
 	{
@@ -383,7 +372,7 @@ void CL_ForwardToServer_f(void)
 	}
 }
 
-void CL_Pause_f(void)
+static void CL_Pause_f()
 {
 	// Never pause in multiplayer
 	if (Cvar_VariableValue("maxclients") > 1 || !Com_ServerState())
@@ -395,14 +384,14 @@ void CL_Pause_f(void)
 	Cvar_SetValue("paused", !cl_paused->value);
 }
 
-void CL_Quit_f(void)
+void CL_Quit_f()
 {
 	CL_Disconnect();
 	Com_Quit();
 }
 
 // Called after an ERR_DROP was thrown
-void CL_Drop(void)
+void CL_Drop()
 {
 	if (cls.state == ca_uninitialized)
 		return;
@@ -418,7 +407,7 @@ void CL_Drop(void)
 }
 
 // We have gotten a challenge from the server, so try and connect.
-void CL_SendConnectPacket(void)
+static void CL_SendConnectPacket()
 {
 	netadr_t adr;
 
@@ -436,17 +425,12 @@ void CL_SendConnectPacket(void)
 	userinfo_modified = false;
 
 	// If in compatibility mode, lie to server about this client's protocol, but exclude localhost for this.
-	const int protocolversion = ((cl_servertrick->value && strcmp(cls.servername, "localhost")) ? OLD_PROTOCOL_VERSION : PROTOCOL_VERSION); //mxd
+	const int protocolversion = ((cl_servertrick->integer && strcmp(cls.servername, "localhost")) ? OLD_PROTOCOL_VERSION : PROTOCOL_VERSION); //mxd
 	Netchan_OutOfBandPrint(NS_CLIENT, adr, "connect %i %i %i \"%s\"\n", protocolversion, port, cls.challenge, Cvar_Userinfo());
 }
 
-/*void CL_ForcePacket(void) //mxd. Never used
-{
-	cls.forcePacket = true;
-}*/
-
 // Resend a connect message if the last one has timed out
-void CL_CheckForResend(void)
+static void CL_CheckForResend()
 {
 	// If the local server is running and we aren't, then connect
 	if (cls.state == ca_disconnected && Com_ServerState() )
@@ -485,7 +469,7 @@ void CL_CheckForResend(void)
 	Netchan_OutOfBandPrint(NS_CLIENT, adr, "getchallenge\n");
 }
 
-void CL_Connect_f(void)
+static void CL_Connect_f()
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -508,7 +492,7 @@ void CL_Connect_f(void)
 }
 
 // Send the rest of the command line over as an unconnected command.
-void CL_Rcon_f(void)
+static void CL_Rcon_f()
 {
 	netadr_t to;
 
@@ -551,7 +535,7 @@ void CL_Rcon_f(void)
 	NET_SendPacket(NS_CLIENT, strlen(message) + 1, message, to);
 }
 
-void CL_ClearState(void)
+void CL_ClearState()
 {
 	S_StopAllSounds();
 	CL_ClearEffects();
@@ -574,7 +558,7 @@ void CL_ClearState(void)
 // Sends a disconnect message to the server.
 // This is also called on Com_Error, so it shouldn't cause any errors.
 extern char *currentweaponmodel;
-void CL_Disconnect(void)
+void CL_Disconnect()
 {
 	byte final[32];
 
@@ -625,60 +609,13 @@ void CL_Disconnect(void)
 	currentweaponmodel = NULL;
 }
 
-void CL_Disconnect_f(void)
+void CL_Disconnect_f()
 {
 	Com_Error(ERR_DROP, "Disconnected from server");
 }
 
-// packet <destination> <contents>
-// Contents allows \n escape character
-/*void CL_Packet_f(void) //mxd. Never used
-{
-	char send[2048];
-	netadr_t adr;
-
-	if (Cmd_Argc() != 3)
-	{
-		Com_Printf("packet <destination> <contents>\n");
-		return;
-	}
-
-	NET_Config(true); // Allow remote
-
-	if (!NET_StringToAdr(Cmd_Argv(1), &adr))
-	{
-		Com_Printf("Bad address\n");
-		return;
-	}
-
-	if (!adr.port)
-		adr.port = BigShort(PORT_SERVER);
-
-	char *in = Cmd_Argv(2);
-	char *out = send + 4;
-	send[0] = send[1] = send[2] = send[3] = (char)0xff;
-
-	const int l = strlen(in);
-	for (int i = 0; i < l; i++)
-	{
-		if (in[i] == '\\' && in[i + 1] == 'n')
-		{
-			*out++ = '\n';
-			i++;
-		}
-		else
-		{
-			*out++ = in[i];
-		}
-	}
-
-	*out = 0;
-
-	NET_SendPacket(NS_CLIENT, out - send, send, adr);
-}*/
-
 // Just sent as a hint to the client that they should drop to full console
-void CL_Changing_f(void)
+static void CL_Changing_f()
 {
 	// ZOID. If we are downloading, we don't change! This so we don't suddenly stop downloading a map
 	SCR_BeginLoadingPlaque(NULL); // Knightmare moved here
@@ -697,7 +634,7 @@ void CL_Changing_f(void)
 }
 
 // The server is changing levels
-void CL_Reconnect_f(void)
+static void CL_Reconnect_f()
 {
 	// ZOID. If we are downloading, we don't change! This so we don't suddenly stop downloading a map
 	if (cls.download)
@@ -733,24 +670,24 @@ void CL_Reconnect_f(void)
 }
 
 // Handle a reply from a ping
-void CL_ParseStatusMessage(void)
+static void CL_ParseStatusMessage()
 {
 	char *s = MSG_ReadString(&net_message);
 	Com_Printf("%s\n", s);
 	UI_AddToServerList(net_from, s);
 }
 
-//<serverping> Added code for compute ping time of server broadcasted
-extern int		global_udp_server_time;
-extern int		global_ipx_server_time;
-extern int		global_adr_server_time[16];
-extern netadr_t	global_adr_server_netadr[16];
+// <serverping> Added code for compute ping time of server broadcasted
+extern int global_udp_server_time;
+extern int global_ipx_server_time;
+extern int global_adr_server_time[16];
+extern netadr_t global_adr_server_netadr[16];
 
-void CL_PingServers_f(void)
+void CL_PingServers_f()
 {
 	netadr_t adr;
 	char name[32];
-	const int protocolversion = (cl_servertrick->value ? OLD_PROTOCOL_VERSION : PROTOCOL_VERSION); //mxd
+	const int protocolversion = (cl_servertrick->integer ? OLD_PROTOCOL_VERSION : PROTOCOL_VERSION); //mxd
 
 	NET_Config(true); // Allow remote
 
@@ -809,7 +746,7 @@ void CL_PingServers_f(void)
 }
 
 // Load or download any custom player skins and models
-void CL_Skins_f(void)
+static void CL_Skins_f()
 {
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -826,14 +763,14 @@ void CL_Skins_f(void)
 	}
 }
 
-void CL_AACSkey_f(void)
+static void CL_AACSkey_f()
 {
 	Com_Printf("AACS processing keys: 09 F9 11 02 9D 74 E3 5B D8 41 56 C5 63 56 88 C0\n");
 	Com_Printf("                      45 5F E1 04 22 CA 29 C4 93 3F 95 05 2B 79 2A B2\n");
 }
 
 // Responses to broadcasts, etc
-void CL_ConnectionlessPacket(void)
+static void CL_ConnectionlessPacket()
 {
 	MSG_BeginReading(&net_message);
 	MSG_ReadLong(&net_message); // Skip the -1
@@ -942,14 +879,7 @@ void CL_ConnectionlessPacket(void)
 	Com_Printf("Unknown command.\n");
 }
 
-// A vain attempt to help bad TCP stacks that cause problems when they overflow
-/*void CL_DumpPackets(void)
-{
-	while (NET_GetPacket(NS_CLIENT, &net_from, &net_message))
-		Com_Printf("dumnping a packet\n");
-}*/
-
-void CL_ReadPackets(void)
+void CL_ReadPackets()
 {
 	while (NET_GetPacket(NS_CLIENT, &net_from, &net_message))
 	{
@@ -999,7 +929,7 @@ void CL_ReadPackets(void)
 
 //=============================================================================
 
-void CL_FixUpGender(void)
+void CL_FixUpGender()
 {
 	if (!info_gender_auto->integer)
 		return;
@@ -1028,28 +958,27 @@ void CL_FixUpGender(void)
 	info_gender->modified = false;
 }
 
-void CL_Userinfo_f(void)
+static void CL_Userinfo_f()
 {
 	Com_Printf("User info settings:\n");
 	Info_Print(Cvar_Userinfo());
 }
 
 // Restart the sound subsystem so it can pick up new parameters and flush all sounds
-void CL_Snd_Restart_f(void)
+void CL_Snd_Restart_f()
 {
 	S_Shutdown();
 	S_Init();
 	CL_RegisterSounds();
 }
 
-
 extern int precache_check; // For autodownload of precache items
 extern int precache_spawncount;
 extern int precache_model_skin;
 extern byte *precache_model; // Used for skin checking in alias models
-extern int precache_pak;	// Knightmare added
+extern int precache_pak; // Knightmare added
 
-void CL_ResetPrecacheCheck(void)
+void CL_ResetPrecacheCheck()
 {
 	precache_check = CS_MODELS;
 	precache_model = 0;
@@ -1058,12 +987,12 @@ void CL_ResetPrecacheCheck(void)
 }
 
 // The server will send this command right before allowing the client into the server
-void CL_Precache_f(void)
+static void CL_Precache_f()
 {
 	// Yet another hack to let old demos work the old precache sequence
 	if (Cmd_Argc() < 2)
 	{
-		unsigned map_checksum; // For detecting cheater maps
+		uint map_checksum; // For detecting cheater maps
 
 		CM_LoadMap(cl.configstrings[CS_MODELS + 1], true, &map_checksum);
 		CL_RegisterSounds();
@@ -1086,7 +1015,7 @@ void CL_Precache_f(void)
 }
 
 #ifdef LOC_SUPPORT // Xile/NiceAss LOC
-void CL_AddLoc_f()
+static void CL_AddLoc_f()
 {
 	if (Cmd_Argc() != 2)
 	{
@@ -1097,18 +1026,18 @@ void CL_AddLoc_f()
 	CL_LocAdd(Cmd_Argv(1));
 }
 
-void CL_DeleteLoc_f()
+static void CL_DeleteLoc_f()
 {
 	CL_LocDelete();
 }
 
-void CL_SaveLoc_f()
+static void CL_SaveLoc_f()
 {
 	CL_LocWrite();
 }
-#endif	// LOC_SUPPORT
+#endif // LOC_SUPPORT
 
-void CL_InitLocal(void)
+static void CL_InitLocal()
 {
 	cls.state = ca_disconnected;
 	cls.realtime = Sys_Milliseconds();
@@ -1128,9 +1057,7 @@ void CL_InitLocal(void)
 	adr10 = Cvar_Get("adr10", "", CVAR_ARCHIVE);
 	adr11 = Cvar_Get("adr11", "", CVAR_ARCHIVE);
 
-	//
 	// Register our variables
-	//
 	cl_stereo_separation = Cvar_Get("cl_stereo_separation", "0.4", CVAR_ARCHIVE);
 	cl_stereo = Cvar_Get("cl_stereo", "0", 0);
 
@@ -1149,7 +1076,6 @@ void CL_InitLocal(void)
 	cl_widescreen_fov = Cvar_Get("cl_widescreen_fov", "1", CVAR_ARCHIVE);
 
 	cl_noskins = Cvar_Get("cl_noskins", "0", 0);
-	cl_autoskins = Cvar_Get("cl_autoskins", "0", 0);
 	cl_predict = Cvar_Get("cl_predict", "1", 0);
 	cl_maxfps = Cvar_Get("cl_maxfps", "90", 0);
 
@@ -1176,6 +1102,7 @@ void CL_InitLocal(void)
 
 	// Option for old explosions
 	cl_old_explosions = Cvar_Get("cl_old_explosions", "0", CVAR_ARCHIVE);
+	
 	// Option for unique plasma explosion sound
 	cl_plasma_explo_sound = Cvar_Get("cl_plasma_explo_sound", "0", CVAR_ARCHIVE);
 	cl_item_bobbing = Cvar_Get("cl_item_bobbing", "0", CVAR_ARCHIVE);
@@ -1234,14 +1161,12 @@ void CL_InitLocal(void)
 
 	cl_lightlevel = Cvar_Get("r_lightlevel", "0", 0);
 
-	//
 	// Userinfo
-	//
 	info_password = Cvar_Get("password", "", CVAR_USERINFO);
 	info_spectator = Cvar_Get("spectator", "0", CVAR_USERINFO);
 	info_name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
 	info_skin = Cvar_Get("skin", "male/grunt", CVAR_USERINFO | CVAR_ARCHIVE);
-	info_rate = Cvar_Get("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE);	// FIXME
+	info_rate = Cvar_Get("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE); // FIXME
 	info_msg = Cvar_Get("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	info_hand = Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
 	info_fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
@@ -1259,19 +1184,16 @@ void CL_InitLocal(void)
 	cl_drawlocs = Cvar_Get("cl_drawlocs", "0", 0);
 	loc_here = Cvar_Get("loc_here", "", CVAR_NOSET);
 	loc_there = Cvar_Get("loc_there", "", CVAR_NOSET);
-#endif // LOC_SUPPORT
+#endif
 
 #ifdef USE_CURL	// HTTP downloading from R1Q2
 	cl_http_proxy = Cvar_Get("cl_http_proxy", "", 0);
 	cl_http_filelists = Cvar_Get("cl_http_filelists", "1", 0);
 	cl_http_downloads = Cvar_Get("cl_http_downloads", "1", CVAR_ARCHIVE);
 	cl_http_max_connections = Cvar_Get("cl_http_max_connections", "4", 0);
-//	cl_http_max_connections->changed = _cl_http_max_connections_changed;
-#endif	// USE_CURL
+#endif
 
-	//
 	// Register our commands
-	//
 	Cmd_AddCommand("cmd", CL_ForwardToServer_f);
 	Cmd_AddCommand("pause", CL_Pause_f);
 	Cmd_AddCommand("pingservers", CL_PingServers_f);
@@ -1291,7 +1213,6 @@ void CL_InitLocal(void)
 	Cmd_AddCommand("reconnect", CL_Reconnect_f);
 
 	Cmd_AddCommand("rcon", CL_Rcon_f);
-// 	Cmd_AddCommand("packet", CL_Packet_f); // this is dangerous to leave in
 	Cmd_AddCommand("setenv", CL_Setenv_f);
 	Cmd_AddCommand("precache", CL_Precache_f);
 	Cmd_AddCommand("download", CL_Download_f);
@@ -1303,11 +1224,10 @@ void CL_InitLocal(void)
 	Cmd_AddCommand("loc_del", CL_DeleteLoc_f);
 	Cmd_AddCommand("loc_save", CL_SaveLoc_f);
 	Cmd_AddCommand("loc_help", CL_LocHelp_f);
-#endif	// LOC_SUPPORT
+#endif
 
-	//
 	// Forward to server commands
-	//
+
 	// The only thing this does is allow command completion to work -- all unknown commands are automatically forwarded to the server
 	Cmd_AddCommand("wave", NULL);
 	Cmd_AddCommand("inven", NULL);
@@ -1357,7 +1277,7 @@ static qboolean CL_WriteConfiguration(char *cfgName)
 	return true;
 }
 
-void CL_WriteConfig_f(void)
+void CL_WriteConfig_f()
 {
 	if (Cmd_Argc() == 1 || Cmd_Argc() == 2)
 	{
@@ -1379,7 +1299,7 @@ void CL_WriteConfig_f(void)
 
 //============================================================================
 
-void CL_FixCvarCheats(void)
+static void CL_FixCvarCheats()
 {
 	// Allow cheats in singleplayer, don't allow in multiplayer
 	const qboolean singleplayer = (!cl.configstrings[CS_MAXCLIENTS][0] || !strcmp(cl.configstrings[CS_MAXCLIENTS], "1"));
@@ -1389,7 +1309,7 @@ void CL_FixCvarCheats(void)
 
 #ifdef CLIENT_SPLIT_NETFRAME
 
-static void CL_RefreshInputs(void)
+static void CL_RefreshInputs()
 {
 	// Fetch results from server
 	CL_ReadPackets();
@@ -1410,7 +1330,7 @@ static void CL_RefreshInputs(void)
 		CL_RefreshMove();
 }
 
-static void CL_SendCommand_Async(void)
+static void CL_SendCommand_Async()
 {
 	// Send intentions now
 	CL_SendCmd(true);
@@ -1420,6 +1340,7 @@ static void CL_SendCommand_Async(void)
 }
 
 #define FRAMETIME_MAX 0.5f // was 0.2
+
 void CL_Frame_Async(int msec)
 {
 	static int packetDelta = 0;
@@ -1481,7 +1402,7 @@ void CL_Frame_Async(int msec)
 		if (!packetFrame && !renderFrame && !cls.forcePacket && !userinfo_modified)
 		{	
 			// Pooy's CPU usage fix
-			if (cl_sleep->value)
+			if (cl_sleep->integer)
 			{
 				const int temptime = (int)min((1000.0f / net_maxfps->value - packetDelta), (1000.0f / r_maxfps->value - renderDelta));
 				if (temptime > 1)
@@ -1588,7 +1509,7 @@ void CL_Frame_Async(int msec)
 }
 #endif // CLIENT_SPLIT_NETFRAME
 
-void CL_SendCommand(void)
+static void CL_SendCommand()
 {
 	// Get new key events
 	IN_Update();
@@ -1606,7 +1527,7 @@ void CL_SendCommand(void)
 	CL_CheckForResend();
 }
 
-void CL_Frame(int msec)
+void CL_Frame(const int msec)
 {
 	static int extratime;
 	static int lasttimecalled;
@@ -1638,7 +1559,7 @@ void CL_Frame(int msec)
 		if (extratime < 1000.0f / cl_maxfps->value)
 		{	
 			// Pooy's CPU usage fix
-			if (cl_sleep->value)
+			if (cl_sleep->integer)
 			{
 				const int temptime = (int)(1000 / cl_maxfps->value - extratime);
 				if (temptime > 1)
@@ -1663,9 +1584,7 @@ void CL_Frame(int msec)
 
 	extratime = 0;
 
-	if (cls.netFrameTime > 0.2f)
-		cls.netFrameTime = 0.2f;
-
+	cls.netFrameTime = min(0.2f, cls.netFrameTime);
 	cls.renderFrameTime = cls.netFrameTime;
 		
 	// Clamp this to acceptable values (don't allow infinite particles)
@@ -1722,7 +1641,7 @@ void CL_Frame(int msec)
 
 	cls.framecount++;
 
-	if (log_stats->value)
+	if (log_stats->integer)
 	{
 		if (cls.state == ca_active)
 		{
@@ -1744,10 +1663,9 @@ void CL_Frame(int msec)
 	}
 }
 
+#pragma region ======================= Init / Shutdown
 
-//============================================================================
-
-void CL_Init(void)
+void CL_Init()
 {
 	if (dedicated->integer)
 		return; // Nothing running on the client
@@ -1780,7 +1698,7 @@ void CL_Init(void)
 
 // FIXME: this is a callback from Sys_Quit and Com_Error.
 // It would be better to run quit through here before the final handoff to the sys code.
-void CL_Shutdown(void)
+void CL_Shutdown()
 {
 	static qboolean isdown = false;
 	int sec, base; // zaphster's delay variables
