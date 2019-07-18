@@ -408,6 +408,9 @@
     <ClCompile Include="..\..\..\win32\sys_main.c">
       <Filter>Source Files\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\client\cl_effects_classic.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\client\client.h">

@@ -172,6 +172,7 @@
     <ClCompile Include="..\..\..\client\cl_console.c" />
     <ClCompile Include="..\..\..\client\cl_download.c" />
     <ClCompile Include="..\..\..\client\cl_effects.c" />
+    <ClCompile Include="..\..\..\client\cl_effects_classic.c" />
     <ClCompile Include="..\..\..\client\cl_ents.c" />
     <ClCompile Include="..\..\..\client\cl_event.c" />
     <ClCompile Include="..\..\..\client\cl_http.c" />
