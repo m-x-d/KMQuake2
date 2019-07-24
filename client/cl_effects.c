@@ -113,7 +113,6 @@ void CL_Explosion_Decal(vec3_t org, float size, int decalnum)
 				p->type = decalnum;
 				p->flags = (PART_SHADED | PART_DECAL | PART_ALPHACOLOR);
 				p->think = CL_DecalAlphaThink;
-				p->thinknext = true;
 
 				CL_FinishParticleInit(p);
 			}
@@ -142,17 +141,12 @@ static void CL_ExplosionThink(cparticle_t *p, vec3_t org, vec3_t angle, float *a
 
 	*alpha *= 3.0f;
 	*alpha = min(1.0f, *alpha);
-
-	p->thinknext = true;
 }
 
 static void CL_ExplosionBubbleThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
-	if (CM_PointContents(org, 0) & MASK_WATER)
-	{
-		p->thinknext = true;
-	}
-	else
+	// Disappear when no longer underwater
+	if (!(CM_PointContents(org, 0) & MASK_WATER))
 	{
 		p->think = NULL;
 		p->alpha = 0;
@@ -172,7 +166,6 @@ void CL_Explosion_Particle(const vec3_t org, const float size, const qboolean ro
 	p->type = particle_rexplosion1;
 	p->flags = PART_DEPTHHACK_SHORT;
 	p->think = CL_ExplosionThink;
-	p->thinknext = true;
 
 	CL_FinishParticleInit(p);
 	CL_AddParticleLight(p, 300, 0, 1, 0.514f, 0);
@@ -205,8 +198,6 @@ static void CL_ParticleExplosionSparksThink(cparticle_t *p, vec3_t org, vec3_t a
 	for (int i = 0; i < 2; i++)
 		angle[i] = 0.25f * (p->vel[i] * time1 + p->accel[i] * time2);
 	angle[2] = 0.25f * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
-
-	p->thinknext = true;
 }
 
 void CL_Explosion_Sparks(const vec3_t org, const int size, const int count)
@@ -230,7 +221,6 @@ void CL_Explosion_Sparks(const vec3_t org, const int size, const int count)
 		p->type = particle_solid;
 		p->flags = (PART_GRAVITY | PART_SPARK);
 		p->think = CL_ParticleExplosionSparksThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 	}
@@ -265,10 +255,11 @@ static void CL_ParticleBloodDecalThink(cparticle_t *p, vec3_t org, vec3_t angle,
 static void CL_ParticleBloodThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
 	trace_t trace = CL_Trace(p->oldorg, org, 0, CONTENTS_SOLID); // Was 0.1
-	qboolean became_decal = false;
 
 	if (trace.fraction < 1.0f) // Delete and stain...
 	{
+		qboolean became_decal = false;
+		
 		if (r_decals->integer && (p->flags & PART_LEAVEMARK)
 			&& !VectorCompare(trace.plane.normal, vec3_origin)
 			&& !(CM_PointContents(p->oldorg, 0) & MASK_WATER)) // No blood splatters underwater...
@@ -309,7 +300,6 @@ static void CL_ParticleBloodThink(cparticle_t *p, vec3_t org, vec3_t angle, floa
 					VectorScale(p->color, 0.5f, p->color); //mxd
 
 				p->think = CL_ParticleBloodDecalThink;
-				p->thinknext = true;
 				p->size = MAXBLEEDSIZE * 0.5f * (random() * 5.0f + 5);
 				p->sizevel = 0;
 				
@@ -329,11 +319,11 @@ static void CL_ParticleBloodThink(cparticle_t *p, vec3_t org, vec3_t angle, floa
 			*alpha = 0;
 			*size = 0;
 			p->alpha = 0;
+			p->think = NULL; //mxd
 		}
 	}
 
 	VectorCopy(org, p->oldorg);
-	p->thinknext = true;
 }
 
 static void CL_ParticleBloodDropThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
@@ -371,7 +361,6 @@ static void CL_BloodSmack(const vec3_t org, const vec3_t dir)
 		p->type = particle_redblood;
 		p->flags = (PART_SHADED | PART_OVERBRIGHT);
 		p->think = CL_ParticleRotateThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 	}
@@ -411,7 +400,6 @@ static void CL_BloodBleed(const vec3_t org, const vec3_t dir, const int count)
 		p->type = particle_blooddrip;
 		p->flags = (PART_SHADED | PART_DIRECTION | PART_GRAVITY | PART_OVERBRIGHT);
 		p->think = CL_ParticleBloodDropThink;
-		p->thinknext = true;
 
 		if (i == 0 && random() < BLOOD_DECAL_CHANCE)
 			p->flags |= PART_LEAVEMARK;
@@ -445,7 +433,6 @@ static void CL_BloodPuff(const vec3_t org, const vec3_t dir, const int count)
 		p->type = particle_blood;
 		p->flags = PART_SHADED;
 		p->think = CL_ParticleBloodPuffThink;
-		p->thinknext = true;
 
 		if (i == 0 && random() < BLOOD_DECAL_CHANCE)
 			p->flags |= PART_LEAVEMARK;
@@ -493,7 +480,6 @@ void CL_GreenBloodHit(const vec3_t org, const vec3_t dir)
 		p->type = particle_blood;
 		p->flags = (PART_SHADED | PART_OVERBRIGHT);
 		p->think = CL_ParticleBloodPuffThink;
-		p->thinknext = true;
 
 		if (i == 0 && random() < BLOOD_DECAL_CHANCE)
 			p->flags |= PART_LEAVEMARK;
@@ -516,8 +502,6 @@ static void CL_ParticleSplashThink(cparticle_t *p, vec3_t org, vec3_t angle, flo
 	for (int i = 0; i < 2; i++)
 		angle[i] = 0.5f * (p->vel[i] * time1 + p->accel[i] * time2);
 	angle[2] = 0.5f * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
-
-	p->thinknext = true;
 }
 
 // Water splashing
@@ -548,7 +532,6 @@ void CL_ParticleEffectSplash(const vec3_t org, const vec3_t dir, const int color
 		p->type = particle_smoke;
 		p->flags = (PART_GRAVITY | PART_DIRECTION);
 		p->think = CL_ParticleSplashThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 	}
@@ -563,8 +546,6 @@ static void CL_ParticleSparksThink(cparticle_t *p, vec3_t org, vec3_t angle, flo
 	for (int i = 0; i < 2; i++)
 		angle[i] = 0.25f * (p->vel[i] * time1 + p->accel[i] * time2);
 	angle[2] = 0.25f * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
-
-	p->thinknext = true;
 }
 
 void CL_ParticleEffectSparks(const vec3_t org, const vec3_t dir, const vec3_t color, const int count)
@@ -590,7 +571,6 @@ void CL_ParticleEffectSparks(const vec3_t org, const vec3_t dir, const vec3_t co
 		p->type = particle_solid;
 		p->flags = (PART_GRAVITY | PART_SPARK);
 		p->think = CL_ParticleSparksThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 	}
@@ -631,7 +611,6 @@ void CL_ParticleBulletDecal(const vec3_t org, const vec3_t dir, const float size
 	p->type = particle_bulletmark;
 	p->flags = (PART_SHADED | PART_DECAL | PART_ALPHACOLOR); // Was part_saturate
 	p->think = CL_DecalAlphaThink;
-	p->thinknext = true;
 
 	CL_FinishParticleInit(p);
 }
@@ -675,7 +654,6 @@ static void CL_ParticleRailDecal(const vec3_t org, const vec3_t dir, const float
 	p->type = particle_bulletmark;
 	p->flags = (PART_SHADED | PART_DECAL | PART_ALPHACOLOR);
 	p->think = CL_DecalAlphaThink;
-	p->thinknext = true;
 
 	CL_FinishParticleInit(p);
 
@@ -1023,7 +1001,6 @@ void CL_BlasterParticles(const vec3_t org, const vec3_t dir, const vec3_t color,
 		p->type = particle_generic;
 		p->flags = PART_GRAVITY;
 		p->think = CL_ParticleBlasterThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 	}
@@ -1273,7 +1250,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 				p->type = particle_bubble;
 				p->flags = (PART_TRANS | PART_SHADED);
 				p->think = CL_ExplosionBubbleThink;
-				p->thinknext = true;
 
 				CL_FinishParticleInit(p);
 			}
@@ -1296,7 +1272,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 				p->type = particle_smoke;
 				p->flags = (PART_TRANS | PART_SHADED);
 				p->think = CL_ParticleRotateThink;
-				p->thinknext = true;
 
 				CL_FinishParticleInit(p);
 			}
@@ -1330,7 +1305,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 						p->type = particle_blooddrop;
 						p->flags = (PART_OVERBRIGHT | PART_GRAVITY | PART_SHADED);
 						p->think = CL_ParticleBloodThink;
-						p->thinknext = true;
 
 						CL_FinishParticleInit(p);
 					}
@@ -1353,7 +1327,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 						p->type = particle_blood;
 						p->flags = (PART_GRAVITY | PART_SHADED);
 						p->think = CL_ParticleBloodThink;
-						p->thinknext = true;
 
 						CL_FinishParticleInit(p);
 					}
@@ -1380,7 +1353,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 					p->type = particle_blood;
 					p->flags = (PART_OVERBRIGHT | PART_GRAVITY | PART_SHADED);
 					p->think = CL_ParticleBloodThink;
-					p->thinknext = true;
 
 					if (crand() < 0.0001f)
 						p->flags |= PART_LEAVEMARK;
@@ -1406,7 +1378,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 						p->type = particle_bubble;
 						p->flags = (PART_TRANS | PART_SHADED);
 						p->think = CL_ExplosionBubbleThink;
-						p->thinknext = true;
 
 						CL_FinishParticleInit(p);
 					}
@@ -1433,7 +1404,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 						p->type = particle_smoke;
 						p->flags = (PART_TRANS | PART_SHADED);
 						p->think = CL_ParticleRotateThink;
-						p->thinknext = true;
 
 						CL_FinishParticleInit(p);
 					}
@@ -1461,7 +1431,6 @@ void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, c
 					p->type = particle_smoke;
 					p->flags = (PART_OVERBRIGHT | PART_TRANS | PART_SHADED);
 					p->think = CL_ParticleRotateThink;
-					p->thinknext = true;
 
 					CL_FinishParticleInit(p);
 				}
@@ -1553,7 +1522,6 @@ void CL_RocketTrail(const vec3_t start, const vec3_t end, centity_t *old)
 		p->sizevel = 5;
 		p->type = particle_inferno;
 		p->think = CL_ParticleRotateThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 
@@ -1653,8 +1621,6 @@ static void CL_ParticleDevRailThink(cparticle_t *p, vec3_t org, vec3_t angle, fl
 	for (int i = 0; i < 2; i++)
 		angle[i] = 3 * (p->vel[i] * time1 + p->accel[i] * time2);
 	angle[2] = 3 * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
-
-	p->thinknext = true;
 }
 
 static void CL_DevRailTrail(const vec3_t start, const vec3_t end, const qboolean isred)
@@ -1728,7 +1694,6 @@ static void CL_DevRailTrail(const vec3_t start, const vec3_t end, const qboolean
 		p->type = particle_solid;
 		p->flags = (PART_GRAVITY | PART_SPARK);
 		p->think = CL_ParticleDevRailThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 		
@@ -1748,7 +1713,6 @@ static void CL_DevRailTrail(const vec3_t start, const vec3_t end, const qboolean
 		p->type = particle_smoke;
 		p->flags = (PART_TRANS | PART_GRAVITY | PART_OVERBRIGHT);
 		p->think = CL_ParticleRotateThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 
@@ -2005,14 +1969,6 @@ void CL_FlyEffect(centity_t *ent, const vec3_t origin)
 	CL_FlyParticles(origin, count);
 }
 
-static void CL_ParticleBFGThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
-{
-	vec3_t len;
-	VectorSubtract(p->angle, p->org, len);
-	
-	*size = (float)(300 / VectorLength(len) * 0.75f);
-}
-
 void CL_BfgParticles(const entity_t *ent)
 {
 	if (!avelocities[0][0])
@@ -2054,10 +2010,13 @@ void CL_BfgParticles(const entity_t *ent)
 
 		VectorSet(p->color, 50, 200 * dist2, 20);
 		p->alphavel = -100;
+
+		vec3_t len;
+		VectorSubtract(p->angle, p->org, len);
+		p->size = 300.0f / VectorLength(len) * 0.75f;
+
 		p->sizevel = 1;
 		p->type = particle_generic;
-		p->think = CL_ParticleBFGThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 
@@ -2804,7 +2763,6 @@ void CL_ParticleSmokeEffect(const vec3_t org, const vec3_t dir, const float size
 	p->type = particle_smoke;
 	p->flags = (PART_TRANS | PART_SHADED | PART_OVERBRIGHT);
 	p->think = CL_ParticleRotateThink;
-	p->thinknext = true;
 
 	CL_FinishParticleInit(p);
 }
@@ -2817,8 +2775,6 @@ static void CL_ParticleElectricSparksThink(cparticle_t *p, vec3_t org, vec3_t an
 	for (int i = 0; i < 2; i++)
 		angle[i] = 0.25f * (p->vel[i] * time1 + p->accel[i] * time2);
 	angle[2] = 0.25f * (p->vel[2] * time1 + (p->accel[2] - PARTICLE_GRAVITY) * time2);
-
-	p->thinknext = true;
 }
 
 // New sparks for Rogue turrets
@@ -2846,7 +2802,6 @@ void CL_ElectricParticles(const vec3_t org, const vec3_t dir, const int count)
 		p->type = particle_solid;
 		p->flags = (PART_GRAVITY | PART_SPARK);
 		p->think = CL_ParticleElectricSparksThink;
-		p->thinknext = true;
 
 		CL_FinishParticleInit(p);
 	}

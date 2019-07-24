@@ -361,20 +361,16 @@ void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 		if (p->flags & PART_GRAVITY && VectorLength(p->vel) < 2)
 			p->flags &= ~PART_GRAVITY;
 	}
-
-	p->thinknext = true;
 }
 
 void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
 	angle[2] = angle[0] + *time * angle[1] + *time * *time * angle[2];
-	p->thinknext = true;
 }
 
 void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
 	*alpha = powf(*alpha, 0.1f);
-	p->thinknext = true;
 }
 
 #pragma endregion
@@ -473,11 +469,8 @@ void CL_AddParticles()
 
 		particle_type type = p->type;
 
-		if (p->thinknext && p->think)
-		{
-			p->thinknext = false;
+		if (p->think)
 			p->think(p, org, angle, &alpha, &size, &type, &time);
-		}
 
 		if (flags & PART_DECAL)
 		{

@@ -115,7 +115,6 @@ typedef struct particle_s
 	decalpolys_t *decal;
 
 	void (*think)(struct particle_s *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time);
-	qboolean thinknext;
 } cparticle_t;
 
 extern cparticle_t *active_particles;
