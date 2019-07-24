@@ -339,7 +339,7 @@ void SV_SendClientDatagram(client_t *client)
 	client->message_size[sv.framenum % RATE_MESSAGES] = msg.cursize;
 }
 
-void SV_DemoCompleted(void)
+void SV_DemoCompleted()
 {
 	if (sv.demofile)
 	{
@@ -373,7 +373,7 @@ qboolean SV_RateDrop(client_t *c)
 	return false;
 }
 
-void SV_SendClientMessages(void)
+void SV_SendClientMessages()
 {
 	static byte msgbuf[MAX_MSGLEN]; //mxd. +static
 	int msglen = 0;

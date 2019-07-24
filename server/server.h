@@ -249,8 +249,8 @@ extern char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
 
 void SV_FlushRedirect(int sv_redirected, char *outputbuf);
 
-void SV_DemoCompleted(void);
-void SV_SendClientMessages(void);
+void SV_DemoCompleted();
+void SV_SendClientMessages();
 
 void SV_Multicast(vec3_t origin, multicast_t to);
 void SV_StartSound(vec3_t origin, edict_t *entity, int channel, int soundindex, float volume, float attenuation, float timeofs);
@@ -261,7 +261,7 @@ void SV_BroadcastCommand(char *fmt, ...);
 //
 // sv_user.c
 //
-void SV_Nextserver(void);
+void SV_Nextserver();
 void SV_UserinfoChanged(client_t *cl);
 void SV_ExecuteClientMessage(client_t *cl);
 

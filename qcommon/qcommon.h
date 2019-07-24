@@ -806,7 +806,7 @@ void FS_FreeFile(void *buffer);
 
 #define MAXPRINTMSG		8192 // was 4096, fix for nVidia 191.xx crash //mxd. Moved from common.c / sys_console.c
 
-void Com_BeginRedirect(int target, char *buffer, int buffersize, void(*flush));
+void Com_BeginRedirect(int target, char *buffer, int buffersize, void(*flush)(int ftarget, char *fbuffer));
 void Com_EndRedirect(void);
 void Com_DPrintf(char *fmt, ...);
 void Com_CPrintf(char *fmt, ...); //mxd
