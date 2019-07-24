@@ -23,6 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "client.h"
 
+//mxd. Some particle-related defines formerly stored in client.h...
+#define DEFAULT_RAIL_LENGTH		2048
+#define MIN_RAIL_LENGTH			1024
+#define DEFAULT_RAIL_SPACE		1
+#define MIN_DECAL_LIFE			5
+
 #pragma region ======================= cvars
 
 cvar_t *freelook;

@@ -83,7 +83,7 @@ void CL_ReadTextureSurfaceAssignments()
 
 // Plays appropriate footstep sound depending on surface flags of the ground surface.
 // Since this is a replacement for plain Jane EV_FOOTSTEP, we already know the player is definitely on the ground when this is called.
-static void CL_FootSteps(entity_state_t *ent, const qboolean loud)
+static void CL_FootSteps(const entity_state_t *ent, const qboolean loud)
 {
 	vec3_t end;
 	struct sfx_s *stepsound;
@@ -191,7 +191,7 @@ static void CL_FootSteps(entity_state_t *ent, const qboolean loud)
 //end Knightmare
 
 // An entity has just been parsed that has an event value
-void CL_EntityEvent(entity_state_t *ent)
+void CL_EntityEvent(const entity_state_t *ent)
 {
 	switch (ent->event)
 	{
@@ -221,7 +221,7 @@ void CL_EntityEvent(entity_state_t *ent)
 		case EV_FOOTSTEP:
 		case EV_LOUDSTEP:
 			if (cl_footsteps->integer)
-				CL_FootSteps(ent, (ent->event == EV_LOUDSTEP));
+				CL_FootSteps(ent, (const qboolean)(ent->event == EV_LOUDSTEP));
 			break;
 
 		case EV_SLOSH:

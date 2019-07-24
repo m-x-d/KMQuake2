@@ -409,6 +409,8 @@ char *Q_strupr(char *string);
 
 short BigShort(short l);
 char *va(char *format, ...);
+float *tv(const float x, const float y, const float z);
+char *vtos(const vec3_t v);
 
 //=============================================
 

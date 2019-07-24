@@ -1150,8 +1150,6 @@ void	G_TouchTriggers (edict_t *ent);
 void	G_TouchSolids (edict_t *ent);
 char	*G_CopyString (char *in);
 void	stuffcmd(edict_t *ent,char *command);
-float	*tv (float x, float y, float z);
-char	*vtos (vec3_t v);
 float vectoyaw (vec3_t vec);
 void vectoangles (vec3_t vec, vec3_t angles);
 qboolean point_infront (edict_t *self, vec3_t point);

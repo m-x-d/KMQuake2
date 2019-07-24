@@ -28,30 +28,22 @@ void CL_ExplosionParticles(const vec3_t org)
 {
 	for (int i = 0; i < 256; i++)
 	{
-		const int color8 = 0xe0 + (rand() & 7);
-		vec3_t color = { color8red(color8), color8green(color8), color8blue(color8) };
+		cparticle_t *p = CL_InitParticle();
+		if (!p)
+			return;
 
-		vec3_t origin, velocity;
 		for (int j = 0; j < 3; j++)
 		{
-			origin[j] = org[j] + ((rand() % 32) - 16);
-			velocity[j] = (rand() % 384) - 192;
+			p->org[j] = org[j] + ((rand() % 32) - 16);
+			p->vel[j] = (rand() % 384) - 192;
 		}
 
-		CL_SetupParticle(
-			0, 0, 0,
-			origin[0], origin[1], origin[2],
-			velocity[0], velocity[1], velocity[2],
-			0, 0, 0,
-			color[0], color[1], color[2],
-			0, 0, 0,
-			1.0, -0.8f / (0.5f + frand() * 0.3f),
-			GL_SRC_ALPHA, GL_ONE,
-			1, 0,
-			particle_classic,
-			PART_GRAVITY,
-			NULL,
-			false);
+		color8_to_vec3(BLASTER_PARTICLE_COLOR + (rand() & 7), p->color);
+		p->alphavel = -0.8f / (0.5f + frand() * 0.3f);
+		p->type = particle_classic;
+		p->flags = PART_GRAVITY;
+
+		CL_FinishParticleInit(p);
 	}
 }
 
@@ -64,8 +56,6 @@ void CL_ParticleEffect(const vec3_t org, const vec3_t dir, const int color8, con
 		if (!p)
 			return;
 
-		color8_to_vec3(color8 + (rand() & 7), p->color);
-
 		const float d = rand() & 31;
 		for (int j = 0; j < 3; j++)
 		{
@@ -74,8 +64,12 @@ void CL_ParticleEffect(const vec3_t org, const vec3_t dir, const int color8, con
 		}
 
 		p->accel[2] = -PARTICLE_GRAVITY;
+		color8_to_vec3(color8 + (rand() & 7), p->color);
 		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
+		p->type = particle_generic;
 		p->flags = PART_GRAVITY;
+
+		CL_FinishParticleInit(p);
 	}
 }
 
@@ -85,7 +79,6 @@ void CL_ParticleEffect2(const vec3_t org, const vec3_t dir, const int color8, co
 
 	for (int i = 0; i < count; i++)
 	{
-		//mxd
 		cparticle_t *p = CL_InitParticle();
 		if (!p)
 			return;
@@ -104,7 +97,10 @@ void CL_ParticleEffect2(const vec3_t org, const vec3_t dir, const int color8, co
 
 		p->accel[2] = acceleration;
 		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
+		p->type = particle_generic;
 		p->flags = PART_GRAVITY;
+
+		CL_FinishParticleInit(p);
 	}
 }
 
@@ -116,8 +112,6 @@ void CL_ClassicBlasterParticles(const vec3_t org, const vec3_t dir)
 		if (!p)
 			return;
 
-		color8_to_vec3(0xe0 + (rand() & 7), p->color);
-
 		const float d = rand() & 15;
 		for (int j = 0; j < 3; j++)
 		{
@@ -126,34 +120,30 @@ void CL_ClassicBlasterParticles(const vec3_t org, const vec3_t dir)
 		}
 
 		p->accel[2] = -PARTICLE_GRAVITY;
+		color8_to_vec3(BLASTER_PARTICLE_COLOR + (rand() & 7), p->color);
 		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
-		p->image = particle_classic;
+		p->type = particle_classic;
 		p->flags = PART_GRAVITY;
+
+		CL_FinishParticleInit(p);
 	}
 }
 
 void CL_ClassicBlasterTrail(const vec3_t start, const vec3_t end)
 {
 	vec3_t move, vec;
-
 	VectorCopy(start, move);
 	VectorSubtract(end, start, vec);
-	float len = VectorNormalize(vec);
+	const float len = VectorNormalize(vec);
 
 	const int dec = 5;
 	VectorScale(vec, dec, vec);
 
-	// FIXME: this is a really silly way to have a loop
-	while (len > 0)
+	for (int i = 0; i < len; i += dec)
 	{
-		len -= dec;
-
 		cparticle_t *p = CL_InitParticle();
 		if (!p)
 			return;
-
-		p->alphavel = -1.0f / (0.3f + frand() * 0.2f);
-		color8_to_vec3(0xe0, p->color);
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -161,7 +151,11 @@ void CL_ClassicBlasterTrail(const vec3_t start, const vec3_t end)
 			p->vel[j] = crand() * 5;
 		}
 
-		p->image = particle_classic;
+		color8_to_vec3(BLASTER_PARTICLE_COLOR, p->color);
+		p->alphavel = -1.0f / (0.3f + frand() * 0.2f);
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
 
 		VectorAdd(move, vec, move);
 	}
@@ -183,9 +177,6 @@ void CL_ClassicBubbleTrail(const vec3_t start, const vec3_t end)
 		if (!p)
 			return;
 
-		p->alphavel = -1.0f / (1 + frand() * 0.2f);
-		color8_to_vec3(4 + (rand() & 7), p->color);
-
 		for (int j = 0; j < 3; j++)
 		{
 			p->org[j] = move[j] + crand() * 2;
@@ -193,7 +184,12 @@ void CL_ClassicBubbleTrail(const vec3_t start, const vec3_t end)
 		}
 
 		p->vel[2] += 6;
-		p->image = particle_classic;
+
+		color8_to_vec3(4 + (rand() & 7), p->color);
+		p->alphavel = -1.0f / (1 + frand() * 0.2f);
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
 
 		VectorAdd(move, vec, move);
 	}
@@ -215,9 +211,6 @@ void CL_ClassicBubbleTrail2(const vec3_t start, const vec3_t end, const int dist
 		if (!p)
 			return;
 
-		p->alphavel = -1.0f / (1 + frand() * 0.1f);
-		color8_to_vec3(4 + (rand() & 7), p->color);
-
 		for (int j = 0; j < 3; j++)
 		{
 			p->org[j] = move[j] + crand() * 2;
@@ -226,7 +219,12 @@ void CL_ClassicBubbleTrail2(const vec3_t start, const vec3_t end, const int dist
 
 		p->org[2] -= 4;
 		p->vel[2] += 20;
-		p->image = particle_classic;
+
+		color8_to_vec3(4 + (rand() & 7), p->color);
+		p->alphavel = -1.0f / (1 + frand() * 0.1f);
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
 
 		VectorAdd(move, vec, move);
 	}
@@ -269,7 +267,7 @@ void CL_ClassicDiminishingTrail(const vec3_t start, const vec3_t end, centity_t 
 		// Drop less particles as it flies
 		if ((rand() & 1023) < old->trailcount)
 		{
-			cparticle_t *p = CL_InitParticle2(flags);
+			cparticle_t *p = CL_InitParticle();
 			if (!p)
 				return;
 
@@ -281,22 +279,26 @@ void CL_ClassicDiminishingTrail(const vec3_t start, const vec3_t end, centity_t 
 
 			if (flags & EF_GIB)
 			{
-				p->alphavel = -1.0f / (1 + frand() * 0.4f);
 				color8_to_vec3(0xe8 + (rand() & 7), p->color);
+				p->alphavel = -1.0f / (1 + frand() * 0.4f);
 				p->vel[2] -= PARTICLE_GRAVITY;
 			}
 			else if (flags & EF_GREENGIB)
 			{
-				p->alphavel = -1.0f / (1 + frand() * 0.4f);
 				color8_to_vec3(0xdb + (rand() & 7), p->color);
+				p->alphavel = -1.0f / (1 + frand() * 0.4f);
 				p->vel[2] -= PARTICLE_GRAVITY;
 			}
 			else
 			{
-				p->alphavel = -1.0f / (1 + frand() * 0.2f);
 				color8_to_vec3(4 + (rand() & 7), p->color);
+				p->alphavel = -1.0f / (1 + frand() * 0.2f);
 				p->accel[2] = 20;
 			}
+
+			p->flags = flags;
+
+			CL_FinishParticleInit(p);
 		}
 
 		old->trailcount = max(100, old->trailcount - 5);
@@ -309,28 +311,28 @@ void CL_ClassicIonripperTrail(const vec3_t start, const vec3_t ent)
 	vec3_t move, vec;
 	VectorCopy(start, move);
 	VectorSubtract(ent, start, vec);
-	float len = VectorNormalize(vec);
+	const float len = VectorNormalize(vec);
 
 	const int dec = 5;
 	VectorScale(vec, dec, vec);
 
 	int dir = 1;
 
-	while (len > 0)
+	for (int i = 0; i < len; i += dec)
 	{
-		len -= dec;
-
 		cparticle_t *p = CL_InitParticle();
 		if (!p)
 			return;
 
-		p->alpha = 0.5f;
-		p->alphavel = -1.0f / (0.3f + frand() * 0.2f);
-		color8_to_vec3(0xe4 + (rand() & 3), p->color);
-
 		VectorCopy(move, p->org);
 		p->vel[0] = 10 * dir;
-		p->image = particle_classic;
+		color8_to_vec3(0xe4 + (rand() & 3), p->color);
+		p->alpha = 0.5f;
+		p->alphavel = -1.0f / (0.3f + frand() * 0.2f);
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
+
 		dir *= -1;
 
 		VectorAdd(move, vec, move);
@@ -350,14 +352,16 @@ void CL_ClassicNukeblast(const cl_sustain_t *self)
 
 		color8_to_vec3(colortable[rand() & 3], p->color);
 		p->alphavel = INSTANT_PARTICLE;
+		p->type = particle_classic;
 		p->flags = PART_INSTANT;
-		p->image = particle_classic;
 
 		vec3_t dir;
 		VectorSet(dir, crand(), crand(), crand());
 		VectorNormalize(dir);
 
 		VectorMA(self->org, 200.0f * ratio, dir, p->org);
+
+		CL_FinishParticleInit(p);
 	}
 }
 
@@ -386,7 +390,9 @@ void CL_ClassicParticleSmokeEffect(const vec3_t org, const vec3_t dir, const int
 		VectorMA(p->vel, d, u, p->vel);
 
 		p->alphavel = -1.0f / (0.5f + frand() * 0.3f);
-		p->image = particle_classic;
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
 	}
 }
 
@@ -395,7 +401,7 @@ void CL_ClassicRailTrail(const vec3_t start, const vec3_t end, const qboolean is
 	vec3_t move, vec;
 	VectorCopy(start, move);
 	VectorSubtract(end, start, vec);
-	float len = VectorNormalize(vec);
+	const float len = VectorNormalize(vec);
 
 	vec3_t right, up;
 	MakeNormalVectors(vec, right, up);
@@ -416,16 +422,18 @@ void CL_ClassicRailTrail(const vec3_t start, const vec3_t end, const qboolean is
 		VectorScale(right, c, dir);
 		VectorMA(dir, s, up, dir);
 
-		p->alphavel = -1.0f / (1 + frand() * 0.2f);
-		color8_to_vec3(color8 + (rand() & 7), p->color);
-
 		for (int j = 0; j < 3; j++)
 		{
 			p->org[j] = move[j] + dir[j] * 3;
 			p->vel[j] = dir[j] * 6;
 		}
 
-		p->image = particle_classic;
+		p->alphavel = -1.0f / (1 + frand() * 0.2f);
+		color8_to_vec3(color8 + (rand() & 7), p->color);
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
+
 		VectorAdd(move, vec, move);
 	}
 
@@ -433,15 +441,11 @@ void CL_ClassicRailTrail(const vec3_t start, const vec3_t end, const qboolean is
 	VectorScale(vec, dec, vec);
 	VectorCopy(start, move);
 
-	while (len > 0)
+	for (int i = 0; i < len; i += dec)
 	{
-		len -= dec;
-
-		cparticle_t	*p = CL_InitParticle();
-		if (!p) return;
-
-		p->alphavel = -1.0f / (0.6f + frand() * 0.2f);
-		color8_to_vec3(rand() & 7, p->color);
+		cparticle_t *p = CL_InitParticle();
+		if (!p)
+			return;
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -449,7 +453,12 @@ void CL_ClassicRailTrail(const vec3_t start, const vec3_t end, const qboolean is
 			p->vel[j] = crand() * 3;
 		}
 
-		p->image = particle_classic;
+		p->alphavel = -1.0f / (0.6f + frand() * 0.2f);
+		color8_to_vec3(rand() & 7, p->color);
+		p->type = particle_classic;
+
+		CL_FinishParticleInit(p);
+
 		VectorAdd(move, vec, move);
 	}
 }
@@ -463,24 +472,16 @@ void CL_ClassicRocketTrail(const vec3_t start, const vec3_t end, centity_t *old)
 	vec3_t move, vec;
 	VectorCopy(start, move);
 	VectorSubtract(end, start, vec);
-	float len = VectorNormalize(vec);
+	const float len = VectorNormalize(vec);
 
-	while (len > 0)
+	for (int i = 0; i < len; i++)
 	{
-		len -= 1;
-
-		if (!free_particles)
-			return;
-
 		// Falling particles
 		if ((rand() & 7) == 0)
 		{
 			cparticle_t *p = CL_InitParticle();
 			if (!p)
 				return;
-
-			p->alphavel = -1.0f / (1 + frand() * 0.2f);
-			color8_to_vec3(0xdc + (rand() & 3), p->color);
 
 			for (int j = 0; j < 3; j++)
 			{
@@ -489,8 +490,12 @@ void CL_ClassicRocketTrail(const vec3_t start, const vec3_t end, centity_t *old)
 			}
 
 			p->accel[2] = -PARTICLE_GRAVITY;
+			color8_to_vec3(0xdc + (rand() & 3), p->color);
+			p->alphavel = -1.0f / (1 + frand() * 0.2f);
+			p->type = particle_classic;
 			p->flags = PART_GRAVITY;
-			p->image = particle_classic;
+
+			CL_FinishParticleInit(p);
 		}
 
 		VectorAdd(move, vec, move);
@@ -516,6 +521,8 @@ void CL_ClassicWidowSplash(const vec3_t org)
 		VectorMA(vec3_origin, 40.0f, dir, p->vel);
 
 		p->alphavel = -0.8f / (0.5f + frand() * 0.3f);
+
+		CL_FinishParticleInit(p);
 	}
 }
 
@@ -532,11 +539,14 @@ void CL_ClassicWidowbeamout(const cl_sustain_t *self)
 
 		color8_to_vec3(colortable[rand() & 3], p->color);
 		p->alphavel = INSTANT_PARTICLE;
+		p->type = particle_classic;
 		p->flags = PART_INSTANT;
 
 		vec3_t dir;
 		VectorSet(dir, crand(), crand(), crand());
 		VectorNormalize(dir);
 		VectorMA(self->org, 45.0f * ratio, dir, p->org);
+
+		CL_FinishParticleInit(p);
 	}
 }

@@ -925,7 +925,7 @@ static void CL_AddPacketEntities(frame_t *frame)
 			if (!Q_strcasecmp((char *)ent.model, "models/objects/laser/tris.md2"))
 			{
 				// Replace the bolt with a particle glow
-				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, 255, 150, 50, 0, -90, -30, 10, 3);
+				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, tv(255, 150, 50), tv(0, -90, -30), 10, 3);
 				drawent = false;
 			}
 			else if (!Q_strcasecmp((char *)ent.model, "models/proj/laser2/tris.md2")
@@ -933,19 +933,19 @@ static void CL_AddPacketEntities(frame_t *frame)
 				  || !Q_strcasecmp((char *)ent.model, "models/objects/glaser/tris.md2"))
 			{
 				// Give the bolt a green particle glow
-				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, 50, 235, 50, -10, 0, -10, 10, 3);
+				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, tv(50, 235, 50), tv(-10, 0, -10), 10, 3);
 				drawent = false;
 			}
 			else if (!Q_strcasecmp((char *)ent.model, "models/objects/blaser/tris.md2"))
 			{
 				// Give the bolt a blue particle glow
-				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, 50, 50, 235, 0, -10, 0, -10, 3);
+				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, tv(50, 50, 235), tv(0, -10, 0), -10, 3);
 				drawent = false;
 			}
 			else if (!Q_strcasecmp((char *)ent.model, "models/objects/rlaser/tris.md2"))
 			{
 				// Give the bolt a red particle glow
-				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, 235, 50, 50, 0, -90, -30, -10, 3);
+				CL_HyperBlasterEffect(cent->lerp_origin, ent.origin, s1->angles, tv(235, 50, 50), tv(0, -90, -30), -10, 3);
 				drawent = false;
 			}
 		}
@@ -1269,19 +1269,19 @@ static void CL_AddPacketEntities(frame_t *frame)
 			{
 				if (effects & EF_TRACKER) // Lame... problematic?
 				{
-					CL_BlasterTrail(cent->lerp_origin, ent.origin, 50, 235, 50, -10, 0, -10);
+					CL_BlasterTrail(cent->lerp_origin, ent.origin, tv(50, 235, 50), tv(-10, 0, -10));
 					V_AddLight(ent.origin, 200, 0.15f, 1.0f, 0.15f);
 				}
 				//Knightmare- behold, the power of cheese!!
 				else if (effects & EF_BLUEHYPERBLASTER) // EF_BLUEBLASTER
 				{
-					CL_BlasterTrail(cent->lerp_origin, ent.origin, 50, 50, 235, -10, 0, -10);
+					CL_BlasterTrail(cent->lerp_origin, ent.origin, tv(50, 50, 235), tv(-10, 0, -10));
 					V_AddLight(ent.origin, 200, 0.15f, 0.15f, 1.0f);
 				}
 				//Knightmare- behold, the power of cheese!!
 				else if (effects & EF_IONRIPPER) // EF_REDBLASTER
 				{
-					CL_BlasterTrail(cent->lerp_origin, ent.origin, 235, 50, 50, 0, -90, -30);
+					CL_BlasterTrail(cent->lerp_origin, ent.origin, tv(235, 50, 50), tv(0, -90, -30));
 					V_AddLight(ent.origin, 200, 1.0f, 0.15f, 0.15f);
 				}
 				else
@@ -1289,7 +1289,7 @@ static void CL_AddPacketEntities(frame_t *frame)
 					if ((effects & EF_GREENGIB) && cl_blood->integer >= 1) // EF_BLASTER|EF_GREENGIB effect
 						CL_DiminishingTrail(cent->lerp_origin, ent.origin, cent, effects);
 					else
-						CL_BlasterTrail(cent->lerp_origin, ent.origin, 255, 150, 50, 0, -90, -30);
+						CL_BlasterTrail(cent->lerp_origin, ent.origin, tv(255, 150, 50), tv(0, -90, -30));
 						
 					V_AddLight(ent.origin, 200, 1.0f, 1.0f, 0.15f);
 				}
@@ -1404,7 +1404,7 @@ static void CL_AddPacketEntities(frame_t *frame)
 			else if (effects & EF_PLASMA) // RAFAEL
 			{
 				if (effects & EF_ANIM_ALLFAST)
-					CL_BlasterTrail(cent->lerp_origin, ent.origin, 255, 150, 50, 0, -90, -30);
+					CL_BlasterTrail(cent->lerp_origin, ent.origin, tv(255, 150, 50), tv(0, -90, -30));
 
 				V_AddLight(ent.origin, 130, 1.0f, 0.5f, 0.5f);
 			}

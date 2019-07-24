@@ -67,11 +67,6 @@ void CL_SetParticleImages(void)
 	R_SetParticlePicture(particle_classic, "***particle***");
 }
 
-int CL_GetRandomBloodParticle()
-{
-	return particle_blooddecal1 + rand() % 5;
-}
-
 #pragma region ======================= Particle management
 
 cparticle_t *active_particles;
@@ -173,7 +168,7 @@ static decalpolys_t *CL_NewDecalPoly()
 	return d;
 }
 
-void CL_ClipDecal(cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir)
+void CL_ClipDecal(cparticle_t *part, const float radius, const float orient, const vec3_t origin, const vec3_t dir)
 {
 	// Invalid decal
 	if (radius <= 0 || VectorCompare(dir, vec3_origin)) 
@@ -222,155 +217,55 @@ void CL_ClipDecal(cparticle_t *part, float radius, float orient, vec3_t origin, 
 	}
 }
 
-float CL_NewParticleTime()
-{
-	return (float)cl.time;
-}
-
-cparticle_t *CL_SetupParticle (
-			float angle0,		float angle1,		float angle2,
-			float org0,			float org1,			float org2,
-			float vel0,			float vel1,			float vel2,
-			float accel0,		float accel1,		float accel2,
-			float color0,		float color1,		float color2,
-			float colorvel0,	float colorvel1,	float colorvel2,
-			float alpha,		float alphavel,
-			int	blendfunc_src,	int blendfunc_dst,
-			float size,			float sizevel,
-			int	image,
-			int flags,
-			void (*think)(cparticle_t *p, vec3_t p_org, vec3_t p_angle, float *p_alpha, float *p_size, int *p_image, float *p_time),
-			qboolean thinknext)
-{
-	if (!free_particles)
-		return NULL;
-
-	cparticle_t *p = free_particles;
-	free_particles = p->next;
-	p->next = active_particles;
-	active_particles = p;
-
-	p->time = cl.time;
-
-	//mxd. Gross hacks
-	if (image == particle_generic && r_particle_mode->integer == 0)
-	{
-		alpha = 1;
-		image = particle_classic;
-		size = 1;
-		sizevel = 0;
-		colorvel0 = 0;
-		colorvel1 = 0;
-		colorvel2 = 0;
-		blendfunc_src = GL_SRC_ALPHA;
-		blendfunc_dst = GL_ONE;
-	}
-
-	VectorSet(p->angle, angle0, angle1, angle2);
-
-	VectorSet(p->org, org0, org1, org2);
-	VectorSet(p->oldorg, org0, org1, org2);
-
-	VectorSet(p->vel, vel0, vel1, vel2);
-	VectorSet(p->accel, accel0, accel1, accel2);
-
-	VectorSet(p->color, color0, color1, color2);
-	VectorSet(p->colorvel, colorvel0, colorvel1, colorvel2);
-
-	p->blendfunc_src = blendfunc_src;
-	p->blendfunc_dst = blendfunc_dst;
-
-	p->alpha = alpha;
-	p->alphavel = alphavel;
-	p->size = size;
-	p->sizevel = sizevel;
-
-	p->image = image;
-	p->flags = flags;
-
-	p->src_ent = 0;
-	p->dst_ent = 0;
-
-	p->think = think;
-	p->thinknext = thinknext;
-
-	for (int j = 0; j < P_LIGHTS_MAX; j++)
-	{
-		cplight_t *plight = &p->lights[j];
-		plight->isactive = false;
-		plight->light = 0;
-		plight->lightvel = 0;
-		VectorClear(plight->lightcol); //mxd
-	}
-
-	p->decalnum = 0;
-	p->decal = NULL;
-
-	if (flags & PART_DECAL)
-	{
-		vec3_t dir;
-		AngleVectors (p->angle, dir, NULL, NULL);
-		VectorNegate(dir, dir);
-		CL_ClipDecal(p, p->size, -p->angle[2], p->org, dir);
-
-		if (!p->decalnum) // kill on viewframe
-			p->alpha = 0;
-	}
-
-	return p;
-}
-
 //mxd
-cparticle_t *CL_InitParticle2(const int flags)
+cparticle_t *CL_InitParticle()
 {
 	if (!free_particles)
 		return NULL;
 
 	cparticle_t *p = free_particles;
 	free_particles = p->next;
+
+	memset(p, 0, sizeof(cparticle_t)); // Reset properties...
+
 	p->next = active_particles;
 	active_particles = p;
 
+	// Set defaults...
 	p->time = cl.time;
 
-	VectorClear(p->angle);
-	VectorClear(p->org);
-	VectorClear(p->oldorg);
-	VectorClear(p->vel);
-	VectorClear(p->accel);
 	VectorSet(p->color, 255, 255, 255);
-	VectorClear(p->colorvel);
 
 	p->blendfunc_src = GL_SRC_ALPHA;
 	p->blendfunc_dst = GL_ONE;
 
 	p->alpha = 1;
-	p->alphavel = 0;
 	p->size = 1;
-	p->sizevel = 0;
+	p->type = particle_generic;
 
-	p->image = (r_particle_mode->integer == 0 ? particle_classic : particle_generic);
-	p->flags = flags;
+	return p;
+}
 
-	p->src_ent = 0;
-	p->dst_ent = 0;
-
-	p->think = NULL;
-	p->thinknext = false;
-
-	for (int i = 0; i < P_LIGHTS_MAX; i++)
+//mxd. Must be called after CL_InitParticle() to finish particle setup...
+void CL_FinishParticleInit(cparticle_t *p)
+{
+	// Store previous origin...
+	VectorCopy(p->org, p->oldorg);
+	
+	// Setup for classic particles mode?
+	if (p->type == particle_generic && r_particle_mode->integer == 0)
 	{
-		cplight_t *plight = &p->lights[i];
-		plight->isactive = false;
-		plight->light = 0;
-		plight->lightvel = 0;
-		VectorClear(plight->lightcol);
+		p->alpha = 1;
+		p->type = particle_classic;
+		p->size = 1;
+		p->sizevel = 0;
+		p->blendfunc_src = GL_SRC_ALPHA;
+		p->blendfunc_dst = GL_ONE;
+		VectorClear(p->colorvel);
 	}
-
-	p->decalnum = 0;
-	p->decal = NULL;
-
-	if (flags & PART_DECAL)
+		
+	// Add decal?
+	if (p->flags & PART_DECAL)
 	{
 		vec3_t dir;
 		AngleVectors(p->angle, dir, NULL, NULL);
@@ -380,19 +275,11 @@ cparticle_t *CL_InitParticle2(const int flags)
 		if (!p->decalnum) // Kill on viewframe
 			p->alpha = 0;
 	}
-
-	return p;
-}
-
-cparticle_t *CL_InitParticle()
-{
-	cparticle_t *p = CL_InitParticle2(0);
-	return p;
 }
 
 void CL_AddParticleLight(cparticle_t *p, const float light, const float lightvel, const float lcol0, const float lcol1, const float lcol2)
 {
-	for (int i = 0; i < P_LIGHTS_MAX; i++)
+	for (int i = 0; i < MAX_PARTICLE_LIGHTS; i++)
 	{
 		cplight_t *plight = &p->lights[i];
 		if (!plight->isactive)
@@ -428,7 +315,7 @@ static void CL_ClearParticles()
 
 #define	STOP_EPSILON	0.1f
 
-void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, vec3_t velocity)
+void CL_CalcPartVelocity(const cparticle_t *p, const float scale, const float time, vec3_t velocity)
 {
 	const float timesq = time * time;
 	const int gravity = (p->flags & PART_GRAVITY ? PARTICLE_GRAVITY : 0); //mxd
@@ -438,7 +325,7 @@ void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, ve
 	velocity[2] = scale * (p->vel[2] * time + (p->accel[2] - gravity) * timesq);
 }
 
-static void CL_ClipParticleVelocity(vec3_t in, const vec3_t normal, vec3_t out)
+static void CL_ClipParticleVelocity(const vec3_t in, const vec3_t normal, vec3_t out)
 {
 	const float backoff = VectorLength(in) * 0.25f + DotProduct(in, normal) * 3.0f;
 
@@ -451,7 +338,7 @@ static void CL_ClipParticleVelocity(vec3_t in, const vec3_t normal, vec3_t out)
 	}
 }
 
-void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
 	const float clipsize = max(*size * 0.5f, 0.25f);
 	const trace_t tr = CL_BrushTrace(p->oldorg, org, clipsize, MASK_SOLID); // Was 1
@@ -470,7 +357,7 @@ void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 		p->alpha = *alpha;
 		p->size = *size;
 
-		p->start = p->time = CL_NewParticleTime();
+		p->time = cl.time;
 
 		if (p->flags & PART_GRAVITY && VectorLength(p->vel) < 2)
 			p->flags &= ~PART_GRAVITY;
@@ -479,13 +366,13 @@ void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alp
 	p->thinknext = true;
 }
 
-void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
 	angle[2] = angle[0] + *time * angle[1] + *time * *time * angle[2];
 	p->thinknext = true;
 }
 
-void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time)
+void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, particle_type *type, float *time)
 {
 	*alpha = powf(*alpha, 0.1f);
 	p->thinknext = true;
@@ -516,7 +403,7 @@ void CL_AddParticles()
 			alpha = p->alpha + time * p->alphavel;
 			if (flags & PART_DECAL)
 			{
-				if (decals >= r_decals->value || alpha <= 0)
+				if (decals >= r_decals->integer || alpha <= 0)
 				{
 					// Faded out
 					p->alpha = 0;
@@ -559,24 +446,23 @@ void CL_AddParticles()
 
 		alpha = clamp(alpha, 0.0f, 1.0f); //mxd
 
-		const float time2 = time * time;
-		int image = p->image;
-
+		const float timesq = time * time;
+		
 		for (int i = 0; i < 3; i++)
 		{
 			color[i] = p->color[i] + p->colorvel[i] * time;
 			color[i] = clamp(color[i], 0, 255); //mxd
 			
 			angle[i] = p->angle[i];
-			org[i] = p->org[i] + p->vel[i] * time + p->accel[i] * time2;
+			org[i] = p->org[i] + p->vel[i] * time + p->accel[i] * timesq;
 		}
 
 		if (p->flags & PART_GRAVITY)
-			org[2] += time2 * -PARTICLE_GRAVITY;
+			org[2] += timesq * -PARTICLE_GRAVITY;
 
 		float size = p->size + p->sizevel * time;
 
-		for (int i = 0; i < P_LIGHTS_MAX; i++)
+		for (int i = 0; i < MAX_PARTICLE_LIGHTS; i++)
 		{
 			const cplight_t *plight = &p->lights[i];
 			if (plight->isactive)
@@ -586,10 +472,12 @@ void CL_AddParticles()
 			}
 		}
 
+		particle_type type = p->type;
+
 		if (p->thinknext && p->think)
 		{
 			p->thinknext = false;
-			p->think(p, org, angle, &alpha, &size, &image, &time);
+			p->think(p, org, angle, &alpha, &size, &type, &time);
 		}
 
 		if (flags & PART_DECAL)
@@ -597,18 +485,18 @@ void CL_AddParticles()
 			if (p->decalnum > 0 && p->decal)
 			{
 				for (decalpolys_t *d = p->decal; d; d = d->nextpoly)
-					V_AddDecal(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, d);
+					V_AddDecal(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, type, flags, d);
 			}
 			else
 			{
-				V_AddDecal(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags, NULL);
+				V_AddDecal(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, type, flags, NULL);
 			}
 
 			decals++;
 		}
 		else
 		{
-			V_AddParticle(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, image, flags);
+			V_AddParticle(org, angle, color, alpha, p->blendfunc_src, p->blendfunc_dst, size, type, flags);
 		}
 		
 		if (p->alphavel == INSTANT_PARTICLE)

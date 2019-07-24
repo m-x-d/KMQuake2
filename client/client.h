@@ -23,14 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //#define PARANOID // Speed sapping error checking
 
-#include <math.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "ref.h"
-
 #include "vid.h"
 #include "screen.h"
 #include "sound.h"
@@ -521,73 +514,6 @@ qboolean FS_RoguePath();
 // Utility function for protocol version
 qboolean LegacyProtocol();
 
-#pragma region ======================= Psychospaz enhanced particle code
-
-typedef struct
-{
-	qboolean isactive;
-
-	vec3_t lightcol;
-	float light;
-	float lightvel;
-} cplight_t;
-
-#define P_LIGHTS_MAX 8
-
-typedef struct particle_s
-{
-	struct particle_s *next;
-
-	cplight_t lights[P_LIGHTS_MAX];
-
-	float start;
-	float time;
-
-	vec3_t org;
-	vec3_t vel;
-	vec3_t accel;
-
-	vec3_t color;
-	vec3_t colorvel;
-
-	int blendfunc_src;
-	int blendfunc_dst;
-
-	float alpha;
-	float alphavel;
-
-	float size;
-	float sizevel;
-
-	vec3_t angle;
-	
-	int image;
-	int flags;
-
-	vec3_t oldorg;
-	float temp;
-	int src_ent;
-	int dst_ent;
-
-	int decalnum;
-	decalpolys_t *decal;
-
-	struct particle_s *link;
-
-	void (*think)(struct particle_s *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
-	qboolean thinknext;
-} cparticle_t;
-
-#define PARTICLE_GRAVITY		40
-#define BLASTER_PARTICLE_COLOR	0xe0
-#define INSTANT_PARTICLE	-10000.0
-#define MIN_RAIL_LENGTH		1024
-#define DEFAULT_RAIL_LENGTH	2048
-#define DEFAULT_RAIL_SPACE	1
-#define MIN_DECAL_LIFE 5
-
-#pragma endregion
-
 void CL_ClearTEnts();
 
 int CL_ParseEntityBits(uint *bits);
@@ -649,11 +575,11 @@ void R_RenderFrame(refdef_t *fd);
 
 void R_SetParticlePicture(int num, char *name); // Knightmare added
 
-void R_DrawGetPicSize(int *w, int *h, char *name);	// will return 0 0 if not found
+void R_DrawGetPicSize(int *w, int *h, char *name); // Will return 0 0 if not found
 void R_DrawPic(int x, int y, char *name);
-void R_DrawStretchPic(int x, int y, int w, int h, char *name, float alpha); // added alpha for Psychospaz's transparent console
+void R_DrawStretchPic(int x, int y, int w, int h, char *name, float alpha); // Added alpha for Psychospaz's transparent console
 void R_DrawScaledPic(int x, int y, float scale, float alpha, char *name);
-void R_DrawChar(float x, float y, int c, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last); // added char scaling from Quake2Max
+void R_DrawChar(float x, float y, int c, float scale, int red, int green, int blue, int alpha, qboolean italic, qboolean last); // Added char scaling from Quake2Max
 void R_DrawFill(int x, int y, int w, int h, int red, int green, int blue, int alpha);
 void R_DrawCameraEffect(void);
 
@@ -849,6 +775,7 @@ void CL_SmokeAndFlash(const vec3_t origin);
 //
 void CL_PredictMovement();
 void CL_CheckPredictionError();
+
 //Knightmare added
 trace_t CL_Trace(const vec3_t start, const vec3_t end, const float size, const int contentmask);
 trace_t CL_BrushTrace(const vec3_t start, const vec3_t end, const float size, const int contentmask);
@@ -865,58 +792,6 @@ void CL_ClearLightStyles();
 //
 // cl_particle.c
 //
-extern cparticle_t *active_particles;
-extern cparticle_t *free_particles;
-
-int CL_GetRandomBloodParticle();
-void CL_ClipDecal(cparticle_t *part, float radius, float orient, vec3_t origin, vec3_t dir);
-float CL_NewParticleTime();
-
-/*color = 255, 255, 255
-image = particle_generic
-blendfunc_src = GL_SRC_ALPHA
-blendfunc_dst = GL_ONE
-p->alpha = 1
-p->size = 1
-p->time = cl.time
-The rest is 0 (mxd). */
-cparticle_t *CL_InitParticle();
-cparticle_t *CL_InitParticle2(const int flags);
-
-//TODO: (mxd) get rid of this abomination
-/*angle X Y Z
-origin X Y Z
-velocity X Y Z
-acceleration X Y Z
-color R G B
-color verlocity R G B
-alpha, alpha velocity
-blendfunc_src, blendfunc_dst
-size, size velocity
-image
-flags
-think, thinknext */
-cparticle_t *CL_SetupParticle(
-			float angle0,		float angle1,		float angle2,
-			float org0,			float org1,			float org2,
-			float vel0,			float vel1,			float vel2,
-			float accel0,		float accel1,		float accel2,
-			float color0,		float color1,		float color2,
-			float colorvel0,	float colorvel1,	float colorvel2,
-			float alpha,		float alphavel,
-			int	blendfunc_src,	int blendfunc_dst,
-			float size,			float sizevel,
-			int	image,
-			int flags,
-			void (*think)(cparticle_t *p, vec3_t p_org, vec3_t p_angle, float *p_alpha, float *p_size, int *p_image, float *p_time),
-			qboolean thinknext);
-
-void CL_AddParticleLight(cparticle_t *p, const float light, const float lightvel, const float lcol0, const float lcol1, const float lcol2);
-
-void CL_CalcPartVelocity(cparticle_t *p, const float scale, const float time, vec3_t velocity);
-void CL_ParticleBounceThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
-void CL_ParticleRotateThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
-void CL_DecalAlphaThink(cparticle_t *p, vec3_t org, vec3_t angle, float *alpha, float *size, int *image, float *time);
 void CL_AddParticles();
 void CL_ClearEffects();
 qboolean CL_UnclipDecals(); //mxd. void -> qboolean
@@ -928,14 +803,12 @@ void CL_ReclipDecals();
 void CL_BigTeleportParticles(const vec3_t org);
 void CL_RocketTrail(const vec3_t start, const vec3_t end, centity_t *old);
 void CL_DiminishingTrail(const vec3_t start, const vec3_t end, centity_t *old, const int flags);
-void CL_FlyEffect(centity_t *ent, vec3_t origin);
+void CL_FlyEffect(centity_t *ent, const vec3_t origin);
 void CL_BfgParticles(const entity_t *ent);
-void CL_EntityEvent(entity_state_t *ent);
 void CL_TrapParticles(entity_t *ent); // RAFAEL
-void CL_BlasterTrail(const vec3_t start, const vec3_t end, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta);
-void CL_HyperBlasterEffect(const vec3_t start, const vec3_t end, const vec3_t angle, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta, const float len, const float size);
-void CL_BlasterTracer(const vec3_t origin, const vec3_t angle, const int red, const int green, const int blue, const float len, const float size);
-void CL_BlasterParticles(const vec3_t org, const vec3_t dir, const int count, const float size, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta);
+void CL_BlasterTrail(const vec3_t start, const vec3_t end, const vec3_t color, const vec3_t colorvel);
+void CL_HyperBlasterEffect(const vec3_t start, const vec3_t end, const vec3_t angle, const vec3_t color, const vec3_t colorvel, const float len, const float size);
+void CL_BlasterParticles(const vec3_t org, const vec3_t dir, const vec3_t color, const vec3_t colorvel, const int count, const float size);
 
 void CL_QuadTrail(const vec3_t start, const vec3_t end);
 void CL_RailTrail(const vec3_t start, const vec3_t end, const qboolean isred);
@@ -949,15 +822,15 @@ void CL_ItemRespawnParticles(const vec3_t org);
 // PGM
 void CL_DebugTrail(const vec3_t start, const vec3_t end);
 void CL_Flashlight(const int ent, const vec3_t pos);
-void CL_ForceWall(const vec3_t start, const vec3_t end, const int color);
+void CL_ForceWall(const vec3_t start, const vec3_t end, const int color8);
 void CL_BubbleTrail2(const vec3_t start, const vec3_t end, const int dist);
 void CL_HeatbeamParticles(const vec3_t start, const vec3_t forward);
-void CL_ParticleSteamEffect(const vec3_t org, const vec3_t dir, const int red, const int green, const int blue, const int reddelta, const int greendelta, const int bluedelta, const int count, const int magnitude);
+void CL_ParticleSteamEffect(const vec3_t org, const vec3_t dir, const vec3_t color, const vec3_t colorvel, const int count, const int magnitude);
 
 void CL_TrackerTrail(const vec3_t start, const vec3_t end);
 void CL_Tracker_Explode(const vec3_t origin);
 void CL_TagTrail(const vec3_t start, const vec3_t end, const int color8);
-void CL_ColorFlash(const vec3_t pos, const int ent, const int intensity, const float r, const float g, const float b);
+void CL_ColorFlash(const vec3_t pos, const int ent, const int intensity, const vec3_t color1);
 void CL_Tracker_Shell(const vec3_t origin);
 void CL_MonsterPlasma_Shell(const vec3_t origin);
 void CL_ColorExplosionParticles(const vec3_t org, const int color8, const int run);
@@ -984,6 +857,11 @@ void CL_ClassicRailTrail(const vec3_t start, const vec3_t end, const qboolean is
 void CL_ClassicRocketTrail(const vec3_t start, const vec3_t end, centity_t *old);
 void CL_ClassicWidowSplash(const vec3_t org);
 void CL_ClassicWidowbeamout(const cl_sustain_t *self);
+
+//
+// cl_event.c
+//
+void CL_EntityEvent(const entity_state_t *ent);
 
 //
 // cl_utils.c

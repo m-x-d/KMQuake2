@@ -78,16 +78,16 @@ static cl_sustain_t cl_sustains[MAX_SUSTAINS]; //ROGUE
 // Psychospaz's enhanced particle code
 clientMedia_t clMedia;
 
-extern void CL_Explosion_Particle(vec3_t org, float scale, qboolean rocket);
-extern void CL_Explosion_FlashParticle(vec3_t org, float size, qboolean large);
+extern void CL_Explosion_Particle(const vec3_t org, const float scale, const qboolean rocket);
+extern void CL_Explosion_FlashParticle(const vec3_t org, const float size, const qboolean large);
 extern void CL_BloodHit(const vec3_t org, const vec3_t dir);
 extern void CL_GreenBloodHit(const vec3_t org, const vec3_t dir);
 extern void CL_ParticleEffectSparks(const vec3_t org, const vec3_t dir, const vec3_t color, const int count);
 extern void CL_ParticleBulletDecal(const vec3_t org, const vec3_t dir, const float size);
 extern void CL_ParticlePlasmaBeamDecal(const vec3_t org, const vec3_t dir, const float size);
-extern void CL_ParticleBlasterDecal(const vec3_t org, const vec3_t dir, const float size, const int red, const int green, const int blue);
+extern void CL_ParticleBlasterDecal(const vec3_t org, const vec3_t dir, const vec3_t color, const float size);
 extern void CL_Explosion_Decal(vec3_t org, float size, int decalnum);
-extern void CL_Explosion_Sparks(vec3_t org, int size, int count);
+extern void CL_Explosion_Sparks(const vec3_t org, const int size, const int count);
 extern void CL_BFGExplosionParticles(const vec3_t org);
 
 extern void CL_ReadTextureSurfaceAssignments();
@@ -401,7 +401,7 @@ static int CL_ParsePlayerBeam(struct model_s *model)
 	return ent;
 }
 
-extern void CL_LightningBeam(vec3_t start, vec3_t end, int srcEnt, int dstEnt, float size);
+extern void CL_LightningBeam(const vec3_t start, const vec3_t end, const int srcent, const int dstent, const float size);
 
 // Psychspaz's enhanced particles
 static int CL_ParseLightning()
@@ -447,33 +447,32 @@ static void CL_ParseLaser(const int colors)
 	{
 		vec3_t vec;
 		VectorSubtract(end, start, vec);
-		float len = VectorNormalize(vec);
+		const float len = VectorNormalize(vec);
 		
 		vec3_t point;
 		VectorCopy(vec, point);
-		const float dec = 20;
+
+		const int dec = 20;
 		VectorScale(vec, dec, vec);
 
 		vec3_t move;
 		VectorCopy(start, move);
 
-		while (len > 0)
+		for (int i = 0; i < len; i += dec)
 		{
-			len -= dec;
+			cparticle_t *p = CL_InitParticle();
+			if (!p)
+				return;
 
-			CL_SetupParticle(
-				point[0], point[1], point[2],
-				move[0], move[1], move[2],
-				0, 0, 0,
-				0, 0, 0,
-				50, 255, 50,
-				0, 0, 0,
-				1, -2.5,
-				GL_SRC_ALPHA, GL_ONE,
-				dec * TWOTHIRDS, 0,
-				particle_beam,
-				PART_DIRECTION,
-				NULL, false);
+			VectorCopy(point, p->angle);
+			VectorCopy(move, p->org);
+			VectorSet(p->color, 50, 255, 50);
+			p->alphavel = -2.5f;
+			p->size = dec * TWOTHIRDS;
+			p->flags = PART_DIRECTION;
+			p->type = particle_beam;
+
+			CL_FinishParticleInit(p);
 
 			VectorAdd(move, vec, move);
 		}
@@ -543,8 +542,9 @@ static void CL_ParseSteam()
 		const int r = MSG_ReadByte(&net_message);
 		const int magnitude = MSG_ReadShort(&net_message);
 
-		const int color = r & 0xff;
-		CL_ParticleSteamEffect(pos, dir, color8red(color), color8green(color), color8blue(color), -20, -20, -20, cnt, magnitude);
+		vec3_t color;
+		color8_to_vec3(r & 0xff, color);
+		CL_ParticleSteamEffect(pos, dir, color, tv(-20, -20, -20), cnt, magnitude);
 	}
 }
 
@@ -1080,8 +1080,8 @@ void CL_ParseTEnt()
 				VectorSet(colordelta, 0, -90, -30);
 			}
 
-			CL_BlasterParticles(pos, dir, numparts, partsize, color[0], color[1], color[2], colordelta[0], colordelta[1], colordelta[2]);
-			CL_ParticleBlasterDecal(pos, dir, 10, color[0], color[1], color[2]);
+			CL_BlasterParticles(pos, dir, color, colordelta, numparts, partsize);
+			CL_ParticleBlasterDecal(pos, dir, color, 10);
 			S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 		} break;
 
@@ -1163,7 +1163,7 @@ void CL_ParseTEnt()
 			else
 				VectorSet(color, 123, 123, 123);
 
-			CL_ParticleSteamEffect(pos, dir, color[0], color[1], color[2], -20, -20, -20, cnt, magnitude);
+			CL_ParticleSteamEffect(pos, dir, color, tv(-20, -20, -20), cnt, magnitude);
 			S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 		} break;
 
@@ -1180,7 +1180,7 @@ void CL_ParseTEnt()
 			else
 				VectorSet(color, 255, 171, 7);
 
-			CL_ParticleSteamEffect(pos, dir, color[0], color[1], color[2], 0, -90, -30, cnt, magnitude);
+			CL_ParticleSteamEffect(pos, dir, color, tv(0, -90, -30), cnt, magnitude);
 			CL_ParticlePlasmaBeamDecal(pos, dir, 10); // Added burnmark
 			S_StartSound(pos, 0, 0, clMedia.sfx_lashit, 1, ATTN_NORM, 0);
 		} break;
@@ -1241,7 +1241,7 @@ void CL_ParseTEnt()
 
 		case TE_TRACKER_EXPLOSION:
 			MSG_ReadPos(&net_message, pos);
-			CL_ColorFlash(pos, 0, 150, -1, -1, -1);
+			CL_ColorFlash(pos, 0, 150, tv(-1, -1, -1));
 
 			// Psychospaz's enhanced particle code
 			if (r_particle_mode->integer == 1)

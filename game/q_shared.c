@@ -875,6 +875,10 @@ short BigShort(short l)
 	return (b1 << 8) + b2;
 }
 
+#pragma endregion
+
+#pragma region ======================= Utility functions
+
 // Does a varargs printf into a temp buffer, so I don't need to have varargs versions of all text functions.
 char *va(char *format, ...)
 {
@@ -886,6 +890,35 @@ char *va(char *format, ...)
 	va_end(argptr);
 
 	return string;
+}
+
+// A convenience function for making temporary vectors for function calls
+float *tv(const float x, const float y, const float z) //mxd. Moved from g_utils.c
+{
+	static int index;
+	static vec3_t vecs[8];
+
+	// Use an array so that multiple tempvectors won't collide for a while
+	float *v = vecs[index];
+	index = (index + 1) & 7;
+	VectorSet(v, x, y, z);
+
+	return v;
+}
+
+// A convenience function for printing vectors
+char *vtos(const vec3_t v) //mxd. Moved from g_utils.c
+{
+	static int index;
+	static char str[8][32];
+
+	// Use an array so that multiple vtos won't collide
+	char* s = str[index];
+	index = (index + 1) & 7;
+
+	Com_sprintf(s, 32, "(%g %g %g)", v[0], v[1], v[2]); //mxd. %i -> %g
+
+	return s;
 }
 
 #pragma endregion
