@@ -181,9 +181,6 @@ typedef struct
 
 //=============================================================================
 
-//extern	netadr_t	net_from; //mxd. Redundant declaration
-//extern	sizebuf_t	net_message; //mxd. Redundant declaration
-
 extern	netadr_t	master_adr[MAX_MASTERS];	// address of the master server
 
 extern	server_static_t	svs;				// persistant server info
@@ -218,26 +215,17 @@ extern	cvar_t *sv_limit_msglen;				// Knightmare- whether to use MAX_MSGLEN_MP f
 //
 // sv_main.c
 //
-void SV_FinalMessage(char *message, qboolean reconnect);
-client_t *GetClientFromAdr(netadr_t address); //Knightmare added
 void SV_DropClient(client_t *drop);
-void SV_DropClientFromAdr(netadr_t address); // Knightmare added
+void SV_DropClientFromAdr(const netadr_t address); // Knightmare added
 
 int SV_ModelIndex(char *name);
 int SV_SoundIndex(char *name);
 int SV_ImageIndex(char *name);
 
-//void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg); //mxd. No definition
-
 void SV_ExecuteUserCommand(char *s);
 void SV_InitOperatorCommands(void);
 
-//void SV_SendServerinfo(client_t *client); //mxd. No definition
-void SV_UserinfoChanged(client_t *cl);
-
-
-void Master_Heartbeat(void);
-//void Master_Packet(void); //mxd. No definition
+void Master_Heartbeat();
 
 //
 // sv_init.c
@@ -245,17 +233,17 @@ void Master_Heartbeat(void);
 void SV_InitGame();
 void SV_Map(const qboolean attractloop, const char *levelstring, const qboolean loadgame);
 
-
-//
-// sv_phys.c
-//
-void SV_PrepWorldFrame(void);
-
 //
 // sv_send.c
 //
-typedef enum {RD_NONE, RD_CLIENT, RD_PACKET} redirect_t;
-#define	SV_OUTPUTBUF_LENGTH	(MAX_MSGLEN - 16)
+typedef enum
+{
+	RD_NONE,
+	RD_CLIENT,
+	RD_PACKET
+} redirect_t;
+
+#define SV_OUTPUTBUF_LENGTH	(MAX_MSGLEN - 16)
 
 extern char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
 
@@ -274,6 +262,7 @@ void SV_BroadcastCommand(char *fmt, ...);
 // sv_user.c
 //
 void SV_Nextserver(void);
+void SV_UserinfoChanged(client_t *cl);
 void SV_ExecuteClientMessage(client_t *cl);
 
 //
@@ -288,7 +277,6 @@ void SV_Status_f(void);
 void SV_WriteFrameToClient(client_t *client, sizebuf_t *msg);
 void SV_RecordDemoMessage(void);
 void SV_BuildClientFrame(client_t *client);
-//void SV_Error(char *error, ...); //mxd. Undefined and unused
 
 //
 // sv_game.c
@@ -297,9 +285,6 @@ extern game_export_t *ge;
 
 void SV_InitGameProgs();
 void SV_ShutdownGameProgs();
-//void SV_InitEdict(edict_t *e); //mxd. Undefined and unused
-
-
 
 //============================================================
 

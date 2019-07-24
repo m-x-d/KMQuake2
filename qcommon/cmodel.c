@@ -390,7 +390,7 @@ static void CMod_LoadVisibility(lump_t *l, byte *data)
 static void CMod_LoadEntityString(lump_t *l, byte *data, char *name)
 {
 	// Knightmare- .ent file support
-	if (sv_entfile->value)
+	if (sv_entfile->integer)
 	{
 		char s[MAX_QPATH];
 		char *buffer = NULL;

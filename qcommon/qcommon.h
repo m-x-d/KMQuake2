@@ -899,8 +899,8 @@ void CL_Frame(const int msec);
 void Con_Print(char *text);
 void SCR_BeginLoadingPlaque(const char *mapname); //mxd. +mapname
 
-void SV_Init(void);
-void SV_Shutdown(char *finalmsg, qboolean reconnect);
-void SV_Frame(int msec);
+void SV_Init();
+void SV_Shutdown(const char *finalmsg, const qboolean reconnect);
+void SV_Frame(const int msec);
 
 #endif // __QCOMMON_H

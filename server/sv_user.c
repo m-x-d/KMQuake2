@@ -635,16 +635,46 @@ void SV_ExecuteUserCommand (char *s)
 ===========================================================================
 */
 
-void SV_ClientThink (client_t *cl, usercmd_t *cmd)
+void SV_ClientThink(client_t *cl, usercmd_t *cmd)
 {
 	cl->commandMsec -= cmd->msec;
 
-	if (cl->commandMsec < 0 && sv_enforcetime->value )
+	if (cl->commandMsec < 0 && sv_enforcetime->integer)
 		Com_DPrintf("commandMsec underflow from %s\n", cl->name);
 	else
 		ge->ClientThink(cl->edict, cmd);
 }
 
+// Pull specific info from a newly changed userinfo string into a more C freindly form.
+void SV_UserinfoChanged(client_t *cl) //mxd. Moved from sv_main.c
+{
+	// Call prog code to allow overrides
+	ge->ClientUserinfoChanged(cl->edict, cl->userinfo);
+
+	// Name for C code
+	strncpy(cl->name, Info_ValueForKey(cl->userinfo, "name"), sizeof(cl->name) - 1);
+
+	// Mask off high bit
+	for (int i = 0; i < strlen(cl->name); i++)
+		cl->name[i] &= 127;
+
+	// Rate command
+	char *val = Info_ValueForKey(cl->userinfo, "rate");
+	if (strlen(val))
+	{
+		cl->rate = atoi(val);
+		cl->rate = clamp(cl->rate, 100, 15000);
+	}
+	else
+	{
+		cl->rate = 5000;
+	}
+
+	// msg command
+	val = Info_ValueForKey(cl->userinfo, "msg");
+	if (strlen(val))
+		cl->messagelevel = atoi(val);
+}
 
 #define MAX_STRINGCMDS	8
 
