@@ -242,8 +242,8 @@ void Master_Heartbeat(void);
 //
 // sv_init.c
 //
-void SV_InitGame(void);
-void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame);
+void SV_InitGame();
+void SV_Map(const qboolean attractloop, const char *levelstring, const qboolean loadgame);
 
 
 //

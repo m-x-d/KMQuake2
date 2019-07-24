@@ -21,9 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "server.h"
 
 server_static_t	svs; // Persistant server info
-server_t		sv;	 // Local server
+server_t sv; // Local server
 
-int SV_FindIndex(char *name, int start, int max)
+static int SV_FindIndex(char *name, const int start, const int max)
 {
 	int index;
 	
@@ -81,9 +81,8 @@ int SV_ImageIndex(char *name)
 	return SV_FindIndex(name, CS_IMAGES, MAX_IMAGES);
 }
 
-// Entity baselines are used to compress the update messages to the clients 
-// -- only the fields that differ from the baseline will be transmitted.
-void SV_CreateBaseline(void)
+// Entity baselines are used to compress the update messages to the clients. Only the fields that differ from the baseline will be transmitted.
+static void SV_CreateBaseline()
 {
 	for (int entnum = 1; entnum < ge->num_edicts; entnum++)
 	{
@@ -102,7 +101,7 @@ void SV_CreateBaseline(void)
 	}
 }
 
-void SV_CheckForSavegame(void)
+static void SV_CheckForSavegame()
 {
 	if (sv_noreload->integer || Cvar_VariableInteger("deathmatch"))
 		return;
@@ -137,9 +136,9 @@ void SV_CheckForSavegame(void)
 }
 
 // Change the server to a new map, taking all connected clients along with it.
-void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
+static void SV_SpawnServer(char *server, char *spawnpoint, const server_state_t serverstate, const qboolean attractloop, const qboolean loadgame)
 {
-	unsigned checksum;
+	uint checksum;
 
 	if (attractloop)
 		Cvar_Set("paused", "0");
@@ -214,9 +213,7 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 
 	Com_sprintf(sv.configstrings[CS_MAPCHECKSUM], sizeof(sv.configstrings[0]), "%i", checksum);
 
-	//
 	// Clear physics interaction links
-	//
 	SV_ClearWorld();
 	
 	for (int i = 1; i < CM_NumInlineModels(); i++)
@@ -225,9 +222,7 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 		sv.models[i + 1] = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
 	}
 
-	//
 	// Spawn the rest of the entities on the map
-	//
 
 	// Precache and static commands can be issued during map initialization
 	sv.state = ss_loading;
@@ -257,7 +252,7 @@ void SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate, 
 }
 
 // A brand new game has been started
-void SV_InitGame(void)
+void SV_InitGame()
 {
 	char idmaster[32];
 
@@ -336,7 +331,7 @@ void SV_InitGame(void)
 // Map can also be a .cin, .pcx, or .dm2 file
 // Nextserver is used to allow a cinematic to play, then proceed to another level:
 //		map tram.cin+jail_e3
-void SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
+void SV_Map(const qboolean attractloop, const char *levelstring, const qboolean loadgame)
 {
 	char level[MAX_QPATH];
 	char spawnpoint[MAX_QPATH];
