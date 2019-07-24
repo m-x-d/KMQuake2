@@ -252,18 +252,6 @@ void CL_FinishParticleInit(cparticle_t *p)
 	// Store previous origin...
 	VectorCopy(p->org, p->oldorg);
 	
-	// Setup for classic particles mode?
-	if (p->type == particle_generic && r_particle_mode->integer == 0)
-	{
-		p->alpha = 1;
-		p->type = particle_classic;
-		p->size = 1;
-		p->sizevel = 0;
-		p->blendfunc_src = GL_SRC_ALPHA;
-		p->blendfunc_dst = GL_ONE;
-		VectorClear(p->colorvel);
-	}
-		
 	// Add decal?
 	if (p->flags & PART_DECAL)
 	{
@@ -274,6 +262,17 @@ void CL_FinishParticleInit(cparticle_t *p)
 
 		if (!p->decalnum) // Kill on viewframe
 			p->alpha = 0;
+	}
+	// Setup for classic particles mode? Don't do this for decals, because they have no classic counterpart and are controlled by a separate cvar.
+	else if (p->type == particle_generic && r_particle_mode->integer == 0)
+	{
+		p->alpha = 1;
+		p->type = particle_classic;
+		p->size = 1;
+		p->sizevel = 0;
+		p->blendfunc_src = GL_SRC_ALPHA;
+		p->blendfunc_dst = GL_ONE;
+		VectorClear(p->colorvel);
 	}
 }
 

@@ -1758,17 +1758,17 @@ static void CL_DevRailTrail(const vec3_t start, const vec3_t end, const qboolean
 
 void CL_RailTrail(const vec3_t start, const vec3_t end, const qboolean isred)
 {
-	//mxd. Classic particles
+	vec3_t vec;
+	VectorSubtract(end, start, vec);
+	VectorNormalize(vec);
+	CL_ParticleRailDecal(end, vec, 7, isred);
+
+	//mxd. Classic particles (we still want decal, because it's controlled by a different cvar)
 	if (r_particle_mode->integer == 0)
 	{
 		CL_ClassicRailTrail(start, end, isred);
 		return;
 	}
-	
-	vec3_t vec;
-	VectorSubtract(end, start, vec);
-	VectorNormalize(vec);
-	CL_ParticleRailDecal(end, vec, 7, isred);
 
 	if (cl_railtype->value == 2)
 	{
