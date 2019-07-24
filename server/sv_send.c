@@ -23,8 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma region ======================= Com_Printf redirection
 
-char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
-
 void SV_FlushRedirect(int sv_redirected, char *outputbuf)
 {
 	if (sv_redirected == RD_PACKET)

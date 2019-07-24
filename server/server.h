@@ -243,10 +243,6 @@ typedef enum
 	RD_PACKET
 } redirect_t;
 
-#define SV_OUTPUTBUF_LENGTH	(MAX_MSGLEN - 16)
-
-extern char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
-
 void SV_FlushRedirect(int sv_redirected, char *outputbuf);
 
 void SV_DemoCompleted();
@@ -292,7 +288,7 @@ void SV_ShutdownGameProgs();
 // High level object sorting to reduce interaction tests
 //
 
-void SV_ClearWorld(void);
+void SV_ClearWorld();
 // Called after the world model has been loaded, before linking any entities
 
 void SV_UnlinkEdict(edict_t *ent);
@@ -304,7 +300,7 @@ void SV_LinkEdict(edict_t *ent);
 // sets ent->v.absmin and ent->v.absmax
 // sets ent->leafnums[] for pvs determination even if the entity is not solid
 
-int SV_AreaEdicts(vec3_t mins, vec3_t maxs, edict_t **list, int maxcount, int areatype);
+int SV_AreaEdicts(vec3_t mins, vec3_t maxs, edict_t **list, const int maxcount, const int areatype);
 // Fills in a table of edict pointers with edicts that have bounding boxes that intersect the given area.
 // It is possible for a non-axial bmodel to be returned that doesn't actually intersect the area on an exact test.
 // Returns the number of pointers filled in.
@@ -320,7 +316,7 @@ int SV_PointContents(vec3_t p);
 // Quake 2 extends this to also check entities, to allow moving liquids
 
 
-trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passedict, int contentmask);
+trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passedict, const int contentmask);
 // mins and maxs are relative.
 
 // If the entire move stays in a solid volume, trace.allsolid will be set,

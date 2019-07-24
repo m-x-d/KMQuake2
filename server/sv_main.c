@@ -443,9 +443,13 @@ static int Rcon_Validate()
 	return 1;
 }
 
+#define SV_OUTPUTBUF_LENGTH (MAX_MSGLEN - 16)
+
 // A client issued an rcon command. Shift down the remaining args. Redirect all printfs.
 static void SVC_RemoteCommand()
 {
+	static char sv_outputbuf[SV_OUTPUTBUF_LENGTH]; //mxd. Made local
+	
 	if (!Rcon_Validate())
 		Com_Printf("Bad rcon from %s:\n%s\n", NET_AdrToString(net_from), net_message.data + 4);
 	else
