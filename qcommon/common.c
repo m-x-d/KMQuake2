@@ -83,7 +83,7 @@ void Com_BeginRedirect(int target, char *buffer, int buffersize, void (*flush)(i
 	*rd_buffer = 0;
 }
 
-void Com_EndRedirect(void)
+void Com_EndRedirect()
 {
 	rd_flush(rd_target, rd_buffer);
 

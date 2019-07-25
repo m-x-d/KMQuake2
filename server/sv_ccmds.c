@@ -228,7 +228,7 @@ void SV_WriteLevelFile(void)
 
 extern void CM_ReadPortalState(fileHandle_t f);
 
-void SV_ReadLevelFile(void)
+void SV_ReadLevelFile()
 {
 	Com_DPrintf("SV_ReadLevelFile()\n");
 
@@ -653,7 +653,7 @@ void SV_Kick_f(void)
 	sv_client->lastmessage = svs.realtime; // In case there is a funny zombie
 }
 
-void SV_Status_f(void)
+void SV_Status_f()
 {
 	if (!svs.clients)
 	{
@@ -887,7 +887,7 @@ void SV_ServerCommand_f(void)
 
 #pragma endregion
 
-void SV_InitOperatorCommands(void)
+void SV_InitOperatorCommands()
 {
 	Cmd_AddCommand("heartbeat", SV_Heartbeat_f);
 	Cmd_AddCommand("kick", SV_Kick_f);

@@ -343,7 +343,7 @@ void SV_Map(const qboolean attractloop, const char *levelstring, const qboolean 
 		SV_InitGame(); // The game is just starting
 
 	//mxd. Reset soundtrack position when changing maps...
-	if(!sv.loadgame)
+	if (!sv.loadgame)
 		Cvar_FullSet("musictrackframe", "-1", CVAR_LATCH);
 
 	// r1ch fix: buffer overflow

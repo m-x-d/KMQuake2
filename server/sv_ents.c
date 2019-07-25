@@ -551,7 +551,7 @@ void SV_BuildClientFrame(client_t *client)
 
 // Save everything in the world out without deltas.
 // Used for recording footage for merged or assembled demos.
-void SV_RecordDemoMessage(void)
+void SV_RecordDemoMessage()
 {
 	if (!svs.demofile)
 		return;
