@@ -531,7 +531,7 @@ static void PM_CatagorizePosition()
 		pml.groundsurface = trace.surface;
 		pml.groundcontents = trace.contents;
 
-		if (!trace.ent || (trace.plane.normal[2] < 0.7 && !trace.startsolid))
+		if (!trace.ent || (trace.plane.normal[2] < 0.7f && !trace.startsolid))
 		{
 			// Try a slightly smaller bounding box - this is to fix getting stuck up on angled walls and not being able to move (like you're stuck in the air).
 			vec3_t mins;
@@ -554,11 +554,12 @@ static void PM_CatagorizePosition()
 				pml.groundcontents = trace.contents;
 				pm->groundentity = trace.ent;
 			}
-		}
-		else if (!trace.ent)
-		{ 
-			pm->groundentity = NULL;
-			pm->s.pm_flags &= ~PMF_ON_GROUND;
+			else
+			{
+				//mxd. No dice...
+				pm->groundentity = NULL;
+				pm->s.pm_flags &= ~PMF_ON_GROUND;
+			}
 		}
 		else
 		{
