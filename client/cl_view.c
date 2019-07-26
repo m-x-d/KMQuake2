@@ -205,7 +205,7 @@ void V_AddLightStyle(int style, float r, float g, float b)
 #pragma region ======================= Test particles / entities / lights
 
 // If cl_testparticles is set, create 4096 particles in the view
-static void V_TestParticles(void)
+static void V_TestParticles()
 {
 	r_numparticles = 4096;
 	for (int i = 0; i < r_numparticles; i++)
@@ -224,7 +224,7 @@ static void V_TestParticles(void)
 }
 
 // If cl_testentities is set, create 32 player models
-static void V_TestEntities(void)
+static void V_TestEntities()
 {
 	r_numentities = 32;
 	memset(r_entities, 0, sizeof(r_entities));
@@ -233,8 +233,8 @@ static void V_TestEntities(void)
 	{
 		entity_t *ent = &r_entities[i];
 
-		const float r = 64 * ((i % 4) - 1.5);
-		const float f = 64 * (i / 4) + 128;
+		const float r = 64 * ((i % 4) - 1.5f);
+		const float f = 64 * (i / 4.0f) + 128;
 
 		for (int j = 0; j < 3; j++)
 			ent->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j] * f + cl.v_right[j] * r;
@@ -245,7 +245,7 @@ static void V_TestEntities(void)
 }
 
 // If cl_testlights is set, create 32 lights models
-static void V_TestLights(void)
+static void V_TestLights()
 {
 	r_numdlights = 32;
 	memset(r_dlights, 0, sizeof(r_dlights));
@@ -254,8 +254,8 @@ static void V_TestLights(void)
 	{
 		dlight_t *dl = &r_dlights[i];
 
-		const float r = 64 * ((i % 4) - 1.5);
-		const float f = 64 * (i / 4) + 128;
+		const float r = 64 * ((i % 4) - 1.5f);
+		const float f = 64 * (i / 4.0f) + 128;
 
 		for (int j = 0; j < 3; j++)
 			dl->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j] * f + cl.v_right[j] * r;

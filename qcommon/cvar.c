@@ -480,7 +480,7 @@ static void Cvar_List_f(void)
 		numtotal++;
 
 	//mxd. Paranoia check...
-	if(numtotal == 0)
+	if (numtotal == 0)
 	{
 		Com_Printf(S_COLOR_GREEN"No cvars...\n");
 		return;

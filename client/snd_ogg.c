@@ -40,16 +40,16 @@ typedef struct
 	int startframe; //mxd. For resuming tracks after game load
 } bgTrack_t;
 
-#define MAX_OGGLIST		512
+#define MAX_OGGLIST	512
 
 static bgTrack_t s_bgTrack;
 static channel_t *s_streamingChannel;
 
-static qboolean ogg_started = false;// Initialization flag
-static ogg_status_t ogg_status;		// Status indicator
+static qboolean ogg_started = false; // Initialization flag
+static ogg_status_t ogg_status; // Status indicator
 
-static char **ogg_filelist;	// List of Ogg Vorbis files
-static int ogg_numfiles;	// Number of Ogg Vorbis files
+static char **ogg_filelist; // List of Ogg Vorbis files
+static int ogg_numfiles; // Number of Ogg Vorbis files
 static int ogg_loopcounter;
 
 //mxd. Fade-in effect after setting music track frame
@@ -62,12 +62,12 @@ static cvar_t *ogg_ambient_track;
 
 static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 {
-	byte *data;
+	byte *data = NULL;
 
 	fileHandle_t fh;
 	int datalength = FS_FOpenFile(name, &fh, FS_READ);
 
-	if(datalength > 0)
+	if (datalength > 0)
 	{
 		data = malloc(datalength);
 		FS_Read(data, datalength, fh);
@@ -81,8 +81,12 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 		datalength = ftell(f);
 		fseek(f, 0, SEEK_SET);
 
-		data = malloc(datalength);
-		fread(data, 1, datalength, f);
+		if (datalength > 0)
+		{
+			data = malloc(datalength);
+			fread(data, 1, datalength, f);
+		}
+
 		fclose(f);
 	}
 

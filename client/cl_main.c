@@ -1410,7 +1410,7 @@ void CL_Frame_Async(int msec)
 			// Pooy's CPU usage fix
 			if (cl_sleep->integer)
 			{
-				const int temptime = (int)min((1000.0f / net_maxfps->value - packetDelta), (1000.0f / r_maxfps->value - renderDelta));
+				const int temptime = (int)min(1000.0f / net_maxfps->value - packetDelta, 1000.0f / r_maxfps->value - renderDelta);
 				if (temptime > 1)
 					Sys_Sleep(1);
 			} // end CPU usage fix

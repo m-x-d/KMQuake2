@@ -621,7 +621,7 @@ char **FS_ListPak(char *find, int *num)
 	}
 
 	//mxd. Paranoia check...
-	if(nfiles == 0)
+	if (nfiles == 0)
 	{
 		Com_Printf(S_COLOR_YELLOW"No usable files found in PAK files!\n");
 		return NULL;
@@ -1551,7 +1551,7 @@ void FS_SetGamedir(char *dir)
 	}
 }
 
-void FS_ExecAutoexec(void)
+void FS_ExecAutoexec()
 {
 	char *dir = Cvar_VariableString("gamedir");
 	if (!*dir)
@@ -1596,7 +1596,7 @@ char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned c
 
 	// Fill list with matching filenames
 	filename = Sys_FindFirst(findname, musthave, canthave);
-	for(int i = 0; filename != NULL;)
+	for (int i = 0; filename != NULL;)
 	{
 		if (filename[strlen(filename) - 1] != '.')
 		{
@@ -1615,7 +1615,7 @@ char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned c
 	return list;
 }
 
-void FS_FreeFileList(char **list, int n)
+void FS_FreeFileList(char **list, const int n)
 {
 	for (int i = 0; i < n; i++)
 	{
@@ -1629,7 +1629,7 @@ void FS_FreeFileList(char **list, int n)
 	free(list);
 }
 
-qboolean FS_ItemInList(const char *check, int num, const char **list)
+qboolean FS_ItemInList(const char *check, const int num, const char **list)
 {
 	for (int i = 0; i < num; i++)
 		if (!Q_strcasecmp(check, list[i]))
@@ -1638,7 +1638,7 @@ qboolean FS_ItemInList(const char *check, int num, const char **list)
 	return false;
 }
 
-void FS_InsertInList(char **list, const char *insert, int len, int start)
+void FS_InsertInList(char **list, const char *insert, const int len, const int start)
 {
 	if (!list)
 		return;
@@ -1655,7 +1655,7 @@ void FS_InsertInList(char **list, const char *insert, int len, int start)
 	list[len] = strdup(insert);
 }
 
-static void FS_Dir_f(void)
+static void FS_Dir_f()
 {
 	char *path = NULL;
 	char findname[1024];

@@ -339,6 +339,7 @@ void CL_ParseMuzzleFlash()
 			break;
 
 		case MZ_HEATBEAM:
+		case MZ_NUKE2:
 			VectorSet(dl->color, 1.0f, 1.0f, 0.0f); //mxd
 			dl->die = cl.time + 100;
 			break;
@@ -356,11 +357,6 @@ void CL_ParseMuzzleFlash()
 
 		case MZ_NUKE1:
 			VectorSet(dl->color, 1.0f, 0.0f, 0.0f); //mxd
-			dl->die = cl.time + 100;
-			break;
-
-		case MZ_NUKE2:
-			VectorSet(dl->color, 1.0f, 1.0f, 0.0f); //mxd
 			dl->die = cl.time + 100;
 			break;
 
@@ -428,24 +424,6 @@ void CL_ParseMuzzleFlash2()
 
 	switch (flash_number)
 	{
-		case MZ2_INFANTRY_MACHINEGUN_1:
-		case MZ2_INFANTRY_MACHINEGUN_2:
-		case MZ2_INFANTRY_MACHINEGUN_3:
-		case MZ2_INFANTRY_MACHINEGUN_4:
-		case MZ2_INFANTRY_MACHINEGUN_5:
-		case MZ2_INFANTRY_MACHINEGUN_6:
-		case MZ2_INFANTRY_MACHINEGUN_7:
-		case MZ2_INFANTRY_MACHINEGUN_8:
-		case MZ2_INFANTRY_MACHINEGUN_9:
-		case MZ2_INFANTRY_MACHINEGUN_10:
-		case MZ2_INFANTRY_MACHINEGUN_11:
-		case MZ2_INFANTRY_MACHINEGUN_12:
-		case MZ2_INFANTRY_MACHINEGUN_13:
-			VectorSet(dl->color, 1.0f, 1.0f, 0.0f); //mxd
-			CL_GunEffect(origin); //mxd
-			S_StartSound(NULL, ent, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav"), 1, ATTN_NORM, 0);
-			break;
-
 		case MZ2_SOLDIER_MACHINEGUN_1:
 		case MZ2_SOLDIER_MACHINEGUN_2:
 		case MZ2_SOLDIER_MACHINEGUN_3:
@@ -472,6 +450,19 @@ void CL_ParseMuzzleFlash2()
 			S_StartSound(NULL, ent, CHAN_WEAPON, S_RegisterSound("gunner/gunatck2.wav"), 1, ATTN_NORM, 0);
 			break;
 
+		case MZ2_INFANTRY_MACHINEGUN_1:
+		case MZ2_INFANTRY_MACHINEGUN_2:
+		case MZ2_INFANTRY_MACHINEGUN_3:
+		case MZ2_INFANTRY_MACHINEGUN_4:
+		case MZ2_INFANTRY_MACHINEGUN_5:
+		case MZ2_INFANTRY_MACHINEGUN_6:
+		case MZ2_INFANTRY_MACHINEGUN_7:
+		case MZ2_INFANTRY_MACHINEGUN_8:
+		case MZ2_INFANTRY_MACHINEGUN_9:
+		case MZ2_INFANTRY_MACHINEGUN_10:
+		case MZ2_INFANTRY_MACHINEGUN_11:
+		case MZ2_INFANTRY_MACHINEGUN_12:
+		case MZ2_INFANTRY_MACHINEGUN_13:
 		case MZ2_ACTOR_MACHINEGUN_1:
 		case MZ2_SUPERTANK_MACHINEGUN_1:
 		case MZ2_SUPERTANK_MACHINEGUN_2:
@@ -658,10 +649,6 @@ void CL_ParseMuzzleFlash2()
 		case MZ2_JORG_MACHINEGUN_R4:
 		case MZ2_JORG_MACHINEGUN_R5:
 		case MZ2_JORG_MACHINEGUN_R6:
-			VectorSet(dl->color, 1.0f, 1.0f, 0.0f); //mxd
-			CL_GunEffect(origin); //mxd
-			break;
-
 		case MZ2_BOSS2_MACHINEGUN_R1:
 		case MZ2_BOSS2_MACHINEGUN_R2:
 		case MZ2_BOSS2_MACHINEGUN_R3:

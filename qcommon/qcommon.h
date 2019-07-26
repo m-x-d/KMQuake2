@@ -769,12 +769,12 @@ void FS_CreatePath(char *path);
 void FS_DeletePath(char *path);
 char *FS_NextPath(const char *prevpath);
 char **FS_ListFiles(char *findname, int *numfiles, unsigned musthave, unsigned canthave);
-void FS_FreeFileList(char **list, int n);
-qboolean FS_ItemInList(const char *check, int num, const char **list);
-void FS_InsertInList(char **list, const char *insert, int len, int start);
-void FS_Dir_f(void);
+void FS_FreeFileList(char **list, const int n);
+qboolean FS_ItemInList(const char *check, const int num, const char **list);
+void FS_InsertInList(char **list, const char *insert, const int len, const int start);
+void FS_Dir_f();
 
-void FS_ExecAutoexec(void);
+void FS_ExecAutoexec();
 //int FS_GetFileList(const char *path, const char *extension, char *buffer, int size, fsSearchType_t searchType);
 
 int FS_LoadFile(const char *path, void **buffer);

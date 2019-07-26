@@ -710,7 +710,7 @@ static int Cmd_SortCmdinfos(const cmdinfo_t *first, const cmdinfo_t *second)
 	return Q_stricmp(name1, name2);
 }
 
-void Cmd_List_f(void)
+static void Cmd_List_f()
 {
 	//mxd. Collect command infos first...
 	int numcommands = 0;
@@ -718,7 +718,7 @@ void Cmd_List_f(void)
 		numcommands++;
 
 	//mxd. Paranoia check
-	if(numcommands == 0)
+	if (numcommands == 0)
 	{
 		Com_Printf(S_COLOR_GREEN"No console comands...\n");
 		return;

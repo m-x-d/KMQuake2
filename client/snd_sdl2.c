@@ -240,7 +240,7 @@ static void SDL_PaintChannels(const int endtime)
 				if (!sc)
 					break;
 
-				if (count > 0 && ch->sfx != NULL) //mxd. V560 A part of conditional expression is always true: ch->sfx.
+				if (count > 0)
 				{
 					if (sc->width == 1)
 						SDL_PaintChannelFrom8(ch, sc, count, ltime - paintedtime);

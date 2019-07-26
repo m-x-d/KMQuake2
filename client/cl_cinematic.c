@@ -669,6 +669,14 @@ static void CIN_ReadAudioFrame(cinematic_t *cin)
 
 			samples = chunk->size / 2;
 		}
+		else
+		{
+			//mxd. Silence "potentially uninitialized samples/data" PVS warnings.
+			Com_Printf(S_COLOR_YELLOW"Unsupported chunk id: %i\n", chunk->id);
+			CIN_Skip(cin, cin->roqChunk.size);
+
+			return;
+		}
 	}
 
 	// Send sound to mixer

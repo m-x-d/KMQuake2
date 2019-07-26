@@ -112,7 +112,7 @@ static int S_SortSoundinfos(const soundinfo_t *first, const soundinfo_t *second)
 	return Q_stricmp(first->name, second->name);
 }
 
-static void S_SoundList_f(void)
+static void S_SoundList_f()
 {
 	//mxd. Avoid memset(NULL);
 	if (num_sfx == 0)
@@ -355,19 +355,26 @@ sfxcache_t *S_LoadSound(sfx_t *s)
 
 sfx_t *S_FindName(char *name, qboolean create)
 {
-	int i;
-
 	if (!name)
+	{
 		Com_Error(ERR_FATAL, "S_FindName: NULL\n");
+		return NULL; //mxd. Silence PVS warning.
+	}
 
 	if (!name[0])
+	{
 		Com_Error(ERR_FATAL, "S_FindName: empty name\n");
+		return NULL; //mxd. Silence PVS warning.
+	}
 
 	if (strlen(name) >= MAX_QPATH)
+	{
 		Com_Error(ERR_FATAL, "Sound name too long: '%s' (%i / %i chars)", name, strlen(name), MAX_QPATH - 1);
+		return NULL; //mxd. Silence PVS warning.
+	}
 
 	// See if already loaded
-	for (i = 0; i < num_sfx; i++)
+	for (int i = 0; i < num_sfx; i++)
 		if (!strcmp(known_sfx[i].name, name))
 			return &known_sfx[i];
 
@@ -375,19 +382,23 @@ sfx_t *S_FindName(char *name, qboolean create)
 		return NULL;
 
 	// Find a free sfx
-	for (i = 0; i < num_sfx; i++)
-		if (!known_sfx[i].name[0])
+	int sfxindex;
+	for (sfxindex = 0; sfxindex < num_sfx; sfxindex++)
+		if (!known_sfx[sfxindex].name[0])
 			break;
 
-	if (i == num_sfx)
+	if (sfxindex == num_sfx)
 	{
 		if (num_sfx == MAX_SFX)
+		{
 			Com_Error(ERR_FATAL, "S_FindName: out of sfx_t");
+			return NULL; //mxd
+		}
 
 		num_sfx++;
 	}
 	
-	sfx_t *sfx = &known_sfx[i];
+	sfx_t *sfx = &known_sfx[sfxindex];
 	memset(sfx, 0, sizeof(*sfx));
 	Q_strncpyz(sfx->name, name, sizeof(sfx->name));
 	sfx->registration_sequence = s_registration_sequence;

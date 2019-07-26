@@ -47,12 +47,10 @@
     <OutDir>$(BuildDir)baseq2\</OutDir>
     <IntDir>$(DebugDir)</IntDir>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(BuildDir)baseq2\</OutDir>
     <IntDir>$(ReleaseDir)</IntDir>
-    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -75,7 +73,7 @@
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsC</CompileAs>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -98,6 +96,7 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(DebugDir)kmq2gamex86.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>

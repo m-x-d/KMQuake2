@@ -289,17 +289,12 @@ static int CL_MissionPackCDTrack(int tracknum)
 		return 0;
 	
 	if (FS_ModType("rogue") || cl_rogue_music->integer)
-	{
-		if (tracknum >= 2 && tracknum <= 11)
-			return tracknum + 10;
-
-		return tracknum;
-	}
+		return (tracknum < 12 ? tracknum + 10 : tracknum);
 
 	// An out-of-order mix from Q2 and Rogue CDs
 	if (FS_ModType("xatrix") || cl_xatrix_music->integer)
 	{
-		switch(tracknum)
+		switch (tracknum)
 		{
 			case 2: return 9;
 			case 3: return 13;

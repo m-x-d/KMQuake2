@@ -522,11 +522,17 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 cmodel_t *CM_InlineModel(char *name)
 {
 	if (!name || name[0] != '*')
+	{
 		Com_Error(ERR_DROP, "CM_InlineModel: bad name");
+		return NULL; //mxd. Silence PVS warning
+	}
 
 	const int num = atoi(name + 1);
 	if (num < 1 || num >= numcmodels)
+	{
 		Com_Error(ERR_DROP, "CM_InlineModel: bad number");
+		return NULL; //mxd. Silence PVS warning
+	}
 
 	return &map_cmodels[num];
 }
