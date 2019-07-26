@@ -40,6 +40,13 @@ typedef struct
 	int startframe; //mxd. For resuming tracks after game load
 } bgTrack_t;
 
+typedef enum
+{
+	PLAY,
+	PAUSE,
+	STOP
+} ogg_status_t;
+
 #define MAX_OGGLIST	512
 
 static bgTrack_t s_bgTrack;
@@ -77,20 +84,23 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 	{
 		//mxd. Music tracks in Q2 GOG are outside of Q2 filesystem, so try loading those directly...
 		FILE *f = fopen(name, "rb");
-		fseek(f, 0, SEEK_END);
-		datalength = ftell(f);
-		fseek(f, 0, SEEK_SET);
-
-		if (datalength > 0)
+		if (f)
 		{
-			data = malloc(datalength);
-			fread(data, 1, datalength, f);
-		}
+			fseek(f, 0, SEEK_END);
+			datalength = ftell(f);
+			fseek(f, 0, SEEK_SET);
 
-		fclose(f);
+			if (datalength > 0)
+			{
+				data = malloc(datalength);
+				fread(data, 1, datalength, f);
+			}
+
+			fclose(f);
+		}
 	}
 
-	if (datalength == 0)
+	if (datalength < 1) //mxd. FS_FOpenFile can return either 0 (zero-length file) or -1 (no such file).
 	{
 		Com_Printf(S_COLOR_YELLOW"%s: couldn't find '%s'\n", __func__, name);
 		return false;
@@ -113,7 +123,7 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 	}
 
 	//mxd. Seek to target frame? Info: doing this during playback results in a bit of sound crackle right after calling stb_vorbis_seek...
-	if(track->startframe > 0)
+	if (track->startframe > 0)
 	{
 		stb_vorbis_seek(track->ogg_file, (uint)track->startframe);
 		ogg_fadeinvolume = 0.0f;
@@ -125,7 +135,7 @@ static qboolean S_OpenBackgroundTrack(const char *name, bgTrack_t *track)
 
 static void S_CloseBackgroundTrack(bgTrack_t *track)
 {
-	if(track->ogg_file)
+	if (track->ogg_file)
 	{
 		stb_vorbis_close(track->ogg_file);
 		track->ogg_file = NULL;
@@ -137,7 +147,7 @@ static void S_CloseBackgroundTrack(bgTrack_t *track)
 	}
 }
 
-static void S_StreamBackgroundTrack(void)
+static void S_StreamBackgroundTrack()
 {
 	if (!s_bgTrack.ogg_file || !s_musicvolume->value || !s_streamingChannel)
 		return;
@@ -202,7 +212,7 @@ static void S_StreamBackgroundTrack(void)
 }
 
 // Streams background track
-void S_UpdateBackgroundTrack(void)
+void S_UpdateBackgroundTrack()
 {
 	// Stop music if paused
 	if (ogg_status == PLAY)
@@ -248,7 +258,7 @@ void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack, int s
 	S_StreamBackgroundTrack();
 }
 
-void S_StopBackgroundTrack(void)
+void S_StopBackgroundTrack()
 {
 	if (!ogg_started) // Was sound_started
 		return;
@@ -261,7 +271,7 @@ void S_StopBackgroundTrack(void)
 	memset(&s_bgTrack, 0, sizeof(bgTrack_t));
 }
 
-void S_StartStreaming(void)
+void S_StartStreaming()
 {
 	if (!ogg_started || s_streamingChannel) // Was sound_started || already started
 		return;
@@ -273,7 +283,7 @@ void S_StartStreaming(void)
 	s_streamingChannel->streaming = true;
 }
 
-void S_StopStreaming(void)
+void S_StopStreaming()
 {
 	if (!ogg_started || !s_streamingChannel) // Was sound_started || already stopped
 		return;
@@ -297,7 +307,7 @@ int S_GetBackgroundTrackFrame()
 
 // Initialize the Ogg Vorbis subsystem
 // Based on code by QuDos
-void S_OGG_Init(void)
+void S_OGG_Init()
 {
 	static qboolean ogg_first_init = true; //mxd. Made local
 	
@@ -329,7 +339,7 @@ void S_OGG_Init(void)
 
 // Shutdown the Ogg Vorbis subsystem
 // Based on code by QuDos
-void S_OGG_Shutdown(void)
+void S_OGG_Shutdown()
 {
 	if (!ogg_started)
 		return;
@@ -347,7 +357,7 @@ void S_OGG_Shutdown(void)
 
 // Reinitialize the Ogg Vorbis subsystem
 // Based on code by QuDos
-void S_OGG_Restart(void)
+void S_OGG_Restart()
 {
 	char introname[MAX_QPATH]; //mxd
 	Q_strncpyz(introname, s_bgTrack.introName, sizeof(introname));
@@ -396,7 +406,7 @@ static void LoadDirectoryFileList(const char *path)
 
 // Load list of Ogg Vorbis files in music/
 // Based on code by QuDos
-void S_OGG_LoadFileList(void)
+void S_OGG_LoadFileList()
 {
 	ogg_filelist = malloc(sizeof(char *) * MAX_OGGLIST);
 	memset(ogg_filelist, 0, sizeof(char *) * MAX_OGGLIST);
@@ -443,7 +453,7 @@ void S_OGG_LoadFileList(void)
 #pragma region ======================= Console commands
 
 // Based on code by QuDos
-static void S_OGG_PlayCmd(void)
+static void S_OGG_PlayCmd()
 {
 	if (Cmd_Argc() < 3)
 	{
@@ -457,7 +467,7 @@ static void S_OGG_PlayCmd(void)
 }
 
 // Based on code by QuDos
-static void S_OGG_StatusCmd(void)
+static void S_OGG_StatusCmd()
 {
 	char *trackName;
 
@@ -492,7 +502,7 @@ static void S_OGG_StatusCmd(void)
 
 // List Ogg Vorbis files
 // Based on code by QuDos
-static void S_OGG_ListCmd(void)
+static void S_OGG_ListCmd()
 {
 	if (ogg_numfiles <= 0)
 	{
@@ -508,7 +518,7 @@ static void S_OGG_ListCmd(void)
 
 // Parses OGG commands
 // Based on code by QuDos
-void S_OGG_ParseCmd(void)
+void S_OGG_ParseCmd()
 {
 	if (Cmd_Argc() < 2)
 	{

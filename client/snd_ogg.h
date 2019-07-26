@@ -21,21 +21,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma once
 
-typedef enum
-{
-	PLAY,
-	PAUSE,
-	STOP
-} ogg_status_t;
-
-void S_UpdateBackgroundTrack(void);
+void S_UpdateBackgroundTrack();
 void S_StartBackgroundTrack(const char *introTrack, const char *loopTrack, int startframe);
-void S_StopBackgroundTrack(void);
-void S_StartStreaming(void);
-void S_StopStreaming(void);
+void S_StopBackgroundTrack();
+void S_StartStreaming();
+void S_StopStreaming();
 int S_GetBackgroundTrackFrame(); //mxd
-void S_OGG_Init(void);
-void S_OGG_Shutdown(void);
-void S_OGG_Restart(void);
-void S_OGG_LoadFileList(void);
-void S_OGG_ParseCmd(void);
+void S_OGG_Init();
+void S_OGG_Shutdown();
+void S_OGG_Restart();
+void S_OGG_LoadFileList();
+void S_OGG_ParseCmd();
