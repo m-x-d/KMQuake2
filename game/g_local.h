@@ -1077,26 +1077,28 @@ void M_FliesOff (edict_t *self);
 void M_FliesOn (edict_t *self);
 void M_CheckGround (edict_t *ent);
 qboolean M_SetDeath (edict_t *ent,mmove_t **moves);
-int  PatchMonsterModel (char *model);
+int PatchMonsterModel (char *model);
+
 //
 // g_patchplayermodels.c
 //
-int PatchPlayerModels (char *modelname);
+int PatchPlayerModels(char *modelname);
+
 //
 // g_phys.c
 //
-void SV_AddGravity (edict_t *ent);
-void G_RunEntity (edict_t *ent);
+void SV_AddGravity(edict_t *ent);
+void G_RunEntity(edict_t *ent);
+
 //
 // g_reflect.c
 //
-void AddReflection (edict_t *ent);
-void DeleteReflection (edict_t *ent, int index);
-void ReflectExplosion (int type, vec3_t origin);
-void ReflectSparks (int type, vec3_t origin, vec3_t movedir);
-void ReflectSteam (vec3_t origin,vec3_t movedir,int count,int sounds,int speed, int wait, int nextid);
-void ReflectTrail (int type, vec3_t start, vec3_t end);
-
+void AddReflection(edict_t *ent);
+void DeleteReflection(edict_t *ent, int index);
+void ReflectExplosion(int type, vec3_t origin);
+void ReflectSparks(int type, vec3_t origin, vec3_t movedir);
+void ReflectSteam(vec3_t origin,vec3_t movedir,int count,int sounds,int speed, int wait, int nextid);
+void ReflectTrail(int type, vec3_t start, vec3_t end);
 
 //
 // g_spawn.c
