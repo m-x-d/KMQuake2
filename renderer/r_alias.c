@@ -86,9 +86,6 @@ static qboolean R_AliasMeshesAreBatchable(maliasmodel_t *paliashdr, uint meshnum
 	renderparms_t *skinParms1 = &mesh1->skins[skinnum1].renderparms;
 	renderparms_t *skinParms2 = &mesh2->skins[skinnum2].renderparms;
 
-	if (!skinParms1 || !skinParms2)
-		return false;
-
 	if (currentmodel->skins[meshnum1][skinnum1] != currentmodel->skins[meshnum2][skinnum2])
 		return false;
 

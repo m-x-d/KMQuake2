@@ -455,9 +455,9 @@ void R_DrawCameraEffect(void)
 		GL_Bind(image[i]->texnum);
 
 		Vector2Set(texCoord[0], 0, 0);
-		Vector2Set(texCoord[1], w / image[i]->width, 0);
-		Vector2Set(texCoord[2], w / image[i]->width, h / image[i]->height);
-		Vector2Set(texCoord[3], 0, h / image[i]->height);
+		Vector2Set(texCoord[1], (float)w / image[i]->width, 0);
+		Vector2Set(texCoord[2], (float)w / image[i]->width, (float)h / image[i]->height);
+		Vector2Set(texCoord[3], 0, (float)h / image[i]->height);
 
 		Mod_SetRenderParmsDefaults(&cameraParms);
 

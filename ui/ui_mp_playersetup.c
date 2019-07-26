@@ -311,7 +311,7 @@ static void PlayerConfig_ScanDirectories(void)
 			s_numplayermodels++;
 		}
 		
-		if (dirnames)
+		if (ndirs > 0)
 			FS_FreeFileList(dirnames, ndirs);
 	}
 }

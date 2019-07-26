@@ -38,7 +38,10 @@ qboolean registration_active; // Map registration flag
 mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model)
 {
 	if (!model || !model->nodes)
+	{
 		VID_Error(ERR_DROP, "Mod_PointInLeaf: bad model");
+		return NULL; //mxd. Silence PVS warning.
+	}
 
 	mnode_t *node = model->nodes;
 	while (true)

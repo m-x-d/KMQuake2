@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-#define ON_EPSILON				0.1
+#define ON_EPSILON				0.1f
 
 #define MAX_FRAGMENT_POINTS		128
 #define MAX_FRAGMENT_PLANES		6
@@ -38,21 +38,21 @@ static cplane_t cm_markPlanes[MAX_FRAGMENT_PLANES];
 
 static int cm_markCheckCount;
 
-int PlaneTypeForNormal(const vec3_t normal)
+static int PlaneTypeForNormal(const vec3_t normal)
 {
-	if (normal[0] == 1.0)
+	if (normal[0] == 1.0f)
 		return PLANE_X;
 
-	if (normal[1] == 1.0)
+	if (normal[1] == 1.0f)
 		return PLANE_Y;
 
-	if (normal[2] == 1.0)
+	if (normal[2] == 1.0f)
 		return PLANE_Z; 
 
 	return 3; //PLANE_NON_AXIAL;
 }
 
-float *worldVert(int index, msurface_t *surf)
+static float *WorldVertex(const int index, msurface_t *surf)
 {
 	const int edgeindex = r_worldmodel->surfedges[surf->firstedge + index];
 	if (edgeindex >= 0)
@@ -61,41 +61,41 @@ float *worldVert(int index, msurface_t *surf)
 		return &r_worldmodel->vertexes[r_worldmodel->edges[-edgeindex].v[1]].position[0];
 }
 
-static void R_ClipFragment(int numPoints, vec3_t points, int stage, markFragment_t *mf)
+static void R_ClipFragment(int numpoints, vec3_t points, const int stage, markFragment_t *mf)
 {
 	vec3_t front[MAX_FRAGMENT_POINTS];
 	float dists[MAX_FRAGMENT_POINTS];
 	int sides[MAX_FRAGMENT_POINTS];
 
-	if (numPoints > MAX_FRAGMENT_POINTS - 2)
+	if (numpoints > MAX_FRAGMENT_POINTS - 2)
 		VID_Error(ERR_DROP, "%s: MAX_FRAGMENT_POINTS hit", __func__);
 
 	if (stage == MAX_FRAGMENT_PLANES)
 	{
 		// Fully clipped
-		if (numPoints > 2)
+		if (numpoints > 2)
 		{
-			mf->numPoints = numPoints;
+			mf->numPoints = numpoints;
 			mf->firstPoint = cm_numMarkPoints;
 			
-			if (cm_numMarkPoints + numPoints > cm_maxMarkPoints)
-				numPoints = cm_maxMarkPoints - cm_numMarkPoints;
+			if (cm_numMarkPoints + numpoints > cm_maxMarkPoints)
+				numpoints = cm_maxMarkPoints - cm_numMarkPoints;
 
 			float *point = points;
-			for (int i = 0; i < numPoints; i++, point += 3)
+			for (int i = 0; i < numpoints; i++, point += 3)
 				VectorCopy(point, cm_markPoints[cm_numMarkPoints + i]);
 
-			cm_numMarkPoints += numPoints;
+			cm_numMarkPoints += numpoints;
 		}
 
 		return;
 	}
 
-	qboolean frontSide = false;
+	qboolean frontside = false;
 
 	cplane_t *plane = &cm_markPlanes[stage];
 	float *point = points;
-	for (int i = 0; i < numPoints; i++, point += 3)
+	for (int i = 0; i < numpoints; i++, point += 3)
 	{
 		if (plane->type < 3)
 			dists[i] = point[plane->type] - plane->dist;
@@ -104,7 +104,7 @@ static void R_ClipFragment(int numPoints, vec3_t points, int stage, markFragment
 
 		if (dists[i] > ON_EPSILON)
 		{
-			frontSide = true;
+			frontside = true;
 			sides[i] = SIDE_FRONT;
 		}
 		else if (dists[i] < -ON_EPSILON)
@@ -117,25 +117,21 @@ static void R_ClipFragment(int numPoints, vec3_t points, int stage, markFragment
 		}
 	}
 
-	if (!frontSide) // Not clipped
+	if (!frontside) // Not clipped
 		return;
 
 	// Clip it
-	dists[numPoints] = dists[0];
-	sides[numPoints] = sides[0];
-	VectorCopy(points, (points + (numPoints * 3)));
+	dists[numpoints] = dists[0];
+	sides[numpoints] = sides[0];
+	VectorCopy(points, (points + (numpoints * 3)));
 
 	int pointindex = 0;
 	point = points;
-	for (int i = 0; i < numPoints; i++, point += 3)
+	for (int i = 0; i < numpoints; i++, point += 3)
 	{
 		switch (sides[i])
 		{
 			case SIDE_FRONT:
-				VectorCopy(point, front[pointindex]);
-				pointindex++;
-				break;
-
 			case SIDE_ON:
 				VectorCopy(point, front[pointindex]);
 				pointindex++;
@@ -181,9 +177,9 @@ static void R_ClipFragmentToSurface(msurface_t *surf, const vec3_t normal, mnode
 		mf->firstPoint = mf->numPoints = 0;
 		mf->node = node; // Vis node
 		
-		VectorCopy(worldVert(0, surf), points[0]);
-		VectorCopy(worldVert(i - 1, surf), points[1]);
-		VectorCopy(worldVert(i, surf), points[2]);
+		VectorCopy(WorldVertex(0, surf), points[0]);
+		VectorCopy(WorldVertex(i - 1, surf), points[1]);
+		VectorCopy(WorldVertex(i, surf), points[2]);
 
 		R_ClipFragment(3, points[0], 0, mf);
 
@@ -197,7 +193,7 @@ static void R_ClipFragmentToSurface(msurface_t *surf, const vec3_t normal, mnode
 	}
 }
 
-static void R_RecursiveMarkFragments(const vec3_t origin, const vec3_t normal, float radius, mnode_t *node)
+static void R_RecursiveMarkFragments(const vec3_t origin, const vec3_t normal, const float radius, mnode_t *node)
 {
 	if (cm_numMarkPoints >= cm_maxMarkPoints || cm_numMarkFragments >= cm_maxMarkFragments) // Already reached the limit somewhere else
 		return;

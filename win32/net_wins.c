@@ -166,7 +166,7 @@ char *NET_AdrToString(const netadr_t a)
 
 static qboolean NET_StringToSockaddr(char *s, struct sockaddr *sadr)
 {
-	int val;
+	uint val;
 	char copy[128];
 	
 	memset(sadr, 0, sizeof(*sadr));
@@ -186,7 +186,7 @@ static qboolean NET_StringToSockaddr(char *s, struct sockaddr *sadr)
 		DO(17, sa_nodenum[4]);
 		DO(19, sa_nodenum[5]);
 		sscanf(&s[22], "%u", &val);
-		((struct sockaddr_ipx *)sadr)->sa_socket = htons((unsigned short)val);
+		((struct sockaddr_ipx *)sadr)->sa_socket = htons((ushort)val);
 	}
 	else
 	{

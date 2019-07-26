@@ -1312,11 +1312,11 @@ void R_MarkLeaves(void)
 	}
 
 	byte *vis = Mod_ClusterPVS(r_viewcluster, r_worldmodel);
+	byte fatvis[MAX_MAP_LEAFS / 8];
 
 	// May have to combine two clusters because of solid water boundaries
 	if (r_viewcluster2 != r_viewcluster)
 	{
-		byte fatvis[MAX_MAP_LEAFS / 8];
 		memcpy(fatvis, vis, (r_worldmodel->numleafs + 7) / 8);
 		vis = Mod_ClusterPVS(r_viewcluster2, r_worldmodel);
 		const int c = (r_worldmodel->numleafs + 31) / 32;

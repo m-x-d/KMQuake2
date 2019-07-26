@@ -118,7 +118,10 @@ static void PF_error(char *fmt, ...)
 static void PF_setmodel(edict_t *ent, char *name)
 {
 	if (!name)
-		Com_Error(ERR_DROP, "PF_setmodel: NULL");
+	{
+		Com_Error(ERR_DROP, "PF_setmodel: NULL name.");
+		return; //mxd. Silence PVS warning.
+	}
 
 	ent->s.modelindex = SV_ModelIndex(name);
 

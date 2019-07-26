@@ -415,7 +415,10 @@ int SV_HullForEntity(edict_t *ent)
 		cmodel_t *model = sv.models[ent->s.modelindex];
 
 		if (!model)
+		{
 			Com_Error(ERR_FATAL, "MOVETYPE_PUSH with a non-bsp model.");
+			return -1; //mxd. Silence PVS warning.
+		}
 
 		return model->headnode;
 	}
