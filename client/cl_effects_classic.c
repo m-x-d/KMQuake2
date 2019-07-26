@@ -441,7 +441,7 @@ void CL_ClassicRailTrail(const vec3_t start, const vec3_t end, const qboolean is
 	VectorScale(vec, dec, vec);
 	VectorCopy(start, move);
 
-	for (int i = 0; i < len; i += dec)
+	for (float i = 0; i < len; i += dec)
 	{
 		cparticle_t *p = CL_InitParticle();
 		if (!p)
