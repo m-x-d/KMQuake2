@@ -290,15 +290,13 @@ extern int numnodes;
 extern int num_items;
 
 // id Function Protos I need
-void     LookAtKiller (edict_t *self, edict_t *inflictor, edict_t *attacker);
-void     ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker);
-void     TossClientWeapon (edict_t *self);
-void     ClientThink (edict_t *ent, usercmd_t *ucmd);
-void	 SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles, int *style, int *health);
-void     ClientUserinfoChanged (edict_t *ent, char *userinfo);
-void     CopyToBodyQue (edict_t *ent);
-qboolean ClientConnect (edict_t *ent, char *userinfo);
-void     Use_Plat (edict_t *ent, edict_t *other, edict_t *activator);
+extern void LookAtKiller(edict_t *self, edict_t *inflictor, edict_t *attacker);
+extern void TossClientWeapon(edict_t *self);
+extern void ClientThink(edict_t *ent, usercmd_t *ucmd);
+extern void SelectSpawnPoint(edict_t *ent, vec3_t origin, vec3_t angles, int *style, int *health);
+extern void CopyToBodyQue(edict_t *ent);
+extern qboolean ClientConnect(edict_t *ent, char *userinfo);
+extern void Use_Plat(edict_t *ent, edict_t *other, edict_t *activator);
 
 // acebot_ai.c protos
 void     ACEAI_Think (edict_t *self);

@@ -1019,12 +1019,11 @@ void ToggleLights();
 // g_lock.c
 //
 void lock_digit_increment (edict_t *digit, edict_t *activator);
+
 //
 // g_main.c
 //
-void SaveClientData (void);
-void FetchClientEntData (edict_t *ent);
-void EndDMLevel (void);
+void EndDMLevel(void);
 
 //
 // g_misc.c
@@ -1231,12 +1230,13 @@ qboolean M_CheckBottom (edict_t *ent);
 qboolean M_walkmove (edict_t *ent, float yaw, float dist);
 void M_MoveToGoal (edict_t *ent, float dist);
 void M_ChangeYaw (edict_t *ent);
-// tpp
+
 //
 // p_chase.c
 //
 #define OPTION_OFF        0
 #define OPTION_BACKGROUND 1
+
 void CheckChasecam_Viewent (edict_t *ent);
 void Cmd_Chasecam_Toggle (edict_t *ent);
 void ChasecamRemove (edict_t *ent, int opt);
@@ -1245,16 +1245,18 @@ void ChasecamStart (edict_t *ent);
 //
 // p_client.c
 //
-void player_pain (edict_t *self, edict_t *other, float kick, int damage);
-void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-void respawn (edict_t *ent);
-void BeginIntermission (edict_t *targ);
-void PutClientInServer (edict_t *ent);
-void InitClientPersistant (gclient_t *client,int style);
-void InitClientResp (gclient_t *client);
-void InitBodyQue (void);
-void ClientBeginServerFrame (edict_t *ent);
-void ClientUserinfoChanged (edict_t *ent, char *userinfo);
+void player_pain(edict_t *self, edict_t *other, float kick, int damage);
+void player_die(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+void respawn(edict_t *ent);
+void BeginIntermission(edict_t *targ);
+void PutClientInServer(edict_t *ent);
+void InitClientPersistant(gclient_t *client, const int style);
+void InitClientResp(gclient_t *client);
+void InitBodyQue();
+void ClientBeginServerFrame(edict_t *ent);
+void ClientUserinfoChanged(edict_t *ent, char *userinfo);
+void SaveClientData();
+void FetchClientEntData(edict_t *ent);
 
 //
 // p_hud.c
