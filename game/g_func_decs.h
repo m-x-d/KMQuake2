@@ -1634,7 +1634,6 @@ extern void func_monitor_init ( edict_t * self ) ;
 extern void use_camera ( edict_t * self , edict_t * other , edict_t * activator ) ;
 extern edict_t * G_FindPrevCamera ( edict_t * camera , edict_t * monitor ) ;
 extern edict_t * G_FindNextCamera ( edict_t * camera , edict_t * monitor ) ;
-extern void camera_on ( edict_t * ent ) ;
 extern void faker_animate ( edict_t * self ) ;
 extern void camera_off ( edict_t * ent ) ;
 extern qboolean ai_chicken ( edict_t * self , edict_t * badguy ) ;

@@ -1634,7 +1634,6 @@
 {"use_camera", (byte *)use_camera},
 {"G_FindPrevCamera", (byte *)G_FindPrevCamera},
 {"G_FindNextCamera", (byte *)G_FindNextCamera},
-{"camera_on", (byte *)camera_on},
 {"faker_animate", (byte *)faker_animate},
 {"camera_off", (byte *)camera_off},
 {"ai_chicken", (byte *)ai_chicken},
