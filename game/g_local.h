@@ -889,17 +889,16 @@ qboolean ai_chicken (edict_t *ent, edict_t *badguy);
 //
 // km_cvar.c
 //
-void InitLithiumVars (void);	// init lithium cvars
+void InitLithiumVars();
 
 //
 // g_camera.c
 //
 void use_camera(edict_t *ent, edict_t *other, edict_t *activator);
-void camera_on(edict_t *ent);
 void camera_off(edict_t *ent);
 void faker_animate(edict_t *self);
-edict_t *G_FindNextCamera (edict_t *camera, edict_t *monitor);
-edict_t *G_FindPrevCamera (edict_t *camera, edict_t *monitor);
+edict_t *G_FindNextCamera(edict_t *camera, edict_t *monitor);
+edict_t *G_FindPrevCamera(edict_t *camera, edict_t *monitor);
 
 //
 // g_chase.c
