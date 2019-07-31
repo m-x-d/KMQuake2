@@ -526,7 +526,7 @@ static void PM_CatagorizePosition()
 	}
 	else
 	{
-		trace_t trace = pm->trace (pml.origin, pm->mins, pm->maxs, point);
+		trace_t trace = pm->trace(pml.origin, pm->mins, pm->maxs, point);
 		pml.groundplane = trace.plane;
 		pml.groundsurface = trace.surface;
 		pml.groundcontents = trace.contents;

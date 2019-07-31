@@ -1706,8 +1706,8 @@ static void SV_Physics_Step(edict_t *ent)
 				case CONTENTS_CURRENT_90:   ent->velocity[1] = v;  break;
 				case CONTENTS_CURRENT_180:  ent->velocity[0] = -v; break;
 				case CONTENTS_CURRENT_270:  ent->velocity[1] = -v; break;
-				case CONTENTS_CURRENT_UP :  ent->velocity[2] = max(v, ent->velocity[2]); //TODO: mxd. Is this fall-through intentional?
-				case CONTENTS_CURRENT_DOWN: ent->velocity[2] = min(-v, ent->velocity[2]);
+				case CONTENTS_CURRENT_UP :  ent->velocity[2] = max(v, ent->velocity[2]); break;
+				case CONTENTS_CURRENT_DOWN: ent->velocity[2] = min(-v, ent->velocity[2]); break;
 			}
 		}
 	}
