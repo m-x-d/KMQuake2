@@ -567,7 +567,7 @@ typedef struct
 	float		trail_time;
 	vec3_t		last_sighting;
 	int			attack_state;
-	int			lefty;
+	qboolean	lefty; //mxd. int -> qboolean
 	float		idle_time;
 	int			linkcount;
 
@@ -869,22 +869,21 @@ extern	spawn_t	spawns[];
 //
 // g_ai.c
 //
-void AI_SetSightClient (void);
-void ai_stand (edict_t *self, float dist);
-void ai_move (edict_t *self, float dist);
-void ai_walk (edict_t *self, float dist);
-void ai_turn (edict_t *self, float dist);
-void ai_run (edict_t *self, float dist);
-void ai_charge (edict_t *self, float dist);
-qboolean canReach (edict_t *ent, edict_t *other);
-qboolean FacingIdeal(edict_t *self);
-qboolean FindTarget (edict_t *self);
-void FoundTarget (edict_t *self);
-void HuntTarget (edict_t *self);
-qboolean infront (edict_t *self, edict_t *other);
-int range (edict_t *self, edict_t *other);
-qboolean visible (edict_t *self, edict_t *other);
-qboolean ai_chicken (edict_t *ent, edict_t *badguy);
+void AI_SetSightClient();
+void ai_stand(edict_t *self, const float dist);
+void ai_move(edict_t *self, const float dist);
+void ai_walk(edict_t *self, const float dist);
+void ai_turn(edict_t *self, const float dist);
+void ai_run(edict_t *self, float dist);
+void ai_charge(edict_t *self, const float dist);
+qboolean canReach(edict_t *self, edict_t *other);
+qboolean FindTarget(edict_t *self);
+void FoundTarget(edict_t *self);
+void HuntTarget(edict_t *self);
+qboolean infront(edict_t *self, edict_t *other);
+int range(edict_t *self, edict_t *other);
+qboolean visible(edict_t *self, edict_t *other);
+qboolean ai_chicken(edict_t *self, edict_t *badguy);
 
 //
 // km_cvar.c
